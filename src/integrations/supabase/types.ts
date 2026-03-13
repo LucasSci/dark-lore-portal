@@ -61,6 +61,138 @@ export type Database = {
           },
         ]
       }
+      campaign_events: {
+        Row: {
+          chapter_number: number
+          created_at: string
+          description: string | null
+          event_type: string | null
+          id: string
+          location: string | null
+          participants: string[] | null
+          sort_order: number | null
+          title: string
+        }
+        Insert: {
+          chapter_number: number
+          created_at?: string
+          description?: string | null
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          participants?: string[] | null
+          sort_order?: number | null
+          title: string
+        }
+        Update: {
+          chapter_number?: number
+          created_at?: string
+          description?: string | null
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          participants?: string[] | null
+          sort_order?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
+      campaign_factions: {
+        Row: {
+          alignment: string | null
+          created_at: string
+          description: string | null
+          headquarters: string | null
+          id: string
+          leader: string | null
+          name: string
+        }
+        Insert: {
+          alignment?: string | null
+          created_at?: string
+          description?: string | null
+          headquarters?: string | null
+          id?: string
+          leader?: string | null
+          name: string
+        }
+        Update: {
+          alignment?: string | null
+          created_at?: string
+          description?: string | null
+          headquarters?: string | null
+          id?: string
+          leader?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      campaign_locations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_discovered: boolean | null
+          location_type: string | null
+          name: string
+          region: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_discovered?: boolean | null
+          location_type?: string | null
+          name: string
+          region?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_discovered?: boolean | null
+          location_type?: string | null
+          name?: string
+          region?: string | null
+        }
+        Relationships: []
+      }
+      campaign_npcs: {
+        Row: {
+          created_at: string
+          description: string | null
+          faction: string | null
+          id: string
+          is_ally: boolean | null
+          location: string | null
+          name: string
+          portrait_url: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          faction?: string | null
+          id?: string
+          is_ally?: boolean | null
+          location?: string | null
+          name: string
+          portrait_url?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          faction?: string | null
+          id?: string
+          is_ally?: boolean | null
+          location?: string | null
+          name?: string
+          portrait_url?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       character_inventory: {
         Row: {
           character_id: string
@@ -479,6 +611,45 @@ export type Database = {
           rarity?: Database["public"]["Enums"]["item_rarity"]
           value?: number
           weight?: number
+        }
+        Relationships: []
+      }
+      lore_entries: {
+        Row: {
+          category: string
+          chapter_number: number | null
+          content: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          slug: string
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          chapter_number?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          slug: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          chapter_number?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          slug?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }

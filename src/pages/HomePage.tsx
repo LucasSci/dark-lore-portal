@@ -1,77 +1,77 @@
 import { motion } from "framer-motion";
-import { BookOpenText, Dice6, Map, ScrollText, Shield, ShoppingBag, Users } from "lucide-react";
+import { BookOpenText, Dice6, Flame, Map, ScrollText, Shield, ShoppingBag, Sword, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/hero-zerrikania.jpg";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
+import { supabase } from "@/integrations/supabase/client";
 
 const featureCards = [
   {
     icon: ScrollText,
-    title: "Cronicas de campanha",
-    description: "Capitulos, dossies e ganchos narrativos com apresentacao editorial e leitura fluida.",
+    title: "Crônicas da Campanha",
+    description: "Capítulos, dossiês e ganchos narrativos de A Caçada ao Escorpião de Vidro.",
     path: "/campanha",
   },
   {
     icon: Dice6,
-    title: "Mesa virtual",
-    description: "Ficha, combate, rolagem de dados, NPCs e mapa em uma mesma experiencia de jogo.",
+    title: "Mesa Virtual",
+    description: "Battlemaps, tokens, fog of war, dados e combate — tudo como no Roll20.",
     path: "/jogar",
   },
   {
     icon: Map,
-    title: "Atlas do universo",
-    description: "Personagens, monstros, locais e faccoes conectados por linha do tempo e links internos.",
+    title: "Atlas de Zerrikânia",
+    description: "Personagens, locais, facções e eventos conectados pela timeline da campanha.",
     path: "/universo",
   },
   {
     icon: ShoppingBag,
-    title: "Conteudo digital",
-    description: "PDFs, mapas, aventuras e tokens com biblioteca de downloads automatica.",
+    title: "Conteúdo Digital",
+    description: "PDFs, mapas, aventuras e tokens com biblioteca de downloads automática.",
     path: "/loja",
   },
   {
     icon: Users,
     title: "Comunidade",
-    description: "Espacos para discutir builds, cronicas, teorias e compartilhar personagens.",
+    description: "Espaços para discutir builds, crônicas, teorias e compartilhar personagens.",
     path: "/comunidade",
   },
   {
     icon: Shield,
-    title: "Dashboard pessoal",
-    description: "Conta, biblioteca, progresso e acesso rapido aos recursos do ecossistema.",
+    title: "Dashboard Pessoal",
+    description: "Conta, biblioteca, progresso e acesso rápido aos recursos do ecossistema.",
     path: "/conta",
   },
 ];
 
-const updateCards = [
-  {
-    tag: "Sistema",
-    title: "Biblioteca base redesenhada",
-    excerpt: "Buttons, cards, tabs, dialogs, alerts e progress bars agora seguem tokens semanticos globais.",
-  },
-  {
-    tag: "Ficha",
-    title: "Hub de personagem em producao",
-    excerpt: "Criacao, ficha, inventario, magias e mesa ja compartilham o mesmo sistema visual.",
-  },
-  {
-    tag: "Universo",
-    title: "Enciclopedia integrada",
-    excerpt: "Verbete narrativo, imagens, ligacoes internas e timeline consolidam o atlas do mundo.",
-  },
-];
+function useLatestEvents() {
+  return useQuery({
+    queryKey: ["latest-campaign-events"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("campaign_events")
+        .select("*")
+        .order("sort_order", { ascending: false })
+        .limit(3);
+      return (data ?? []) as Array<{ title: string; description: string; event_type: string; chapter_number: number }>;
+    },
+  });
+}
 
 export default function HomePage() {
+  const { data: events } = useLatestEvents();
+
   return (
     <div>
       <section className="relative overflow-hidden border-b border-border/70">
         <img
           src={heroBg}
-          alt="Paisagem de fantasia sombria"
+          alt="Areias de Zerrikânia — deserto com cidade dourada e dragão"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-hero-gradient" />
@@ -86,35 +86,40 @@ export default function HomePage() {
           >
             <div className="max-w-3xl space-y-6">
               <Badge variant="outline" className="border-primary/25 text-primary">
-                Original dark fantasy interface
+                <Flame className="mr-2 h-3.5 w-3.5" />
+                Areias de Zerrikânia
               </Badge>
               <div className="space-y-4">
                 <h1 className="font-display text-5xl leading-tight text-brand-gradient md:text-7xl">
-                  Cronicas sombrias, sistema premium e mesa integrada.
+                  A Caçada ao Escorpião de Vidro
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-foreground/86">
-                  Realm combina campanha, enciclopedia, loja digital e jogo online em uma identidade visual unificada, editorial e juridicamente segura.
+                  Nashara, filha da tempestade, deve desvendar a profecia do N'kara antes que Nilfgaard controle o Dragão da Noite.
+                  Mesa virtual, crônicas vivas e lore interativo em um único hub.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg">
-                  <Link to="/jogar">Abrir hub de jogo</Link>
+                  <Link to="/jogar">
+                    <Sword className="mr-2 h-5 w-5" />
+                    Abrir mesa virtual
+                  </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                  <Link to="/universo">Explorar o universo</Link>
+                  <Link to="/universo">Explorar Zerrikânia</Link>
                 </Button>
               </div>
             </div>
 
             <Card variant="elevated" className="self-end">
               <CardHeader>
-                <CardTitle className="text-2xl">Painel de arranque</CardTitle>
+                <CardTitle className="text-2xl">Campanha Ativa</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3">
-                <DataSection label="Tema" value="Noir Chronicle" variant="quiet" />
-                <DataSection label="Base" value="React + Tailwind + shadcn" variant="quiet" />
-                <DataSection label="Foco" value="Narrativa, combate e conteudo digital" variant="quiet" />
+                <DataSection label="Arco" value="A Caçada ao Escorpião de Vidro" variant="quiet" />
+                <DataSection label="Capítulos" value="22+" variant="quiet" />
+                <DataSection label="Cenário" value="Zerrikânia — Deserto & Interstício" variant="quiet" />
               </CardContent>
             </Card>
           </motion.div>
@@ -128,9 +133,9 @@ export default function HomePage() {
           viewport={{ once: true }}
           className="mb-12 max-w-2xl"
         >
-          <h2 className="font-display text-4xl text-brand-gradient">Ecossistema do projeto</h2>
+          <h2 className="font-display text-4xl text-brand-gradient">Hub da Campanha</h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground">
-            A experiencia foi reorganizada em blocos equivalentes aos fluxos do projeto original, traduzidos para web com componentes semanticamente consistentes.
+            Crônicas, mesa virtual, atlas do mundo e comunidade — tudo integrado para a experiência de RPG definitiva.
           </p>
         </motion.div>
 
@@ -162,61 +167,63 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-border/70 bg-surface-strong/40">
-        <div className="container py-24">
-          <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-            <Card variant="panel">
-              <CardHeader>
-                <CardTitle className="text-2xl">Estado atual</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <DataSection label="Fase ativa" value="Biblioteca base + rollout inicial" variant="quiet" />
-                <DataSection label="Paginas prontas" value="Ficha, conta, universo e campanha" variant="quiet" />
-                <DataSection label="Guard rails" value="Assets originais e sem imitacao direta" tone="info" variant="quiet" />
-              </CardContent>
-            </Card>
+      {events && events.length > 0 && (
+        <section className="border-y border-border/70 bg-surface-strong/40">
+          <div className="container py-24">
+            <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+              <Card variant="panel">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Últimos Eventos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <DataSection label="Status" value="Campanha em andamento" variant="quiet" />
+                  <DataSection label="Protagonista" value="Nashara, filha da tempestade" variant="quiet" />
+                  <DataSection label="Ameaça" value="Nilfgaard & N'kara" tone="info" variant="quiet" />
+                </CardContent>
+              </Card>
 
-            <div className="grid gap-5 md:grid-cols-3">
-              {updateCards.map((update, index) => (
-                <motion.div
-                  key={update.title}
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.06 }}
-                >
-                  <Card variant="panel" className="h-full">
-                    <CardContent className="space-y-4 p-6">
-                      <Badge variant="secondary">{update.tag}</Badge>
-                      <div>
-                        <h3 className="font-heading text-xl text-foreground">{update.title}</h3>
-                        <p className="mt-3 text-sm leading-7 text-muted-foreground">{update.excerpt}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+              <div className="grid gap-5 md:grid-cols-3">
+                {events.map((event, index) => (
+                  <motion.div
+                    key={event.title}
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.06 }}
+                  >
+                    <Card variant="panel" className="h-full">
+                      <CardContent className="space-y-4 p-6">
+                        <Badge variant="secondary">Cap. {event.chapter_number}</Badge>
+                        <div>
+                          <h3 className="font-heading text-xl text-foreground">{event.title}</h3>
+                          <p className="mt-3 text-sm leading-7 text-muted-foreground">{event.description}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="container py-24">
         <Card variant="elevated">
           <CardContent className="flex flex-col gap-6 p-8 md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
-              <h2 className="font-display text-3xl text-brand-gradient">Escolha seu ponto de entrada</h2>
+              <h2 className="font-display text-3xl text-brand-gradient">Entre na campanha</h2>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-                Entre pela ficha se quiser jogar agora, pela conta se quiser sua biblioteca, ou pelo atlas se quiser mergulhar no mundo antes de entrar na mesa.
+                Crie seu personagem, junte-se à mesa de Nashara e Tarim, ou mergulhe no lore de Zerrikânia.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <Button asChild>
-                <Link to="/conta">Abrir dashboard</Link>
+                <Link to="/jogar">Abrir mesa</Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link to="/campanha">Ler cronicas</Link>
+                <Link to="/campanha">Ler crônicas</Link>
               </Button>
             </div>
           </CardContent>

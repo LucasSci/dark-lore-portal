@@ -77,6 +77,9 @@ export default function VirtualTabletop() {
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>("mapa");
   const [chatDraft, setChatDraft] = useState("");
   const [diceDraft, setDiceDraft] = useState("1d20+4");
+  const [showGrid, setShowGrid] = useState(true);
+  const [gridOpacity, setGridOpacity] = useState(0.3);
+  const [battlemapUrl, setBattlemapUrl] = useState<string | null>(null);
   const [npcDraft, setNpcDraft] = useState({
     name: "",
     hp: 18,
@@ -425,6 +428,48 @@ export default function VirtualTabletop() {
               <p className="mt-1 font-heading text-lg text-foreground">{scene.presence.length || 1}</p>
             </div>
           </div>
+
+          {/* Battlemap upload */}
+          <div className="space-y-2">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Battlemap</p>
+            <Input
+              type="file"
+              accept="image/*"
+              className="text-xs"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const url = URL.createObjectURL(file);
+                  setBattlemapUrl(url);
+                }
+              }}
+            />
+            {battlemapUrl && (
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => setBattlemapUrl(null)}>
+                Remover mapa
+              </Button>
+            )}
+          </div>
+
+          {/* Grid controls */}
+          <div className="flex items-center justify-between gap-2">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <input type="checkbox" checked={showGrid} onChange={(e) => setShowGrid(e.target.checked)} className="accent-primary" />
+              Grid visível
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground">Opacidade</span>
+              <input
+                type="range"
+                min={0.05}
+                max={0.8}
+                step={0.05}
+                value={gridOpacity}
+                onChange={(e) => setGridOpacity(Number(e.target.value))}
+                className="w-20 accent-primary"
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -619,6 +664,10 @@ export default function VirtualTabletop() {
               tokens={tokens}
               selectedTokenId={scene.selectedObjectId}
               boardMode={scene.boardMode}
+              gridOpacity={gridOpacity}
+              gridColor={0xffffff}
+              showGrid={showGrid}
+              battlemapUrl={battlemapUrl}
               onCellClick={(cell) => void handleCellClick(cell)}
               onSelectToken={(tokenId) => void mutateScene((current) => setSceneSelection(current, tokenId), { persist: false })}
               onMoveToken={(tokenId, x, y) => void handleMoveToken(tokenId, x, y)}
