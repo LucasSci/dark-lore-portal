@@ -53,8 +53,8 @@ function useLatestEvents() {
   return useQuery({
     queryKey: ["latest-campaign-events"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("campaign_events" as any)
+      const { data } = await (supabase as any)
+        .from("campaign_events")
         .select("*")
         .order("sort_order", { ascending: false })
         .limit(3);
