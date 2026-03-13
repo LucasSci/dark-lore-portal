@@ -622,6 +622,10 @@ export default function VirtualTabletop() {
               tokens={tokens}
               selectedTokenId={scene.selectedObjectId}
               boardMode={scene.boardMode}
+              gridOpacity={gridOpacity}
+              gridColor={0xffffff}
+              showGrid={showGrid}
+              battlemapUrl={battlemapUrl}
               onCellClick={(cell) => void handleCellClick(cell)}
               onSelectToken={(tokenId) => void mutateScene((current) => setSceneSelection(current, tokenId), { persist: false })}
               onMoveToken={(tokenId, x, y) => void handleMoveToken(tokenId, x, y)}
