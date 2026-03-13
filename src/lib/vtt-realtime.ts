@@ -59,14 +59,14 @@ function normalizeInitiativeState(value: unknown): InitiativeState {
   }
 
   return {
-    entries: candidate.entries
+    entries: (candidate.entries as unknown[])
       .map((entry) => {
         const current = entry as Record<string, unknown>;
 
         return {
           tokenId: String(current.tokenId ?? ""),
           name: String(current.name ?? "Combatente"),
-          team: current.team === "npc" ? "npc" : "party",
+          team: (current.team === "npc" ? "npc" : "party") as import("@/lib/virtual-tabletop").TokenTeam,
           total: Number(current.total ?? 0),
           bonus: Number(current.bonus ?? 0),
         };
