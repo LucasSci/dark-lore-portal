@@ -59,7 +59,7 @@ function normalizeInitiativeState(value: unknown): InitiativeState {
   }
 
   return {
-    entries: candidate.entries
+    entries: (candidate.entries as unknown[])
       .map((entry) => {
         const current = entry as Record<string, unknown>;
 
