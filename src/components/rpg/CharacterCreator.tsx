@@ -1,25 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shuffle, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 
+import { NOIR_CHRONICLE_SHEET } from "@/lib/sheets/noir-chronicle-sheet";
+import { useCharacterSheetRuntime } from "@/lib/sheets/runtime";
+import { buildCharacterDraftFromStore } from "@/lib/sheets/engine";
+import { ATTRIBUTES, CLASSES, formatModifier, getModifier, RACES, rollDice, type AttributeKey } from "@/lib/rpg-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  ATTRIBUTES,
-  calculateAC,
-  calculateHP,
-  calculateMP,
-  CLASSES,
-  formatModifier,
-  getModifier,
-  RACES,
-  rollDice,
-  type AttributeKey,
-} from "@/lib/rpg-utils";
 
 export interface CharacterData {
   name: string;
@@ -28,93 +21,107 @@ export interface CharacterData {
   attributes: Record<AttributeKey, number>;
   background: string;
   appearance: string;
+  level?: number;
+  experience?: number;
+  gold?: number;
+  speed?: number;
 }
 
 interface Props {
   onSave?: (data: CharacterData) => void;
 }
 
-const STEPS = ["Identidade", "Raca", "Classe", "Atributos", "Historia"];
-
 export default function CharacterCreator({ onSave }: Props) {
+  const steps = NOIR_CHRONICLE_SHEET.wizardSteps;
   const [step, setStep] = useState(0);
-  const [data, setData] = useState<CharacterData>({
-    name: "",
-    race: "humano",
-    class: "guerreiro",
-    attributes: {
-      forca: 10,
-      destreza: 10,
-      constituicao: 10,
-      inteligencia: 10,
-      sabedoria: 10,
-      carisma: 10,
-    },
-    background: "",
-    appearance: "",
+  const { store, validation, workerReady, setAttribute, validateStep } = useCharacterSheetRuntime({
+    definition: NOIR_CHRONICLE_SHEET,
   });
 
-  const pointsUsed = Object.values(data.attributes).reduce((sum, value) => sum + Math.max(0, value - 8), 0);
+  const draft = buildCharacterDraftFromStore(store);
+  const selectedClass = CLASSES.find((item) => item.value === draft.class);
+  const pointsUsed = Number(store.derived.point_budget_used ?? 0);
   const pointBudget = 27;
+  const hp = Number(store.derived.hp_max ?? 0);
+  const mp = Number(store.derived.mp_max ?? 0);
+  const ac = Number(store.derived.armor_class ?? 0);
+  const currentValidation = validation[steps[step]?.id];
 
-  const setAttr = (key: AttributeKey, delta: number) => {
-    setData((previous) => {
-      const nextValue = previous.attributes[key] + delta;
-
-      if (nextValue < 8 || nextValue > 15) {
-        return previous;
-      }
-
-      const nextCost = Object.entries(previous.attributes).reduce((sum, [attributeKey, value]) => {
-        const score = attributeKey === key ? nextValue : value;
-        return sum + Math.max(0, score - 8);
-      }, 0);
-
-      if (nextCost > pointBudget) {
-        return previous;
-      }
-
-      return {
-        ...previous,
-        attributes: { ...previous.attributes, [key]: nextValue },
-      };
-    });
+  const updateAttribute = async (key: string, value: string | number) => {
+    await setAttribute(key, value);
   };
 
-  const randomizeAttributes = () => {
+  const setAttr = async (key: AttributeKey, delta: number) => {
+    const currentValue = draft.attributes[key];
+    const nextValue = currentValue + delta;
+
+    await setAttribute(key, nextValue);
+  };
+
+  const randomizeAttributes = async () => {
     const roll4d6 = () => {
       const { results } = rollDice(6, 4);
-      return results.sort((a, b) => b - a).slice(0, 3).reduce((sum, value) => sum + value, 0);
+      return results
+        .sort((left, right) => right - left)
+        .slice(0, 3)
+        .reduce((sum, value) => sum + value, 0);
     };
 
-    const nextAttributes = ATTRIBUTES.reduce<Record<AttributeKey, number>>((accumulator, attribute) => {
-      accumulator[attribute.key] = roll4d6();
-      return accumulator;
-    }, {} as Record<AttributeKey, number>);
-
-    setData((previous) => ({ ...previous, attributes: nextAttributes }));
+    for (const attribute of ATTRIBUTES) {
+      await setAttribute(attribute.key, roll4d6());
+    }
   };
 
-  const selectedClass = CLASSES.find((item) => item.value === data.class);
-  const conMod = getModifier(data.attributes.constituicao);
-  const dexMod = getModifier(data.attributes.destreza);
-  const primaryKey = (selectedClass?.primaryAttr ?? "inteligencia") as AttributeKey;
-  const hp = calculateHP(data.class, conMod, 1);
-  const mp = calculateMP(data.class, getModifier(data.attributes[primaryKey] ?? 10));
-  const ac = calculateAC(dexMod);
+  const moveToStep = async (nextStep: number) => {
+    if (nextStep <= step) {
+      setStep(nextStep);
+      return;
+    }
+
+    const result = await validateStep(steps[step].id);
+
+    if (!result.valid) {
+      toast.error(Object.values(result.errors)[0] ?? "Preencha os campos obrigatorios.");
+      return;
+    }
+
+    setStep(Math.min(nextStep, steps.length - 1));
+  };
+
+  const handleSave = async () => {
+    const result = await validateStep(steps[step].id);
+
+    if (!result.valid) {
+      toast.error(Object.values(result.errors)[0] ?? "Finalize a etapa atual antes de salvar.");
+      return;
+    }
+
+    onSave?.({
+      name: draft.name,
+      race: draft.race,
+      class: draft.class,
+      attributes: draft.attributes,
+      background: draft.background,
+      appearance: draft.appearance,
+      level: draft.level,
+      experience: draft.experience,
+      gold: draft.gold,
+      speed: draft.speed,
+    });
+  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div className="grid gap-2 sm:grid-cols-5">
-        {STEPS.map((label, index) => {
+        {steps.map((wizardStep, index) => {
           const active = index === step;
           const completed = index < step;
 
           return (
             <button
-              key={label}
+              key={wizardStep.id}
               type="button"
-              onClick={() => setStep(index)}
+              onClick={() => void moveToStep(index)}
               className={`rounded-[calc(var(--radius)-6px)] border px-3 py-2 text-center font-heading text-[11px] uppercase tracking-[0.18em] transition-colors ${
                 active
                   ? "border-primary/35 bg-primary/10 text-primary shadow-brand"
@@ -123,10 +130,22 @@ export default function CharacterCreator({ onSave }: Props) {
                     : "border-border/60 bg-transparent text-muted-foreground"
               }`}
             >
-              {label}
+              {wizardStep.label}
             </button>
           );
         })}
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-[var(--radius)] border border-border/70 bg-background/35 px-4 py-3">
+        <div>
+          <p className="font-heading text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            Engine da ficha
+          </p>
+          <p className="text-sm text-foreground">
+            {workerReady ? "Worker ativo para derivacoes e validacoes." : "Fallback local ativo enquanto o worker inicializa."}
+          </p>
+        </div>
+        <Progress value={((step + 1) / steps.length) * 100} tone="info" className="h-2 w-32" />
       </div>
 
       <motion.div key={step} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -136,8 +155,8 @@ export default function CharacterCreator({ onSave }: Props) {
               <div className="space-y-2">
                 <Label>Nome do personagem</Label>
                 <Input
-                  value={data.name}
-                  onChange={(event) => setData((previous) => ({ ...previous, name: event.target.value }))}
+                  value={draft.name}
+                  onChange={(event) => void updateAttribute("name", event.target.value)}
                   placeholder="Ex: Thorin Escudo de Ferro"
                 />
               </div>
@@ -145,8 +164,8 @@ export default function CharacterCreator({ onSave }: Props) {
               <div className="space-y-2">
                 <Label>Aparencia em uma frase</Label>
                 <Textarea
-                  value={data.appearance}
-                  onChange={(event) => setData((previous) => ({ ...previous, appearance: event.target.value }))}
+                  value={draft.appearance}
+                  onChange={(event) => void updateAttribute("appearance", event.target.value)}
                   placeholder="Ex: Armadura escura, capa de viagem e um olhar que mede todas as saidas."
                   className="min-h-[110px]"
                 />
@@ -163,9 +182,9 @@ export default function CharacterCreator({ onSave }: Props) {
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setData((previous) => ({ ...previous, race: race.value }))}
+                onClick={() => void updateAttribute("race", race.value)}
                 className={`rounded-[var(--radius)] border p-4 text-left transition-colors ${
-                  data.race === race.value
+                  draft.race === race.value
                     ? "border-primary/35 bg-primary/10 shadow-brand"
                     : "border-border bg-card-gradient hover:border-primary/25"
                 }`}
@@ -185,16 +204,16 @@ export default function CharacterCreator({ onSave }: Props) {
                 type="button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setData((previous) => ({ ...previous, class: characterClass.value }))}
+                onClick={() => void updateAttribute("class", characterClass.value)}
                 className={`rounded-[var(--radius)] border p-4 text-left transition-colors ${
-                  data.class === characterClass.value
+                  draft.class === characterClass.value
                     ? "border-primary/35 bg-primary/10 shadow-brand"
                     : "border-border bg-card-gradient hover:border-primary/25"
                 }`}
               >
                 <h4 className="font-heading text-sm text-foreground">{characterClass.label}</h4>
                 <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  HP d{characterClass.hitDie} · MP base {characterClass.mpBase}
+                  HP d{characterClass.hitDie} | MP base {characterClass.mpBase}
                 </p>
               </motion.button>
             ))}
@@ -210,20 +229,24 @@ export default function CharacterCreator({ onSave }: Props) {
                     Pontos usados: {pointsUsed}/{pointBudget}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Sistema point-buy com orcamento limitado.
+                    Sistema point-buy com orcamento limitado e validacao por etapa.
                   </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={randomizeAttributes}>
+                <Button variant="outline" size="sm" onClick={() => void randomizeAttributes()}>
                   <Shuffle className="mr-2 h-4 w-4" />
                   4d6 drop lowest
                 </Button>
               </div>
 
-              <Progress value={(pointsUsed / pointBudget) * 100} tone={pointsUsed > pointBudget * 0.7 ? "warn" : "good"} className="h-2" />
+              <Progress
+                value={(pointsUsed / pointBudget) * 100}
+                tone={pointsUsed > pointBudget * 0.7 ? "warn" : "good"}
+                className="h-2"
+              />
 
               <div className="grid gap-4 md:grid-cols-3">
                 {ATTRIBUTES.map((attribute) => {
-                  const value = data.attributes[attribute.key];
+                  const value = draft.attributes[attribute.key];
                   const modifier = getModifier(value);
 
                   return (
@@ -237,11 +260,21 @@ export default function CharacterCreator({ onSave }: Props) {
                       <h4 className="mt-2 font-heading text-sm text-foreground">{attribute.label}</h4>
 
                       <div className="mt-3 flex items-center justify-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setAttr(attribute.key, -1)} className="h-8 w-8 p-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => void setAttr(attribute.key, -1)}
+                          className="h-8 w-8 p-0"
+                        >
                           -
                         </Button>
                         <span className="w-10 font-heading text-2xl text-foreground">{value}</span>
-                        <Button variant="ghost" size="sm" onClick={() => setAttr(attribute.key, 1)} className="h-8 w-8 p-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => void setAttr(attribute.key, 1)}
+                          className="h-8 w-8 p-0"
+                        >
                           +
                         </Button>
                       </div>
@@ -264,8 +297,8 @@ export default function CharacterCreator({ onSave }: Props) {
                 <div className="space-y-2">
                   <Label>Historia de fundo</Label>
                   <Textarea
-                    value={data.background}
-                    onChange={(event) => setData((previous) => ({ ...previous, background: event.target.value }))}
+                    value={draft.background}
+                    onChange={(event) => void updateAttribute("background", event.target.value)}
                     placeholder="Conte a historia, o juramento ou o fracasso que trouxe este personagem ate aqui."
                     className="min-h-[140px]"
                   />
@@ -274,8 +307,8 @@ export default function CharacterCreator({ onSave }: Props) {
                 <div className="space-y-2">
                   <Label>Detalhes adicionais</Label>
                   <Textarea
-                    value={data.appearance}
-                    onChange={(event) => setData((previous) => ({ ...previous, appearance: event.target.value }))}
+                    value={draft.appearance}
+                    onChange={(event) => void updateAttribute("appearance", event.target.value)}
                     placeholder="Marcas, postura, tracos e linguagem corporal."
                     className="min-h-[110px]"
                   />
@@ -285,16 +318,16 @@ export default function CharacterCreator({ onSave }: Props) {
 
             <Card variant="elevated">
               <CardContent className="space-y-4 p-6">
-                <h3 className="font-heading text-lg text-gold-gradient">Resumo da ficha</h3>
+                <h3 className="font-heading text-lg text-gold-gradient">Resumo derivado</h3>
 
                 <div className="grid gap-2 text-sm">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Nome</span>
-                    <span className="text-right text-foreground">{data.name || "Aventureiro sem nome"}</span>
+                    <span className="text-right text-foreground">{draft.name || "Aventureiro sem nome"}</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Raca</span>
-                    <span className="text-right text-foreground">{RACES.find((race) => race.value === data.race)?.label}</span>
+                    <span className="text-right text-foreground">{RACES.find((race) => race.value === draft.race)?.label}</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Classe</span>
@@ -319,15 +352,25 @@ export default function CharacterCreator({ onSave }: Props) {
         ) : null}
       </motion.div>
 
+      {currentValidation && !currentValidation.valid ? (
+        <div className="rounded-[var(--radius)] border border-status-bad/30 bg-status-bad/10 px-4 py-3 text-sm text-foreground">
+          {Object.values(currentValidation.errors)[0]}
+        </div>
+      ) : null}
+
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => setStep((previous) => Math.max(0, previous - 1))} disabled={step === 0}>
+        <Button
+          variant="outline"
+          onClick={() => void moveToStep(Math.max(0, step - 1))}
+          disabled={step === 0}
+        >
           Anterior
         </Button>
 
-        {step < STEPS.length - 1 ? (
-          <Button onClick={() => setStep((previous) => previous + 1)}>Proximo</Button>
+        {step < steps.length - 1 ? (
+          <Button onClick={() => void moveToStep(step + 1)}>Proximo</Button>
         ) : (
-          <Button onClick={() => onSave?.(data)} disabled={!data.name.trim()}>
+          <Button onClick={() => void handleSave()} disabled={!draft.name.trim()}>
             <UserPlus className="mr-2 h-4 w-4" />
             Criar personagem
           </Button>

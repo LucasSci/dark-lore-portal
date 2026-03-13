@@ -18,6 +18,10 @@ export interface CharacterDraftData {
   attributes: Record<AttributeKey, number>;
   background: string;
   appearance: string;
+  level?: number;
+  experience?: number;
+  gold?: number;
+  speed?: number;
 }
 
 export function clampPercent(value: number) {
@@ -86,7 +90,11 @@ export function buildCharacterFromCreator(draft: CharacterDraftData): CharacterR
   const dexMod = getModifier(draft.attributes.destreza);
   const primaryKey = (selectedClass?.primaryAttr ?? "inteligencia") as AttributeKey;
   const primaryMod = getModifier(draft.attributes[primaryKey] ?? 10);
-  const hp = calculateHP(draft.class, conMod, 1);
+  const level = draft.level ?? 1;
+  const experience = draft.experience ?? 0;
+  const gold = draft.gold ?? 35;
+  const speed = draft.speed ?? 30;
+  const hp = calculateHP(draft.class, conMod, level);
   const mp = calculateMP(draft.class, primaryMod);
   const armorClass = calculateAC(dexMod);
   const safeName = draft.name.trim() || "Aventureiro sem nome";
@@ -100,23 +108,23 @@ export function buildCharacterFromCreator(draft: CharacterDraftData): CharacterR
     constituicao: draft.attributes.constituicao,
     created_at: createdAt,
     destreza: draft.attributes.destreza,
-    experience: 0,
+    experience,
     forca: draft.attributes.forca,
-    gold: 35,
+    gold,
     hp_current: hp,
     hp_max: hp,
     id: `demo-${Date.now()}`,
     initiative_bonus: dexMod,
     inteligencia: draft.attributes.inteligencia,
     is_active: true,
-    level: 1,
+    level,
     mp_current: mp,
     mp_max: mp,
     name: safeName,
     portrait_url: null,
     race: draft.race,
     sabedoria: draft.attributes.sabedoria,
-    speed: 30,
+    speed,
     updated_at: createdAt,
     user_id: "demo-user",
   };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Castle,
@@ -20,6 +20,8 @@ import {
   Sword,
   Users,
 } from "lucide-react";
+
+import VttPixiStage from "@/components/rpg/VttPixiStage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,112 +35,48 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { parseDiceNotation, rollDice } from "@/lib/rpg-utils";
-import { cn } from "@/lib/utils";
 import {
-  BOARD_COLUMNS,
-  BOARD_ROWS,
-  TERRAIN_META,
+  persistChatMessage,
+  persistInitiativeSnapshot,
+  persistSceneSnapshot,
+  useVttRealtime,
+} from "@/lib/vtt-realtime";
+import {
+  addSceneNpc,
+  adjustSceneTokenHp,
+  appendSceneChat,
+  clearSceneInitiative,
   countRevealedCells,
-  createBoard,
-  createDemoTokens,
-  createInitialFog,
-  createInitiativeOrder,
-  getNextInitiativeTurn,
-  getNextOpenPosition,
-  revealAllFog,
-  revealFogArea,
-  type InitiativeEntry,
-  type TabletopCell,
-  type TabletopToken,
+  createSceneModel,
+  getActivePage,
+  getPositionLabel,
+  recordSceneRoll,
+  getSceneTokens,
+  getSelectedToken,
+  revealEntireSceneFog,
+  revealSceneFogAround,
+  restoreSceneFog,
+  setBoardMode,
+  setSceneCameraScale,
+  setScenePresence,
+  setSceneSelection,
+  startSceneInitiative,
+  toggleSceneFogCell,
+  advanceSceneInitiative,
+  moveSceneToken,
+  type BoardMode,
+  type ChatTone,
+  type SceneModel,
 } from "@/lib/virtual-tabletop";
+import { cn } from "@/lib/utils";
 
-type BoardMode = "move" | "fog";
 type MobilePanel = "mapa" | "mesa" | "chat";
-type ChatTone = "system" | "party" | "npc" | "roll";
-
-interface ChatMessage {
-  id: string;
-  author: string;
-  tone: ChatTone;
-  text: string;
-  time: string;
-}
-
-interface DiceHistoryEntry {
-  id: string;
-  actor: string;
-  notation: string;
-  results: number[];
-  total: number;
-}
-
-const BOARD = createBoard();
-const DEMO_TOKENS = createDemoTokens();
-const INITIAL_FOG = createInitialFog();
-
-const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-function makeId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function stampTime() {
-  return timeFormatter.format(new Date());
-}
-
-function positionLabel(x: number, y: number) {
-  return `${String.fromCharCode(65 + x)}${y + 1}`;
-}
-
-function shortNameFrom(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-
-  if (!parts.length) {
-    return "NPC";
-  }
-
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("")
-    .slice(0, 2);
-}
-
-function createInitialChat(): ChatMessage[] {
-  return [
-    {
-      id: makeId("chat"),
-      author: "Sistema",
-      tone: "system",
-      text: "Mesa da Cripta de Velkyn pronta. Jogadores podem mover tokens, rolar dados e falar no chat.",
-      time: stampTime(),
-    },
-    {
-      id: makeId("chat"),
-      author: "Narrador",
-      tone: "party",
-      text: "A porta do santuario se abriu. A neblina cobre o corredor alem do altar.",
-      time: stampTime(),
-    },
-  ];
-}
 
 export default function VirtualTabletop() {
-  const [tokens, setTokens] = useState<TabletopToken[]>(DEMO_TOKENS);
-  const [fog, setFog] = useState(INITIAL_FOG);
-  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(DEMO_TOKENS[0]?.id ?? null);
-  const [boardMode, setBoardMode] = useState<BoardMode>("move");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(createInitialChat);
+  const [scene, setScene] = useState<SceneModel>(() => createSceneModel());
+  const [mobilePanel, setMobilePanel] = useState<MobilePanel>("mapa");
   const [chatDraft, setChatDraft] = useState("");
   const [diceDraft, setDiceDraft] = useState("1d20+4");
-  const [diceHistory, setDiceHistory] = useState<DiceHistoryEntry[]>([]);
-  const [initiative, setInitiative] = useState<InitiativeEntry[]>([]);
-  const [activeTurnId, setActiveTurnId] = useState<string | null>(null);
-  const [round, setRound] = useState(0);
-  const [mobilePanel, setMobilePanel] = useState<MobilePanel>("mapa");
   const [npcDraft, setNpcDraft] = useState({
     name: "",
     hp: 18,
@@ -146,204 +84,267 @@ export default function VirtualTabletop() {
     initiativeBonus: 1,
     notes: "",
   });
+  const sceneRef = useRef(scene);
 
   useEffect(() => {
-    if (!tokens.some((token) => token.id === selectedTokenId)) {
-      setSelectedTokenId(tokens[0]?.id ?? null);
-    }
-  }, [selectedTokenId, tokens]);
+    sceneRef.current = scene;
+  }, [scene]);
 
-  const selectedToken = tokens.find((token) => token.id === selectedTokenId) ?? null;
-  const activeTurn = initiative.find((entry) => entry.tokenId === activeTurnId) ?? null;
-  const activeToken = tokens.find((token) => token.id === activeTurnId) ?? null;
-  const revealedCells = countRevealedCells(fog);
-  const partyCount = tokens.filter((token) => token.team === "party").length;
-  const npcCount = tokens.filter((token) => token.team === "npc").length;
+  const { presence, broadcastScene } = useVttRealtime({
+    sessionId: scene.sessionId,
+    displayName: "Narrador",
+    role: "gm",
+    onRemoteScene: (remoteScene) => {
+      if (remoteScene.revision <= sceneRef.current.revision) {
+        return;
+      }
 
-  const appendChat = (author: string, text: string, tone: ChatTone) => {
-    setChatMessages((previous) => [
-      ...previous.slice(-39),
-      {
-        id: makeId("chat"),
-        author,
-        tone,
-        text,
-        time: stampTime(),
+      sceneRef.current = remoteScene;
+      setScene(setScenePresence(remoteScene, presence));
+    },
+  });
+
+  useEffect(() => {
+    setScene((current) => setScenePresence(current, presence));
+  }, [presence]);
+
+  const commitScene = useCallback(
+    async (
+      nextScene: SceneModel,
+      options: {
+        broadcast?: boolean;
+        persist?: boolean;
+      } = {},
+    ) => {
+      const shouldBroadcast = options.broadcast !== false;
+      const shouldPersist = options.persist !== false;
+
+      sceneRef.current = nextScene;
+      setScene(nextScene);
+
+      if (shouldBroadcast) {
+        await broadcastScene(nextScene);
+      }
+
+      if (shouldPersist) {
+        await persistSceneSnapshot(nextScene);
+      }
+    },
+    [broadcastScene],
+  );
+
+  const mutateScene = useCallback(
+    async (
+      updater: (current: SceneModel) => SceneModel,
+      options?: {
+        broadcast?: boolean;
+        persist?: boolean;
       },
-    ]);
+    ) => {
+      const nextScene = updater(sceneRef.current);
+      await commitScene(nextScene, options);
+      return nextScene;
+    },
+    [commitScene],
+  );
+
+  const activePage = getActivePage(scene);
+  const tokens = getSceneTokens(scene);
+  const selectedToken = getSelectedToken(scene);
+  const activeTurn = scene.initiative.entries.find(
+    (entry) => entry.tokenId === scene.initiative.activeTurnId,
+  );
+  const revealedCells = activePage ? countRevealedCells(activePage.fog) : 0;
+  const partyCount = tokens.filter((token) => token.payload.team === "party").length;
+  const npcCount = tokens.filter((token) => token.payload.team === "npc").length;
+
+  const appendChatMessage = async (author: string, text: string, tone: ChatTone) => {
+    const nextScene = await mutateScene((current) => appendSceneChat(current, author, text, tone));
+    const latestMessage = nextScene.chatMessages.at(-1);
+    const nextPage = getActivePage(nextScene);
+
+    if (latestMessage && nextPage) {
+      await persistChatMessage(nextScene.sessionId, nextPage.id, latestMessage);
+    }
   };
 
-  const rollNotation = (notation: string, actor: string) => {
+  const handleCellClick = async (cell: { id: string; x: number; y: number }) => {
+    if (scene.boardMode === "fog") {
+      await mutateScene((current) => toggleSceneFogCell(current, cell.id));
+      return;
+    }
+
+    if (!selectedToken) {
+      return;
+    }
+
+    if (
+      selectedToken.position.x === cell.x &&
+      selectedToken.position.y === cell.y
+    ) {
+      return;
+    }
+
+    await mutateScene((current) => moveSceneToken(current, selectedToken.id, cell.x, cell.y));
+  };
+
+  const handleMoveToken = async (tokenId: string, x: number, y: number) => {
+    await mutateScene((current) => moveSceneToken(current, tokenId, x, y));
+  };
+
+  const sendChat = async () => {
+    if (!chatDraft.trim()) {
+      return;
+    }
+
+    await appendChatMessage("Narrador", chatDraft.trim(), "party");
+    setChatDraft("");
+  };
+
+  const rollNotation = async (notation: string, actor: string) => {
     const parsed = parseDiceNotation(notation.trim().toLowerCase());
     const { results, total } = rollDice(parsed.sides, parsed.count);
     const finalTotal = total + parsed.modifier;
     const normalizedNotation = `${parsed.count}d${parsed.sides}${parsed.modifier === 0 ? "" : parsed.modifier > 0 ? `+${parsed.modifier}` : parsed.modifier}`;
 
-    setDiceHistory((previous) => [
-      {
-        id: makeId("roll"),
-        actor,
-        notation: normalizedNotation,
-        results,
-        total: finalTotal,
-      },
-      ...previous.slice(0, 7),
-    ]);
+    const nextScene = await mutateScene((current) =>
+      recordSceneRoll(current, actor, normalizedNotation, results, finalTotal),
+    );
+    const latestMessage = nextScene.chatMessages.at(-1);
+    const nextPage = getActivePage(nextScene);
 
-    appendChat(actor, `${normalizedNotation} -> [${results.join(", ")}] = ${finalTotal}`, "roll");
-  };
-
-  const handleCellClick = (cell: TabletopCell) => {
-    if (boardMode === "fog") {
-      setFog((previous) => ({
-        ...previous,
-        [cell.id]: !previous[cell.id],
-      }));
-      return;
+    if (latestMessage && nextPage) {
+      await persistChatMessage(nextScene.sessionId, nextPage.id, latestMessage);
     }
 
+    setDiceDraft(normalizedNotation);
+  };
+
+  const revealAroundSelected = async () => {
     if (!selectedToken) {
       return;
     }
 
-    if (selectedToken.x === cell.x && selectedToken.y === cell.y) {
-      return;
-    }
-
-    setTokens((previous) =>
-      previous.map((token) =>
-        token.id === selectedToken.id ? { ...token, x: cell.x, y: cell.y } : token,
+    await mutateScene((current) =>
+      revealSceneFogAround(
+        current,
+        selectedToken.position.x,
+        selectedToken.position.y,
+        1,
       ),
+    );
+    await appendChatMessage(
+      "Sistema",
+      `Neblina dissipada ao redor de ${selectedToken.payload.name}.`,
+      "system",
     );
   };
 
-  const revealAroundSelected = () => {
-    if (!selectedToken) {
+  const revealEverything = async () => {
+    await mutateScene((current) => revealEntireSceneFog(current));
+    await appendChatMessage("Sistema", "Toda a neblina de guerra foi removida.", "system");
+  };
+
+  const restoreFogState = async () => {
+    await mutateScene((current) => restoreSceneFog(current));
+    await appendChatMessage("Sistema", "Neblina restaurada para o estado inicial da cena.", "system");
+  };
+
+  const startInitiative = async () => {
+    const nextScene = await mutateScene((current) => startSceneInitiative(current));
+    const nextPage = getActivePage(nextScene);
+
+    if (!nextScene.initiative.entries.length) {
+      await appendChatMessage("Sistema", "Nao ha combatentes validos para a iniciativa.", "system");
       return;
     }
 
-    setFog((previous) => revealFogArea(previous, selectedToken.x, selectedToken.y, 1));
-    appendChat("Sistema", `Neblina dissipada ao redor de ${selectedToken.name}.`, "system");
-  };
-
-  const revealEverything = () => {
-    setFog(revealAllFog());
-    appendChat("Sistema", "Toda a neblina de guerra foi removida.", "system");
-  };
-
-  const restoreFog = () => {
-    setFog(createInitialFog());
-    appendChat("Sistema", "Neblina restaurada para o estado inicial da cena.", "system");
-  };
-
-  const sendChatMessage = () => {
-    if (!chatDraft.trim()) {
-      return;
+    if (nextPage) {
+      await persistInitiativeSnapshot(
+        nextScene.sessionId,
+        nextPage.id,
+        nextScene.initiative,
+        nextScene.revision,
+      );
     }
 
-    appendChat("Narrador", chatDraft.trim(), "party");
-    setChatDraft("");
-  };
-
-  const startInitiative = () => {
-    const order = createInitiativeOrder(tokens);
-
-    setInitiative(order);
-    setActiveTurnId(order[0]?.tokenId ?? null);
-    setRound(order.length ? 1 : 0);
-
-    if (!order.length) {
-      appendChat("Sistema", "Nao ha combatentes validos para a iniciativa.", "system");
-      return;
-    }
-
-    appendChat(
+    await appendChatMessage(
       "Sistema",
-      `Iniciativa automatica: ${order
+      `Iniciativa automatica: ${nextScene.initiative.entries
         .map((entry) => `${entry.name} ${entry.total}`)
         .join(" | ")}`,
       "system",
     );
   };
 
-  const advanceTurn = () => {
-    if (!initiative.length) {
+  const advanceTurn = async () => {
+    const previousRound = scene.initiative.round;
+    const nextScene = await mutateScene((current) => advanceSceneInitiative(current));
+    const nextPage = getActivePage(nextScene);
+
+    if (nextPage) {
+      await persistInitiativeSnapshot(
+        nextScene.sessionId,
+        nextPage.id,
+        nextScene.initiative,
+        nextScene.revision,
+      );
+    }
+
+    if (!nextScene.initiative.activeTurnId) {
+      await appendChatMessage(
+        "Sistema",
+        "Encontro encerrado. Nao restam combatentes ativos.",
+        "system",
+      );
       return;
     }
 
-    const livingIds = new Set(tokens.filter((token) => token.hp > 0).map((token) => token.id));
-    const { nextId, wrapped } = getNextInitiativeTurn(initiative, activeTurnId, livingIds);
-
-    if (!nextId) {
-      setActiveTurnId(null);
-      setRound(0);
-      appendChat("Sistema", "Encontro encerrado. Nao restam combatentes ativos.", "system");
-      return;
-    }
-
-    setActiveTurnId(nextId);
-
-    if (wrapped) {
-      setRound((previous) => {
-        const nextRound = previous + 1;
-        appendChat("Sistema", `Rodada ${nextRound} iniciada.`, "system");
-        return nextRound;
-      });
+    if (nextScene.initiative.round > previousRound) {
+      await appendChatMessage(
+        "Sistema",
+        `Rodada ${nextScene.initiative.round} iniciada.`,
+        "system",
+      );
     }
   };
 
-  const clearInitiative = () => {
-    setInitiative([]);
-    setActiveTurnId(null);
-    setRound(0);
+  const clearInitiativeState = async () => {
+    const nextScene = await mutateScene((current) => clearSceneInitiative(current));
+    const nextPage = getActivePage(nextScene);
+
+    if (nextPage) {
+      await persistInitiativeSnapshot(
+        nextScene.sessionId,
+        nextPage.id,
+        nextScene.initiative,
+        nextScene.revision,
+      );
+    }
   };
 
-  const adjustTokenHp = (tokenId: string, delta: number) => {
-    const token = tokens.find((entry) => entry.id === tokenId);
-
-    if (!token) {
-      return;
-    }
-
-    const nextHp = Math.max(0, Math.min(token.hpMax, token.hp + delta));
-
-    setTokens((previous) =>
-      previous.map((entry) =>
-        entry.id === tokenId ? { ...entry, hp: nextHp } : entry,
-      ),
+  const adjustHp = async (tokenId: string, delta: number) => {
+    const currentToken = tokens.find((token) => token.id === tokenId);
+    const nextScene = await mutateScene((current) => adjustSceneTokenHp(current, tokenId, delta));
+    const nextToken = nextScene.objects.find(
+      (entry) => entry.id === tokenId && entry.objectType === "token",
     );
 
-    if (token.hp > 0 && nextHp === 0) {
-      appendChat("Sistema", `${token.name} caiu em combate.`, "system");
+    if (currentToken && nextToken?.objectType === "token") {
+      if (currentToken.payload.hp > 0 && nextToken.payload.hp === 0) {
+        await appendChatMessage("Sistema", `${nextToken.payload.name} caiu em combate.`, "system");
+      }
     }
   };
 
-  const addNpc = () => {
+  const createNpc = async () => {
     if (!npcDraft.name.trim()) {
       return;
     }
 
-    const position = getNextOpenPosition(tokens);
-    const nextNpc: TabletopToken = {
-      id: makeId("npc"),
-      name: npcDraft.name.trim(),
-      shortName: shortNameFrom(npcDraft.name),
-      team: "npc",
-      role: "NPC",
-      x: position.x,
-      y: position.y,
-      hp: npcDraft.hp,
-      hpMax: npcDraft.hp,
-      ac: npcDraft.ac,
-      initiativeBonus: npcDraft.initiativeBonus,
-      color:
-        "linear-gradient(145deg, rgba(244, 128, 88, 0.96), rgba(116, 26, 36, 0.96))",
-      note: npcDraft.notes.trim() || "NPC controlado pelo mestre.",
-      controlledBy: "gm",
-    };
+    const nextScene = await mutateScene((current) => addSceneNpc(current, npcDraft));
+    const nextToken = nextScene.objects.find((object) => object.id === nextScene.selectedObjectId);
 
-    setTokens((previous) => [...previous, nextNpc]);
-    setSelectedTokenId(nextNpc.id);
     setNpcDraft({
       name: "",
       hp: 18,
@@ -352,419 +353,243 @@ export default function VirtualTabletop() {
       notes: "",
     });
 
-    appendChat(
-      "Sistema",
-      `${nextNpc.name} entrou em cena em ${positionLabel(position.x, position.y)}.`,
-      "npc",
-    );
-  };
-
-  const removeNpc = (tokenId: string) => {
-    const token = tokens.find((entry) => entry.id === tokenId);
-
-    if (!token || token.team !== "npc") {
-      return;
+    if (nextToken?.objectType === "token") {
+      await appendChatMessage(
+        "Sistema",
+        `${nextToken.payload.name} entrou em cena em ${getPositionLabel(
+          nextToken.position.x,
+          nextToken.position.y,
+        )}.`,
+        "npc",
+      );
     }
-
-    setTokens((previous) => previous.filter((entry) => entry.id !== tokenId));
-    setInitiative((previous) => previous.filter((entry) => entry.tokenId !== tokenId));
-
-    if (activeTurnId === tokenId) {
-      setActiveTurnId(null);
-    }
-
-    appendChat("Sistema", `${token.name} foi removido da mesa.`, "system");
   };
 
   const renderCommandPanel = () => (
     <div className="space-y-4">
-      <Card className="border-gold/20 bg-card-gradient shadow-card">
-        <CardHeader className="pb-4">
+      <Card variant="panel">
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
-            <div className="space-y-1">
+            <div>
               <CardTitle className="font-heading text-lg text-foreground">
-                Controle da Cena
+                Direcao da cena
               </CardTitle>
               <CardDescription>
-                Alterna entre mover tokens e editar a neblina de guerra.
+                Estado page-scoped com fog, tokens, presenca e revisao incremental.
               </CardDescription>
             </div>
-            <Badge variant="outline" className="border-primary/30 text-primary">
-              Visao do Mestre
-            </Badge>
+            <Crown className="h-5 w-5 text-primary" />
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <Button
-              variant={boardMode === "move" ? "default" : "outline"}
-              onClick={() => setBoardMode("move")}
-              className="justify-start"
+              variant={scene.boardMode === "move" ? "primary" : "outline"}
+              onClick={() => void mutateScene((current) => setBoardMode(current, "move"))}
             >
               <Crosshair className="mr-2 h-4 w-4" />
-              Mover tokens
+              Mover
             </Button>
             <Button
-              variant={boardMode === "fog" ? "default" : "outline"}
-              onClick={() => setBoardMode("fog")}
-              className="justify-start"
+              variant={scene.boardMode === "fog" ? "primary" : "outline"}
+              onClick={() => void mutateScene((current) => setBoardMode(current, "fog"))}
             >
               <EyeOff className="mr-2 h-4 w-4" />
-              Editar fog
+              Fog
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={revealAroundSelected}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Revelar area
+          <div className="grid grid-cols-3 gap-2">
+            <Button variant="outline" onClick={() => void mutateScene((current) => setSceneCameraScale(current, "out"))}>
+              <Minus className="h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={restoreFog}>
-              <RefreshCcw className="mr-2 h-4 w-4" />
-              Restaurar
+            <Button variant="outline" onClick={() => void mutateScene((current) => setSceneCameraScale(current, "reset"))}>
+              <RefreshCcw className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" onClick={() => void mutateScene((current) => setSceneCameraScale(current, "in"))}>
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
 
-          <Button variant="secondary" onClick={revealEverything} className="w-full">
-            <Map className="mr-2 h-4 w-4" />
-            Revelar mapa inteiro
-          </Button>
-
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="rounded-lg border border-border/70 bg-background/50 px-3 py-2">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-border/70 bg-background/50 p-3">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                Jogadores
+                Revisao
               </p>
-              <p className="font-heading text-xl text-foreground">{partyCount}</p>
+              <p className="mt-1 font-heading text-lg text-foreground">{scene.revision}</p>
             </div>
-            <div className="rounded-lg border border-border/70 bg-background/50 px-3 py-2">
+            <div className="rounded-xl border border-border/70 bg-background/50 p-3">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                NPCs
+                Conectados
               </p>
-              <p className="font-heading text-xl text-foreground">{npcCount}</p>
-            </div>
-            <div className="rounded-lg border border-border/70 bg-background/50 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                Visivel
-              </p>
-              <p className="font-heading text-xl text-foreground">
-                {revealedCells}/{BOARD_COLUMNS * BOARD_ROWS}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="border-gold/20 bg-card-gradient shadow-card">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <CardTitle className="font-heading text-lg text-foreground">
-                Tokens na Mesa
-              </CardTitle>
-              <CardDescription>
-                Clique em um token para selecionar, mover e ajustar HP.
-              </CardDescription>
-            </div>
-            <Users className="h-5 w-5 text-primary" />
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="max-h-[24rem] space-y-3 overflow-y-auto pr-1 scrollbar-dark">
-            {tokens.map((token) => {
-              const isSelected = token.id === selectedTokenId;
-              const isActive = token.id === activeTurnId;
-
-              return (
-                <button
-                  key={token.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedTokenId(token.id);
-                    setBoardMode("move");
-                  }}
-                  className={cn(
-                    "w-full rounded-xl border p-3 text-left transition-colors",
-                    isSelected
-                      ? "border-primary/60 bg-primary/10"
-                      : "border-border bg-background/40 hover:border-primary/30",
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div
-                        className={cn(
-                          "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xs font-heading tracking-[0.2em] text-white",
-                          isActive && "ring-2 ring-primary/70",
-                        )}
-                        style={{
-                          backgroundImage: token.color,
-                          borderColor:
-                            token.team === "party"
-                              ? "rgba(244, 200, 109, 0.35)"
-                              : "rgba(244, 128, 88, 0.35)",
-                        }}
-                      >
-                        {token.shortName}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate font-heading text-sm text-foreground">
-                            {token.name}
-                          </p>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "border-current px-2 py-0 text-[10px] uppercase tracking-[0.18em]",
-                              token.team === "party"
-                                ? "text-primary"
-                                : "text-amber-300",
-                            )}
-                          >
-                            {token.team === "party" ? "PJ" : "NPC"}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {token.role} - {positionLabel(token.x, token.y)} - Init{" "}
-                          {token.initiativeBonus >= 0
-                            ? `+${token.initiativeBonus}`
-                            : token.initiativeBonus}
-                        </p>
-                      </div>
-                    </div>
-                    {token.hp === 0 && <Skull className="mt-1 h-4 w-4 text-destructive" />}
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>HP</span>
-                        <span>
-                          {token.hp}/{token.hpMax}
-                        </span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                        <div
-                          className={cn(
-                            "h-full transition-all",
-                            token.hp / token.hpMax > 0.5
-                              ? "bg-emerald-500"
-                              : token.hp / token.hpMax > 0.25
-                                ? "bg-amber-500"
-                                : "bg-destructive",
-                          )}
-                          style={{ width: `${(token.hp / token.hpMax) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          adjustTokenHp(token.id, -5);
-                        }}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          adjustTokenHp(token.id, 5);
-                        }}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {token.team === "npc" && (
-                    <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/70 pt-3 text-xs text-muted-foreground">
-                      <span>CA {token.ac}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-destructive"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          removeNpc(token.id);
-                        }}
-                      >
-                        Remover
-                      </Button>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-gold/20 bg-card-gradient shadow-card">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <CardTitle className="font-heading text-lg text-foreground">
-                Iniciativa Automatica
-              </CardTitle>
-              <CardDescription>
-                Gera a ordem de combate com 1d20 + bonus de iniciativa.
-              </CardDescription>
-            </div>
-            <Sword className="h-5 w-5 text-primary" />
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-2">
-            <Button onClick={startInitiative}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Rolar ordem
-            </Button>
-            <Button variant="outline" onClick={advanceTurn} disabled={!initiative.length}>
-              <Crown className="mr-2 h-4 w-4" />
-              Proximo turno
-            </Button>
-          </div>
-
-          <Button variant="ghost" className="w-full" onClick={clearInitiative}>
-            Limpar encontro
-          </Button>
-
-          <div className="rounded-lg border border-border/70 bg-background/50 p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-heading text-sm text-foreground">Rodada</span>
-              <Badge variant="secondary">{round > 0 ? round : "Fora de combate"}</Badge>
-            </div>
-            <div className="space-y-2">
-              {initiative.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Nenhum encontro em andamento. Clique em &quot;Rolar ordem&quot; para iniciar.
-                </p>
-              )}
-
-              {initiative.map((entry, index) => {
-                const token = tokens.find((candidate) => candidate.id === entry.tokenId);
-                const isCurrent = entry.tokenId === activeTurnId;
-                const isDefeated = !token || token.hp === 0;
-
-                return (
-                  <div
-                    key={entry.tokenId}
-                    className={cn(
-                      "flex items-center justify-between rounded-lg border px-3 py-2 transition-colors",
-                      isCurrent
-                        ? "border-primary/60 bg-primary/10"
-                        : "border-border/70 bg-background/40",
-                      isDefeated && "opacity-40",
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="font-heading text-sm text-muted-foreground">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      {entry.team === "party" ? (
-                        <Shield className="h-4 w-4 text-primary" />
-                      ) : (
-                        <Ghost className="h-4 w-4 text-amber-300" />
-                      )}
-                      <span className="font-heading text-sm text-foreground">
-                        {entry.name}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-heading text-sm text-foreground">{entry.total}</p>
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                        {entry.bonus >= 0 ? `+${entry.bonus}` : entry.bonus}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+              <p className="mt-1 font-heading text-lg text-foreground">{scene.presence.length || 1}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-gold/20 bg-card-gradient shadow-card">
+      <Card variant="panel">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <CardTitle className="font-heading text-lg text-foreground">
-                Controle de NPCs
+                Token selecionado
               </CardTitle>
               <CardDescription>
-                Adiciona novos oponentes direto na grade da cena.
+                Selecione um token no stage Pixi para mover, curar ou ferir.
               </CardDescription>
             </div>
             <Ghost className="h-5 w-5 text-primary" />
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {selectedToken ? (
+            <>
+              <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-heading text-base text-foreground">
+                      {selectedToken.payload.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedToken.payload.role} | {getPositionLabel(selectedToken.position.x, selectedToken.position.y)}
+                    </p>
+                  </div>
+                  <Badge variant={selectedToken.payload.team === "party" ? "success" : "danger"}>
+                    {selectedToken.payload.team}
+                  </Badge>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  {selectedToken.payload.note}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <Button variant="outline" onClick={() => void adjustHp(selectedToken.id, -5)}>
+                  -5 HP
+                </Button>
+                <Button variant="outline" onClick={() => void adjustHp(selectedToken.id, +5)}>
+                  +5 HP
+                </Button>
+                <Button variant="secondary" onClick={() => void revealAroundSelected()}>
+                  Revelar
+                </Button>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">HP</p>
+                  <p className="mt-1 font-heading text-lg text-foreground">
+                    {selectedToken.payload.hp}/{selectedToken.payload.hpMax}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">CA</p>
+                  <p className="mt-1 font-heading text-lg text-foreground">{selectedToken.payload.ac}</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Nenhum token selecionado.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card variant="panel">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-heading text-lg text-foreground">
+            Ferramentas do mestre
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-2">
+            <Button variant="outline" onClick={() => void revealEverything()}>
+              Revelar mapa inteiro
+            </Button>
+            <Button variant="outline" onClick={() => void restoreFogState()}>
+              Restaurar neblina
+            </Button>
+            <Button onClick={() => void startInitiative()}>Iniciativa automatica</Button>
+            <Button variant="outline" onClick={() => void advanceTurn()}>
+              Proximo turno
+            </Button>
+            <Button variant="ghost" onClick={() => void clearInitiativeState()}>
+              Limpar iniciativa
+            </Button>
+          </div>
+
+          <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              Presenca
+            </p>
+            <div className="mt-3 space-y-2">
+              {scene.presence.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Apenas esta aba esta conectada.</p>
+              ) : (
+                scene.presence.map((member) => (
+                  <div key={member.key} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-foreground">{member.displayName}</span>
+                    <Badge variant={member.role === "gm" ? "info" : "secondary"}>{member.role}</Badge>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card variant="panel">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-heading text-lg text-foreground">
+            Adicionar NPC
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           <Input
             value={npcDraft.name}
-            onChange={(event) =>
-              setNpcDraft((previous) => ({ ...previous, name: event.target.value }))
-            }
+            onChange={(event) => setNpcDraft((current) => ({ ...current, name: event.target.value }))}
             placeholder="Nome do NPC"
-            className="bg-background/60"
           />
           <div className="grid grid-cols-3 gap-2">
             <Input
               type="number"
               value={npcDraft.hp}
               onChange={(event) =>
-                setNpcDraft((previous) => ({
-                  ...previous,
-                  hp: Number(event.target.value) || 0,
-                }))
+                setNpcDraft((current) => ({ ...current, hp: Number(event.target.value) }))
               }
               placeholder="HP"
-              className="bg-background/60"
             />
             <Input
               type="number"
               value={npcDraft.ac}
               onChange={(event) =>
-                setNpcDraft((previous) => ({
-                  ...previous,
-                  ac: Number(event.target.value) || 0,
-                }))
+                setNpcDraft((current) => ({ ...current, ac: Number(event.target.value) }))
               }
               placeholder="CA"
-              className="bg-background/60"
             />
             <Input
               type="number"
               value={npcDraft.initiativeBonus}
               onChange={(event) =>
-                setNpcDraft((previous) => ({
-                  ...previous,
-                  initiativeBonus: Number(event.target.value) || 0,
+                setNpcDraft((current) => ({
+                  ...current,
+                  initiativeBonus: Number(event.target.value),
                 }))
               }
-              placeholder="Init"
-              className="bg-background/60"
+              placeholder="Ini"
             />
           </div>
           <Textarea
             value={npcDraft.notes}
-            onChange={(event) =>
-              setNpcDraft((previous) => ({ ...previous, notes: event.target.value }))
-            }
-            placeholder="Notas de comportamento ou gancho de cena"
-            className="min-h-[96px] bg-background/60"
+            onChange={(event) => setNpcDraft((current) => ({ ...current, notes: event.target.value }))}
+            placeholder="Notas e comportamento"
+            className="min-h-[90px]"
           />
-          <Button onClick={addNpc} className="w-full">
+          <Button className="w-full" onClick={() => void createNpc()}>
             <Plus className="mr-2 h-4 w-4" />
-            Adicionar NPC ao mapa
+            Adicionar NPC
           </Button>
         </CardContent>
       </Card>
@@ -773,283 +598,59 @@ export default function VirtualTabletop() {
 
   const renderMapPanel = () => (
     <div className="space-y-4">
-      <Card className="overflow-hidden border-gold/20 bg-card-gradient shadow-card">
-        <CardHeader className="border-b border-border/70 pb-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <Map className="h-5 w-5 text-primary" />
-                <CardTitle className="font-heading text-2xl text-gold-gradient">
-                  Mesa Virtual da Cripta de Velkyn
-                </CardTitle>
-              </div>
-              <CardDescription className="max-w-2xl text-sm md:text-base">
-                Interface inspirada em Roll20 e Foundry, mas com foco em uma mesa enxuta:
-                mapa central, tokens, chat, iniciativa, dados e ferramentas do mestre.
+      <Card variant="elevated">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <CardTitle className="font-heading text-lg text-foreground">
+                Page-scoped VTT
+              </CardTitle>
+              <CardDescription>
+                Renderer PixiJS com grid, fog, zoom, selecao e drag de tokens.
               </CardDescription>
             </div>
-
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Cena
-                </p>
-                <p className="font-heading text-sm text-foreground">Cripta</p>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Modo
-                </p>
-                <p className="font-heading text-sm text-foreground">
-                  {boardMode === "move" ? "Mover" : "Fog"}
-                </p>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Turno
-                </p>
-                <p className="font-heading text-sm text-foreground">
-                  {activeToken?.name ?? "Livre"}
-                </p>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Status
-                </p>
-                <p className="font-heading text-sm text-foreground">
-                  {initiative.length ? `Rodada ${round}` : "Exploracao"}
-                </p>
-              </div>
-            </div>
+            <Map className="h-5 w-5 text-primary" />
           </div>
         </CardHeader>
+        <CardContent className="space-y-4">
+          {activePage ? (
+            <VttPixiStage
+              page={activePage}
+              tokens={tokens}
+              selectedTokenId={scene.selectedObjectId}
+              boardMode={scene.boardMode}
+              onCellClick={(cell) => void handleCellClick(cell)}
+              onSelectToken={(tokenId) => void mutateScene((current) => setSceneSelection(current, tokenId), { persist: false })}
+              onMoveToken={(tokenId, x, y) => void handleMoveToken(tokenId, x, y)}
+            />
+          ) : null}
 
-        <CardContent className="space-y-5 p-4 md:p-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              variant={boardMode === "move" ? "default" : "outline"}
-              onClick={() => setBoardMode("move")}
-            >
-              <Crosshair className="mr-2 h-4 w-4" />
-              Tokens
-            </Button>
-            <Button
-              size="sm"
-              variant={boardMode === "fog" ? "default" : "outline"}
-              onClick={() => setBoardMode("fog")}
-            >
-              <EyeOff className="mr-2 h-4 w-4" />
-              Fog
-            </Button>
-            <Button size="sm" variant="outline" onClick={revealAroundSelected}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Revelar ao redor
-            </Button>
-            <Button size="sm" variant="outline" onClick={startInitiative}>
-              <Sword className="mr-2 h-4 w-4" />
-              Auto iniciativa
-            </Button>
-            <Button size="sm" variant="ghost" onClick={advanceTurn} disabled={!initiative.length}>
-              <Crown className="mr-2 h-4 w-4" />
-              Proximo
-            </Button>
-          </div>
-
-          <div className="overflow-hidden rounded-2xl border border-border/70 bg-background/70 p-2 md:p-3">
-            <div
-              className="grid gap-2"
-              style={{
-                gridTemplateColumns: `repeat(${BOARD_COLUMNS}, minmax(0, 1fr))`,
-              }}
-            >
-              {BOARD.map((cell) => {
-                const terrain = TERRAIN_META[cell.terrain];
-                const cellTokens = tokens.filter(
-                  (token) => token.x === cell.x && token.y === cell.y,
-                );
-                const isVisible = fog[cell.id];
-                const isSelectedCell =
-                  selectedToken?.x === cell.x && selectedToken?.y === cell.y;
-
-                return (
-                  <button
-                    key={cell.id}
-                    type="button"
-                    onClick={() => handleCellClick(cell)}
-                    className={cn(
-                      "group relative aspect-square overflow-hidden rounded-xl border text-left transition-all",
-                      isSelectedCell
-                        ? "border-primary/70 shadow-[0_0_0_1px_rgba(244,200,109,0.35)]"
-                        : "border-border/70 hover:border-primary/30",
-                    )}
-                    style={{
-                      background: terrain.background,
-                      borderColor: isSelectedCell ? undefined : terrain.border,
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_58%)]" />
-                    <div className="pointer-events-none absolute left-2 top-1 text-[10px] font-heading tracking-[0.18em] text-muted-foreground">
-                      {cell.label}
-                    </div>
-                    <div className="pointer-events-none absolute bottom-1 right-2 text-[9px] uppercase tracking-[0.22em] text-muted-foreground/80">
-                      {terrain.label}
-                    </div>
-
-                    <div className="absolute inset-0 flex flex-wrap items-end content-end gap-1 p-1 md:p-2">
-                      {cellTokens.map((token) => {
-                        const isSelected = token.id === selectedTokenId;
-                        const isCurrent = token.id === activeTurnId;
-
-                        return (
-                          <button
-                            key={token.id}
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setSelectedTokenId(token.id);
-                              setBoardMode("move");
-                            }}
-                            className={cn(
-                              "relative z-10 flex h-9 w-9 items-center justify-center rounded-full border text-[10px] font-heading tracking-[0.18em] text-white shadow-lg transition-transform md:h-10 md:w-10",
-                              isSelected && "scale-105 ring-2 ring-primary/70",
-                              isCurrent && "animate-pulse",
-                            )}
-                            style={{
-                              backgroundImage: token.color,
-                              borderColor:
-                                token.team === "party"
-                                  ? "rgba(244, 200, 109, 0.5)"
-                                  : "rgba(244, 128, 88, 0.5)",
-                            }}
-                          >
-                            {token.shortName}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {!isVisible && (
-                      <div className="pointer-events-none absolute inset-0 rounded-xl bg-[linear-gradient(160deg,_rgba(3,6,13,0.94),_rgba(8,12,24,0.86))] shadow-[inset_0_0_0_1px_rgba(9,14,21,0.7)]" />
-                    )}
-                  </button>
-                );
-              })}
+          <div className="grid gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Page</p>
+              <p className="mt-1 font-heading text-base text-foreground">{activePage?.name ?? "-"}</p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Revelado</p>
+              <p className="mt-1 font-heading text-base text-foreground">{revealedCells}</p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Aliados</p>
+              <p className="mt-1 font-heading text-base text-foreground">{partyCount}</p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">NPCs</p>
+              <p className="mt-1 font-heading text-base text-foreground">{npcCount}</p>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      {selectedToken && (
-        <Card className="border-gold/20 bg-card-gradient shadow-card">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-12 w-12 items-center justify-center rounded-full border text-sm font-heading tracking-[0.18em] text-white"
-                  style={{
-                    backgroundImage: selectedToken.color,
-                    borderColor:
-                      selectedToken.team === "party"
-                        ? "rgba(244, 200, 109, 0.45)"
-                        : "rgba(244, 128, 88, 0.45)",
-                  }}
-                >
-                  {selectedToken.shortName}
-                </div>
-                <div>
-                  <CardTitle className="font-heading text-lg text-foreground">
-                    {selectedToken.name}
-                  </CardTitle>
-                  <CardDescription>
-                    {selectedToken.role} -{" "}
-                    {selectedToken.team === "party" ? "Personagem" : "NPC"} -{" "}
-                    {positionLabel(selectedToken.x, selectedToken.y)}
-                  </CardDescription>
-                </div>
-              </div>
-
-              <Badge variant="outline" className="border-primary/30 text-primary">
-                {selectedToken.controlledBy === "gm" ? "Controle GM" : "Controle jogador"}
-              </Badge>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-border/70 bg-background/50 p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  HP
-                </p>
-                <p className="font-heading text-2xl text-foreground">
-                  {selectedToken.hp}/{selectedToken.hpMax}
-                </p>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-background/50 p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  CA
-                </p>
-                <p className="font-heading text-2xl text-foreground">{selectedToken.ac}</p>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-background/50 p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Iniciativa
-                </p>
-                <p className="font-heading text-2xl text-foreground">
-                  {selectedToken.initiativeBonus >= 0
-                    ? `+${selectedToken.initiativeBonus}`
-                    : selectedToken.initiativeBonus}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-border/70 bg-background/50 p-4">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                Notas de controle
-              </p>
-              <p className="mt-2 text-sm text-foreground/90">{selectedToken.note}</p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                onClick={() =>
-                  rollNotation(
-                    `1d20${selectedToken.initiativeBonus >= 0 ? `+${selectedToken.initiativeBonus}` : selectedToken.initiativeBonus}`,
-                    selectedToken.name,
-                  )
-                }
-              >
-                <Dice6 className="mr-2 h-4 w-4" />
-                Rolar iniciativa
-              </Button>
-              <Button variant="outline" onClick={revealAroundSelected}>
-                <EyeOff className="mr-2 h-4 w-4" />
-                Abrir visao
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() =>
-                  appendChat(
-                    "Sistema",
-                    `${selectedToken.name} assume posicao em ${positionLabel(selectedToken.x, selectedToken.y)}.`,
-                    "system",
-                  )
-                }
-              >
-                <ScrollText className="mr-2 h-4 w-4" />
-                Publicar no chat
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 
   const renderSessionPanel = () => (
     <div className="space-y-4">
-      <Card className="border-gold/20 bg-card-gradient shadow-card">
+      <Card variant="panel">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -1065,7 +666,7 @@ export default function VirtualTabletop() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="max-h-[26rem] space-y-3 overflow-y-auto rounded-xl border border-border/70 bg-background/50 p-3 scrollbar-dark">
-            {chatMessages.map((message) => (
+            {scene.chatMessages.map((message) => (
               <div
                 key={message.id}
                 className={cn(
@@ -1094,7 +695,7 @@ export default function VirtualTabletop() {
               placeholder="Enviar uma mensagem para a mesa..."
               className="min-h-[90px] bg-background/60"
             />
-            <Button onClick={sendChatMessage} className="w-full">
+            <Button onClick={() => void sendChat()} className="w-full">
               <Send className="mr-2 h-4 w-4" />
               Enviar no chat
             </Button>
@@ -1102,7 +703,7 @@ export default function VirtualTabletop() {
         </CardContent>
       </Card>
 
-      <Card className="border-gold/20 bg-card-gradient shadow-card">
+      <Card variant="panel">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -1122,7 +723,7 @@ export default function VirtualTabletop() {
               <Button
                 key={notation}
                 variant="outline"
-                onClick={() => rollNotation(notation, selectedToken?.name ?? "Mesa")}
+                onClick={() => void rollNotation(notation, selectedToken?.payload.name ?? "Mesa")}
               >
                 {notation}
               </Button>
@@ -1136,7 +737,7 @@ export default function VirtualTabletop() {
               placeholder="Ex.: 2d6+3"
               className="bg-background/60"
             />
-            <Button onClick={() => rollNotation(diceDraft, selectedToken?.name ?? "Mesa")}>
+            <Button onClick={() => void rollNotation(diceDraft, selectedToken?.payload.name ?? "Mesa")}>
               Rolar
             </Button>
           </div>
@@ -1144,76 +745,56 @@ export default function VirtualTabletop() {
           <div className="space-y-2 rounded-xl border border-border/70 bg-background/50 p-3">
             <div className="flex items-center justify-between">
               <span className="font-heading text-sm text-foreground">Ultimos resultados</span>
-              <Badge variant="secondary">{diceHistory.length}</Badge>
+              <Badge variant="secondary">{scene.diceHistory.length}</Badge>
             </div>
 
-            {diceHistory.length === 0 && (
+            {scene.diceHistory.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Nenhuma rolagem ainda. Use os atalhos acima para abastecer a sessao.
               </p>
-            )}
-
-            {diceHistory.map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-center justify-between rounded-lg border border-border/70 bg-background/60 px-3 py-2"
-              >
-                <div>
-                  <p className="font-heading text-sm text-foreground">
-                    {entry.actor} - {entry.notation}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    [{entry.results.join(", ")}]
-                  </p>
+            ) : (
+              scene.diceHistory.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between rounded-lg border border-border/70 bg-background/60 px-3 py-2"
+                >
+                  <div>
+                    <p className="font-heading text-sm text-foreground">
+                      {entry.actor} - {entry.notation}
+                    </p>
+                    <p className="text-xs text-muted-foreground">[{entry.results.join(", ")}]</p>
+                  </div>
+                  <span className="font-heading text-lg text-primary">{entry.total}</span>
                 </div>
-                <span className="font-heading text-lg text-primary">{entry.total}</span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-gold/20 bg-card-gradient shadow-card">
+      <Card variant="panel">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <CardTitle className="font-heading text-lg text-foreground">
-                Resumo do Mestre
+                Estado da mesa
               </CardTitle>
               <CardDescription>
-                Objetivos rapidos e leitura instantanea do estado da mesa.
+                Ordem de turno, ativo atual e resumo tatico da cena.
               </CardDescription>
             </div>
             <Castle className="h-5 w-5 text-primary" />
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-xl border border-border/70 bg-background/50 p-4">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              Objetivo da cena
-            </p>
-            <p className="mt-2 text-sm text-foreground/90">
-              Romper a sentinela, atravessar o corredor runico e estabilizar o altar
-              antes que os ghouls ativem a proxima onda.
-            </p>
-          </div>
-
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-border/70 bg-background/50 p-3">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                Token selecionado
-              </p>
-              <p className="mt-1 font-heading text-base text-foreground">
-                {selectedToken?.name ?? "Nenhum"}
-              </p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Rodada</p>
+              <p className="mt-1 font-heading text-base text-foreground">{scene.initiative.round || "-"}</p>
             </div>
             <div className="rounded-xl border border-border/70 bg-background/50 p-3">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                Turno ativo
-              </p>
-              <p className="mt-1 font-heading text-base text-foreground">
-                {activeTurn?.name ?? "Sem iniciativa"}
-              </p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Turno ativo</p>
+              <p className="mt-1 font-heading text-base text-foreground">{activeTurn?.name ?? "Sem iniciativa"}</p>
             </div>
           </div>
 
@@ -1250,13 +831,13 @@ export default function VirtualTabletop() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="border-primary/30 text-primary">
-              Mapa interativo
+              Pixi stage
+            </Badge>
+            <Badge variant="outline" className="border-primary/30 text-primary">
+              Presence
             </Badge>
             <Badge variant="outline" className="border-primary/30 text-primary">
               Tokens
-            </Badge>
-            <Badge variant="outline" className="border-primary/30 text-primary">
-              Chat + Dados
             </Badge>
             <Badge variant="outline" className="border-primary/30 text-primary">
               Fog de guerra
@@ -1276,7 +857,7 @@ export default function VirtualTabletop() {
             onValueChange={(value) => setMobilePanel(value as MobilePanel)}
             className="space-y-4"
           >
-            <TabsList className="grid h-auto grid-cols-3 gap-1 bg-secondary/60 p-1">
+            <TabsList className="grid h-auto grid-cols-3 gap-1">
               <TabsTrigger value="mapa" className="font-heading uppercase tracking-[0.18em]">
                 Mapa
               </TabsTrigger>

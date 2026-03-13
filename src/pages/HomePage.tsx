@@ -75,7 +75,7 @@ export default function HomePage() {
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-hero-gradient" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--brand)/0.18),transparent_34%),radial-gradient(circle_at_bottom_right,hsl(var(--info)/0.14),transparent_30%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--brand)/0.18),transparent_34%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.16),transparent_30%)]" />
 
         <div className="container relative py-28 md:py-36">
           <motion.div

@@ -35,6 +35,16 @@ organiza o dominio de RPG em torno das entidades pedidas:
 - `lore_entry_media`: imagens e galeria de cada verbete.
 - `lore_entry_links`: ligacoes internas entre paginas do lore.
 - `lore_timeline_events`: eventos da linha do tempo por verbete.
+- `sheet_definitions`: schema JSON versionado da ficha.
+- `character_attribute_values`: store persistido de atributos, derivados e repeaters.
+- `character_sheet_revisions`: historico append-only de revisoes da ficha.
+- `vtt_pages`: pages do VTT com grid, camera e ordem de camadas.
+- `vtt_page_assets`: manifest de battlemaps e variantes de asset.
+- `vtt_scene_objects`: tokens, walls, drawings e fontes de luz serializados.
+- `vtt_fog_states`: estado page-scoped de fog e explorer data.
+- `vtt_session_presence`: heartbeat e papel dos usuarios conectados.
+- `vtt_chat_messages`: chat persistido da mesa.
+- `vtt_event_log`: log append-only para auditoria, replay parcial e debug.
 
 ## Compatibilidade com o que ja existe
 
@@ -62,3 +72,8 @@ tabelas originais.
 - Um `product` pode ser a origem de `lore_entries`, `items`, `spells`, `monsters`,
   `locations` e `factions`.
 - Um `order` representa a compra de um `product` por um `user`.
+- Um `sheet_definition` governa o formato de `character_attribute_values`.
+- Um `character` pode ter varias `character_sheet_revisions`.
+- Uma `session` pode ter varias `vtt_pages`, `vtt_scene_objects`, `vtt_chat_messages`
+  e eventos em `vtt_event_log`.
+- Uma `vtt_page` pode ter um `vtt_fog_state` e varios `vtt_page_assets`.

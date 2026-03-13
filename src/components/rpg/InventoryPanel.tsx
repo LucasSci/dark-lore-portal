@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { FlaskConical, Package, ScrollText, Shield, Sword } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -45,7 +46,11 @@ interface Item {
   effect: string | null;
 }
 
-export default function InventoryPanel() {
+interface Props {
+  onImportItem?: (item: Item) => void;
+}
+
+export default function InventoryPanel({ onImportItem }: Props) {
   const [items, setItems] = useState<Item[]>([]);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [selected, setSelected] = useState<Item | null>(null);
@@ -131,6 +136,18 @@ export default function InventoryPanel() {
                       {item.effect ? <p>Efeito: {item.effect}</p> : null}
                       <p>Peso: {item.weight} kg</p>
                     </div>
+                    {onImportItem ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onImportItem(item);
+                        }}
+                      >
+                        Adicionar a ficha
+                      </Button>
+                    ) : null}
                   </div>
                 ) : null}
               </CardContent>

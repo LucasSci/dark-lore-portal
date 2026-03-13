@@ -31,6 +31,10 @@ interface Spell {
   mp_cost: number;
 }
 
+interface Props {
+  onImportSpell?: (spell: Spell) => void;
+}
+
 const schoolMeta: Record<
   SpellSchool,
   { label: string; variant: "info" | "success" | "warning" | "danger" | "secondary" }
@@ -45,7 +49,7 @@ const schoolMeta: Record<
   transmutacao: { label: "Transmutacao", variant: "success" },
 };
 
-export default function SpellBook() {
+export default function SpellBook({ onImportSpell }: Props) {
   const [spells, setSpells] = useState<Spell[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filterSchool, setFilterSchool] = useState<SpellSchool | "todas">("todas");
@@ -172,32 +176,47 @@ export default function SpellBook() {
                     </p>
 
                     {isOpen ? (
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <DataSection
-                          label="Conjuracao"
-                          value={spell.casting_time}
-                          icon={<Clock3 className="h-4 w-4" />}
-                          variant="quiet"
-                        />
-                        <DataSection
-                          label="Alcance"
-                          value={spell.range}
-                          icon={<Crosshair className="h-4 w-4" />}
-                          variant="quiet"
-                        />
-                        <DataSection
-                          label="Duracao"
-                          value={spell.duration}
-                          icon={<Sparkles className="h-4 w-4" />}
-                          variant="quiet"
-                        />
-                        <DataSection
-                          label="Impacto"
-                          value={spell.damage ?? "Utilitaria"}
-                          icon={<Zap className="h-4 w-4" />}
-                          variant="quiet"
-                          tone={spell.damage ? "warn" : "info"}
-                        />
+                      <div className="space-y-3">
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <DataSection
+                            label="Conjuracao"
+                            value={spell.casting_time}
+                            icon={<Clock3 className="h-4 w-4" />}
+                            variant="quiet"
+                          />
+                          <DataSection
+                            label="Alcance"
+                            value={spell.range}
+                            icon={<Crosshair className="h-4 w-4" />}
+                            variant="quiet"
+                          />
+                          <DataSection
+                            label="Duracao"
+                            value={spell.duration}
+                            icon={<Sparkles className="h-4 w-4" />}
+                            variant="quiet"
+                          />
+                          <DataSection
+                            label="Impacto"
+                            value={spell.damage ?? "Utilitaria"}
+                            icon={<Zap className="h-4 w-4" />}
+                            variant="quiet"
+                            tone={spell.damage ? "warn" : "info"}
+                          />
+                        </div>
+
+                        {onImportSpell ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onImportSpell(spell);
+                            }}
+                          >
+                            Vincular a ficha
+                          </Button>
+                        ) : null}
                       </div>
                     ) : null}
                   </CardContent>

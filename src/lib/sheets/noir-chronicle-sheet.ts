@@ -1,0 +1,236 @@
+import { ATTRIBUTES, CLASSES, RACES } from "@/lib/rpg-utils";
+import type {
+  CharacterSheetDraft,
+  SheetDefinition,
+  SheetScalarValue,
+} from "@/lib/sheets/types";
+
+export const NOIR_CHRONICLE_SHEET: SheetDefinition = {
+  id: "noir-chronicle-core",
+  slug: "noir-chronicle-sheet",
+  version: 1,
+  sections: [
+    { id: "identity", label: "Identidade", kind: "identity" },
+    { id: "resources", label: "Recursos", kind: "resources" },
+    { id: "combat", label: "Combate", kind: "combat" },
+    { id: "attributes", label: "Atributos", kind: "attributes" },
+    { id: "narrative", label: "Narrativa", kind: "narrative" },
+    { id: "attachments", label: "Vinculos", kind: "attachments" },
+  ],
+  fields: [
+    {
+      id: "name",
+      label: "Nome do personagem",
+      binding: "name",
+      type: "text",
+      sectionId: "identity",
+      stepId: "identity",
+      required: true,
+      defaultValue: "",
+    },
+    {
+      id: "appearance",
+      label: "Aparencia",
+      binding: "appearance",
+      type: "textarea",
+      sectionId: "narrative",
+      stepId: "identity",
+      defaultValue: "",
+    },
+    {
+      id: "race",
+      label: "Raca",
+      binding: "race",
+      type: "select",
+      sectionId: "identity",
+      stepId: "race",
+      defaultValue: "humano",
+      options: RACES.map((race) => ({ label: race.label, value: race.value })),
+    },
+    {
+      id: "class",
+      label: "Classe",
+      binding: "class",
+      type: "select",
+      sectionId: "identity",
+      stepId: "class",
+      defaultValue: "guerreiro",
+      options: CLASSES.map((characterClass) => ({
+        label: characterClass.label,
+        value: characterClass.value,
+      })),
+    },
+    ...ATTRIBUTES.map((attribute) => ({
+      id: attribute.key,
+      label: attribute.label,
+      binding: attribute.key,
+      type: "number" as const,
+      sectionId: "attributes",
+      stepId: "attributes",
+      min: 8,
+      max: 18,
+      defaultValue: 10,
+    })),
+    {
+      id: "background",
+      label: "Historico",
+      binding: "background",
+      type: "textarea",
+      sectionId: "narrative",
+      stepId: "history",
+      defaultValue: "",
+    },
+    {
+      id: "level",
+      label: "Nivel",
+      binding: "level",
+      type: "number",
+      sectionId: "resources",
+      defaultValue: 1,
+      min: 1,
+      max: 20,
+    },
+    {
+      id: "experience",
+      label: "Experiencia",
+      binding: "experience",
+      type: "number",
+      sectionId: "resources",
+      defaultValue: 0,
+      min: 0,
+    },
+    {
+      id: "gold",
+      label: "Ouro",
+      binding: "gold",
+      type: "number",
+      sectionId: "resources",
+      defaultValue: 35,
+      min: 0,
+    },
+    {
+      id: "speed",
+      label: "Movimento",
+      binding: "speed",
+      type: "number",
+      sectionId: "combat",
+      defaultValue: 30,
+      min: 0,
+    },
+  ],
+  wizardSteps: [
+    { id: "identity", label: "Identidade", fieldBindings: ["name", "appearance"] },
+    { id: "race", label: "Raca", fieldBindings: ["race"] },
+    { id: "class", label: "Classe", fieldBindings: ["class"] },
+    {
+      id: "attributes",
+      label: "Atributos",
+      fieldBindings: ATTRIBUTES.map((attribute) => attribute.key),
+    },
+    { id: "history", label: "Historia", fieldBindings: ["background", "appearance"] },
+  ],
+  derivedFields: [
+    {
+      id: "hp-max",
+      label: "HP maximo",
+      binding: "hp_max",
+      dependencies: ["class", "level", "constituicao"],
+      compute: "hit-points",
+    },
+    {
+      id: "hp-current",
+      label: "HP atual",
+      binding: "hp_current",
+      dependencies: ["hp_max"],
+      compute: "hit-points",
+    },
+    {
+      id: "mp-max",
+      label: "MP maximo",
+      binding: "mp_max",
+      dependencies: ["class", "inteligencia", "sabedoria", "carisma"],
+      compute: "mana-points",
+    },
+    {
+      id: "mp-current",
+      label: "MP atual",
+      binding: "mp_current",
+      dependencies: ["mp_max"],
+      compute: "mana-points",
+    },
+    {
+      id: "armor-class",
+      label: "Classe de armadura",
+      binding: "armor_class",
+      dependencies: ["destreza"],
+      compute: "armor-class",
+    },
+    {
+      id: "initiative-bonus",
+      label: "Iniciativa",
+      binding: "initiative_bonus",
+      dependencies: ["destreza"],
+      compute: "initiative",
+    },
+    {
+      id: "xp-next",
+      label: "XP para o proximo nivel",
+      binding: "xp_next",
+      dependencies: ["level"],
+      compute: "xp-next",
+    },
+    {
+      id: "point-budget",
+      label: "Pontos usados",
+      binding: "point_budget_used",
+      dependencies: ATTRIBUTES.map((attribute) => attribute.key),
+      compute: "point-budget",
+    },
+    ...ATTRIBUTES.map((attribute) => ({
+      id: `modifier-${attribute.key}`,
+      label: `Modificador de ${attribute.label}`,
+      binding: `modifier.${attribute.key}` as const,
+      dependencies: [attribute.key],
+      compute: "attribute-modifier" as const,
+      attributeKey: attribute.key,
+    })),
+  ],
+  repeatingGroups: [
+    { id: "inventory", label: "Inventario", binding: "inventory", itemType: "inventory" },
+    { id: "spellbook", label: "Magias", binding: "spellbook", itemType: "spellbook" },
+  ],
+  bindings: {
+    inventory: "inventory",
+    spellbook: "spellbook",
+  },
+};
+
+export const NOIR_CHRONICLE_DEFAULTS: CharacterSheetDraft = {
+  name: "",
+  race: "humano",
+  class: "guerreiro",
+  level: 1,
+  experience: 0,
+  gold: 35,
+  speed: 30,
+  background: "",
+  appearance: "",
+  attributes: {
+    forca: 10,
+    destreza: 10,
+    constituicao: 10,
+    inteligencia: 10,
+    sabedoria: 10,
+    carisma: 10,
+  },
+};
+
+export function createNoirChronicleInitialValues(): Record<string, SheetScalarValue> {
+  const values: Record<string, SheetScalarValue> = {};
+
+  for (const field of NOIR_CHRONICLE_SHEET.fields) {
+    values[field.binding] = field.defaultValue ?? null;
+  }
+
+  return values;
+}

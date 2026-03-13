@@ -14,12 +14,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
+import { NOIR_CHRONICLE_SHEET } from "@/lib/sheets/noir-chronicle-sheet";
+import { useCharacterSheetRuntime } from "@/lib/sheets/runtime";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildCharacterFromCreator, buildDemoCharacter, type CharacterRow } from "@/lib/rpg-ui";
 
 export default function PlayPage() {
   const [activeCharacter, setActiveCharacter] = useState<CharacterRow>(() => buildDemoCharacter());
   const [section, setSection] = useState("ficha");
+  const sheetRuntime = useCharacterSheetRuntime({
+    definition: NOIR_CHRONICLE_SHEET,
+    character: activeCharacter,
+  });
 
   const handleCreateCharacter = (draft: CharacterData) => {
     const nextCharacter = buildCharacterFromCreator({
@@ -31,6 +37,67 @@ export default function PlayPage() {
     setActiveCharacter(nextCharacter);
     setSection("ficha");
     toast.success("Ficha criada e pronta para a mesa.");
+  };
+
+  const handleImportItem = async (item: {
+    id: string;
+    name: string;
+    description: string | null;
+    item_type: string;
+    rarity: string;
+    weight: number;
+    value: number;
+    damage: string | null;
+    armor_bonus: number | null;
+    effect: string | null;
+  }) => {
+    await sheetRuntime.importCompendiumData(NOIR_CHRONICLE_SHEET.bindings.inventory, {
+      id: item.id,
+      kind: "inventory",
+      values: {
+        name: item.name,
+        description: item.description ?? "",
+        item_type: item.item_type,
+        rarity: item.rarity,
+        weight: item.weight,
+        value: item.value,
+        damage: item.damage ?? "",
+        armor_bonus: item.armor_bonus ?? 0,
+        effect: item.effect ?? "",
+        equipped: false,
+      },
+    });
+    toast.success(`${item.name} vinculado ao inventario da ficha.`);
+  };
+
+  const handleImportSpell = async (spell: {
+    id: string;
+    name: string;
+    description: string | null;
+    school: string;
+    level: number;
+    casting_time: string;
+    range: string;
+    duration: string;
+    damage: string | null;
+    mp_cost: number;
+  }) => {
+    await sheetRuntime.importCompendiumData(NOIR_CHRONICLE_SHEET.bindings.spellbook, {
+      id: spell.id,
+      kind: "spellbook",
+      values: {
+        name: spell.name,
+        description: spell.description ?? "",
+        school: spell.school,
+        level: spell.level,
+        casting_time: spell.casting_time,
+        range: spell.range,
+        duration: spell.duration,
+        damage: spell.damage ?? "",
+        mp_cost: spell.mp_cost,
+      },
+    });
+    toast.success(`${spell.name} vinculada ao grimorio da ficha.`);
   };
 
   return (
@@ -76,7 +143,7 @@ export default function PlayPage() {
 
           <TabsContent value="ficha" className="mt-0 space-y-6">
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-              <CharacterSheet character={activeCharacter} />
+              <CharacterSheet store={sheetRuntime.store} definition={NOIR_CHRONICLE_SHEET} />
 
               <div className="space-y-4">
                 <Card variant="panel">
@@ -84,10 +151,15 @@ export default function PlayPage() {
                     <CardTitle className="text-xl">Resumo rapido</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 pt-0">
-                    <DataSection label="Raca" value={activeCharacter.race} variant="quiet" />
-                    <DataSection label="Classe" value={activeCharacter.class} variant="quiet" />
-                    <DataSection label="Nivel" value={activeCharacter.level} variant="quiet" />
-                    <DataSection label="Ouro" value={activeCharacter.gold} variant="quiet" />
+                    <DataSection label="Raca" value={String(sheetRuntime.store.values.race ?? activeCharacter.race)} variant="quiet" />
+                    <DataSection label="Classe" value={String(sheetRuntime.store.values.class ?? activeCharacter.class)} variant="quiet" />
+                    <DataSection label="Nivel" value={Number(sheetRuntime.store.values.level ?? activeCharacter.level)} variant="quiet" />
+                    <DataSection label="Ouro" value={Number(sheetRuntime.store.values.gold ?? activeCharacter.gold)} variant="quiet" />
+                    <DataSection
+                      label="Bindings"
+                      value={`${sheetRuntime.store.repeaters.inventory?.length ?? 0} itens | ${sheetRuntime.store.repeaters.spellbook?.length ?? 0} magias`}
+                      variant="quiet"
+                    />
                   </CardContent>
                 </Card>
 
@@ -100,7 +172,7 @@ export default function PlayPage() {
                       A ficha atual esta em modo demo/local. Crie uma nova personagem para atualizar este painel e levar os dados para a mesa da sessao.
                     </p>
                     <p>
-                      Os componentes abaixo exercitam o sistema base do plano: dados, inventario e magias com o novo tema.
+                      Os componentes abaixo exercitam o sistema base do plano: dados, inventario e magias com o novo tema, agora ligados ao attribute store e ao worker da ficha.
                     </p>
                   </CardContent>
                 </Card>
@@ -134,7 +206,7 @@ export default function PlayPage() {
               <TabsContent value="inventario" className="mt-0">
                 <Card variant="panel">
                   <CardContent className="p-6">
-                    <InventoryPanel />
+                    <InventoryPanel onImportItem={handleImportItem} />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -142,7 +214,7 @@ export default function PlayPage() {
               <TabsContent value="magias" className="mt-0">
                 <Card variant="panel">
                   <CardContent className="p-6">
-                    <SpellBook />
+                    <SpellBook onImportSpell={handleImportSpell} />
                   </CardContent>
                 </Card>
               </TabsContent>

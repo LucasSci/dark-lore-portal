@@ -2,12 +2,18 @@ import { describe, expect, it } from "vitest";
 import {
   BOARD_COLUMNS,
   BOARD_ROWS,
+  createSceneModel,
   createBoard,
   createInitialFog,
   createInitiativeOrder,
   getNextInitiativeTurn,
   getNextOpenPosition,
+  moveSceneToken,
+  recordSceneRoll,
   revealFogArea,
+  setSceneCameraScale,
+  startSceneInitiative,
+  advanceSceneInitiative,
 } from "@/lib/virtual-tabletop";
 
 describe("virtual tabletop helpers", () => {
@@ -78,6 +84,63 @@ describe("virtual tabletop helpers", () => {
     expect(getNextInitiativeTurn(order, "c", livingIds)).toEqual({
       nextId: "a",
       wrapped: true,
+    });
+  });
+
+  it("creates a scene model with a page and token objects", () => {
+    const scene = createSceneModel();
+
+    expect(scene.pages).toHaveLength(1);
+    expect(scene.objects.length).toBeGreaterThan(0);
+    expect(scene.selectedObjectId).toBeTruthy();
+  });
+
+  it("moves a token and keeps payload and object position in sync", () => {
+    const scene = createSceneModel();
+    const tokenId = scene.selectedObjectId!;
+    const moved = moveSceneToken(scene, tokenId, 4, 5);
+    const token = moved.objects.find((entry) => entry.id === tokenId);
+
+    expect(token?.objectType).toBe("token");
+    if (token?.objectType === "token") {
+      expect(token.position).toEqual({ x: 4, y: 5 });
+      expect(token.payload.x).toBe(4);
+      expect(token.payload.y).toBe(5);
+    }
+  });
+
+  it("adjusts camera scale within allowed bounds", () => {
+    const scene = createSceneModel();
+    const zoomedIn = setSceneCameraScale(scene, "in");
+    const zoomedOut = setSceneCameraScale(scene, "out");
+    const reset = setSceneCameraScale(zoomedIn, "reset");
+
+    expect(zoomedIn.pages[0].camera.scale).toBeGreaterThan(scene.pages[0].camera.scale);
+    expect(zoomedOut.pages[0].camera.scale).toBeLessThanOrEqual(scene.pages[0].camera.scale);
+    expect(reset.pages[0].camera.scale).toBe(1);
+  });
+
+  it("starts and advances initiative inside the scene model", () => {
+    const scene = startSceneInitiative(createSceneModel());
+    const advanced = advanceSceneInitiative(scene);
+
+    expect(scene.initiative.entries.length).toBeGreaterThan(0);
+    expect(scene.initiative.round).toBe(1);
+    expect(advanced.initiative.activeTurnId).toBeTruthy();
+  });
+
+  it("records a dice roll and mirrors it into the chat log", () => {
+    const scene = createSceneModel();
+    const updated = recordSceneRoll(scene, "Narrador", "1d20+4", [16], 20);
+
+    expect(updated.diceHistory[0]).toMatchObject({
+      actor: "Narrador",
+      notation: "1d20+4",
+      total: 20,
+    });
+    expect(updated.chatMessages.at(-1)).toMatchObject({
+      author: "Narrador",
+      tone: "roll",
     });
   });
 });
