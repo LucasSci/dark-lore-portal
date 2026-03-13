@@ -66,7 +66,7 @@ function normalizeInitiativeState(value: unknown): InitiativeState {
         return {
           tokenId: String(current.tokenId ?? ""),
           name: String(current.name ?? "Combatente"),
-          team: current.team === "npc" ? "npc" : "party",
+          team: (current.team === "npc" ? "npc" : "party") as import("@/lib/virtual-tabletop").TokenTeam,
           total: Number(current.total ?? 0),
           bonus: Number(current.bonus ?? 0),
         };

@@ -79,12 +79,14 @@ self.onmessage = (event: MessageEvent<SheetEngineRequest>) => {
         });
         break;
       }
-      default:
+      default: {
+        const unknownMessage = message as { requestId?: string };
         respond({
-          requestId: message.requestId,
+          requestId: unknownMessage.requestId ?? "unknown",
           ok: false,
           error: "Unsupported worker message.",
         });
+      }
     }
   } catch (error) {
     respond({
