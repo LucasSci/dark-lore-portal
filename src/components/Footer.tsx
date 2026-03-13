@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+
+import { Badge } from "@/components/ui/badge";
 import logoEmblem from "@/assets/logo-emblem.png";
 
 const footerLinks = [
@@ -13,49 +15,59 @@ const footerLinks = [
   {
     title: "Jogar",
     links: [
-      { label: "Criar Personagem", path: "/jogar" },
-      { label: "Encontrar Sessão", path: "/jogar" },
-      { label: "Regras", path: "/universo" },
+      { label: "Criar ficha", path: "/jogar" },
+      { label: "Mesa virtual", path: "/jogar" },
+      { label: "Biblioteca de regras", path: "/universo" },
     ],
   },
   {
-    title: "Comunidade",
+    title: "Conta",
     links: [
-      { label: "Fórum", path: "/comunidade" },
-      { label: "Discord", path: "/comunidade" },
-      { label: "Notícias", path: "/comunidade" },
+      { label: "Dashboard", path: "/conta" },
+      { label: "Biblioteca", path: "/conta" },
+      { label: "Downloads", path: "/conta" },
     ],
   },
 ];
 
 export default function Footer() {
   return (
-    <footer className="border-t border-gold/10 bg-card">
+    <footer className="border-t border-border/70 bg-surface-strong/80">
       <div className="container py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          {/* Brand */}
-          <div className="space-y-4">
+        <div className="grid gap-10 md:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))]">
+          <div className="space-y-5">
             <div className="flex items-center gap-3">
-              <img src={logoEmblem} alt="Emblem" className="h-8 w-8" />
-              <span className="font-display text-base tracking-widest text-gold">REALM</span>
+              <div className="rounded-full border border-primary/20 bg-background/60 p-2">
+                <img src={logoEmblem} alt="Realm emblem" className="h-8 w-8" />
+              </div>
+              <div>
+                <p className="font-display text-lg tracking-[0.22em] text-brand-gradient">REALM</p>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+                  Noir Chronicle UI
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Um universo de dark fantasy onde lendas são forjadas pelo destino e pela lâmina.
+
+            <p className="max-w-sm text-sm leading-7 text-muted-foreground">
+              Um universo de dark fantasy original com foco em cronicas, personagens, combate e conteudo digital propio.
             </p>
+
+            <Badge variant="outline" className="border-primary/25 text-primary">
+              Assets originais ou licenciados
+            </Badge>
           </div>
 
-          {/* Link columns */}
-          {footerLinks.map((col) => (
-            <div key={col.title}>
-              <h4 className="font-heading text-xs tracking-[0.2em] uppercase text-primary mb-4">
-                {col.title}
+          {footerLinks.map((column) => (
+            <div key={column.title}>
+              <h4 className="font-heading text-xs uppercase tracking-[0.2em] text-primary">
+                {column.title}
               </h4>
-              <ul className="space-y-2">
-                {col.links.map((link) => (
+              <ul className="mt-4 space-y-3">
+                {column.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       to={link.path}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {link.label}
                     </Link>
@@ -66,10 +78,9 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 pt-6 border-t border-gold/10 text-center">
-          <p className="text-xs text-muted-foreground tracking-wider">
-            © 2026 REALM. Todos os direitos reservados. Forjado nas trevas.
-          </p>
+        <div className="mt-12 flex flex-col gap-3 border-t border-border/70 pt-6 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+          <p>(c) 2026 Realm. Todos os direitos reservados.</p>
+          <p>Dark fantasy original, sem referencia direta a IPs de terceiros.</p>
         </div>
       </div>
     </footer>

@@ -1,0 +1,20 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" rx="28" fill="#081018"/>
+  <rect x="18" y="18" width="604" height="384" rx="22" fill="url(#bg)"/>
+  <circle cx="474" cy="112" r="46" fill="#E2B86B" fill-opacity="0.18"/>
+  <path d="M124 324L238 210L294 246L356 164L446 244L514 188V324H124Z" fill="#19181B"/>
+  <path d="M196 324L280 196L328 228L410 118L496 324H196Z" fill="#252129"/>
+  <path d="M408 126L442 72L472 126H408Z" fill="#7C5A2E"/>
+  <path d="M282 214H332V324H282V214Z" fill="#100E12"/>
+  <path d="M352 178H392V324H352V178Z" fill="#100E12"/>
+  <path d="M126 324H514" stroke="#F2C771" stroke-width="4" stroke-linecap="round"/>
+  <text x="320" y="366" fill="#F5D79A" font-size="22" text-anchor="middle" font-family="serif">
+    Atlas Landmark
+  </text>
+  <defs>
+    <linearGradient id="bg" x1="58" y1="20" x2="592" y2="394" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#132033"/>
+      <stop offset="1" stop-color="#120D0B"/>
+    </linearGradient>
+  </defs>
+</svg>

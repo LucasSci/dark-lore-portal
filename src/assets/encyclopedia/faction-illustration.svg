@@ -1,0 +1,20 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" rx="28" fill="#0A0C14"/>
+  <rect x="18" y="18" width="604" height="384" rx="22" fill="url(#bg)"/>
+  <circle cx="320" cy="210" r="130" stroke="#F2C771" stroke-width="10" stroke-opacity="0.18"/>
+  <path d="M320 96L384 176L352 314H288L256 176L320 96Z" fill="#201915"/>
+  <path d="M320 132L348 190L320 246L292 190L320 132Z" fill="#F2C771"/>
+  <path d="M210 210H430" stroke="#7C5A2E" stroke-width="8" stroke-linecap="round"/>
+  <path d="M320 78V342" stroke="#7C5A2E" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="320" cy="210" r="28" fill="#0E1118"/>
+  <circle cx="320" cy="210" r="12" fill="#F2C771"/>
+  <text x="320" y="370" fill="#F5D79A" font-size="22" text-anchor="middle" font-family="serif">
+    Faction Sigil
+  </text>
+  <defs>
+    <linearGradient id="bg" x1="36" y1="26" x2="604" y2="394" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1C1D2B"/>
+      <stop offset="1" stop-color="#140E0D"/>
+    </linearGradient>
+  </defs>
+</svg>

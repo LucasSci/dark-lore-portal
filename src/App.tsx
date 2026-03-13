@@ -27,6 +27,7 @@ const App = () => (
             <Route path="/campanha" element={<CampaignPage />} />
             <Route path="/jogar" element={<PlayPage />} />
             <Route path="/universo" element={<UniversePage />} />
+            <Route path="/universo/:entrySlug" element={<UniversePage />} />
             <Route path="/comunidade" element={<CommunityPage />} />
             <Route path="/loja" element={<StorePage />} />
             <Route path="/conta" element={<AccountPage />} />

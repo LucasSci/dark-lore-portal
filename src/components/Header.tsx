@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Menu, Shield, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import logoEmblem from "@/assets/logo-emblem.png";
 
 const navItems = [
@@ -18,74 +21,96 @@ export default function Header() {
   const location = useLocation();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-gold/20 bg-background/80 backdrop-blur-md">
-      <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
-          <img src={logoEmblem} alt="Emblem" className="h-10 w-10" />
-          <span className="font-display text-lg tracking-widest text-gold">
-            REALM
-          </span>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/82 backdrop-blur-xl">
+      <div className="container flex h-16 items-center justify-between gap-4">
+        <Link to="/" className="flex min-w-0 items-center gap-3">
+          <div className="rounded-full border border-primary/20 bg-background/60 p-2 shadow-panel">
+            <img src={logoEmblem} alt="Realm emblem" className="h-8 w-8" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-display text-lg tracking-[0.22em] text-brand-gradient">REALM</p>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+              Noir Chronicle UI
+            </p>
+          </div>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`font-heading text-sm tracking-[0.15em] uppercase transition-colors duration-300 hover:text-primary ${
-                location.pathname === item.path
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-          <Link
-            to="/conta"
-            className="font-heading text-sm tracking-[0.15em] uppercase border border-primary/40 px-4 py-1.5 transition-all duration-300 hover:bg-primary/10 hover:border-primary text-primary"
-          >
-            Conta
-          </Link>
+        <nav className="hidden items-center gap-2 lg:flex">
+          {navItems.map((item) => {
+            const active = location.pathname === item.path;
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`rounded-[calc(var(--radius)-4px)] px-4 py-2 font-heading text-xs uppercase tracking-[0.18em] transition-colors ${
+                  active
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Mobile toggle */}
+        <div className="hidden items-center gap-3 lg:flex">
+          <Badge variant="outline" className="border-primary/25 text-primary">
+            <Shield className="mr-2 h-3.5 w-3.5" />
+            Original dark fantasy
+          </Badge>
+          <Button asChild variant="outline">
+            <Link to="/conta">Conta</Link>
+          </Button>
+        </div>
+
         <button
-          className="md:hidden text-foreground"
-          onClick={() => setMobileOpen(!mobileOpen)}
+          type="button"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-[calc(var(--radius)-2px)] border border-border/70 bg-secondary/60 text-foreground transition-colors hover:border-primary/30 hover:bg-secondary lg:hidden"
+          onClick={() => setMobileOpen((previous) => !previous)}
+          aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
         >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
-      {/* Mobile nav */}
       <AnimatePresence>
-        {mobileOpen && (
+        {mobileOpen ? (
           <motion.nav
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-gold/10 bg-background/95 backdrop-blur-md overflow-hidden"
+            className="overflow-hidden border-t border-border/70 bg-background/96 lg:hidden"
           >
-            <div className="container py-4 flex flex-col gap-3">
-              {[...navItems, { label: "Conta", path: "/conta" }].map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileOpen(false)}
-                  className={`font-heading text-sm tracking-[0.15em] uppercase py-2 transition-colors ${
-                    location.pathname === item.path
-                      ? "text-primary"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <div className="container space-y-4 py-4">
+              <Badge variant="outline" className="border-primary/25 text-primary">
+                Original dark fantasy
+              </Badge>
+
+              <div className="grid gap-2">
+                {[...navItems, { label: "Conta", path: "/conta" }].map((item) => {
+                  const active = location.pathname === item.path;
+
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={`rounded-[calc(var(--radius)-4px)] border px-4 py-3 font-heading text-xs uppercase tracking-[0.18em] transition-colors ${
+                        active
+                          ? "border-primary/30 bg-secondary text-foreground"
+                          : "border-border/70 bg-background/40 text-muted-foreground hover:border-primary/20 hover:text-foreground"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </motion.nav>
-        )}
+        ) : null}
       </AnimatePresence>
     </header>
   );

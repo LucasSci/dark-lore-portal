@@ -7,16 +7,26 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "var(--layout-gutter)",
       screens: {
         "2xl": "1400px",
       },
     },
     extend: {
       fontFamily: {
-        display: ['Cinzel Decorative', 'serif'],
-        heading: ['Cinzel', 'serif'],
-        body: ['Cormorant Garamond', 'serif'],
+        display: ["Fraunces", "serif"],
+        heading: ["Fraunces", "serif"],
+        body: ["Public Sans", "sans-serif"],
+        mono: ["IBM Plex Mono", "monospace"],
+      },
+      spacing: {
+        "space-xs": "var(--space-xs)",
+        "space-sm": "var(--space-sm)",
+        "space-md": "var(--space-md)",
+        "space-lg": "var(--space-lg)",
+        "space-xl": "var(--space-xl)",
+        "space-2xl": "var(--space-2xl)",
+        "space-3xl": "var(--space-3xl)",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -24,6 +34,10 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        brand: {
+          DEFAULT: "hsl(var(--brand))",
+          foreground: "hsl(var(--brand-foreground))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -44,6 +58,18 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -52,6 +78,19 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        surface: {
+          DEFAULT: "hsl(var(--surface-base))",
+          raised: "hsl(var(--surface-raised))",
+          strong: "hsl(var(--surface-strong))",
+          foreground: "hsl(var(--foreground))",
+        },
+        status: {
+          good: "hsl(var(--status-good))",
+          warn: "hsl(var(--status-warn))",
+          bad: "hsl(var(--status-bad))",
+          info: "hsl(var(--status-info))",
+        },
+        parchment: "hsl(var(--parchment))",
         gold: {
           DEFAULT: "hsl(var(--gold))",
           light: "hsl(var(--gold-light))",
@@ -76,6 +115,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      backgroundImage: {
+        "brand-gradient": "var(--gradient-brand)",
+        "surface-gradient": "var(--gradient-surface)",
+        "page-gradient": "var(--gradient-page)",
+        "hero-gradient": "var(--gradient-hero)",
+        "warning-gradient": "var(--gradient-warning)",
+      },
+      boxShadow: {
+        panel: "var(--shadow-panel)",
+        elevated: "var(--shadow-elevated)",
+        brand: "var(--shadow-glow-brand)",
+        warning: "var(--shadow-glow-warning)",
       },
       borderRadius: {
         lg: "var(--radius)",

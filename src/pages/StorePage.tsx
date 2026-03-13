@@ -1,55 +1,337 @@
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ShoppingBag, Map, Scroll, Palette, Sword } from "lucide-react";
+import {
+  CreditCard,
+  Download,
+  Library,
+  Loader2,
+  ShoppingBag,
+} from "lucide-react";
+import { Link, useSearchParams, type SetURLSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import StoreProductCard from "@/components/store/StoreProductCard";
+import UserLibrary from "@/components/store/UserLibrary";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  confirmStorePurchase,
+  createDownloadLink,
+  createStoreCheckout,
+  fetchStorefrontData,
+} from "@/lib/store-api";
+import {
+  formatStorePrice,
+  productTypeLabels,
+  type DigitalProductType,
+} from "@/lib/store";
 
-const products = [
-  { icon: Map, title: "Pacote de Mapas: Terras Sombrias", price: "R$ 19,90", tag: "Mapas" },
-  { icon: Scroll, title: "Aventura: A Cripta dos Esquecidos", price: "R$ 14,90", tag: "Aventura" },
-  { icon: Palette, title: "Token Pack: Bestiário Vol. I", price: "R$ 9,90", tag: "Tokens" },
-  { icon: Sword, title: "Suplemento: Classes Avançadas", price: "R$ 24,90", tag: "Regras" },
-  { icon: Map, title: "Mapa Mundi HD — Realm of Shadows", price: "R$ 29,90", tag: "Mapas" },
-  { icon: Scroll, title: "Aventura: O Ritual de Sangue", price: "R$ 14,90", tag: "Aventura" },
+type ProductFilter = "todos" | DigitalProductType;
+
+const filters: ProductFilter[] = [
+  "todos",
+  "livro_pdf",
+  "mapa",
+  "token",
+  "aventura",
+  "classe",
+  "item",
 ];
 
+function stripCheckoutParams(
+  searchParams: URLSearchParams,
+  setSearchParams: SetURLSearchParams,
+) {
+  const next = new URLSearchParams(searchParams);
+  next.delete("checkout");
+  next.delete("session_id");
+  setSearchParams(next, { replace: true });
+}
+
 export default function StorePage() {
+  const { user, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState("catalogo");
+  const [activeFilter, setActiveFilter] = useState<ProductFilter>("todos");
+  const [checkoutProductId, setCheckoutProductId] = useState<string | null>(null);
+  const [downloadProductId, setDownloadProductId] = useState<string | null>(null);
+  const [handledSessionId, setHandledSessionId] = useState<string | null>(null);
+
+  const storefrontQuery = useQuery({
+    queryKey: ["storefront", user?.id ?? "guest"],
+    queryFn: fetchStorefrontData,
+    staleTime: 60_000,
+  });
+
+  const library = storefrontQuery.data?.library ?? [];
+  const ownedProductIds = new Set(library.map((item) => item.productId));
+  const filteredProducts = (storefrontQuery.data?.products ?? []).filter((product) =>
+    activeFilter === "todos" ? true : product.product_type === activeFilter,
+  );
+
+  const checkoutMutation = useMutation({
+    mutationFn: createStoreCheckout,
+    onSuccess: (data) => {
+      if (!data.url) {
+        toast.error("Nao foi possivel abrir o checkout do Stripe.");
+        return;
+      }
+
+      window.location.href = data.url;
+    },
+    onError: (error) => {
+      toast.error(error.message);
+      setCheckoutProductId(null);
+    },
+  });
+
+  const confirmMutation = useMutation({
+    mutationFn: confirmStorePurchase,
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ["storefront"] });
+      toast.success("Compra confirmada. Produto liberado na sua biblioteca.");
+
+      if (data.downloadUrl) {
+        window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
+      }
+
+      stripCheckoutParams(searchParams, setSearchParams);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+      stripCheckoutParams(searchParams, setSearchParams);
+    },
+  });
+
+  const downloadMutation = useMutation({
+    mutationFn: createDownloadLink,
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ["storefront"] });
+      window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
+      setDownloadProductId(null);
+      toast.success("Download liberado.");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+      setDownloadProductId(null);
+    },
+  });
+
+  useEffect(() => {
+    const checkoutStatus = searchParams.get("checkout");
+    const sessionId = searchParams.get("session_id");
+
+    if (checkoutStatus === "cancelled") {
+      toast.message("Pagamento cancelado. Seu carrinho digital continua pronto na loja.");
+      stripCheckoutParams(searchParams, setSearchParams);
+      return;
+    }
+
+    if (
+      checkoutStatus !== "success" ||
+      !sessionId ||
+      handledSessionId === sessionId ||
+      authLoading ||
+      !user
+    ) {
+      return;
+    }
+
+    setHandledSessionId(sessionId);
+    setActiveTab("biblioteca");
+    confirmMutation.mutate(sessionId);
+  }, [
+    authLoading,
+    confirmMutation,
+    handledSessionId,
+    searchParams,
+    setSearchParams,
+    user,
+  ]);
+
+  const handleCheckout = (productId: string) => {
+    if (!user) {
+      toast.message("Entre na sua conta para concluir a compra.");
+      return;
+    }
+
+    setCheckoutProductId(productId);
+    checkoutMutation.mutate(productId);
+  };
+
+  const handleDownload = (productId: string) => {
+    if (!user) {
+      toast.message("Entre na sua conta para baixar seu conteudo.");
+      return;
+    }
+
+    setDownloadProductId(productId);
+    downloadMutation.mutate(productId);
+  };
+
+  const totalSpent = storefrontQuery.data?.summary.totalSpentCents ?? 0;
+
   return (
     <div className="container py-24">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-16"
+        className="mb-12 space-y-8"
       >
-        <ShoppingBag className="w-10 h-10 text-primary mx-auto mb-4" />
-        <h1 className="font-display text-3xl md:text-5xl text-gold-gradient mb-4">
-          Loja
-        </h1>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Conteúdo digital exclusivo para enriquecer suas sessões e campanhas.
-        </p>
+        <div className="text-center">
+          <ShoppingBag className="mx-auto mb-4 h-10 w-10 text-primary" />
+          <h1 className="mb-4 font-display text-3xl text-gold-gradient md:text-5xl">
+            Loja Digital de RPG
+          </h1>
+          <p className="mx-auto max-w-2xl text-muted-foreground">
+            Venda e entrega de livros PDF, mapas, tokens, aventuras, classes e itens
+            diretamente no site, com checkout Stripe e biblioteca do usuario.
+          </p>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <Card className="border-gold/15 bg-card-gradient shadow-card">
+            <CardContent className="grid gap-4 p-6 md:grid-cols-3">
+              <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Catalogo ativo
+                </p>
+                <p className="mt-2 font-heading text-3xl text-foreground">
+                  {storefrontQuery.data?.products.length ?? 0}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Na biblioteca
+                </p>
+                <p className="mt-2 font-heading text-3xl text-foreground">
+                  {storefrontQuery.data?.summary.ownedCount ?? 0}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Total investido
+                </p>
+                <p className="mt-2 font-heading text-3xl text-foreground">
+                  {formatStorePrice(totalSpent, "BRL")}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-gold/15 bg-card-gradient shadow-card">
+            <CardContent className="space-y-4 p-6">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full border border-primary/20 bg-background/50 p-3">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-heading text-lg text-foreground">Fluxo de compra</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Checkout Stripe + download automatico + re-download pela conta.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-sm text-foreground/90">
+                <p>1. O usuario escolhe um produto e entra no checkout Stripe.</p>
+                <p>2. A compra confirmada libera o arquivo e registra a biblioteca.</p>
+                <p>3. O download continua disponivel depois na conta do usuario.</p>
+              </div>
+
+              {!user && (
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/conta">Entrar para comprar</Link>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        {products.map((p, i) => (
-          <motion.div
-            key={p.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-            className="p-6 bg-card-gradient border border-gold/10 hover:border-gold/30 transition-all duration-300 cursor-pointer shadow-card group"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="font-heading text-[10px] tracking-[0.2em] uppercase text-primary">{p.tag}</span>
-              <p.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid h-auto max-w-md grid-cols-2 bg-secondary/60 p-1">
+          <TabsTrigger value="catalogo" className="font-heading uppercase tracking-[0.18em]">
+            Catalogo
+          </TabsTrigger>
+          <TabsTrigger value="biblioteca" className="font-heading uppercase tracking-[0.18em]">
+            Biblioteca
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="catalogo" className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {filters.map((filter) => (
+              <Button
+                key={filter}
+                variant={activeFilter === filter ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveFilter(filter)}
+              >
+                {filter === "todos" ? "Todos" : productTypeLabels[filter]}
+              </Button>
+            ))}
+          </div>
+
+          {storefrontQuery.isLoading ? (
+            <Card className="border-gold/15 bg-card-gradient shadow-card">
+              <CardContent className="flex items-center justify-center gap-3 p-10 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Carregando catalogo da loja...
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-6 xl:grid-cols-3">
+              {filteredProducts.map((product) => (
+                <StoreProductCard
+                  key={product.id}
+                  product={product}
+                  owned={ownedProductIds.has(product.id)}
+                  userAuthenticated={!!user}
+                  busy={
+                    checkoutMutation.isPending && checkoutProductId === product.id ||
+                    downloadMutation.isPending && downloadProductId === product.id
+                  }
+                  onBuy={handleCheckout}
+                  onDownload={handleDownload}
+                />
+              ))}
             </div>
-            <h3 className="font-heading text-base text-foreground mb-3">{p.title}</h3>
-            <div className="flex items-center justify-between">
-              <span className="font-heading text-lg text-primary">{p.price}</span>
-              <span className="font-heading text-xs tracking-[0.1em] uppercase border border-primary/30 text-primary px-3 py-1 group-hover:bg-primary/10 transition-colors">
-                Comprar
-              </span>
+          )}
+        </TabsContent>
+
+        <TabsContent value="biblioteca" className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-heading text-2xl text-foreground">Biblioteca do usuario</h2>
+              <p className="text-sm text-muted-foreground">
+                Todos os downloads liberados apos o pagamento ficam guardados aqui.
+              </p>
             </div>
-          </motion.div>
-        ))}
-      </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="border-primary/30 text-primary">
+                <Library className="mr-2 h-3.5 w-3.5" />
+                {storefrontQuery.data?.summary.ownedCount ?? 0} itens
+              </Badge>
+              <Badge variant="outline" className="border-primary/30 text-primary">
+                <Download className="mr-2 h-3.5 w-3.5" />
+                Download automatico
+              </Badge>
+            </div>
+          </div>
+
+          <UserLibrary
+            items={library}
+            userAuthenticated={!!user}
+            busyProductId={downloadMutation.isPending ? downloadProductId : null}
+            onDownload={handleDownload}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

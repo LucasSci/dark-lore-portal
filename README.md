@@ -71,3 +71,56 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Loja digital com Stripe
+
+O projeto agora inclui uma loja digital integrada com:
+
+- catalogo de produtos digitais
+- checkout Stripe
+- confirmacao de compra por webhook
+- download automatico apos pagamento
+- biblioteca do usuario
+
+### Banco e storage
+
+A migration `supabase/migrations/20260312170500_storefront.sql` cria:
+
+- `digital_products`
+- `store_orders`
+- bucket privado `digital-products`
+
+Envie para o bucket os arquivos usados no catalogo, respeitando os `file_path` gravados na tabela `digital_products`.
+
+### Edge Functions
+
+As funcoes usadas pela loja sao:
+
+- `storefront-data`
+- `create-store-checkout`
+- `confirm-store-purchase`
+- `create-download-link`
+- `stripe-store-webhook`
+
+No `supabase/config.toml`, a funcao `stripe-store-webhook` esta configurada com `verify_jwt = false`.
+
+### Secrets necessarios
+
+Configure estes secrets no Supabase Functions:
+
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SITE_URL`
+
+### Webhook Stripe
+
+Cadastre no Stripe um webhook apontando para:
+
+`https://<seu-projeto>.supabase.co/functions/v1/stripe-store-webhook`
+
+Eventos recomendados:
+
+- `checkout.session.completed`
+- `checkout.session.async_payment_succeeded`
+- `checkout.session.async_payment_failed`

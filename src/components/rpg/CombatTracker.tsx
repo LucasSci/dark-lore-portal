@@ -1,9 +1,27 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Sword, Shield, Heart, Zap, SkullIcon, ScrollText } from "lucide-react";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Clock3,
+  Heart,
+  Shield,
+  Skull,
+  Sparkles,
+  Swords,
+  UserRound,
+  Users,
+  Zap,
+} from "lucide-react";
+
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataSection } from "@/components/ui/data-section";
 import { Input } from "@/components/ui/input";
-import { rollDice, formatModifier } from "@/lib/rpg-utils";
+import { Progress } from "@/components/ui/progress";
+import { rollDice } from "@/lib/rpg-utils";
+import { getResourceTone } from "@/lib/rpg-ui";
 
 interface Combatant {
   id: string;
@@ -20,11 +38,28 @@ interface LogEntry {
   id: number;
   round: number;
   actor: string;
-  type: string;
+  type: "start" | "round" | "attack" | "heal" | "defeat" | "end";
   description: string;
-  damage?: number;
-  roll?: string;
-  result?: number;
+}
+
+function sortCombatants(list: Combatant[]) {
+  return [...list].sort((left, right) => right.initiative - left.initiative);
+}
+
+function getLogVariant(type: LogEntry["type"]) {
+  if (type === "heal") {
+    return "success";
+  }
+
+  if (type === "attack") {
+    return "warning";
+  }
+
+  if (type === "defeat" || type === "end") {
+    return "danger";
+  }
+
+  return "info";
 }
 
 export default function CombatTracker() {
@@ -33,237 +68,554 @@ export default function CombatTracker() {
   const [round, setRound] = useState(1);
   const [combatActive, setCombatActive] = useState(false);
   const [battleLog, setBattleLog] = useState<LogEntry[]>([]);
-
-  // Add NPC form
   const [npcName, setNpcName] = useState("");
   const [npcHp, setNpcHp] = useState(20);
   const [npcAc, setNpcAc] = useState(12);
+  const [confirmStopOpen, setConfirmStopOpen] = useState(false);
+
+  const addLog = (
+    actor: string,
+    type: LogEntry["type"],
+    description: string,
+    roundOverride = round,
+  ) => {
+    setBattleLog((previous) => [
+      {
+        id: Date.now() + previous.length,
+        round: roundOverride,
+        actor,
+        type,
+        description,
+      },
+      ...previous,
+    ]);
+  };
 
   const addNpc = () => {
-    if (!npcName) return;
-    const { total } = rollDice(20);
-    setCombatants(prev => [...prev, {
-      id: `npc-${Date.now()}`,
-      name: npcName,
-      initiative: total,
-      hpCurrent: npcHp,
-      hpMax: npcHp,
-      ac: npcAc,
-      isNpc: true,
-      conditions: [],
-    }].sort((a, b) => b.initiative - a.initiative));
+    const safeName = npcName.trim();
+
+    if (!safeName) {
+      return;
+    }
+
+    const initiative = rollDice(20).total;
+    const nextCombatants = sortCombatants([
+      ...combatants,
+      {
+        id: `npc-${Date.now()}`,
+        name: safeName,
+        initiative,
+        hpCurrent: npcHp,
+        hpMax: npcHp,
+        ac: npcAc,
+        isNpc: true,
+        conditions: [],
+      },
+    ]);
+
+    setCombatants(nextCombatants);
     setNpcName("");
   };
 
-  const addSampleParty = () => {
+  const addSampleEncounter = () => {
     const party: Combatant[] = [
-      { id: 'p1', name: 'Thorin (Guerreiro)', initiative: rollDice(20).total + 2, hpCurrent: 45, hpMax: 45, ac: 18, isNpc: false, conditions: [] },
-      { id: 'p2', name: 'Elara (Maga)', initiative: rollDice(20).total + 3, hpCurrent: 22, hpMax: 22, ac: 12, isNpc: false, conditions: [] },
-      { id: 'p3', name: 'Grimshaw (Clérigo)', initiative: rollDice(20).total + 1, hpCurrent: 32, hpMax: 32, ac: 16, isNpc: false, conditions: [] },
+      {
+        id: "hero-1",
+        name: "Thorin Vale",
+        initiative: rollDice(20).total + 2,
+        hpCurrent: 45,
+        hpMax: 45,
+        ac: 18,
+        isNpc: false,
+        conditions: ["Linha de frente"],
+      },
+      {
+        id: "hero-2",
+        name: "Elara Morn",
+        initiative: rollDice(20).total + 3,
+        hpCurrent: 24,
+        hpMax: 24,
+        ac: 13,
+        isNpc: false,
+        conditions: ["Canalizando"],
+      },
+      {
+        id: "hero-3",
+        name: "Grimshaw Reed",
+        initiative: rollDice(20).total + 1,
+        hpCurrent: 33,
+        hpMax: 33,
+        ac: 16,
+        isNpc: false,
+        conditions: [],
+      },
     ];
+
     const enemies: Combatant[] = [
-      { id: 'e1', name: 'Goblin Líder', initiative: rollDice(20).total + 3, hpCurrent: 35, hpMax: 35, ac: 15, isNpc: true, conditions: [] },
-      { id: 'e2', name: 'Goblin Soldado', initiative: rollDice(20).total + 2, hpCurrent: 15, hpMax: 15, ac: 13, isNpc: true, conditions: [] },
-      { id: 'e3', name: 'Goblin Soldado', initiative: rollDice(20).total + 2, hpCurrent: 15, hpMax: 15, ac: 13, isNpc: true, conditions: [] },
+      {
+        id: "enemy-1",
+        name: "Goblin Leader",
+        initiative: rollDice(20).total + 3,
+        hpCurrent: 36,
+        hpMax: 36,
+        ac: 15,
+        isNpc: true,
+        conditions: ["Tatico"],
+      },
+      {
+        id: "enemy-2",
+        name: "Goblin Raider",
+        initiative: rollDice(20).total + 2,
+        hpCurrent: 15,
+        hpMax: 15,
+        ac: 13,
+        isNpc: true,
+        conditions: [],
+      },
+      {
+        id: "enemy-3",
+        name: "Goblin Raider",
+        initiative: rollDice(20).total + 2,
+        hpCurrent: 15,
+        hpMax: 15,
+        ac: 13,
+        isNpc: true,
+        conditions: [],
+      },
     ];
-    setCombatants([...party, ...enemies].sort((a, b) => b.initiative - a.initiative));
+
+    const nextCombatants = sortCombatants([...party, ...enemies]);
+    setCombatants(nextCombatants);
     setCombatActive(true);
     setRound(1);
     setCurrentTurn(0);
-    addLog('Sistema', 'inicio', 'Combate iniciado!');
+    setBattleLog([]);
+    addLog("Sistema", "start", "Combate demo iniciado.", 1);
   };
 
   const startCombat = () => {
-    if (combatants.length < 2) return;
+    if (combatants.length < 2) {
+      return;
+    }
+
     setCombatActive(true);
     setRound(1);
     setCurrentTurn(0);
-    addLog('Sistema', 'inicio', 'Combate iniciado!');
+    setBattleLog([]);
+    addLog("Sistema", "start", "Combate iniciado.", 1);
+  };
+
+  const advanceCombat = (roster: Combatant[]) => {
+    const alive = roster.filter((combatant) => combatant.hpCurrent > 0);
+
+    if (alive.length <= 1) {
+      setCombatActive(false);
+      addLog(
+        "Sistema",
+        "end",
+        alive[0] ? `${alive[0].name} venceu o confronto.` : "O confronto terminou sem sobreviventes.",
+      );
+      return;
+    }
+
+    for (let offset = 1; offset <= roster.length; offset += 1) {
+      const nextIndex = (currentTurn + offset) % roster.length;
+      const candidate = roster[nextIndex];
+
+      if (candidate?.hpCurrent > 0) {
+        const wrapped = currentTurn + offset >= roster.length;
+
+        if (wrapped) {
+          const nextRound = round + 1;
+          setRound(nextRound);
+          addLog("Sistema", "round", `Rodada ${nextRound} iniciada.`, nextRound);
+        }
+
+        setCurrentTurn(nextIndex);
+        return;
+      }
+    }
   };
 
   const nextTurn = () => {
-    const alive = combatants.filter(c => c.hpCurrent > 0);
-    if (alive.length <= 1) {
-      setCombatActive(false);
-      addLog('Sistema', 'fim', `Combate finalizado! ${alive[0]?.name || 'Ninguém'} venceu!`);
+    if (!combatants.length) {
       return;
     }
-    let next = currentTurn + 1;
-    if (next >= combatants.length) {
-      next = 0;
-      setRound(r => r + 1);
-      addLog('Sistema', 'rodada', `Rodada ${round + 1}`);
-    }
-    // Skip dead
-    while (combatants[next]?.hpCurrent <= 0 && next < combatants.length) {
-      next++;
-      if (next >= combatants.length) {
-        next = 0;
-        setRound(r => r + 1);
-      }
-    }
-    setCurrentTurn(next);
+
+    advanceCombat(combatants);
   };
 
   const attack = (targetId: string) => {
     const attacker = combatants[currentTurn];
-    if (!attacker) return;
-    const target = combatants.find(c => c.id === targetId);
-    if (!target || target.hpCurrent <= 0) return;
+    const target = combatants.find((combatant) => combatant.id === targetId);
 
-    const atkRoll = rollDice(20).total;
-    const hit = atkRoll >= target.ac;
-
-    if (hit) {
-      const dmgRoll = rollDice(8).total;
-      setCombatants(prev => prev.map(c =>
-        c.id === targetId ? { ...c, hpCurrent: Math.max(0, c.hpCurrent - dmgRoll) } : c
-      ));
-      addLog(attacker.name, 'ataque', `atacou ${target.name} e acertou! (d20: ${atkRoll} vs CA ${target.ac}) → ${dmgRoll} de dano`, dmgRoll, `d20`, atkRoll);
-      if (target.hpCurrent - dmgRoll <= 0) {
-        addLog('Sistema', 'morte', `${target.name} foi derrotado!`);
-      }
-    } else {
-      addLog(attacker.name, 'ataque', `atacou ${target.name} mas errou! (d20: ${atkRoll} vs CA ${target.ac})`, undefined, `d20`, atkRoll);
+    if (!attacker || !target || target.hpCurrent <= 0) {
+      return;
     }
-    nextTurn();
+
+    const attackRoll = rollDice(20).total;
+    const hit = attackRoll >= target.ac;
+
+    if (!hit) {
+      addLog(
+        attacker.name,
+        "attack",
+        `${attacker.name} falhou contra ${target.name} com ${attackRoll} contra CA ${target.ac}.`,
+      );
+      advanceCombat(combatants);
+      return;
+    }
+
+    const damage = rollDice(8).total;
+    const nextCombatants = combatants.map((combatant) =>
+      combatant.id === targetId
+        ? { ...combatant, hpCurrent: Math.max(0, combatant.hpCurrent - damage) }
+        : combatant,
+    );
+
+    setCombatants(nextCombatants);
+    addLog(
+      attacker.name,
+      "attack",
+      `${attacker.name} acertou ${target.name} com ${attackRoll} e causou ${damage} de dano.`,
+    );
+
+    if (target.hpCurrent - damage <= 0) {
+      addLog("Sistema", "defeat", `${target.name} caiu em combate.`);
+    }
+
+    advanceCombat(nextCombatants);
   };
 
   const heal = (targetId: string) => {
-    const healer = combatants[currentTurn];
-    const target = combatants.find(c => c.id === targetId);
-    if (!target) return;
-    const healRoll = rollDice(8).total + 3;
-    setCombatants(prev => prev.map(c =>
-      c.id === targetId ? { ...c, hpCurrent: Math.min(c.hpMax, c.hpCurrent + healRoll) } : c
-    ));
-    addLog(healer?.name || 'Desconhecido', 'cura', `curou ${target.name} por ${healRoll} HP`, healRoll);
-    nextTurn();
+    const actor = combatants[currentTurn];
+    const target = combatants.find((combatant) => combatant.id === targetId);
+
+    if (!actor || !target || target.hpCurrent <= 0) {
+      return;
+    }
+
+    const restored = rollDice(8).total + 3;
+    const nextCombatants = combatants.map((combatant) =>
+      combatant.id === targetId
+        ? {
+            ...combatant,
+            hpCurrent: Math.min(combatant.hpMax, combatant.hpCurrent + restored),
+          }
+        : combatant,
+    );
+
+    setCombatants(nextCombatants);
+    addLog(actor.name, "heal", `${actor.name} restaurou ${restored} HP para ${target.name}.`);
+    advanceCombat(nextCombatants);
   };
 
-  const addLog = (actor: string, type: string, description: string, damage?: number, diceRoll?: string, result?: number) => {
-    setBattleLog(prev => [{
-      id: Date.now(),
-      round,
-      actor,
-      type,
-      description,
-      damage,
-      roll: diceRoll,
-      result,
-    }, ...prev]);
-  };
-
-  const current = combatants[currentTurn];
+  const currentCombatant = combatants[currentTurn];
+  const alivePlayers = combatants.filter((combatant) => !combatant.isNpc && combatant.hpCurrent > 0);
+  const aliveEnemies = combatants.filter((combatant) => combatant.isNpc && combatant.hpCurrent > 0);
 
   return (
     <div className="space-y-6">
-      {/* Controls */}
-      {!combatActive && (
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Button onClick={addSampleParty} variant="outline" className="flex-1">
-              <Sword className="w-4 h-4 mr-2" /> Carregar Combate Demo
-            </Button>
-            {combatants.length >= 2 && (
-              <Button onClick={startCombat} className="flex-1">
-                <Zap className="w-4 h-4 mr-2" /> Iniciar Combate
-              </Button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Input placeholder="Nome do NPC" value={npcName} onChange={e => setNpcName(e.target.value)} className="bg-secondary text-foreground" />
-            <Input type="number" placeholder="HP" value={npcHp} onChange={e => setNpcHp(+e.target.value)} className="w-20 bg-secondary text-foreground" />
-            <Input type="number" placeholder="CA" value={npcAc} onChange={e => setNpcAc(+e.target.value)} className="w-20 bg-secondary text-foreground" />
-            <Button onClick={addNpc} variant="outline">+</Button>
-          </div>
-        </div>
-      )}
-
-      {/* Round info */}
-      {combatActive && (
-        <div className="flex items-center justify-between p-3 bg-card-gradient border border-gold/20">
-          <span className="font-heading text-sm text-primary">Rodada {round}</span>
-          <span className="font-heading text-sm text-foreground">Turno: {current?.name}</span>
-        </div>
-      )}
-
-      {/* Initiative Order */}
-      <div className="space-y-2">
-        {combatants.map((c, i) => {
-          const hpPercent = (c.hpCurrent / c.hpMax) * 100;
-          const isDead = c.hpCurrent <= 0;
-          const isCurrent = combatActive && i === currentTurn;
-
-          return (
-            <motion.div
-              key={c.id}
-              layout
-              className={`p-3 border transition-all ${isCurrent ? 'border-primary bg-primary/5 glow-gold' : isDead ? 'border-border/30 opacity-40' : 'border-border bg-card-gradient'}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="font-heading text-xs text-muted-foreground w-6">{c.initiative}</span>
-                  {isDead ? <SkullIcon className="w-4 h-4 text-blood" /> : c.isNpc ? <Sword className="w-4 h-4 text-blood-light" /> : <Shield className="w-4 h-4 text-primary" />}
-                  <span className={`font-heading text-sm ${c.isNpc ? 'text-blood-light' : 'text-foreground'}`}>{c.name}</span>
+      <Card variant="elevated">
+        <CardHeader className="gap-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full border border-primary/20 bg-background/60 p-3 text-primary">
+                  <Swords className="h-5 w-5" />
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <span className="text-xs text-muted-foreground">HP</span>
-                    <p className="font-heading text-sm text-foreground">{c.hpCurrent}/{c.hpMax}</p>
-                    <div className="w-20 h-1 bg-secondary rounded-full overflow-hidden">
-                      <div className={`h-full transition-all ${hpPercent > 50 ? 'bg-green-500' : hpPercent > 25 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${hpPercent}%` }} />
-                    </div>
-                  </div>
-                  <span className="font-heading text-xs text-muted-foreground">CA {c.ac}</span>
+                <div>
+                  <CardTitle className="text-2xl">Controle de combate</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Iniciativa automatica, HP semantico, log de rodada e acoes de ataque ou cura.
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Actions for current turn */}
-              {isCurrent && !isDead && (
-                <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="mt-3 pt-3 border-t border-border flex flex-wrap gap-2">
-                  {combatants.filter(t => t.id !== c.id && t.hpCurrent > 0 && t.isNpc !== c.isNpc).map(target => (
-                    <Button key={target.id} size="sm" variant="destructive" onClick={() => attack(target.id)}>
-                      <Sword className="w-3 h-3 mr-1" /> Atacar {target.name}
-                    </Button>
-                  ))}
-                  {combatants.filter(t => t.hpCurrent > 0 && t.hpCurrent < t.hpMax && !t.isNpc).map(target => (
-                    <Button key={`heal-${target.id}`} size="sm" variant="outline" onClick={() => heal(target.id)}>
-                      <Heart className="w-3 h-3 mr-1" /> Curar {target.name}
-                    </Button>
-                  ))}
-                  <Button size="sm" variant="ghost" onClick={nextTurn}>Pular Turno</Button>
-                </motion.div>
-              )}
-            </motion.div>
-          );
-        })}
+            <div className="grid gap-3 sm:grid-cols-3">
+              <DataSection label="Aliados vivos" value={alivePlayers.length} variant="quiet" />
+              <DataSection label="Inimigos vivos" value={aliveEnemies.length} variant="quiet" />
+              <DataSection label="Rodada" value={round} variant="quiet" />
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {!combatActive ? (
+        <Alert variant="info">
+          <Sparkles />
+          <AlertTitle>Preparacao de encontro</AlertTitle>
+          <AlertDescription>
+            Carregue um confronto demo ou cadastre NPCs antes de iniciar a ordem de iniciativa.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Alert variant="warning">
+          <Clock3 />
+          <AlertTitle>Combate ativo</AlertTitle>
+          <AlertDescription>
+            Rodada {round}. Turno atual: {currentCombatant?.name ?? "Sem combatente"}.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!combatActive ? (
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <Card variant="panel">
+            <CardContent className="space-y-4 p-6">
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_110px_110px_auto]">
+                <Input
+                  placeholder="Nome do NPC"
+                  value={npcName}
+                  onChange={(event) => setNpcName(event.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="HP"
+                  value={npcHp}
+                  onChange={(event) => setNpcHp(Number(event.target.value))}
+                />
+                <Input
+                  type="number"
+                  placeholder="CA"
+                  value={npcAc}
+                  onChange={(event) => setNpcAc(Number(event.target.value))}
+                />
+                <Button onClick={addNpc}>Adicionar NPC</Button>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <DataSection
+                  label="Fila atual"
+                  value={combatants.length}
+                  icon={<Users className="h-4 w-4" />}
+                  variant="quiet"
+                />
+                <DataSection
+                  label="Prontos para iniciar"
+                  value={combatants.length >= 2 ? "Sim" : "Nao"}
+                  tone={combatants.length >= 2 ? "good" : "warn"}
+                  variant="quiet"
+                />
+                <DataSection
+                  label="Modo"
+                  value="Narrativo"
+                  icon={<Sparkles className="h-4 w-4" />}
+                  variant="quiet"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card variant="panel">
+            <CardContent className="space-y-3 p-6">
+              <Button variant="secondary" className="w-full" onClick={addSampleEncounter}>
+                Carregar combate demo
+              </Button>
+              <Button
+                className="w-full"
+                onClick={startCombat}
+                disabled={combatants.length < 2}
+              >
+                Iniciar combate
+              </Button>
+              <p className="text-sm leading-6 text-muted-foreground">
+                O sistema ordena a iniciativa automaticamente e sinaliza HP em bom estado, alerta ou zona critica.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <Card variant="panel">
+          <CardContent className="flex flex-col gap-3 p-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="info">Rodada {round}</Badge>
+              <Badge variant={currentCombatant?.isNpc ? "danger" : "success"}>
+                {currentCombatant?.isNpc ? "NPC ativo" : "Jogador ativo"}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                {currentCombatant?.name ?? "Sem combatente"} esta com a vez.
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={nextTurn}>
+                Pular turno
+              </Button>
+              <Button variant="danger" onClick={() => setConfirmStopOpen(true)}>
+                Encerrar combate
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-3">
+        {combatants.length === 0 ? (
+          <Card variant="outline">
+            <CardContent className="p-10 text-center text-sm text-muted-foreground">
+              Adicione combatentes para montar a ordem de iniciativa.
+            </CardContent>
+          </Card>
+        ) : (
+          combatants.map((combatant, index) => {
+            const hpPercent = combatant.hpMax > 0 ? (combatant.hpCurrent / combatant.hpMax) * 100 : 0;
+            const hpTone = getResourceTone(hpPercent);
+            const isCurrent = combatActive && index === currentTurn;
+            const isDefeated = combatant.hpCurrent <= 0;
+            const enemyTargets = combatants.filter(
+              (target) =>
+                target.id !== combatant.id &&
+                target.hpCurrent > 0 &&
+                target.isNpc !== combatant.isNpc,
+            );
+            const allyTargets = combatants.filter(
+              (target) =>
+                target.id !== combatant.id &&
+                target.hpCurrent > 0 &&
+                target.hpCurrent < target.hpMax &&
+                target.isNpc === combatant.isNpc,
+            );
+
+            return (
+              <motion.div
+                key={combatant.id}
+                layout
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card variant={isCurrent ? "elevated" : isDefeated ? "outline" : "panel"}>
+                  <CardContent className="space-y-4 p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline">Ini {combatant.initiative}</Badge>
+                          <Badge variant={combatant.isNpc ? "danger" : "success"}>
+                            {combatant.isNpc ? "NPC" : "Jogador"}
+                          </Badge>
+                          <Badge variant={hpTone === "good" ? "success" : hpTone === "warn" ? "warning" : "danger"}>
+                            {isDefeated ? "Derrotado" : hpTone === "good" ? "Estavel" : hpTone === "warn" ? "Ferido" : "Critico"}
+                          </Badge>
+                        </div>
+
+                        <div>
+                          <h3 className="font-heading text-xl text-foreground">{combatant.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {combatant.conditions.length > 0
+                              ? combatant.conditions.join(" | ")
+                              : "Sem condicoes registradas."}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <DataSection
+                          label="Vida"
+                          value={`${combatant.hpCurrent} / ${combatant.hpMax}`}
+                          icon={<Heart className="h-4 w-4" />}
+                          tone={hpTone}
+                          variant="quiet"
+                        >
+                          <Progress value={hpPercent} tone={hpTone} />
+                        </DataSection>
+                        <DataSection
+                          label="Armadura"
+                          value={`CA ${combatant.ac}`}
+                          icon={<Shield className="h-4 w-4" />}
+                          variant="quiet"
+                        />
+                        <DataSection
+                          label="Estado"
+                          value={isDefeated ? "Fora de combate" : isCurrent ? "Agindo agora" : "Aguardando"}
+                          icon={isDefeated ? <Skull className="h-4 w-4" /> : <UserRound className="h-4 w-4" />}
+                          tone={isDefeated ? "bad" : isCurrent ? "info" : "neutral"}
+                          variant="quiet"
+                        />
+                      </div>
+                    </div>
+
+                    <AnimatePresence initial={false}>
+                      {isCurrent && !isDefeated ? (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden border-t border-border/70 pt-4"
+                        >
+                          <div className="flex flex-wrap gap-2">
+                            {enemyTargets.map((target) => (
+                              <Button
+                                key={target.id}
+                                size="sm"
+                                variant="danger"
+                                onClick={() => attack(target.id)}
+                              >
+                                Atacar {target.name}
+                              </Button>
+                            ))}
+                            {allyTargets.map((target) => (
+                              <Button
+                                key={`heal-${target.id}`}
+                                size="sm"
+                                variant="success"
+                                onClick={() => heal(target.id)}
+                              >
+                                Curar {target.name}
+                              </Button>
+                            ))}
+                            <Button size="sm" variant="outline" onClick={nextTurn}>
+                              Passar vez
+                            </Button>
+                          </div>
+                        </motion.div>
+                      ) : null}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })
+        )}
       </div>
 
-      {/* Battle Log */}
-      {battleLog.length > 0 && (
-        <div className="border border-border bg-card-gradient">
-          <div className="p-3 border-b border-border flex items-center gap-2">
-            <ScrollText className="w-4 h-4 text-primary" />
-            <span className="font-heading text-sm text-foreground">Log de Batalha</span>
-          </div>
-          <div className="max-h-48 overflow-y-auto scrollbar-dark p-3 space-y-1">
-            {battleLog.map(entry => (
-              <motion.div
+      {battleLog.length > 0 ? (
+        <Card variant="panel">
+          <CardHeader>
+            <CardTitle className="text-xl">Log de batalha</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {battleLog.map((entry) => (
+              <div
                 key={entry.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-xs"
+                className="flex flex-col gap-2 rounded-[calc(var(--radius)-4px)] border border-border/70 bg-background/45 p-4 md:flex-row md:items-center md:justify-between"
               >
-                <span className="text-muted-foreground">[R{entry.round}]</span>{' '}
-                <span className={entry.type === 'morte' ? 'text-blood-light' : entry.type === 'cura' ? 'text-green-400' : entry.type === 'ataque' ? 'text-ember' : 'text-muted-foreground'}>
-                  {entry.description}
-                </span>
-              </motion.div>
+                <div>
+                  <p className="text-sm text-foreground">{entry.description}</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    Rodada {entry.round} | {entry.actor}
+                  </p>
+                </div>
+                <Badge variant={getLogVariant(entry.type)}>{entry.type}</Badge>
+              </div>
             ))}
-          </div>
-        </div>
-      )}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <ConfirmActionDialog
+        open={confirmStopOpen}
+        onOpenChange={setConfirmStopOpen}
+        title="Encerrar combate?"
+        description="Esta acao para a rodada atual e preserva o log ja registrado."
+        confirmLabel="Encerrar"
+        pendingLabel="Encerrando..."
+        onConfirm={async () => {
+          setCombatActive(false);
+          addLog("Sistema", "end", "Combate encerrado manualmente.");
+          setConfirmStopOpen(false);
+        }}
+      />
     </div>
   );
 }

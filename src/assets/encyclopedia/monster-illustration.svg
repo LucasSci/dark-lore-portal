@@ -1,0 +1,21 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" rx="28" fill="#090C11"/>
+  <rect x="18" y="18" width="604" height="384" rx="22" fill="url(#bg)"/>
+  <circle cx="320" cy="210" r="118" fill="#B63C2F" fill-opacity="0.14"/>
+  <path d="M214 314C214 243.86 270.86 187 341 187H345C415.14 187 472 243.86 472 314V324H214V314Z" fill="#160E12"/>
+  <path d="M290 135L328 173L286 212L250 177L290 135Z" fill="#792E26"/>
+  <path d="M392 135L430 177L394 212L352 173L392 135Z" fill="#792E26"/>
+  <path d="M242 196C242 146.294 282.294 106 332 106C381.706 106 422 146.294 422 196C422 245.706 381.706 286 332 286C282.294 286 242 245.706 242 196Z" fill="#24161A"/>
+  <circle cx="302" cy="191" r="16" fill="#F2C771"/>
+  <circle cx="362" cy="191" r="16" fill="#F2C771"/>
+  <path d="M308 239L332 267L356 239" stroke="#F2C771" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="320" y="366" fill="#F5D79A" font-size="22" text-anchor="middle" font-family="serif">
+    Bestiary Plate
+  </text>
+  <defs>
+    <linearGradient id="bg" x1="48" y1="26" x2="600" y2="394" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#191422"/>
+      <stop offset="1" stop-color="#180C0E"/>
+    </linearGradient>
+  </defs>
+</svg>

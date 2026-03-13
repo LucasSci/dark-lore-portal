@@ -4,12 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
+  "relative w-full rounded-[var(--radius)] border px-4 py-4 [&>svg~*]:pl-8 [&>svg+div]:translate-y-[-2px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:h-4 [&>svg]:w-4",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
-        destructive: "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+        default: "border-border/80 bg-card/88 text-foreground shadow-panel [&>svg]:text-primary",
+        info: "border-info/25 bg-info/10 text-foreground [&>svg]:text-info",
+        success: "border-status-good/30 bg-status-good/10 text-foreground [&>svg]:text-status-good",
+        warning: "border-status-warn/30 bg-status-warn/12 text-foreground [&>svg]:text-warning",
+        destructive: "border-status-bad/35 bg-status-bad/12 text-foreground [&>svg]:text-status-bad",
+        danger: "border-status-bad/35 bg-status-bad/12 text-foreground [&>svg]:text-status-bad",
       },
     },
     defaultVariants: {
@@ -40,4 +44,4 @@ const AlertDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttrib
 );
 AlertDescription.displayName = "AlertDescription";
 
-export { Alert, AlertTitle, AlertDescription };
+export { Alert, AlertTitle, AlertDescription, alertVariants };

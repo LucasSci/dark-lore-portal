@@ -1,0 +1,22 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" rx="28" fill="#0A0F18"/>
+  <rect x="18" y="18" width="604" height="384" rx="22" fill="url(#bg)"/>
+  <rect x="150" y="94" width="340" height="230" rx="18" fill="#191410"/>
+  <rect x="174" y="122" width="292" height="174" rx="12" fill="#F0D9A8" fill-opacity="0.1" stroke="#F2C771" stroke-opacity="0.28"/>
+  <path d="M202 164H436" stroke="#F2C771" stroke-width="4" stroke-linecap="round"/>
+  <path d="M202 208H384" stroke="#7C5A2E" stroke-width="4" stroke-linecap="round"/>
+  <path d="M202 252H420" stroke="#7C5A2E" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="240" cy="164" r="10" fill="#F2C771"/>
+  <circle cx="320" cy="208" r="10" fill="#F2C771"/>
+  <circle cx="392" cy="252" r="10" fill="#F2C771"/>
+  <path d="M240 164L320 208L392 252" stroke="#F2C771" stroke-width="3"/>
+  <text x="320" y="364" fill="#F5D79A" font-size="22" text-anchor="middle" font-family="serif">
+    Timeline Codex
+  </text>
+  <defs>
+    <linearGradient id="bg" x1="42" y1="22" x2="600" y2="394" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#18263A"/>
+      <stop offset="1" stop-color="#120E0C"/>
+    </linearGradient>
+  </defs>
+</svg>
