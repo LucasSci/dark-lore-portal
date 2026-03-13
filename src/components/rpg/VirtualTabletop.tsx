@@ -77,6 +77,9 @@ export default function VirtualTabletop() {
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>("mapa");
   const [chatDraft, setChatDraft] = useState("");
   const [diceDraft, setDiceDraft] = useState("1d20+4");
+  const [showGrid, setShowGrid] = useState(true);
+  const [gridOpacity, setGridOpacity] = useState(0.3);
+  const [battlemapUrl, setBattlemapUrl] = useState<string | null>(null);
   const [npcDraft, setNpcDraft] = useState({
     name: "",
     hp: 18,
