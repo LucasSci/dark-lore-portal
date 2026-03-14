@@ -7,6 +7,10 @@ import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import CampaignPage from "./pages/CampaignPage";
 import PlayPage from "./pages/PlayPage";
+import MesaPage from "./pages/MesaPage";
+import FichaPage from "./pages/FichaPage";
+import CriacaoPage from "./pages/CriacaoPage";
+import MestrePage from "./pages/MestrePage";
 import UniversePage from "./pages/UniversePage";
 import CommunityPage from "./pages/CommunityPage";
 import StorePage from "./pages/StorePage";
@@ -26,6 +30,10 @@ const App = () => (
             <Route path="/" element={<HomePage />} />
             <Route path="/campanha" element={<CampaignPage />} />
             <Route path="/jogar" element={<PlayPage />} />
+            <Route path="/mesa" element={<MesaPage />} />
+            <Route path="/ficha" element={<FichaPage />} />
+            <Route path="/criacao" element={<CriacaoPage />} />
+            <Route path="/mestre" element={<MestrePage />} />
             <Route path="/universo" element={<UniversePage />} />
             <Route path="/universo/:entrySlug" element={<UniversePage />} />
             <Route path="/comunidade" element={<CommunityPage />} />

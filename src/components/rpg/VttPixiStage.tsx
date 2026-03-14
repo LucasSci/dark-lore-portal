@@ -173,7 +173,7 @@ export default function VttPixiStage({
         antialias: true,
         backgroundAlpha: 0,
         width: host.clientWidth || 960,
-        height: Math.max(520, host.clientWidth * 0.56 || 560),
+        height: host.clientHeight || 560,
         resolution: window.devicePixelRatio || 1,
       });
 
@@ -199,7 +199,7 @@ export default function VttPixiStage({
         }
 
         const width = Math.max(320, entry.contentRect.width);
-        const height = Math.max(460, width * 0.58);
+        const height = Math.max(320, entry.contentRect.height);
         app.renderer.resize(width, height);
       });
 
@@ -661,7 +661,7 @@ export default function VttPixiStage({
   return (
     <div
       ref={hostRef}
-      className="min-h-[520px] w-full overflow-hidden rounded-[var(--radius)] border border-border/70 bg-background/45"
+      className="absolute inset-0 w-full h-full overflow-hidden bg-background-strong"
       title="Use o scroll para zoom, botao direito para pan e arraste monstros do codex para o mapa."
     />
   );
