@@ -173,7 +173,7 @@ export default function VttPixiStage({
         antialias: true,
         backgroundAlpha: 0,
         width: host.clientWidth || 960,
-        height: Math.max(520, host.clientWidth * 0.56 || 560),
+        height: host.clientHeight || 560,
         resolution: window.devicePixelRatio || 1,
       });
 
