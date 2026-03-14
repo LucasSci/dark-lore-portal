@@ -3,6 +3,7 @@ import {
   encyclopediaCategories,
   encyclopediaEntries,
   getEncyclopediaEntry,
+  getVttReadyEntries,
 } from "@/lib/encyclopedia";
 
 describe("encyclopedia data", () => {
@@ -27,6 +28,16 @@ describe("encyclopedia data", () => {
       for (const slug of entry.internalLinks) {
         expect(getEncyclopediaEntry(slug)).not.toBeNull();
       }
+    }
+  });
+
+  it("exposes VTT-ready entries with HP and CA for codex spawning", () => {
+    const spawnableEntries = getVttReadyEntries();
+
+    expect(spawnableEntries.length).toBeGreaterThan(0);
+    for (const entry of spawnableEntries) {
+      expect(entry.vtt.hp).toBeGreaterThan(0);
+      expect(entry.vtt.ac).toBeGreaterThan(0);
     }
   });
 });

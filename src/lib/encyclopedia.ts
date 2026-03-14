@@ -27,6 +27,15 @@ export interface EncyclopediaStat {
   value: string;
 }
 
+export interface EncyclopediaVttProfile {
+  hp: number;
+  ac: number;
+  initiativeBonus: number;
+  role: string;
+  note: string;
+  color?: string;
+}
+
 export interface EncyclopediaEntry {
   slug: string;
   title: string;
@@ -39,6 +48,7 @@ export interface EncyclopediaEntry {
   internalLinks: string[];
   timeline: EncyclopediaTimelineEvent[];
   stats: EncyclopediaStat[];
+  vtt?: EncyclopediaVttProfile;
 }
 
 export const encyclopediaCategories: Record<
@@ -240,9 +250,19 @@ export const encyclopediaEntries: EncyclopediaEntry[] = [
     ],
     stats: [
       { label: "Tipo", value: "Guardiao runico" },
+      { label: "HP", value: "34" },
+      { label: "CA", value: "15" },
       { label: "Ameaca", value: "Alta em corredores fechados" },
       { label: "Fraqueza", value: "Comandos rituais incompletos" },
     ],
+    vtt: {
+      hp: 34,
+      ac: 15,
+      initiativeBonus: 2,
+      role: "Guardiao runico",
+      note: "Patrulha corredores selados e responde a comandos rituais incompletos.",
+      color: "linear-gradient(145deg, rgba(214, 175, 103, 0.94), rgba(88, 65, 38, 0.98))",
+    },
   },
   {
     slug: "devorador-de-cinzas",
@@ -290,9 +310,19 @@ export const encyclopediaEntries: EncyclopediaEntry[] = [
     ],
     stats: [
       { label: "Tipo", value: "Aberracao de ruina" },
+      { label: "HP", value: "48" },
+      { label: "CA", value: "13" },
       { label: "Habitat", value: "Campos queimados" },
       { label: "Sinal", value: "Cinza morna ao amanhecer" },
     ],
+    vtt: {
+      hp: 48,
+      ac: 13,
+      initiativeBonus: 3,
+      role: "Predador de ruina",
+      note: "Se move pelas bordas do mapa em busca de alvos isolados e calor residual.",
+      color: "linear-gradient(145deg, rgba(213, 92, 56, 0.96), rgba(96, 24, 22, 0.98))",
+    },
   },
   {
     slug: "cripta-de-velkyn",
@@ -608,4 +638,11 @@ export function getLinkedEntries(entry: EncyclopediaEntry) {
   return entry.internalLinks
     .map((slug) => getEncyclopediaEntry(slug))
     .filter((linkedEntry): linkedEntry is EncyclopediaEntry => Boolean(linkedEntry));
+}
+
+export function getVttReadyEntries() {
+  return encyclopediaEntries.filter(
+    (entry): entry is EncyclopediaEntry & { vtt: EncyclopediaVttProfile } =>
+      Boolean(entry.vtt),
+  );
 }

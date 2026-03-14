@@ -8,9 +8,11 @@ import {
   createInitiativeOrder,
   getNextInitiativeTurn,
   getNextOpenPosition,
+  addSceneNpc,
   moveSceneToken,
   recordSceneRoll,
   revealFogArea,
+  setSceneCamera,
   setSceneCameraScale,
   startSceneInitiative,
   advanceSceneInitiative,
@@ -120,6 +122,13 @@ describe("virtual tabletop helpers", () => {
     expect(reset.pages[0].camera.scale).toBe(1);
   });
 
+  it("updates the active page camera with explicit coordinates", () => {
+    const scene = createSceneModel();
+    const updated = setSceneCamera(scene, { x: 48, y: -32, scale: 1.45 });
+
+    expect(updated.pages[0].camera).toEqual({ x: 48, y: -32, scale: 1.45 });
+  });
+
   it("starts and advances initiative inside the scene model", () => {
     const scene = startSceneInitiative(createSceneModel());
     const advanced = advanceSceneInitiative(scene);
@@ -142,5 +151,24 @@ describe("virtual tabletop helpers", () => {
       author: "Narrador",
       tone: "roll",
     });
+  });
+
+  it("spawns an NPC at the requested position when provided", () => {
+    const scene = createSceneModel();
+    const updated = addSceneNpc(scene, {
+      name: "Sentinela Teste",
+      hp: 24,
+      ac: 15,
+      initiativeBonus: 2,
+      notes: "Teste de drop do codex.",
+      position: { x: 5, y: 1 },
+    });
+    const token = updated.objects.find((entry) => entry.id === updated.selectedObjectId);
+
+    expect(token?.objectType).toBe("token");
+    if (token?.objectType === "token") {
+      expect(token.position).toEqual({ x: 5, y: 1 });
+      expect(token.payload.hp).toBe(24);
+    }
   });
 });

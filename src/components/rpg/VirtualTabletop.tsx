@@ -34,6 +34,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  getVttReadyEntries,
+  type EncyclopediaEntry,
+} from "@/lib/encyclopedia";
 import { parseDiceNotation, rollDice } from "@/lib/rpg-utils";
 import {
   persistChatMessage,
@@ -57,6 +61,7 @@ import {
   revealSceneFogAround,
   restoreSceneFog,
   setBoardMode,
+  setSceneCamera,
   setSceneCameraScale,
   setScenePresence,
   setSceneSelection,
@@ -71,6 +76,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type MobilePanel = "mapa" | "mesa" | "chat";
+const loreThreats = getVttReadyEntries();
 
 export default function VirtualTabletop() {
   const [scene, setScene] = useState<SceneModel>(() => createSceneModel());
@@ -193,6 +199,58 @@ export default function VirtualTabletop() {
 
   const handleMoveToken = async (tokenId: string, x: number, y: number) => {
     await mutateScene((current) => moveSceneToken(current, tokenId, x, y));
+  };
+
+  const handleCameraChange = async (camera: SceneModel["pages"][number]["camera"]) => {
+    await mutateScene((current) => setSceneCamera(current, camera), {
+      broadcast: false,
+      persist: false,
+    });
+  };
+
+  const spawnLoreEntry = async (
+    entry: EncyclopediaEntry & { vtt: NonNullable<EncyclopediaEntry["vtt"]> },
+    position?: { x: number; y: number },
+  ) => {
+    const nextScene = await mutateScene((current) =>
+      addSceneNpc(current, {
+        name: entry.title,
+        hp: entry.vtt.hp,
+        ac: entry.vtt.ac,
+        initiativeBonus: entry.vtt.initiativeBonus,
+        notes: entry.vtt.note || entry.summary,
+        role: entry.vtt.role,
+        color: entry.vtt.color,
+        position,
+      }),
+    );
+    const spawnedToken = nextScene.objects.find(
+      (object) => object.id === nextScene.selectedObjectId && object.objectType === "token",
+    );
+
+    if (spawnedToken?.objectType === "token") {
+      await appendChatMessage(
+        "Codex",
+        `${entry.title} materializado em ${getPositionLabel(
+          spawnedToken.position.x,
+          spawnedToken.position.y,
+        )}.`,
+        "npc",
+      );
+    }
+  };
+
+  const handleDropLoreEntry = async (
+    entrySlug: string,
+    cell: { id: string; x: number; y: number },
+  ) => {
+    const entry = loreThreats.find((candidate) => candidate.slug === entrySlug);
+
+    if (!entry) {
+      return;
+    }
+
+    await spawnLoreEntry(entry, { x: cell.x, y: cell.y });
   };
 
   const sendChat = async () => {
@@ -403,13 +461,37 @@ export default function VirtualTabletop() {
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" onClick={() => void mutateScene((current) => setSceneCameraScale(current, "out"))}>
+            <Button
+              variant="outline"
+              onClick={() =>
+                void mutateScene((current) => setSceneCameraScale(current, "out"), {
+                  broadcast: false,
+                  persist: false,
+                })
+              }
+            >
               <Minus className="h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => void mutateScene((current) => setSceneCameraScale(current, "reset"))}>
+            <Button
+              variant="outline"
+              onClick={() =>
+                void mutateScene((current) => setSceneCameraScale(current, "reset"), {
+                  broadcast: false,
+                  persist: false,
+                })
+              }
+            >
               <RefreshCcw className="h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => void mutateScene((current) => setSceneCameraScale(current, "in"))}>
+            <Button
+              variant="outline"
+              onClick={() =>
+                void mutateScene((current) => setSceneCameraScale(current, "in"), {
+                  broadcast: false,
+                  persist: false,
+                })
+              }
+            >
               <Plus className="h-4 w-4" />
             </Button>
           </div>
@@ -588,6 +670,53 @@ export default function VirtualTabletop() {
       <Card variant="panel">
         <CardHeader className="pb-3">
           <CardTitle className="font-heading text-lg text-foreground">
+            Codex de ameacas
+          </CardTitle>
+          <CardDescription>
+            Arraste verbetes prontos da enciclopedia para o mapa ou use a entrada rapida.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {loreThreats.map((entry) => (
+            <div
+              key={entry.slug}
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.setData("application/x-dark-lore-entry", entry.slug);
+                event.dataTransfer.effectAllowed = "copy";
+              }}
+              className="rounded-xl border border-border/70 bg-background/50 p-4 transition-colors hover:border-primary/30"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-heading text-base text-foreground">{entry.title}</p>
+                  <p className="text-xs uppercase tracking-[0.16em] text-primary/80">
+                    {entry.vtt.role}
+                  </p>
+                </div>
+                <Badge variant="outline" className="border-primary/30 text-primary">
+                  HP {entry.vtt.hp} | CA {entry.vtt.ac}
+                </Badge>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                {entry.summary}
+              </p>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                  Arraste para o palco
+                </span>
+                <Button size="sm" variant="ghost" onClick={() => void spawnLoreEntry(entry)}>
+                  Entrada rapida
+                </Button>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card variant="panel">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-heading text-lg text-foreground">
             Adicionar NPC
           </CardTitle>
         </CardHeader>
@@ -651,7 +780,7 @@ export default function VirtualTabletop() {
                 Page-scoped VTT
               </CardTitle>
               <CardDescription>
-                Renderer PixiJS com grid, fog, zoom, selecao e drag de tokens.
+                Renderer PixiJS com layers, zoom no scroll, pan com botao direito e drag de verbetes da lore.
               </CardDescription>
             </div>
             <Map className="h-5 w-5 text-primary" />
@@ -669,8 +798,15 @@ export default function VirtualTabletop() {
               showGrid={showGrid}
               battlemapUrl={battlemapUrl}
               onCellClick={(cell) => void handleCellClick(cell)}
-              onSelectToken={(tokenId) => void mutateScene((current) => setSceneSelection(current, tokenId), { persist: false })}
+              onSelectToken={(tokenId) =>
+                void mutateScene((current) => setSceneSelection(current, tokenId), {
+                  broadcast: false,
+                  persist: false,
+                })
+              }
               onMoveToken={(tokenId, x, y) => void handleMoveToken(tokenId, x, y)}
+              onCameraChange={(camera) => void handleCameraChange(camera)}
+              onDropEntry={(entrySlug, cell) => void handleDropLoreEntry(entrySlug, cell)}
             />
           ) : null}
 

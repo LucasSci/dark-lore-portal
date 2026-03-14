@@ -85,6 +85,8 @@ export interface VttPage {
   };
 }
 
+export type SceneCamera = VttPage["camera"];
+
 export interface VttTokenObject {
   id: string;
   pageId: string;
@@ -747,6 +749,17 @@ export function setSceneCameraScale(scene: SceneModel, direction: "in" | "out" |
   });
 }
 
+export function setSceneCamera(scene: SceneModel, camera: SceneCamera) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    camera: {
+      x: Number(camera.x.toFixed(2)),
+      y: Number(camera.y.toFixed(2)),
+      scale: Number(Math.max(0.55, Math.min(2.1, camera.scale)).toFixed(2)),
+    },
+  }));
+}
+
 export function toggleSceneFogCell(scene: SceneModel, cellIdValue: string) {
   return updateActivePage(scene, (page) => ({
     ...page,
@@ -805,9 +818,17 @@ export function addSceneNpc(scene: SceneModel, draft: {
   ac: number;
   initiativeBonus: number;
   notes: string;
+  role?: string;
+  color?: string;
+  team?: TokenTeam;
+  controlledBy?: "gm" | "party";
+  position?: {
+    x: number;
+    y: number;
+  };
 }) {
   const tokens = getSceneTokens(scene).map((token) => token.payload);
-  const position = getNextOpenPosition(tokens);
+  const position = draft.position ?? getNextOpenPosition(tokens);
   const page = getActivePage(scene);
 
   if (!page) {
@@ -818,17 +839,19 @@ export function addSceneNpc(scene: SceneModel, draft: {
     id: makeId("npc"),
     name: draft.name.trim(),
     shortName: shortNameFrom(draft.name),
-    team: "npc",
-    role: "NPC",
+    team: draft.team ?? "npc",
+    role: draft.role?.trim() || "NPC",
     x: position.x,
     y: position.y,
     hp: draft.hp,
     hpMax: draft.hp,
     ac: draft.ac,
     initiativeBonus: draft.initiativeBonus,
-    color: "linear-gradient(145deg, rgba(244, 128, 88, 0.96), rgba(116, 26, 36, 0.96))",
+    color:
+      draft.color ??
+      "linear-gradient(145deg, rgba(244, 128, 88, 0.96), rgba(116, 26, 36, 0.96))",
     note: draft.notes.trim() || "NPC controlado pelo mestre.",
-    controlledBy: "gm",
+    controlledBy: draft.controlledBy ?? "gm",
   };
 
   return bumpScene(scene, {

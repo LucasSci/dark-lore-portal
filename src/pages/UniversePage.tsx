@@ -7,9 +7,11 @@ import {
   Clock3,
   Flag,
   MapPin,
+  Network,
   Search,
   ScrollText,
   Skull,
+  Sparkles,
   Users,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
@@ -18,12 +20,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   encyclopediaCategories,
   encyclopediaEntries,
   getEncyclopediaEntry,
   getEntriesByCategory,
   getLinkedEntries,
+  getVttReadyEntries,
   globalTimeline,
   type EncyclopediaCategory,
   type EncyclopediaEntry,
@@ -92,6 +96,7 @@ function TimelineRail({
 
 function EncyclopediaEntryCard({ entry }: { entry: EncyclopediaEntry }) {
   const Icon = categoryIcons[entry.category];
+  const vttReady = getVttReadyEntries().some((candidate) => candidate.slug === entry.slug);
 
   return (
     <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
@@ -107,7 +112,14 @@ function EncyclopediaEntryCard({ entry }: { entry: EncyclopediaEntry }) {
               <Badge variant="outline" className="border-primary/30 text-primary">
                 {encyclopediaCategories[entry.category].label}
               </Badge>
-              <Icon className="h-5 w-5 text-primary/70" />
+              <div className="flex items-center gap-2">
+                {vttReady ? (
+                  <Badge variant="secondary" className="bg-secondary/80 text-foreground">
+                    Mesa pronta
+                  </Badge>
+                ) : null}
+                <Icon className="h-5 w-5 text-primary/70" />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -142,6 +154,274 @@ function EncyclopediaEntryCard({ entry }: { entry: EncyclopediaEntry }) {
         </CardContent>
       </Card>
     </motion.div>
+  );
+}
+
+function getShowcaseTone(index: number) {
+  const tones = [
+    "from-primary/18 via-primary/8 to-transparent",
+    "from-destructive/18 via-destructive/8 to-transparent",
+    "from-info/18 via-info/8 to-transparent",
+    "from-warning/18 via-warning/8 to-transparent",
+  ];
+
+  return tones[index % tones.length];
+}
+
+function getShowcaseLabel(entry: EncyclopediaEntry) {
+  if (entry.category === "personagens") {
+    return "Dons e marcas";
+  }
+
+  if (entry.category === "monstros") {
+    return "Ameaca tatica";
+  }
+
+  if (entry.category === "locais") {
+    return "Camadas do lugar";
+  }
+
+  if (entry.category === "faccoes") {
+    return "Vetores de poder";
+  }
+
+  return "Fragmentos da cronica";
+}
+
+function EntryShowcase({ entry }: { entry: EncyclopediaEntry }) {
+  const panels = entry.stats.map((stat, index) => ({
+    id: `${entry.slug}-${stat.label}`,
+    label: stat.label,
+    value: stat.value,
+    description:
+      entry.narrative[index % entry.narrative.length]?.body ?? entry.summary,
+    heading:
+      entry.narrative[index % entry.narrative.length]?.heading ?? entry.subtitle,
+    tone: getShowcaseTone(index),
+  }));
+
+  if (panels.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card variant="panel" className="overflow-hidden">
+      <CardContent className="space-y-6 p-6 md:p-8">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
+              {getShowcaseLabel(entry)}
+            </p>
+            <h2 className="mt-2 font-heading text-2xl text-foreground">
+              Painel interativo do verbete
+            </h2>
+          </div>
+          <Sparkles className="h-5 w-5 text-primary" />
+        </div>
+
+        <Tabs defaultValue={panels[0].id} className="space-y-5">
+          <TabsList className="grid h-auto w-full gap-2 md:grid-cols-4">
+            {panels.map((panel) => (
+              <TabsTrigger
+                key={panel.id}
+                value={panel.id}
+                className="font-heading uppercase tracking-[0.16em]"
+              >
+                {panel.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {panels.map((panel, index) => (
+            <TabsContent key={panel.id} value={panel.id} className="mt-0">
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative min-h-[280px] overflow-hidden rounded-[var(--radius)] border border-primary/18 bg-background/70"
+                >
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${panel.tone}`}
+                  />
+                  <motion.div
+                    className="absolute -left-12 top-10 h-40 w-40 rounded-full bg-primary/16 blur-3xl"
+                    animate={{ x: [0, 24, -12, 0], y: [0, -18, 12, 0] }}
+                    transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    className="absolute bottom-0 right-0 h-44 w-44 rounded-full bg-destructive/14 blur-3xl"
+                    animate={{ x: [0, -18, 14, 0], y: [0, 16, -14, 0] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <div className="relative flex h-full flex-col justify-between p-6">
+                    <div className="space-y-3">
+                      <Badge variant="outline" className="border-primary/30 text-primary">
+                        Sequencia {index + 1}
+                      </Badge>
+                      <div>
+                        <p className="font-heading text-sm uppercase tracking-[0.2em] text-primary/78">
+                          {panel.label}
+                        </p>
+                        <h3 className="mt-3 font-display text-3xl text-gold-gradient">
+                          {panel.value}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {entry.stats.slice(0, 4).map((stat) => (
+                        <div
+                          key={`${panel.id}-${stat.label}`}
+                          className="rounded-xl border border-border/60 bg-background/46 px-3 py-2"
+                        >
+                          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                            {stat.label}
+                          </p>
+                          <p className="mt-1 text-sm text-foreground">{stat.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+
+                <div className="space-y-4 rounded-[var(--radius)] border border-border/70 bg-background/40 p-6">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
+                      Leitura narrativa
+                    </p>
+                    <h3 className="mt-2 font-heading text-2xl text-foreground">
+                      {panel.heading}
+                    </h3>
+                  </div>
+                  <p className="text-base leading-8 text-foreground/90">
+                    {panel.description}
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <DataSection
+                      label="Linha do tempo"
+                      value={`${entry.timeline.length} marcos`}
+                      variant="quiet"
+                    />
+                    <DataSection
+                      label="Ligacoes"
+                      value={`${entry.internalLinks.length} conexoes`}
+                      variant="quiet"
+                    />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RelationshipMap({
+  entry,
+  linkedEntries,
+}: {
+  entry: EncyclopediaEntry;
+  linkedEntries: EncyclopediaEntry[];
+}) {
+  if (linkedEntries.length === 0) {
+    return null;
+  }
+
+  const orbitRadius = linkedEntries.length === 1 ? 0 : 34;
+
+  return (
+    <Card variant="panel" className="overflow-hidden">
+      <CardContent className="space-y-5 p-6 md:p-8">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
+              Lore ties
+            </p>
+            <h2 className="mt-2 font-heading text-2xl text-foreground">
+              Mapa de relacionamentos
+            </h2>
+          </div>
+          <Network className="h-5 w-5 text-primary" />
+        </div>
+
+        <div className="relative min-h-[420px] overflow-hidden rounded-[var(--radius)] border border-border/70 bg-background/55">
+          <svg
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+          >
+            {linkedEntries.map((linkedEntry, index) => {
+              const angle = (Math.PI * 2 * index) / linkedEntries.length - Math.PI / 2;
+              const x = linkedEntries.length === 1 ? 50 : 50 + Math.cos(angle) * orbitRadius;
+              const y = linkedEntries.length === 1 ? 18 : 50 + Math.sin(angle) * orbitRadius;
+
+              return (
+                <line
+                  key={`line-${linkedEntry.slug}`}
+                  x1="50"
+                  y1="50"
+                  x2={x}
+                  y2={y}
+                  stroke="hsl(var(--primary) / 0.32)"
+                  strokeWidth="0.55"
+                />
+              );
+            })}
+          </svg>
+
+          <div className="absolute inset-0">
+            <motion.div
+              className="absolute left-1/2 top-1/2 w-[220px] -translate-x-1/2 -translate-y-1/2"
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <div className="rounded-[var(--radius)] border border-primary/25 bg-background/88 p-5 text-center shadow-panel">
+                <Badge variant="outline" className="border-primary/30 text-primary">
+                  Centro narrativo
+                </Badge>
+                <p className="mt-3 font-display text-2xl text-gold-gradient">
+                  {entry.title}
+                </p>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  {entry.subtitle}
+                </p>
+              </div>
+            </motion.div>
+
+            {linkedEntries.map((linkedEntry, index) => {
+              const angle = (Math.PI * 2 * index) / linkedEntries.length - Math.PI / 2;
+              const x = linkedEntries.length === 1 ? 50 : 50 + Math.cos(angle) * orbitRadius;
+              const y = linkedEntries.length === 1 ? 18 : 50 + Math.sin(angle) * orbitRadius;
+
+              return (
+                <motion.div
+                  key={linkedEntry.slug}
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="absolute w-[180px] -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                >
+                  <Link
+                    to={`/universo/${linkedEntry.slug}`}
+                    className="block rounded-[var(--radius)] border border-border/70 bg-background/84 p-4 transition-colors hover:border-primary/30"
+                  >
+                    <p className="font-heading text-base text-foreground">
+                      {linkedEntry.title}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {linkedEntry.subtitle}
+                    </p>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -271,13 +551,14 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
     (relatedEntry) => relatedEntry.slug !== entry.slug,
   );
   const Icon = categoryIcons[entry.category];
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
 
   return (
-    <div className="container py-24">
+    <div className="container py-16 md:py-20">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-8"
+        className="space-y-12"
       >
         <Button asChild variant="ghost" className="pl-0 text-primary">
           <Link to="/universo">
@@ -286,23 +567,50 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
           </Link>
         </Button>
 
-        <Card variant="elevated" className="overflow-hidden">
-          <CardContent className="grid gap-0 p-0 lg:grid-cols-[1.2fr_minmax(0,1fr)]">
-            <img
-              src={entry.image}
-              alt={entry.imageAlt}
-              className="h-full min-h-[280px] w-full object-cover"
-            />
-            <div className="space-y-5 p-6 md:p-8">
-              <div className="flex items-center gap-3">
+        <section
+          className="relative min-h-[72vh] overflow-hidden rounded-[var(--radius)] border border-border/70"
+          onMouseMove={(event) => {
+            const rect = event.currentTarget.getBoundingClientRect();
+            const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
+            const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+
+            setParallax({ x: offsetX, y: offsetY });
+          }}
+          onMouseLeave={() => setParallax({ x: 0, y: 0 })}
+        >
+          <motion.img
+            src={entry.image}
+            alt={entry.imageAlt}
+            className="absolute inset-0 h-full w-full object-cover"
+            animate={{
+              x: parallax.x * 26,
+              y: parallax.y * 20,
+              scale: 1.08,
+            }}
+            transition={{ type: "spring", stiffness: 70, damping: 18 }}
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--background)/0.16),hsl(var(--background)/0.42)_34%,hsl(var(--background-strong)/0.92)_74%,hsl(var(--background-strong))_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.16),transparent_30%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.16),transparent_26%)]" />
+
+          <div className="relative grid min-h-[72vh] items-end gap-6 p-6 md:p-8 xl:grid-cols-[minmax(0,1.2fr)_360px] xl:p-12">
+            <div className="max-w-3xl space-y-6">
+              <div className="flex flex-wrap items-center gap-3">
                 <Badge variant="outline" className="border-primary/30 text-primary">
                   {encyclopediaCategories[entry.category].label}
                 </Badge>
                 <Icon className="h-5 w-5 text-primary/70" />
+                {entry.vtt ? (
+                  <Badge variant="secondary" className="bg-secondary/80 text-foreground">
+                    Pronto para VTT
+                  </Badge>
+                ) : null}
               </div>
 
               <div>
-                <h1 className="font-display text-3xl text-gold-gradient md:text-4xl">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
+                  Verbete imersivo
+                </p>
+                <h1 className="mt-3 font-display text-4xl text-gold-gradient md:text-6xl">
                   {entry.title}
                 </h1>
                 <p className="mt-3 text-base leading-7 text-muted-foreground">
@@ -310,27 +618,66 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
                 </p>
               </div>
 
-              <p className="text-sm leading-7 text-foreground/90">{entry.summary}</p>
+              <p className="max-w-2xl text-base leading-8 text-foreground/92">
+                {entry.summary}
+              </p>
+            </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                {entry.stats.map((stat) => (
-                  <DataSection key={stat.label} label={stat.label} value={stat.value} variant="quiet" />
-                ))}
+            <div className="rounded-[var(--radius)] border border-border/70 bg-background/70 p-5 shadow-panel backdrop-blur-sm">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
+                    Resumo tatico
+                  </p>
+                  <h2 className="mt-2 font-heading text-2xl text-foreground">
+                    Leitura rapida
+                  </h2>
+                </div>
+                <div className="grid gap-3">
+                  {entry.stats.slice(0, 4).map((stat) => (
+                    <DataSection
+                      key={stat.label}
+                      label={stat.label}
+                      value={stat.value}
+                      variant="quiet"
+                    />
+                  ))}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                  <DataSection
+                    label="Linha do tempo"
+                    value={`${entry.timeline.length} marcos`}
+                    variant="quiet"
+                  />
+                  <DataSection
+                    label="Conexoes"
+                    value={`${linkedEntries.length} elos`}
+                    variant="quiet"
+                  />
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
+
+        <EntryShowcase entry={entry} />
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-6">
             <Card variant="panel">
               <CardContent className="space-y-6 p-6 md:p-8">
                 {entry.narrative.map((block) => (
-                  <section key={block.heading} className="space-y-3">
-                    <h2 className="font-heading text-2xl text-foreground">
+                  <section
+                    key={block.heading}
+                    className="rounded-[var(--radius)] border border-border/60 bg-background/35 p-6"
+                  >
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
+                      Capitulo
+                    </p>
+                    <h2 className="mt-3 font-heading text-2xl text-foreground">
                       {block.heading}
                     </h2>
-                    <p className="text-base leading-8 text-foreground/90">
+                    <p className="mt-4 text-base leading-8 text-foreground/90">
                       {block.body}
                     </p>
                   </section>
@@ -338,33 +685,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
               </CardContent>
             </Card>
 
-            <Card variant="panel">
-              <CardContent className="space-y-5 p-6">
-                <div>
-                  <h2 className="font-heading text-2xl text-foreground">Ligacoes internas</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Continue a leitura por entradas conectadas a este verbete.
-                  </p>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  {linkedEntries.map((linkedEntry) => (
-                    <Link
-                      key={linkedEntry.slug}
-                      to={`/universo/${linkedEntry.slug}`}
-                      className="rounded-xl border border-border/70 bg-background/50 p-4 transition-colors hover:border-primary/30"
-                    >
-                      <p className="font-heading text-base text-foreground">
-                        {linkedEntry.title}
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {linkedEntry.subtitle}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <RelationshipMap entry={entry} linkedEntries={linkedEntries} />
           </div>
 
           <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
