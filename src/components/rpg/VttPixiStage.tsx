@@ -354,7 +354,12 @@ export default function VttPixiStage({
       worldRef.current = null;
 
       if (appInstance) {
-        void appInstance.destroy(true, { children: true });
+        try {
+          appInstance.stage.removeChildren();
+          appInstance.destroy(true);
+        } catch {
+          // PixiJS texture pool may already be torn down
+        }
       }
     };
   }, []);
