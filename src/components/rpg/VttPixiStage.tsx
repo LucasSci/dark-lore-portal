@@ -199,7 +199,7 @@ export default function VttPixiStage({
         }
 
         const width = Math.max(320, entry.contentRect.width);
-        const height = Math.max(460, width * 0.58);
+        const height = Math.max(320, entry.contentRect.height);
         app.renderer.resize(width, height);
       });
 
