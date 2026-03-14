@@ -661,7 +661,7 @@ export default function VttPixiStage({
   return (
     <div
       ref={hostRef}
-      className="min-h-[520px] w-full overflow-hidden rounded-[var(--radius)] border border-border/70 bg-background/45"
+      className="absolute inset-0 w-full h-full overflow-hidden bg-background-strong"
       title="Use o scroll para zoom, botao direito para pan e arraste monstros do codex para o mapa."
     />
   );
