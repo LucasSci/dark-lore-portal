@@ -39,12 +39,27 @@ const CAMERA_SCALE_MAX = 2.1;
 const PARTY_TOKEN_COLOR = 0x6e92a6;
 const NPC_TOKEN_COLOR = 0xbb533b;
 const SELECTED_TOKEN_COLOR = 0xcfab67;
+const MEASURE_LINE_COLOR = 0xf5c842;
+const MEASURE_CELL_COLOR = 0xf5c842;
 const GRID_LABEL_STYLE = new TextStyle({
   fill: 0xe7dfd4,
   fontSize: 9,
   fontFamily: "IBM Plex Mono",
   fontWeight: "500",
   letterSpacing: 1,
+});
+const MEASURE_LABEL_STYLE = new TextStyle({
+  fill: 0xffffff,
+  fontSize: 13,
+  fontFamily: "IBM Plex Mono",
+  fontWeight: "700",
+  letterSpacing: 0.5,
+  dropShadow: {
+    color: 0x000000,
+    alpha: 0.7,
+    distance: 1,
+    blur: 3,
+  },
 });
 
 function clamp(value: number, min: number, max: number) {
@@ -123,13 +138,37 @@ export default function VttPixiStage({
     cameraX: 0,
     cameraY: 0,
   });
+  const measureRef = useRef<{
+    active: boolean;
+    startCellX: number;
+    startCellY: number;
+    endCellX: number;
+    endCellY: number;
+  }>({ active: false, startCellX: 0, startCellY: 0, endCellX: 0, endCellY: 0 });
+  const boardModeRef = useRef(boardMode);
   const [mapTexture, setMapTexture] = useState<Texture | null>(null);
+  const [measureState, setMeasureState] = useState<{
+    active: boolean;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+  } | null>(null);
 
   useEffect(() => {
     pageRef.current = page;
     cameraChangeRef.current = onCameraChange;
     dropEntryRef.current = onDropEntry;
-  }, [onCameraChange, onDropEntry, page]);
+    boardModeRef.current = boardMode;
+  }, [onCameraChange, onDropEntry, page, boardMode]);
+
+  // Clear measure when leaving measure mode
+  useEffect(() => {
+    if (boardMode !== "measure") {
+      measureRef.current.active = false;
+      setMeasureState(null);
+    }
+  }, [boardMode]);
 
   useEffect(() => {
     if (!battlemapUrl) {
@@ -245,24 +284,69 @@ export default function VttPixiStage({
         });
       };
 
+      const viewportToCell = (clientX: number, clientY: number) => {
+        const rect = host.getBoundingClientRect();
+        const vx = clientX - rect.left;
+        const vy = clientY - rect.top;
+        const currentPage = pageRef.current;
+        const m = getBoardMetrics(currentPage, app.renderer.width, app.renderer.height);
+        const bx = (vx - m.paddingX - currentPage.camera.x) / currentPage.camera.scale;
+        const by = (vy - m.paddingY - currentPage.camera.y) / currentPage.camera.scale;
+        return {
+          cellX: clamp(Math.floor(bx / currentPage.gridSize), 0, currentPage.width - 1),
+          cellY: clamp(Math.floor(by / currentPage.gridSize), 0, currentPage.height - 1),
+          inBounds: bx >= 0 && by >= 0 && bx < currentPage.width * currentPage.gridSize && by < currentPage.height * currentPage.gridSize,
+        };
+      };
+
       const handlePointerDown = (event: PointerEvent) => {
-        if (event.button !== 2) {
+        // Right-click = pan
+        if (event.button === 2) {
+          event.preventDefault();
+          panStateRef.current = {
+            active: true,
+            originX: event.clientX,
+            originY: event.clientY,
+            cameraX: pageRef.current.camera.x,
+            cameraY: pageRef.current.camera.y,
+          };
+          host.style.cursor = "grabbing";
           return;
         }
 
-        event.preventDefault();
+        // Left-click in measure mode
+        if (event.button === 0 && boardModeRef.current === "measure") {
+          const { cellX, cellY, inBounds } = viewportToCell(event.clientX, event.clientY);
+          if (!inBounds) return;
 
-        panStateRef.current = {
-          active: true,
-          originX: event.clientX,
-          originY: event.clientY,
-          cameraX: pageRef.current.camera.x,
-          cameraY: pageRef.current.camera.y,
-        };
-        host.style.cursor = "grabbing";
+          if (!measureRef.current.active) {
+            measureRef.current = { active: true, startCellX: cellX, startCellY: cellY, endCellX: cellX, endCellY: cellY };
+            setMeasureState({ active: true, startX: cellX, startY: cellY, endX: cellX, endY: cellY });
+          } else {
+            // Second click ends measurement — keep it visible
+            measureRef.current.active = false;
+          }
+        }
       };
 
       const handlePointerMove = (event: PointerEvent) => {
+        // Measure drag
+        if (measureRef.current.active && boardModeRef.current === "measure") {
+          const { cellX, cellY } = viewportToCell(event.clientX, event.clientY);
+          if (cellX !== measureRef.current.endCellX || cellY !== measureRef.current.endCellY) {
+            measureRef.current.endCellX = cellX;
+            measureRef.current.endCellY = cellY;
+            setMeasureState({
+              active: true,
+              startX: measureRef.current.startCellX,
+              startY: measureRef.current.startCellY,
+              endX: cellX,
+              endY: cellY,
+            });
+          }
+          return;
+        }
+
         if (!panStateRef.current.active) {
           return;
         }
@@ -444,7 +528,7 @@ export default function VttPixiStage({
       cellGraphic.rect(0, 0, page.gridSize, page.gridSize);
       cellGraphic.fill({ color: 0x000000, alpha: 0.001 });
       cellGraphic.eventMode = "static";
-      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : "pointer";
+      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
       cellGraphic.on("pointertap", () => onCellClick(cell));
       interactionLayer.addChild(cellGraphic);
 
@@ -634,6 +718,78 @@ export default function VttPixiStage({
       renderLayer.addChild(container);
     }
 
+    // Measure overlay
+    const measureLayer = new Container();
+    measureLayer.zIndex = 35;
+
+    if (measureState) {
+      const { startX, startY, endX, endY } = measureState;
+      const gs = page.gridSize;
+
+      // Bresenham line to get cells along the path
+      const cells: Array<{ x: number; y: number }> = [];
+      let x0 = startX, y0 = startY;
+      const x1 = endX, y1 = endY;
+      const dx = Math.abs(x1 - x0);
+      const dy = Math.abs(y1 - y0);
+      const sx = x0 < x1 ? 1 : -1;
+      const sy = y0 < y1 ? 1 : -1;
+      let err = dx - dy;
+
+      while (true) {
+        cells.push({ x: x0, y: y0 });
+        if (x0 === x1 && y0 === y1) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x0 += sx; }
+        if (e2 < dx) { err += dx; y0 += sy; }
+      }
+
+      // Highlight cells along the path
+      for (const c of cells) {
+        const highlight = new Graphics();
+        highlight.rect(c.x * gs, c.y * gs, gs, gs);
+        highlight.fill({ color: MEASURE_CELL_COLOR, alpha: 0.12 });
+        highlight.stroke({ color: MEASURE_CELL_COLOR, alpha: 0.4, width: 1 });
+        measureLayer.addChild(highlight);
+      }
+
+      // Draw the line from center to center
+      const fromCx = startX * gs + gs / 2;
+      const fromCy = startY * gs + gs / 2;
+      const toCx = endX * gs + gs / 2;
+      const toCy = endY * gs + gs / 2;
+
+      const line = new Graphics();
+      line.moveTo(fromCx, fromCy);
+      line.lineTo(toCx, toCy);
+      line.stroke({ color: MEASURE_LINE_COLOR, alpha: 0.85, width: 3 });
+      measureLayer.addChild(line);
+
+      // Start dot
+      const startDot = new Graphics();
+      startDot.circle(fromCx, fromCy, 5);
+      startDot.fill({ color: MEASURE_LINE_COLOR, alpha: 0.95 });
+      measureLayer.addChild(startDot);
+
+      // End dot
+      const endDot = new Graphics();
+      endDot.circle(toCx, toCy, 5);
+      endDot.fill({ color: MEASURE_LINE_COLOR, alpha: 0.95 });
+      measureLayer.addChild(endDot);
+
+      // Distance = Chebyshev (diagonal = 1 cell) — standard 5ft grid
+      const distCells = Math.max(Math.abs(endX - startX), Math.abs(endY - startY));
+      const distFt = distCells * 5;
+
+      const label = new Text({
+        text: `${distCells} casas · ${distFt} ft`,
+        style: MEASURE_LABEL_STYLE,
+      });
+      label.anchor.set(0.5);
+      label.position.set((fromCx + toCx) / 2, (fromCy + toCy) / 2 - 14);
+      measureLayer.addChild(label);
+    }
+
     world.addChild(
       frameLayer,
       mapLayer,
@@ -643,12 +799,14 @@ export default function VttPixiStage({
       tokenLayer,
       gmLayer,
       overlayLayer,
+      measureLayer,
     );
   }, [
     boardMode,
     gridColor,
     gridOpacity,
     mapTexture,
+    measureState,
     onCellClick,
     onMoveToken,
     onSelectToken,

@@ -254,14 +254,17 @@ export default function MesaPage() {
   };
 
   const setActiveTool = (tool: LeftTool) => {
-    if (tool === "fog") {
-      void mutateScene((c) => setBoardMode(c, "fog"));
-    } else {
-      void mutateScene((c) => setBoardMode(c, "move"));
-    }
+    const modeMap: Record<LeftTool, BoardMode> = {
+      select: "move",
+      move: "move",
+      fog: "fog",
+      measure: "measure",
+    };
+    void mutateScene((c) => setBoardMode(c, modeMap[tool]));
   };
 
-  const currentTool: LeftTool = scene.boardMode === "fog" ? "fog" : "move";
+  const currentTool: LeftTool =
+    scene.boardMode === "fog" ? "fog" : scene.boardMode === "measure" ? "measure" : "move";
 
   const toolButtons: { id: LeftTool; icon: React.ReactNode; label: string }[] = [
     { id: "select", icon: <MousePointer className="h-4 w-4" />, label: "Selecionar" },
