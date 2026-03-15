@@ -9,10 +9,12 @@ import {
   Dice6,
   Eye,
   EyeOff,
+  Flame,
   Ghost,
   Grid3X3,
   ImagePlus,
   Layers,
+  Lightbulb,
   MessageSquare,
   Minus,
   MousePointer,
@@ -27,6 +29,7 @@ import {
   Target,
   Trash2,
   Users,
+  WallpaperIcon,
 } from "lucide-react";
 
 import VttPixiStage from "@/components/rpg/VttPixiStage";
@@ -49,9 +52,13 @@ import {
 } from "@/lib/vtt-realtime";
 import {
   addSceneNpc,
+  addSceneWall,
+  addSceneLight,
   adjustSceneTokenHp,
   appendSceneChat,
   clearSceneInitiative,
+  clearSceneWalls,
+  clearSceneLights,
   countRevealedCells,
   createSceneModel,
   getActivePage,
@@ -68,6 +75,7 @@ import {
   setScenePresence,
   setSceneSelection,
   startSceneInitiative,
+  toggleDynamicLighting,
   toggleSceneFogCell,
   advanceSceneInitiative,
   moveSceneToken,
@@ -80,7 +88,7 @@ import { toast } from "sonner";
 
 const loreThreats = getVttReadyEntries();
 
-type LeftTool = "select" | "move" | "fog" | "measure";
+type LeftTool = "select" | "move" | "fog" | "measure" | "wall" | "light";
 type RightTab = "chat" | "tokens" | "initiative" | "codex" | "npc";
 
 export default function MesaPage() {
@@ -259,18 +267,26 @@ export default function MesaPage() {
       move: "move",
       fog: "fog",
       measure: "measure",
+      wall: "wall",
+      light: "light",
     };
     void mutateScene((c) => setBoardMode(c, modeMap[tool]));
   };
 
   const currentTool: LeftTool =
-    scene.boardMode === "fog" ? "fog" : scene.boardMode === "measure" ? "measure" : "move";
+    scene.boardMode === "fog" ? "fog"
+    : scene.boardMode === "measure" ? "measure"
+    : scene.boardMode === "wall" ? "wall"
+    : scene.boardMode === "light" ? "light"
+    : "move";
 
   const toolButtons: { id: LeftTool; icon: React.ReactNode; label: string }[] = [
     { id: "select", icon: <MousePointer className="h-4 w-4" />, label: "Selecionar" },
     { id: "move", icon: <Crosshair className="h-4 w-4" />, label: "Mover" },
     { id: "fog", icon: <EyeOff className="h-4 w-4" />, label: "Fog de Guerra" },
     { id: "measure", icon: <Ruler className="h-4 w-4" />, label: "Medir" },
+    { id: "wall", icon: <WallpaperIcon className="h-4 w-4" />, label: "Paredes (bloqueiam visão)" },
+    { id: "light", icon: <Lightbulb className="h-4 w-4" />, label: "Fonte de Luz" },
   ];
 
   return (
@@ -341,6 +357,31 @@ export default function MesaPage() {
         {/* Bottom toolbar items */}
         <div className="w-8 border-t border-border/50 mb-3" />
 
+        {/* Dynamic lighting toggle */}
+        <button
+          onClick={() => void mutateScene((c) => toggleDynamicLighting(c))}
+          title={activePage?.dynamicLighting ? "Desativar iluminação dinâmica" : "Ativar iluminação dinâmica"}
+          className={cn(
+            "mb-1 flex h-9 w-9 items-center justify-center rounded-md transition-colors",
+            activePage?.dynamicLighting
+              ? "bg-amber-500/20 text-amber-400"
+              : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+          )}
+        >
+          <Flame className="h-4 w-4" />
+        </button>
+
+        {/* Clear walls */}
+        <button
+          onClick={() => void mutateScene((c) => clearSceneWalls(c))}
+          title="Limpar paredes"
+          className="mb-1 flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+
+        <div className="w-8 border-t border-border/50 mb-3" />
+
         <button
           onClick={() => void mutateScene((c) => revealEntireSceneFog(c))}
           title="Revelar todo o mapa"
@@ -402,6 +443,8 @@ export default function MesaPage() {
               onMoveToken={(tokenId, x, y) => void handleMoveToken(tokenId, x, y)}
               onCameraChange={(camera) => void handleCameraChange(camera)}
               onDropEntry={(slug, cell) => void handleDropLoreEntry(slug, cell)}
+              onAddWall={(x1, y1, x2, y2) => void mutateScene((c) => addSceneWall(c, x1, y1, x2, y2))}
+              onAddLight={(cellX, cellY) => void mutateScene((c) => addSceneLight(c, cellX, cellY))}
             />
           )}
 

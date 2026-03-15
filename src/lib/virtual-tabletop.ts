@@ -4,7 +4,7 @@ export const DEFAULT_GRID_SIZE = 72;
 
 export type TerrainType = "ruins" | "road" | "forest" | "swamp" | "altar";
 export type TokenTeam = "party" | "npc";
-export type BoardMode = "move" | "fog" | "measure";
+export type BoardMode = "move" | "fog" | "measure" | "wall" | "light";
 export type VttLayer = "map" | "objects" | "gm" | "walls" | "foreground";
 export type VttGridType = "square";
 export type ChatTone = "system" | "party" | "npc" | "roll";
@@ -66,6 +66,23 @@ export interface DiceHistoryEntry {
   total: number;
 }
 
+export interface WallSegmentData {
+  id: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+export interface LightSourceData {
+  id: string;
+  cellX: number;
+  cellY: number;
+  radius: number;       // in grid cells
+  intensity: number;    // 0-1
+  color: number;        // hex
+}
+
 export interface VttPage {
   id: string;
   sessionId: string;
@@ -83,6 +100,10 @@ export interface VttPage {
     y: number;
     scale: number;
   };
+  wallSegments: WallSegmentData[];
+  lightSources: LightSourceData[];
+  dynamicLighting: boolean;
+  tokenVisionRadius: number; // default vision radius for party tokens (cells)
 }
 
 export type SceneCamera = VttPage["camera"];
@@ -621,6 +642,10 @@ function createDemoPage(sessionId: string): VttPage {
       y: 0,
       scale: 1,
     },
+    wallSegments: [],
+    lightSources: [],
+    dynamicLighting: false,
+    tokenVisionRadius: 6,
   };
 }
 
@@ -989,4 +1014,85 @@ export function setScenePresence(scene: SceneModel, presence: PresenceMember[]) 
 
 export function getPositionLabel(x: number, y: number) {
   return `${String.fromCharCode(65 + x)}${y + 1}`;
+}
+
+// ── Wall management ─────────────────────────────────────────────
+
+export function addSceneWall(
+  scene: SceneModel,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    wallSegments: [
+      ...page.wallSegments,
+      { id: makeId("wall"), x1, y1, x2, y2 },
+    ],
+  }));
+}
+
+export function removeSceneWall(scene: SceneModel, wallId: string) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    wallSegments: page.wallSegments.filter((w) => w.id !== wallId),
+  }));
+}
+
+export function clearSceneWalls(scene: SceneModel) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    wallSegments: [],
+  }));
+}
+
+// ── Light source management ─────────────────────────────────────
+
+export function addSceneLight(
+  scene: SceneModel,
+  cellX: number,
+  cellY: number,
+  radius: number = 5,
+  intensity: number = 0.8,
+  color: number = 0xf5c842,
+) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    lightSources: [
+      ...page.lightSources,
+      { id: makeId("light"), cellX, cellY, radius, intensity, color },
+    ],
+  }));
+}
+
+export function removeSceneLight(scene: SceneModel, lightId: string) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    lightSources: page.lightSources.filter((l) => l.id !== lightId),
+  }));
+}
+
+export function clearSceneLights(scene: SceneModel) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    lightSources: [],
+  }));
+}
+
+// ── Dynamic lighting toggle ─────────────────────────────────────
+
+export function toggleDynamicLighting(scene: SceneModel) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    dynamicLighting: !page.dynamicLighting,
+  }));
+}
+
+export function setTokenVisionRadius(scene: SceneModel, radius: number) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    tokenVisionRadius: Math.max(1, Math.min(20, radius)),
+  }));
 }

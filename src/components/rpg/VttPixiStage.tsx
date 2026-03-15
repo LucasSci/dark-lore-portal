@@ -12,11 +12,18 @@ import {
 
 import type {
   BoardMode,
+  LightSourceData,
   SceneCamera,
   TabletopCell,
   VttPage,
   VttTokenObject,
+  WallSegmentData,
 } from "@/lib/virtual-tabletop";
+import {
+  computeVisibilityPolygon,
+  wallObjectsToSegments,
+  type Segment,
+} from "@/lib/vtt-lighting";
 
 interface Props {
   page: VttPage;
@@ -32,6 +39,8 @@ interface Props {
   onMoveToken: (tokenId: string, x: number, y: number) => void;
   onCameraChange: (camera: SceneCamera) => void;
   onDropEntry: (entrySlug: string, cell: TabletopCell) => void;
+  onAddWall?: (x1: number, y1: number, x2: number, y2: number) => void;
+  onAddLight?: (cellX: number, cellY: number) => void;
 }
 
 const CAMERA_SCALE_MIN = 0.55;
@@ -124,6 +133,8 @@ export default function VttPixiStage({
   onMoveToken,
   onCameraChange,
   onDropEntry,
+  onAddWall,
+  onAddLight,
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
@@ -146,6 +157,9 @@ export default function VttPixiStage({
     endCellY: number;
   }>({ active: false, startCellX: 0, startCellY: 0, endCellX: 0, endCellY: 0 });
   const boardModeRef = useRef(boardMode);
+  const wallStartRef = useRef<{ x: number; y: number } | null>(null);
+  const onAddWallRef = useRef(onAddWall);
+  const onAddLightRef = useRef(onAddLight);
   const [mapTexture, setMapTexture] = useState<Texture | null>(null);
   const [measureState, setMeasureState] = useState<{
     active: boolean;
@@ -154,19 +168,26 @@ export default function VttPixiStage({
     endX: number;
     endY: number;
   } | null>(null);
+  const [wallPreview, setWallPreview] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
 
   useEffect(() => {
     pageRef.current = page;
     cameraChangeRef.current = onCameraChange;
     dropEntryRef.current = onDropEntry;
     boardModeRef.current = boardMode;
-  }, [onCameraChange, onDropEntry, page, boardMode]);
+    onAddWallRef.current = onAddWall;
+    onAddLightRef.current = onAddLight;
+  }, [onCameraChange, onDropEntry, page, boardMode, onAddWall, onAddLight]);
 
-  // Clear measure when leaving measure mode
+  // Clear interactive state when leaving modes
   useEffect(() => {
     if (boardMode !== "measure") {
       measureRef.current.active = false;
       setMeasureState(null);
+    }
+    if (boardMode !== "wall") {
+      wallStartRef.current = null;
+      setWallPreview(null);
     }
   }, [boardMode]);
 
@@ -323,9 +344,33 @@ export default function VttPixiStage({
             measureRef.current = { active: true, startCellX: cellX, startCellY: cellY, endCellX: cellX, endCellY: cellY };
             setMeasureState({ active: true, startX: cellX, startY: cellY, endX: cellX, endY: cellY });
           } else {
-            // Second click ends measurement — keep it visible
             measureRef.current.active = false;
           }
+        }
+
+        // Left-click in wall mode — two clicks to define a wall segment
+        if (event.button === 0 && boardModeRef.current === "wall") {
+          const { cellX, cellY, inBounds } = viewportToCell(event.clientX, event.clientY);
+          if (!inBounds) return;
+
+          if (!wallStartRef.current) {
+            wallStartRef.current = { x: cellX, y: cellY };
+            setWallPreview({ x1: cellX, y1: cellY, x2: cellX, y2: cellY });
+          } else {
+            const start = wallStartRef.current;
+            if (start.x !== cellX || start.y !== cellY) {
+              onAddWallRef.current?.(start.x, start.y, cellX, cellY);
+            }
+            wallStartRef.current = null;
+            setWallPreview(null);
+          }
+        }
+
+        // Left-click in light mode — place a light source
+        if (event.button === 0 && boardModeRef.current === "light") {
+          const { cellX, cellY, inBounds } = viewportToCell(event.clientX, event.clientY);
+          if (!inBounds) return;
+          onAddLightRef.current?.(cellX, cellY);
         }
       };
 
@@ -344,6 +389,18 @@ export default function VttPixiStage({
               endY: cellY,
             });
           }
+          return;
+        }
+
+        // Wall preview drag
+        if (wallStartRef.current && boardModeRef.current === "wall") {
+          const { cellX, cellY } = viewportToCell(event.clientX, event.clientY);
+          setWallPreview({
+            x1: wallStartRef.current.x,
+            y1: wallStartRef.current.y,
+            x2: cellX,
+            y2: cellY,
+          });
           return;
         }
 
@@ -790,13 +847,167 @@ export default function VttPixiStage({
       measureLayer.addChild(label);
     }
 
+    // ── Wall rendering ──────────────────────────────────────────
+    const wallLayer = new Container();
+    wallLayer.zIndex = 12;
+    const gs = page.gridSize;
+
+    for (const wall of page.wallSegments) {
+      const wallLine = new Graphics();
+      const ax = wall.x1 * gs + gs / 2;
+      const ay = wall.y1 * gs + gs / 2;
+      const bx = wall.x2 * gs + gs / 2;
+      const by = wall.y2 * gs + gs / 2;
+      wallLine.moveTo(ax, ay);
+      wallLine.lineTo(bx, by);
+      wallLine.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
+      // Endpoint dots
+      const dotA = new Graphics();
+      dotA.circle(ax, ay, 3);
+      dotA.fill({ color: 0xe85d4a, alpha: 0.8 });
+      const dotB = new Graphics();
+      dotB.circle(bx, by, 3);
+      dotB.fill({ color: 0xe85d4a, alpha: 0.8 });
+      wallLayer.addChild(wallLine, dotA, dotB);
+    }
+
+    // Wall preview (during placement)
+    if (wallPreview) {
+      const wpLine = new Graphics();
+      const ax = wallPreview.x1 * gs + gs / 2;
+      const ay = wallPreview.y1 * gs + gs / 2;
+      const bx = wallPreview.x2 * gs + gs / 2;
+      const by = wallPreview.y2 * gs + gs / 2;
+      wpLine.moveTo(ax, ay);
+      wpLine.lineTo(bx, by);
+      wpLine.stroke({ color: 0xf5c842, alpha: 0.7, width: 2 });
+      wallLayer.addChild(wpLine);
+    }
+
+    // ── Light source rendering ──────────────────────────────────
+    const lightIconLayer = new Container();
+    lightIconLayer.zIndex = 22;
+
+    for (const light of page.lightSources) {
+      const cx = light.cellX * gs + gs / 2;
+      const cy = light.cellY * gs + gs / 2;
+      // Glow circle
+      const glow = new Graphics();
+      glow.circle(cx, cy, gs * 0.4);
+      glow.fill({ color: light.color, alpha: 0.15 });
+      lightIconLayer.addChild(glow);
+      // Icon
+      const icon = new Graphics();
+      icon.circle(cx, cy, 6);
+      icon.fill({ color: light.color, alpha: 0.9 });
+      icon.stroke({ color: 0xffffff, alpha: 0.4, width: 1 });
+      lightIconLayer.addChild(icon);
+    }
+
+    // ── Dynamic lighting overlay ────────────────────────────────
+    const lightingLayer = new Container();
+    lightingLayer.zIndex = 8; // Between map and fog
+
+    if (page.dynamicLighting && (page.lightSources.length > 0 || tokens.some(t => t.payload.team === "party"))) {
+      const wallSegs: Segment[] = page.wallSegments.map((w) => ({
+        a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
+        b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
+      }));
+
+      const bounds = { width: boardWidth, height: boardHeight };
+
+      // Collect all vision sources: party tokens + light sources
+      const visionPolygons: Array<{ x: number; y: number }[]> = [];
+
+      for (const token of tokens) {
+        if (token.payload.team === "party" && token.payload.hp > 0) {
+          const origin = {
+            x: token.position.x * gs + gs / 2,
+            y: token.position.y * gs + gs / 2,
+          };
+          const poly = computeVisibilityPolygon(origin, wallSegs, bounds, page.tokenVisionRadius * gs);
+          visionPolygons.push(poly);
+        }
+      }
+
+      for (const light of page.lightSources) {
+        const origin = {
+          x: light.cellX * gs + gs / 2,
+          y: light.cellY * gs + gs / 2,
+        };
+        const poly = computeVisibilityPolygon(origin, wallSegs, bounds, light.radius * gs);
+        visionPolygons.push(poly);
+      }
+
+      // Draw darkness overlay with cutouts for visible areas
+      if (visionPolygons.length > 0) {
+        const darkness = new Graphics();
+        // Full darkness rectangle
+        darkness.rect(0, 0, boardWidth, boardHeight);
+        darkness.fill({ color: 0x000000, alpha: 0.72 });
+
+        // Cut out visible areas (draw them with "erase" blend)
+        for (const poly of visionPolygons) {
+          if (poly.length < 3) continue;
+          const cutout = new Graphics();
+          cutout.moveTo(poly[0].x, poly[0].y);
+          for (let i = 1; i < poly.length; i++) {
+            cutout.lineTo(poly[i].x, poly[i].y);
+          }
+          cutout.closePath();
+          cutout.fill({ color: 0x000000, alpha: 0.72 });
+
+          // Use as mask by cutting from darkness
+          lightingLayer.addChild(cutout);
+        }
+
+        // Use a mask approach: render darkness, then use visibility polygons as holes
+        // PixiJS approach: render light areas on top with the map color to "reveal"
+        // Simpler: draw semi-transparent darkness, then draw visibility polygons to clear it
+        // We'll use the "cut" approach with a single graphics object
+
+        const combinedDarkness = new Graphics();
+        combinedDarkness.rect(0, 0, boardWidth, boardHeight);
+        combinedDarkness.fill({ color: 0x050404, alpha: 0.7 });
+
+        // Draw each visibility polygon as a "hole" using winding
+        for (const poly of visionPolygons) {
+          if (poly.length < 3) continue;
+          combinedDarkness.moveTo(poly[0].x, poly[0].y);
+          for (let i = 1; i < poly.length; i++) {
+            combinedDarkness.lineTo(poly[i].x, poly[i].y);
+          }
+          combinedDarkness.closePath();
+          combinedDarkness.cut();
+        }
+
+        // Clear the individual cutouts we added above
+        lightingLayer.removeChildren();
+        lightingLayer.addChild(combinedDarkness);
+
+        // Add subtle gradient glow for each light source
+        for (const light of page.lightSources) {
+          const cx = light.cellX * gs + gs / 2;
+          const cy = light.cellY * gs + gs / 2;
+          const glowRadius = light.radius * gs * 0.6;
+          const lightGlow = new Graphics();
+          lightGlow.circle(cx, cy, glowRadius);
+          lightGlow.fill({ color: light.color, alpha: light.intensity * 0.08 });
+          lightingLayer.addChild(lightGlow);
+        }
+      }
+    }
+
     world.addChild(
       frameLayer,
       mapLayer,
+      lightingLayer,
       gridLayer,
       fogLayer,
+      wallLayer,
       interactionLayer,
       tokenLayer,
+      lightIconLayer,
       gmLayer,
       overlayLayer,
       measureLayer,
@@ -807,6 +1018,7 @@ export default function VttPixiStage({
     gridOpacity,
     mapTexture,
     measureState,
+    wallPreview,
     onCellClick,
     onMoveToken,
     onSelectToken,
