@@ -88,7 +88,7 @@ import { toast } from "sonner";
 
 const loreThreats = getVttReadyEntries();
 
-type LeftTool = "select" | "move" | "fog" | "measure";
+type LeftTool = "select" | "move" | "fog" | "measure" | "wall" | "light";
 type RightTab = "chat" | "tokens" | "initiative" | "codex" | "npc";
 
 export default function MesaPage() {
