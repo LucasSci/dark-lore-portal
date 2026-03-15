@@ -179,11 +179,15 @@ export default function VttPixiStage({
     onAddLightRef.current = onAddLight;
   }, [onCameraChange, onDropEntry, page, boardMode, onAddWall, onAddLight]);
 
-  // Clear measure when leaving measure mode
+  // Clear interactive state when leaving modes
   useEffect(() => {
     if (boardMode !== "measure") {
       measureRef.current.active = false;
       setMeasureState(null);
+    }
+    if (boardMode !== "wall") {
+      wallStartRef.current = null;
+      setWallPreview(null);
     }
   }, [boardMode]);
 
