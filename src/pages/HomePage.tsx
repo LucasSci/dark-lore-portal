@@ -1,77 +1,80 @@
 import { motion } from "framer-motion";
-import { BookOpenText, Dice6, Flame, Map, ScrollText, Shield, ShoppingBag, Sword, Users } from "lucide-react";
+import {
+  Dice6,
+  Flame,
+  Map,
+  ScrollText,
+  Shield,
+  ShoppingBag,
+  Sword,
+  Users,
+} from "lucide-react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 
 import heroBg from "@/assets/hero-zerrikania.jpg";
+import ContinentMap from "@/components/world/ContinentMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
-import { supabase } from "@/integrations/supabase/client";
+import { CURRENT_PROTAGONISTS } from "@/lib/immersive-lore";
+import { useCampaignPublications } from "@/lib/publications";
 
 const featureCards = [
   {
     icon: ScrollText,
-    title: "Crônicas da Campanha",
-    description: "Capítulos, dossiês e ganchos narrativos de A Caçada ao Escorpião de Vidro.",
+    title: "Arquivo da Campanha",
+    description:
+      "Cronicas, contratos, rumores e informes publicados pelo mestre para manter o mundo respirando.",
     path: "/campanha",
   },
   {
     icon: Dice6,
     title: "Mesa Virtual",
-    description: "Battlemaps, tokens, fog of war, dados e combate — tudo como no Roll20.",
-    path: "/jogar",
+    description:
+      "Battlemaps, grids, conexoes de area, tokens e deslocamento narrativo guiado pelo mestre.",
+    path: "/mesa",
   },
   {
     icon: Map,
-    title: "Atlas de Zerrikânia",
-    description: "Personagens, locais, facções e eventos conectados pela timeline da campanha.",
-    path: "/universo",
+    title: "Atlas do Continente",
+    description:
+      "Continente, regioes e pontos locais conectados em um atlas navegavel da campanha.",
+    path: "/mapa",
   },
   {
     icon: ShoppingBag,
-    title: "Conteúdo Digital",
-    description: "PDFs, mapas, aventuras e tokens com biblioteca de downloads automática.",
+    title: "Mercado In-Game",
+    description:
+      "Negocie suprimentos, runas, componentes e curiosidades como se estivesse na estrada.",
     path: "/loja",
   },
   {
     icon: Users,
-    title: "Comunidade",
-    description: "Espaços para discutir builds, crônicas, teorias e compartilhar personagens.",
+    title: "Mural da Campanha",
+    description:
+      "Rumores, publicacoes e conversas que continuam dentro do mundo mesmo fora da mesa.",
     path: "/comunidade",
   },
   {
     icon: Shield,
-    title: "Dashboard Pessoal",
-    description: "Conta, biblioteca, progresso e acesso rápido aos recursos do ecossistema.",
+    title: "Arquivo Pessoal",
+    description:
+      "Ficha, biblioteca e progresso do personagem sem quebrar o tom do universo.",
     path: "/conta",
   },
 ];
 
-function useLatestEvents() {
-  return useQuery({
-    queryKey: ["latest-campaign-events"],
-    queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("campaign_events")
-        .select("*")
-        .order("sort_order", { ascending: false })
-        .limit(3);
-      return (data ?? []) as Array<{ title: string; description: string; event_type: string; chapter_number: number }>;
-    },
-  });
-}
-
 export default function HomePage() {
-  const { data: events } = useLatestEvents();
+  const { publishedPublications } = useCampaignPublications();
+  const spotlight = publishedPublications.slice(0, 3);
 
   return (
     <div>
       <section className="relative overflow-hidden border-b border-border/70">
         <img
           src={heroBg}
-          alt="Areias de Zerrikânia — deserto com cidade dourada e dragão"
+          alt="Areias de Zerrikania - deserto, muralhas e rotas de campanha"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-hero-gradient" />
@@ -82,44 +85,53 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_320px]"
+            className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]"
           >
             <div className="max-w-3xl space-y-6">
               <Badge variant="outline" className="border-primary/25 text-primary">
                 <Flame className="mr-2 h-3.5 w-3.5" />
-                Areias de Zerrikânia
+                Areias de Zerrikania
               </Badge>
               <div className="space-y-4">
                 <h1 className="font-display text-5xl leading-tight text-brand-gradient md:text-7xl">
-                  A Caçada ao Escorpião de Vidro
+                  Alaric, Sorrow e Hauz atravessam um continente em ruptura
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-foreground/86">
-                  Nashara, filha da tempestade, deve desvendar a profecia do N'kara antes que Nilfgaard controle o Dragão da Noite.
-                  Mesa virtual, crônicas vivas e lore interativo em um único hub.
+                  O foco da campanha agora esta nas rotas que unem Elarion, Vaz'hir,
+                  Korath e as areias negras de Zerrikania. A mesa, o atlas, o mercado e
+                  as publicacoes do mestre fazem parte do mesmo mundo.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg">
-                  <Link to="/jogar">
+                  <Link to="/mesa">
                     <Sword className="mr-2 h-5 w-5" />
-                    Abrir mesa virtual
+                    Abrir mesa
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                  <Link to="/universo">Explorar Zerrikânia</Link>
+                  <Link to="/mapa">Explorar o continente</Link>
                 </Button>
               </div>
             </div>
 
             <Card variant="elevated" className="self-end">
               <CardHeader>
-                <CardTitle className="text-2xl">Campanha Ativa</CardTitle>
+                <CardTitle className="text-2xl">Frente Atual</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3">
-                <DataSection label="Arco" value="A Caçada ao Escorpião de Vidro" variant="quiet" />
-                <DataSection label="Capítulos" value="22+" variant="quiet" />
-                <DataSection label="Cenário" value="Zerrikânia — Deserto & Interstício" variant="quiet" />
+                <DataSection label="Arco" value="Rotas de Elarion" variant="quiet" />
+                <DataSection
+                  label="Protagonistas"
+                  value={CURRENT_PROTAGONISTS.join(" / ")}
+                  variant="quiet"
+                />
+                <DataSection
+                  label="Cenario"
+                  value="Continente / Korath / Zerrikania"
+                  variant="quiet"
+                />
               </CardContent>
             </Card>
           </motion.div>
@@ -133,9 +145,12 @@ export default function HomePage() {
           viewport={{ once: true }}
           className="mb-12 max-w-2xl"
         >
-          <h2 className="font-display text-4xl text-brand-gradient">Hub da Campanha</h2>
+          <h2 className="font-display text-4xl text-brand-gradient">
+            Ecossistema da Campanha
+          </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground">
-            Crônicas, mesa virtual, atlas do mundo e comunidade — tudo integrado para a experiência de RPG definitiva.
+            Tudo foi reorganizado para parecer um mundo jogavel: rumor, contrato,
+            viagem, compra, preparacao e mesa.
           </p>
         </motion.div>
 
@@ -148,14 +163,21 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card variant="panel" className="h-full transition-transform duration-150 hover:-translate-y-1">
+              <Card
+                variant="panel"
+                className="h-full transition-transform duration-150 hover:-translate-y-1"
+              >
                 <CardContent className="flex h-full flex-col gap-5 p-6">
-                  <div className="rounded-full border border-primary/20 bg-background/60 p-3 text-primary w-fit">
+                  <div className="w-fit rounded-full border border-primary/20 bg-background/60 p-3 text-primary">
                     <feature.icon className="h-6 w-6" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="font-heading text-xl text-foreground">{feature.title}</h3>
-                    <p className="text-sm leading-7 text-muted-foreground">{feature.description}</p>
+                    <h3 className="font-heading text-xl text-foreground">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm leading-7 text-muted-foreground">
+                      {feature.description}
+                    </p>
                   </div>
                   <Button asChild variant="outline" className="mt-auto w-fit">
                     <Link to={feature.path}>Abrir</Link>
@@ -167,25 +189,42 @@ export default function HomePage() {
         </div>
       </section>
 
-      {events && events.length > 0 && (
+      <section className="container pb-24">
+        <ContinentMap />
+      </section>
+
+      {spotlight.length > 0 ? (
         <section className="border-y border-border/70 bg-surface-strong/40">
           <div className="container py-24">
             <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
               <Card variant="panel">
                 <CardHeader>
-                  <CardTitle className="text-2xl">Últimos Eventos</CardTitle>
+                  <CardTitle className="text-2xl">Arquivo em movimento</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <DataSection label="Status" value="Campanha em andamento" variant="quiet" />
-                  <DataSection label="Protagonista" value="Nashara, filha da tempestade" variant="quiet" />
-                  <DataSection label="Ameaça" value="Nilfgaard & N'kara" tone="info" variant="quiet" />
+                  <DataSection
+                    label="Tom"
+                    value="Fronteira, estrada e pressao"
+                    variant="quiet"
+                  />
+                  <DataSection
+                    label="Centro atual"
+                    value={CURRENT_PROTAGONISTS.join(" / ")}
+                    variant="quiet"
+                  />
+                  <DataSection
+                    label="Ritmo"
+                    value="Publicacoes do mestre entre sessoes"
+                    tone="info"
+                    variant="quiet"
+                  />
                 </CardContent>
               </Card>
 
               <div className="grid gap-5 md:grid-cols-3">
-                {events.map((event, index) => (
+                {spotlight.map((publication, index) => (
                   <motion.div
-                    key={event.title}
+                    key={publication.id}
                     initial={{ opacity: 0, y: 18 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -193,10 +232,14 @@ export default function HomePage() {
                   >
                     <Card variant="panel" className="h-full">
                       <CardContent className="space-y-4 p-6">
-                        <Badge variant="secondary">Cap. {event.chapter_number}</Badge>
+                        <Badge variant="secondary">{publication.kind}</Badge>
                         <div>
-                          <h3 className="font-heading text-xl text-foreground">{event.title}</h3>
-                          <p className="mt-3 text-sm leading-7 text-muted-foreground">{event.description}</p>
+                          <h3 className="font-heading text-xl text-foreground">
+                            {publication.title}
+                          </h3>
+                          <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                            {publication.excerpt}
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
@@ -206,24 +249,27 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-      )}
+      ) : null}
 
       <section className="container py-24">
         <Card variant="elevated">
           <CardContent className="flex flex-col gap-6 p-8 md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
-              <h2 className="font-display text-3xl text-brand-gradient">Entre na campanha</h2>
+              <h2 className="font-display text-3xl text-brand-gradient">
+                Entrar na estrada
+              </h2>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-                Crie seu personagem, junte-se à mesa de Nashara e Tarim, ou mergulhe no lore de Zerrikânia.
+                Leia as publicacoes do mestre, prepare sua ficha, negocie no mercado e
+                siga viagem para a proxima area.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <Button asChild>
-                <Link to="/jogar">Abrir mesa</Link>
+                <Link to="/criacao">Criar personagem</Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link to="/campanha">Ler crônicas</Link>
+                <Link to="/campanha">Ler cronicas</Link>
               </Button>
             </div>
           </CardContent>

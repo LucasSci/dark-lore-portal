@@ -1,23 +1,29 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, Flame, X } from "lucide-react";
+import { Flame, Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { label: "Início", path: "/" },
+  { label: "Inicio", path: "/" },
   { label: "Campanha", path: "/campanha" },
-  { label: "Mesa", path: "/jogar" },
+  { label: "Mesa", path: "/mesa" },
+  { label: "Mapa", path: "/mapa" },
   { label: "Universo", path: "/universo" },
   { label: "Comunidade", path: "/comunidade" },
   { label: "Loja", path: "/loja" },
+  { label: "Mestre", path: "/mestre" },
 ];
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const isActivePath = (path: string) =>
+    path === "/"
+      ? location.pathname === "/"
+      : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/82 backdrop-blur-xl">
@@ -28,17 +34,17 @@ export default function Header() {
           </div>
           <div className="min-w-0">
             <p className="font-display text-lg tracking-[0.18em] text-brand-gradient">
-              AREIAS DE ZERRIKÂNIA
+              AREIAS DE ZERRIKANIA
             </p>
             <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              A Caçada ao Escorpião de Vidro
+              Alaric, Sorrow e Hauz em rota para Elarion
             </p>
           </div>
         </Link>
 
         <nav className="hidden items-center gap-2 lg:flex">
           {navItems.map((item) => {
-            const active = location.pathname === item.path;
+            const active = isActivePath(item.path);
 
             return (
               <Link
@@ -59,7 +65,7 @@ export default function Header() {
         <div className="hidden items-center gap-3 lg:flex">
           <Badge variant="outline" className="border-primary/25 text-primary">
             <Flame className="mr-2 h-3.5 w-3.5" />
-            Zerrikânia
+            Continente em campanha
           </Badge>
           <Button asChild variant="outline">
             <Link to="/conta">Conta</Link>
@@ -70,7 +76,7 @@ export default function Header() {
           type="button"
           className="inline-flex h-11 w-11 items-center justify-center rounded-[calc(var(--radius)-2px)] border border-border/70 bg-secondary/60 text-foreground transition-colors hover:border-primary/30 hover:bg-secondary lg:hidden"
           onClick={() => setMobileOpen((previous) => !previous)}
-          aria-label={mobileOpen ? "Fechar navegação" : "Abrir navegação"}
+          aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
         >
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -86,12 +92,12 @@ export default function Header() {
           >
             <div className="container space-y-4 py-4">
               <Badge variant="outline" className="border-primary/25 text-primary">
-                Areias de Zerrikânia
+                Areias de Zerrikania
               </Badge>
 
               <div className="grid gap-2">
                 {[...navItems, { label: "Conta", path: "/conta" }].map((item) => {
-                  const active = location.pathname === item.path;
+                  const active = isActivePath(item.path);
 
                   return (
                     <Link
