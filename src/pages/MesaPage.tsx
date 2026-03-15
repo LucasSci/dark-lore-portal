@@ -443,6 +443,8 @@ export default function MesaPage() {
               onMoveToken={(tokenId, x, y) => void handleMoveToken(tokenId, x, y)}
               onCameraChange={(camera) => void handleCameraChange(camera)}
               onDropEntry={(slug, cell) => void handleDropLoreEntry(slug, cell)}
+              onAddWall={(x1, y1, x2, y2) => void mutateScene((c) => addSceneWall(c, x1, y1, x2, y2))}
+              onAddLight={(cellX, cellY) => void mutateScene((c) => addSceneLight(c, cellX, cellY))}
             />
           )}
 
