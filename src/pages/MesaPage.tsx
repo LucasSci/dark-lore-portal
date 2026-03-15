@@ -267,18 +267,26 @@ export default function MesaPage() {
       move: "move",
       fog: "fog",
       measure: "measure",
+      wall: "wall",
+      light: "light",
     };
     void mutateScene((c) => setBoardMode(c, modeMap[tool]));
   };
 
   const currentTool: LeftTool =
-    scene.boardMode === "fog" ? "fog" : scene.boardMode === "measure" ? "measure" : "move";
+    scene.boardMode === "fog" ? "fog"
+    : scene.boardMode === "measure" ? "measure"
+    : scene.boardMode === "wall" ? "wall"
+    : scene.boardMode === "light" ? "light"
+    : "move";
 
   const toolButtons: { id: LeftTool; icon: React.ReactNode; label: string }[] = [
     { id: "select", icon: <MousePointer className="h-4 w-4" />, label: "Selecionar" },
     { id: "move", icon: <Crosshair className="h-4 w-4" />, label: "Mover" },
     { id: "fog", icon: <EyeOff className="h-4 w-4" />, label: "Fog de Guerra" },
     { id: "measure", icon: <Ruler className="h-4 w-4" />, label: "Medir" },
+    { id: "wall", icon: <WallpaperIcon className="h-4 w-4" />, label: "Paredes (bloqueiam visão)" },
+    { id: "light", icon: <Lightbulb className="h-4 w-4" />, label: "Fonte de Luz" },
   ];
 
   return (
