@@ -66,6 +66,23 @@ export interface DiceHistoryEntry {
   total: number;
 }
 
+export interface WallSegmentData {
+  id: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+export interface LightSourceData {
+  id: string;
+  cellX: number;
+  cellY: number;
+  radius: number;       // in grid cells
+  intensity: number;    // 0-1
+  color: number;        // hex
+}
+
 export interface VttPage {
   id: string;
   sessionId: string;
@@ -83,6 +100,10 @@ export interface VttPage {
     y: number;
     scale: number;
   };
+  wallSegments: WallSegmentData[];
+  lightSources: LightSourceData[];
+  dynamicLighting: boolean;
+  tokenVisionRadius: number; // default vision radius for party tokens (cells)
 }
 
 export type SceneCamera = VttPage["camera"];
