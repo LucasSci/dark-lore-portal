@@ -4,7 +4,7 @@ export const DEFAULT_GRID_SIZE = 72;
 
 export type TerrainType = "ruins" | "road" | "forest" | "swamp" | "altar";
 export type TokenTeam = "party" | "npc";
-export type BoardMode = "move" | "fog" | "measure";
+export type BoardMode = "move" | "fog" | "measure" | "wall" | "light";
 export type VttLayer = "map" | "objects" | "gm" | "walls" | "foreground";
 export type VttGridType = "square";
 export type ChatTone = "system" | "party" | "npc" | "roll";
