@@ -54,11 +54,12 @@ const MEASURE_LABEL_STYLE = new TextStyle({
   fontFamily: "IBM Plex Mono",
   fontWeight: "700",
   letterSpacing: 0.5,
-  dropShadow: true,
-  dropShadowColor: 0x000000,
-  dropShadowAlpha: 0.7,
-  dropShadowDistance: 1,
-  dropShadowBlur: 3,
+  dropShadow: {
+    color: 0x000000,
+    alpha: 0.7,
+    distance: 1,
+    blur: 3,
+  },
 });
 
 function clamp(value: number, min: number, max: number) {
