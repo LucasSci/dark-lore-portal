@@ -528,7 +528,7 @@ export default function VttPixiStage({
       cellGraphic.rect(0, 0, page.gridSize, page.gridSize);
       cellGraphic.fill({ color: 0x000000, alpha: 0.001 });
       cellGraphic.eventMode = "static";
-      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : "pointer";
+      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
       cellGraphic.on("pointertap", () => onCellClick(cell));
       interactionLayer.addChild(cellGraphic);
 
