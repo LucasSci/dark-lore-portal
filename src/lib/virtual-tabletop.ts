@@ -642,6 +642,10 @@ function createDemoPage(sessionId: string): VttPage {
       y: 0,
       scale: 1,
     },
+    wallSegments: [],
+    lightSources: [],
+    dynamicLighting: false,
+    tokenVisionRadius: 6,
   };
 }
 
