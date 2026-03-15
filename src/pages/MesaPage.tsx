@@ -9,10 +9,12 @@ import {
   Dice6,
   Eye,
   EyeOff,
+  Flame,
   Ghost,
   Grid3X3,
   ImagePlus,
   Layers,
+  Lightbulb,
   MessageSquare,
   Minus,
   MousePointer,
@@ -27,6 +29,7 @@ import {
   Target,
   Trash2,
   Users,
+  WallpaperIcon,
 } from "lucide-react";
 
 import VttPixiStage from "@/components/rpg/VttPixiStage";
