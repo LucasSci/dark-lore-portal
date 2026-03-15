@@ -330,6 +330,23 @@ export default function VttPixiStage({
       };
 
       const handlePointerMove = (event: PointerEvent) => {
+        // Measure drag
+        if (measureRef.current.active && boardModeRef.current === "measure") {
+          const { cellX, cellY } = viewportToCell(event.clientX, event.clientY);
+          if (cellX !== measureRef.current.endCellX || cellY !== measureRef.current.endCellY) {
+            measureRef.current.endCellX = cellX;
+            measureRef.current.endCellY = cellY;
+            setMeasureState({
+              active: true,
+              startX: measureRef.current.startCellX,
+              startY: measureRef.current.startCellY,
+              endX: cellX,
+              endY: cellY,
+            });
+          }
+          return;
+        }
+
         if (!panStateRef.current.active) {
           return;
         }
