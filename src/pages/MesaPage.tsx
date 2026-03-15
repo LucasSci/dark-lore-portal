@@ -52,9 +52,13 @@ import {
 } from "@/lib/vtt-realtime";
 import {
   addSceneNpc,
+  addSceneWall,
+  addSceneLight,
   adjustSceneTokenHp,
   appendSceneChat,
   clearSceneInitiative,
+  clearSceneWalls,
+  clearSceneLights,
   countRevealedCells,
   createSceneModel,
   getActivePage,
@@ -71,6 +75,7 @@ import {
   setScenePresence,
   setSceneSelection,
   startSceneInitiative,
+  toggleDynamicLighting,
   toggleSceneFogCell,
   advanceSceneInitiative,
   moveSceneToken,
