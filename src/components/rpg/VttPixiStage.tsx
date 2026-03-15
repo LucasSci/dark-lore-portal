@@ -340,9 +340,33 @@ export default function VttPixiStage({
             measureRef.current = { active: true, startCellX: cellX, startCellY: cellY, endCellX: cellX, endCellY: cellY };
             setMeasureState({ active: true, startX: cellX, startY: cellY, endX: cellX, endY: cellY });
           } else {
-            // Second click ends measurement — keep it visible
             measureRef.current.active = false;
           }
+        }
+
+        // Left-click in wall mode — two clicks to define a wall segment
+        if (event.button === 0 && boardModeRef.current === "wall") {
+          const { cellX, cellY, inBounds } = viewportToCell(event.clientX, event.clientY);
+          if (!inBounds) return;
+
+          if (!wallStartRef.current) {
+            wallStartRef.current = { x: cellX, y: cellY };
+            setWallPreview({ x1: cellX, y1: cellY, x2: cellX, y2: cellY });
+          } else {
+            const start = wallStartRef.current;
+            if (start.x !== cellX || start.y !== cellY) {
+              onAddWallRef.current?.(start.x, start.y, cellX, cellY);
+            }
+            wallStartRef.current = null;
+            setWallPreview(null);
+          }
+        }
+
+        // Left-click in light mode — place a light source
+        if (event.button === 0 && boardModeRef.current === "light") {
+          const { cellX, cellY, inBounds } = viewportToCell(event.clientX, event.clientY);
+          if (!inBounds) return;
+          onAddLightRef.current?.(cellX, cellY);
         }
       };
 
