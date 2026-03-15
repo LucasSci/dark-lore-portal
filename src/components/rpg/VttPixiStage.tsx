@@ -392,6 +392,18 @@ export default function VttPixiStage({
           return;
         }
 
+        // Wall preview drag
+        if (wallStartRef.current && boardModeRef.current === "wall") {
+          const { cellX, cellY } = viewportToCell(event.clientX, event.clientY);
+          setWallPreview({
+            x1: wallStartRef.current.x,
+            y1: wallStartRef.current.y,
+            x2: cellX,
+            y2: cellY,
+          });
+          return;
+        }
+
         if (!panStateRef.current.active) {
           return;
         }
