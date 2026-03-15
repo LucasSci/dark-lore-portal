@@ -133,6 +133,8 @@ export default function VttPixiStage({
   onMoveToken,
   onCameraChange,
   onDropEntry,
+  onAddWall,
+  onAddLight,
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
