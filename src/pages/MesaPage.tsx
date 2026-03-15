@@ -357,6 +357,31 @@ export default function MesaPage() {
         {/* Bottom toolbar items */}
         <div className="w-8 border-t border-border/50 mb-3" />
 
+        {/* Dynamic lighting toggle */}
+        <button
+          onClick={() => void mutateScene((c) => toggleDynamicLighting(c))}
+          title={activePage?.dynamicLighting ? "Desativar iluminação dinâmica" : "Ativar iluminação dinâmica"}
+          className={cn(
+            "mb-1 flex h-9 w-9 items-center justify-center rounded-md transition-colors",
+            activePage?.dynamicLighting
+              ? "bg-amber-500/20 text-amber-400"
+              : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+          )}
+        >
+          <Flame className="h-4 w-4" />
+        </button>
+
+        {/* Clear walls */}
+        <button
+          onClick={() => void mutateScene((c) => clearSceneWalls(c))}
+          title="Limpar paredes"
+          className="mb-1 flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+
+        <div className="w-8 border-t border-border/50 mb-3" />
+
         <button
           onClick={() => void mutateScene((c) => revealEntireSceneFog(c))}
           title="Revelar todo o mapa"
