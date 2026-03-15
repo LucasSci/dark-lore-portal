@@ -157,6 +157,9 @@ export default function VttPixiStage({
     endCellY: number;
   }>({ active: false, startCellX: 0, startCellY: 0, endCellX: 0, endCellY: 0 });
   const boardModeRef = useRef(boardMode);
+  const wallStartRef = useRef<{ x: number; y: number } | null>(null);
+  const onAddWallRef = useRef(onAddWall);
+  const onAddLightRef = useRef(onAddLight);
   const [mapTexture, setMapTexture] = useState<Texture | null>(null);
   const [measureState, setMeasureState] = useState<{
     active: boolean;
@@ -165,13 +168,16 @@ export default function VttPixiStage({
     endX: number;
     endY: number;
   } | null>(null);
+  const [wallPreview, setWallPreview] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
 
   useEffect(() => {
     pageRef.current = page;
     cameraChangeRef.current = onCameraChange;
     dropEntryRef.current = onDropEntry;
     boardModeRef.current = boardMode;
-  }, [onCameraChange, onDropEntry, page, boardMode]);
+    onAddWallRef.current = onAddWall;
+    onAddLightRef.current = onAddLight;
+  }, [onCameraChange, onDropEntry, page, boardMode, onAddWall, onAddLight]);
 
   // Clear measure when leaving measure mode
   useEffect(() => {
