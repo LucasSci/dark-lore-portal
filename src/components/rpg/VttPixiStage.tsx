@@ -718,6 +718,78 @@ export default function VttPixiStage({
       renderLayer.addChild(container);
     }
 
+    // Measure overlay
+    const measureLayer = new Container();
+    measureLayer.zIndex = 35;
+
+    if (measureState) {
+      const { startX, startY, endX, endY } = measureState;
+      const gs = page.gridSize;
+
+      // Bresenham line to get cells along the path
+      const cells: Array<{ x: number; y: number }> = [];
+      let x0 = startX, y0 = startY;
+      const x1 = endX, y1 = endY;
+      const dx = Math.abs(x1 - x0);
+      const dy = Math.abs(y1 - y0);
+      const sx = x0 < x1 ? 1 : -1;
+      const sy = y0 < y1 ? 1 : -1;
+      let err = dx - dy;
+
+      while (true) {
+        cells.push({ x: x0, y: y0 });
+        if (x0 === x1 && y0 === y1) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x0 += sx; }
+        if (e2 < dx) { err += dx; y0 += sy; }
+      }
+
+      // Highlight cells along the path
+      for (const c of cells) {
+        const highlight = new Graphics();
+        highlight.rect(c.x * gs, c.y * gs, gs, gs);
+        highlight.fill({ color: MEASURE_CELL_COLOR, alpha: 0.12 });
+        highlight.stroke({ color: MEASURE_CELL_COLOR, alpha: 0.4, width: 1 });
+        measureLayer.addChild(highlight);
+      }
+
+      // Draw the line from center to center
+      const fromCx = startX * gs + gs / 2;
+      const fromCy = startY * gs + gs / 2;
+      const toCx = endX * gs + gs / 2;
+      const toCy = endY * gs + gs / 2;
+
+      const line = new Graphics();
+      line.moveTo(fromCx, fromCy);
+      line.lineTo(toCx, toCy);
+      line.stroke({ color: MEASURE_LINE_COLOR, alpha: 0.85, width: 3 });
+      measureLayer.addChild(line);
+
+      // Start dot
+      const startDot = new Graphics();
+      startDot.circle(fromCx, fromCy, 5);
+      startDot.fill({ color: MEASURE_LINE_COLOR, alpha: 0.95 });
+      measureLayer.addChild(startDot);
+
+      // End dot
+      const endDot = new Graphics();
+      endDot.circle(toCx, toCy, 5);
+      endDot.fill({ color: MEASURE_LINE_COLOR, alpha: 0.95 });
+      measureLayer.addChild(endDot);
+
+      // Distance = Chebyshev (diagonal = 1 cell) — standard 5ft grid
+      const distCells = Math.max(Math.abs(endX - startX), Math.abs(endY - startY));
+      const distFt = distCells * 5;
+
+      const label = new Text({
+        text: `${distCells} casas · ${distFt} ft`,
+        style: MEASURE_LABEL_STYLE,
+      });
+      label.anchor.set(0.5);
+      label.position.set((fromCx + toCx) / 2, (fromCy + toCy) / 2 - 14);
+      measureLayer.addChild(label);
+    }
+
     world.addChild(
       frameLayer,
       mapLayer,
@@ -727,12 +799,14 @@ export default function VttPixiStage({
       tokenLayer,
       gmLayer,
       overlayLayer,
+      measureLayer,
     );
   }, [
     boardMode,
     gridColor,
     gridOpacity,
     mapTexture,
+    measureState,
     onCellClick,
     onMoveToken,
     onSelectToken,
