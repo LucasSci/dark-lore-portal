@@ -284,21 +284,49 @@ export default function VttPixiStage({
         });
       };
 
+      const viewportToCell = (clientX: number, clientY: number) => {
+        const rect = host.getBoundingClientRect();
+        const vx = clientX - rect.left;
+        const vy = clientY - rect.top;
+        const currentPage = pageRef.current;
+        const m = getBoardMetrics(currentPage, app.renderer.width, app.renderer.height);
+        const bx = (vx - m.paddingX - currentPage.camera.x) / currentPage.camera.scale;
+        const by = (vy - m.paddingY - currentPage.camera.y) / currentPage.camera.scale;
+        return {
+          cellX: clamp(Math.floor(bx / currentPage.gridSize), 0, currentPage.width - 1),
+          cellY: clamp(Math.floor(by / currentPage.gridSize), 0, currentPage.height - 1),
+          inBounds: bx >= 0 && by >= 0 && bx < currentPage.width * currentPage.gridSize && by < currentPage.height * currentPage.gridSize,
+        };
+      };
+
       const handlePointerDown = (event: PointerEvent) => {
-        if (event.button !== 2) {
+        // Right-click = pan
+        if (event.button === 2) {
+          event.preventDefault();
+          panStateRef.current = {
+            active: true,
+            originX: event.clientX,
+            originY: event.clientY,
+            cameraX: pageRef.current.camera.x,
+            cameraY: pageRef.current.camera.y,
+          };
+          host.style.cursor = "grabbing";
           return;
         }
 
-        event.preventDefault();
+        // Left-click in measure mode
+        if (event.button === 0 && boardModeRef.current === "measure") {
+          const { cellX, cellY, inBounds } = viewportToCell(event.clientX, event.clientY);
+          if (!inBounds) return;
 
-        panStateRef.current = {
-          active: true,
-          originX: event.clientX,
-          originY: event.clientY,
-          cameraX: pageRef.current.camera.x,
-          cameraY: pageRef.current.camera.y,
-        };
-        host.style.cursor = "grabbing";
+          if (!measureRef.current.active) {
+            measureRef.current = { active: true, startCellX: cellX, startCellY: cellY, endCellX: cellX, endCellY: cellY };
+            setMeasureState({ active: true, startX: cellX, startY: cellY, endX: cellX, endY: cellY });
+          } else {
+            // Second click ends measurement — keep it visible
+            measureRef.current.active = false;
+          }
+        }
       };
 
       const handlePointerMove = (event: PointerEvent) => {
