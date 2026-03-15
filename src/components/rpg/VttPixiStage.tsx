@@ -39,12 +39,26 @@ const CAMERA_SCALE_MAX = 2.1;
 const PARTY_TOKEN_COLOR = 0x6e92a6;
 const NPC_TOKEN_COLOR = 0xbb533b;
 const SELECTED_TOKEN_COLOR = 0xcfab67;
+const MEASURE_LINE_COLOR = 0xf5c842;
+const MEASURE_CELL_COLOR = 0xf5c842;
 const GRID_LABEL_STYLE = new TextStyle({
   fill: 0xe7dfd4,
   fontSize: 9,
   fontFamily: "IBM Plex Mono",
   fontWeight: "500",
   letterSpacing: 1,
+});
+const MEASURE_LABEL_STYLE = new TextStyle({
+  fill: 0xffffff,
+  fontSize: 13,
+  fontFamily: "IBM Plex Mono",
+  fontWeight: "700",
+  letterSpacing: 0.5,
+  dropShadow: true,
+  dropShadowColor: 0x000000,
+  dropShadowAlpha: 0.7,
+  dropShadowDistance: 1,
+  dropShadowBlur: 3,
 });
 
 function clamp(value: number, min: number, max: number) {
