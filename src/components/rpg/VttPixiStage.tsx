@@ -138,13 +138,22 @@ export default function VttPixiStage({
     cameraX: 0,
     cameraY: 0,
   });
+  const measureRef = useRef<{
+    active: boolean;
+    startCellX: number;
+    startCellY: number;
+    endCellX: number;
+    endCellY: number;
+  }>({ active: false, startCellX: 0, startCellY: 0, endCellX: 0, endCellY: 0 });
+  const boardModeRef = useRef(boardMode);
   const [mapTexture, setMapTexture] = useState<Texture | null>(null);
-
-  useEffect(() => {
-    pageRef.current = page;
-    cameraChangeRef.current = onCameraChange;
-    dropEntryRef.current = onDropEntry;
-  }, [onCameraChange, onDropEntry, page]);
+  const [measureState, setMeasureState] = useState<{
+    active: boolean;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!battlemapUrl) {
