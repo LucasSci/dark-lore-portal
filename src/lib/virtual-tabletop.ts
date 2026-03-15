@@ -1015,3 +1015,84 @@ export function setScenePresence(scene: SceneModel, presence: PresenceMember[]) 
 export function getPositionLabel(x: number, y: number) {
   return `${String.fromCharCode(65 + x)}${y + 1}`;
 }
+
+// ── Wall management ─────────────────────────────────────────────
+
+export function addSceneWall(
+  scene: SceneModel,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    wallSegments: [
+      ...page.wallSegments,
+      { id: makeId("wall"), x1, y1, x2, y2 },
+    ],
+  }));
+}
+
+export function removeSceneWall(scene: SceneModel, wallId: string) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    wallSegments: page.wallSegments.filter((w) => w.id !== wallId),
+  }));
+}
+
+export function clearSceneWalls(scene: SceneModel) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    wallSegments: [],
+  }));
+}
+
+// ── Light source management ─────────────────────────────────────
+
+export function addSceneLight(
+  scene: SceneModel,
+  cellX: number,
+  cellY: number,
+  radius: number = 5,
+  intensity: number = 0.8,
+  color: number = 0xf5c842,
+) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    lightSources: [
+      ...page.lightSources,
+      { id: makeId("light"), cellX, cellY, radius, intensity, color },
+    ],
+  }));
+}
+
+export function removeSceneLight(scene: SceneModel, lightId: string) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    lightSources: page.lightSources.filter((l) => l.id !== lightId),
+  }));
+}
+
+export function clearSceneLights(scene: SceneModel) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    lightSources: [],
+  }));
+}
+
+// ── Dynamic lighting toggle ─────────────────────────────────────
+
+export function toggleDynamicLighting(scene: SceneModel) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    dynamicLighting: !page.dynamicLighting,
+  }));
+}
+
+export function setTokenVisionRadius(scene: SceneModel, radius: number) {
+  return updateActivePage(scene, (page) => ({
+    ...page,
+    tokenVisionRadius: Math.max(1, Math.min(20, radius)),
+  }));
+}
