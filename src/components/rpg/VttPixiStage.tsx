@@ -12,11 +12,18 @@ import {
 
 import type {
   BoardMode,
+  LightSourceData,
   SceneCamera,
   TabletopCell,
   VttPage,
   VttTokenObject,
+  WallSegmentData,
 } from "@/lib/virtual-tabletop";
+import {
+  computeVisibilityPolygon,
+  wallObjectsToSegments,
+  type Segment,
+} from "@/lib/vtt-lighting";
 
 interface Props {
   page: VttPage;
@@ -32,6 +39,8 @@ interface Props {
   onMoveToken: (tokenId: string, x: number, y: number) => void;
   onCameraChange: (camera: SceneCamera) => void;
   onDropEntry: (entrySlug: string, cell: TabletopCell) => void;
+  onAddWall?: (x1: number, y1: number, x2: number, y2: number) => void;
+  onAddLight?: (cellX: number, cellY: number) => void;
 }
 
 const CAMERA_SCALE_MIN = 0.55;
