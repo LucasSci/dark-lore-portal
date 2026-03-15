@@ -156,6 +156,21 @@ export default function VttPixiStage({
   } | null>(null);
 
   useEffect(() => {
+    pageRef.current = page;
+    cameraChangeRef.current = onCameraChange;
+    dropEntryRef.current = onDropEntry;
+    boardModeRef.current = boardMode;
+  }, [onCameraChange, onDropEntry, page, boardMode]);
+
+  // Clear measure when leaving measure mode
+  useEffect(() => {
+    if (boardMode !== "measure") {
+      measureRef.current.active = false;
+      setMeasureState(null);
+    }
+  }, [boardMode]);
+
+  useEffect(() => {
     if (!battlemapUrl) {
       setMapTexture(null);
       return;
