@@ -30,6 +30,7 @@ import {
   Trash2,
   Users,
   WallpaperIcon,
+  X,
 } from "lucide-react";
 
 import VttPixiStage from "@/components/rpg/VttPixiStage";
