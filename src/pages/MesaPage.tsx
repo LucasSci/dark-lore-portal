@@ -903,10 +903,12 @@ export default function MesaPage() {
     { id: "light", icon: <Lightbulb className="h-4 w-4" />, label: "Fonte de Luz" },
   ];
 
+  const [mobilePanel, setMobilePanel] = useState(false);
+
   return (
-    <div className="fixed inset-0 z-[60] flex bg-background-strong">
-      {/* Left toolbar */}
-      <div className="flex w-12 flex-col items-center border-r border-border/70 bg-surface-raised py-2">
+    <div className="fixed inset-0 z-[60] flex bg-background-strong safe-top safe-bottom safe-left safe-right">
+      {/* Left toolbar — horizontal on mobile, vertical on desktop */}
+      <div className="hidden w-12 flex-col items-center border-r border-border/70 bg-surface-raised py-2 sm:flex">
         <Link
           to="/jogar"
           className="mb-4 flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -935,7 +937,6 @@ export default function MesaPage() {
 
         <div className="w-8 border-t border-border/50 my-3" />
 
-        {/* Grid toggle */}
         <button
           onClick={() => setShowGrid((v) => !v)}
           title={showGrid ? "Ocultar grid" : "Mostrar grid"}
@@ -947,7 +948,6 @@ export default function MesaPage() {
           <Grid3X3 className="h-4 w-4" />
         </button>
 
-        {/* Battlemap upload */}
         <button
           onClick={() => fileInputRef.current?.click()}
           title="Importar battlemap"
@@ -970,10 +970,8 @@ export default function MesaPage() {
 
         <div className="flex-1" />
 
-        {/* Bottom toolbar items */}
         <div className="w-8 border-t border-border/50 mb-3" />
 
-        {/* Dynamic lighting toggle */}
         <button
           onClick={() => void mutateScene((c) => toggleDynamicLighting(c))}
           title={activePage?.dynamicLighting ? "Desativar iluminação dinâmica" : "Ativar iluminação dinâmica"}
@@ -987,7 +985,6 @@ export default function MesaPage() {
           <Flame className="h-4 w-4" />
         </button>
 
-        {/* Clear walls */}
         <button
           onClick={() => void mutateScene((c) => clearSceneWalls(c))}
           title="Limpar paredes"
