@@ -7,7 +7,18 @@ export type TokenTeam = "party" | "npc";
 export type BoardMode = "move" | "fog" | "measure" | "wall" | "light";
 export type VttLayer = "map" | "objects" | "gm" | "walls" | "foreground";
 export type VttGridType = "square";
+export type PageConnectionEdge = "north" | "east" | "south" | "west";
 export type ChatTone = "system" | "party" | "npc" | "roll";
+export type SceneEventType =
+  | "TOKEN_MOVED"
+  | "TOKEN_UPDATED"
+  | "OBJECT_CREATED"
+  | "OBJECT_REMOVED"
+  | "FOG_UPDATED"
+  | "INITIATIVE_SNAPSHOT"
+  | "CHAT_APPENDED"
+  | "PAGE_SWITCHED"
+  | "PRESENCE_HEARTBEAT";
 
 export interface TabletopCell {
   id: string;
@@ -78,21 +89,43 @@ export interface LightSourceData {
   id: string;
   cellX: number;
   cellY: number;
-  radius: number;       // in grid cells
-  intensity: number;    // 0-1
-  color: number;        // hex
+  radius: number;
+  intensity: number;
+  color: number;
+}
+
+export interface PageConnection {
+  id: string;
+  edge: PageConnectionEdge;
+  label: string;
+  targetPageId: string;
+  spawn: {
+    x: number;
+    y: number;
+  };
+}
+
+export interface BattlemapFrame {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface VttPage {
   id: string;
   sessionId: string;
   name: string;
+  region: string;
   gridType: VttGridType;
   gridSize: number;
   width: number;
   height: number;
   backgroundAssetId: string | null;
+  backgroundAssetUrl: string | null;
+  backgroundFrame: BattlemapFrame | null;
   layerOrder: VttLayer[];
+  connections: PageConnection[];
   cells: TabletopCell[];
   fog: FogState;
   camera: {
@@ -191,7 +224,60 @@ export interface VttLightSource {
   revision: number;
 }
 
-export type VttSceneObject = VttTokenObject | VttWall | VttDrawing | VttLightSource;
+export interface VttMapDecal {
+  id: string;
+  pageId: string;
+  objectType: "map-decal";
+  layer: "map" | "foreground";
+  position: {
+    x: number;
+    y: number;
+  };
+  size: {
+    width: number;
+    height: number;
+  };
+  rotation: number;
+  payload: {
+    assetId: string | null;
+    imageUrl: string | null;
+    opacity: number;
+    blendMode: "normal" | "multiply" | "screen";
+  };
+  revision: number;
+}
+
+export interface VttMeasurement {
+  id: string;
+  pageId: string;
+  objectType: "measurement";
+  layer: "foreground" | "gm";
+  position: {
+    x: number;
+    y: number;
+  };
+  size: {
+    width: number;
+    height: number;
+  };
+  rotation: number;
+  payload: {
+    from: { x: number; y: number };
+    to: { x: number; y: number };
+    distance: number;
+    unit: string;
+    label: string;
+  };
+  revision: number;
+}
+
+export type VttSceneObject =
+  | VttTokenObject
+  | VttWall
+  | VttDrawing
+  | VttLightSource
+  | VttMapDecal
+  | VttMeasurement;
 
 export interface ScenePermissions {
   role: "gm" | "player";
@@ -222,6 +308,16 @@ export interface SceneModel {
   presence: PresenceMember[];
 }
 
+export interface SceneEvent {
+  type: SceneEventType;
+  sessionId: string;
+  pageId: string | null;
+  revision: number;
+  actorId: string | null;
+  createdAt: string;
+  payload: Record<string, unknown>;
+}
+
 export interface AssetManifest {
   assetId: string;
   kind: "map" | "token" | "portrait";
@@ -241,6 +337,64 @@ export interface AssetManifest {
   };
   pageCount: number;
   processingStatus: "pending" | "processing" | "ready" | "failed";
+}
+
+function normalizeBattlemapFrame(
+  frame: Partial<BattlemapFrame> | null | undefined,
+  boardWidth: number,
+  boardHeight: number,
+): BattlemapFrame | null {
+  if (!frame) {
+    return null;
+  }
+
+  const width = Math.max(1, Math.min(boardWidth, Math.round(frame.width ?? boardWidth)));
+  const height = Math.max(1, Math.min(boardHeight, Math.round(frame.height ?? boardHeight)));
+  const maxX = Math.max(0, boardWidth - width);
+  const maxY = Math.max(0, boardHeight - height);
+
+  return {
+    x: Math.max(0, Math.min(maxX, Math.round(frame.x ?? 0))),
+    y: Math.max(0, Math.min(maxY, Math.round(frame.y ?? 0))),
+    width,
+    height,
+  };
+}
+
+function createFullBoardBattlemapFrame(boardWidth: number, boardHeight: number): BattlemapFrame {
+  return {
+    x: 0,
+    y: 0,
+    width: boardWidth,
+    height: boardHeight,
+  };
+}
+
+function shiftFogState(
+  fog: FogState,
+  previousWidth: number,
+  previousHeight: number,
+  nextWidth: number,
+  nextHeight: number,
+  offsetX: number,
+  offsetY: number,
+) {
+  const nextFog = createInitialFog(nextWidth, nextHeight);
+
+  for (let y = 0; y < previousHeight; y += 1) {
+    for (let x = 0; x < previousWidth; x += 1) {
+      const nextX = x + offsetX;
+      const nextY = y + offsetY;
+
+      if (nextX < 0 || nextY < 0 || nextX >= nextWidth || nextY >= nextHeight) {
+        continue;
+      }
+
+      nextFog[`${nextX}:${nextY}`] = Boolean(fog[`${x}:${y}`]);
+    }
+  }
+
+  return nextFog;
 }
 
 export const TERRAIN_META: Record<
@@ -292,6 +446,18 @@ function makeId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function makeEntityId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+    const random = Math.floor(Math.random() * 16);
+    const value = char === "x" ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+}
+
 function stampTime() {
   return timeFormatter.format(new Date());
 }
@@ -316,6 +482,10 @@ function shortNameFrom(name: string) {
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("")
     .slice(0, 2);
+}
+
+function clampPosition(value: number, max: number) {
+  return Math.max(0, Math.min(max, value));
 }
 
 function resolveTerrain(
@@ -424,7 +594,7 @@ export function countRevealedCells(fog: FogState) {
 export function createDemoTokens(): TabletopToken[] {
   return [
     {
-      id: "pc-thorin",
+      id: makeEntityId(),
       name: "Thorin",
       shortName: "TH",
       team: "party",
@@ -441,7 +611,7 @@ export function createDemoTokens(): TabletopToken[] {
       controlledBy: "party",
     },
     {
-      id: "pc-elara",
+      id: makeEntityId(),
       name: "Elara",
       shortName: "EL",
       team: "party",
@@ -458,7 +628,7 @@ export function createDemoTokens(): TabletopToken[] {
       controlledBy: "party",
     },
     {
-      id: "pc-grimshaw",
+      id: makeEntityId(),
       name: "Grimshaw",
       shortName: "GR",
       team: "party",
@@ -475,7 +645,7 @@ export function createDemoTokens(): TabletopToken[] {
       controlledBy: "party",
     },
     {
-      id: "npc-sentinel",
+      id: makeEntityId(),
       name: "Sentinela Sombria",
       shortName: "SS",
       team: "npc",
@@ -492,7 +662,7 @@ export function createDemoTokens(): TabletopToken[] {
       controlledBy: "gm",
     },
     {
-      id: "npc-ghoul-a",
+      id: makeEntityId(),
       name: "Ghoul da Cripta",
       shortName: "GC",
       team: "npc",
@@ -509,7 +679,7 @@ export function createDemoTokens(): TabletopToken[] {
       controlledBy: "gm",
     },
     {
-      id: "npc-ghoul-b",
+      id: makeEntityId(),
       name: "Ghoul da Cripta",
       shortName: "GB",
       team: "npc",
@@ -624,19 +794,44 @@ export function createInitialChat(): ChatMessage[] {
   ];
 }
 
-function createDemoPage(sessionId: string): VttPage {
+export function createScenePage(
+  sessionId: string,
+  name: string,
+  options: Partial<
+    Pick<
+      VttPage,
+      "gridSize" | "width" | "height" | "region" | "backgroundAssetId" | "backgroundAssetUrl" | "backgroundFrame"
+    >
+  > = {},
+): VttPage {
+  const width = options.width ?? BOARD_COLUMNS;
+  const height = options.height ?? BOARD_ROWS;
+  const gridSize = options.gridSize ?? DEFAULT_GRID_SIZE;
+  const backgroundFrame = normalizeBattlemapFrame(
+    options.backgroundFrame ??
+      (options.backgroundAssetId || options.backgroundAssetUrl
+        ? createFullBoardBattlemapFrame(width, height)
+        : null),
+    width,
+    height,
+  );
+
   return {
-    id: "page-crypt",
+    id: makeEntityId(),
     sessionId,
-    name: "Cripta de Velkyn",
+    name,
+    region: options.region ?? name,
     gridType: "square",
-    gridSize: DEFAULT_GRID_SIZE,
-    width: BOARD_COLUMNS,
-    height: BOARD_ROWS,
-    backgroundAssetId: null,
+    gridSize,
+    width,
+    height,
+    backgroundAssetId: options.backgroundAssetId ?? null,
+    backgroundAssetUrl: options.backgroundAssetUrl ?? null,
+    backgroundFrame,
     layerOrder: ["map", "objects", "gm", "walls", "foreground"],
-    cells: createBoard(),
-    fog: createInitialFog(),
+    connections: [],
+    cells: createBoard(width, height),
+    fog: createInitialFog(width, height),
     camera: {
       x: 0,
       y: 0,
@@ -646,6 +841,14 @@ function createDemoPage(sessionId: string): VttPage {
     lightSources: [],
     dynamicLighting: false,
     tokenVisionRadius: 6,
+  };
+}
+
+function createDemoPage(sessionId: string): VttPage {
+  return {
+    ...createScenePage(sessionId, "Cripta de Velkyn", {
+      region: "Velkyn",
+    }),
   };
 }
 
@@ -696,6 +899,152 @@ export function createSceneModel(sessionId: string = "demo-session"): SceneModel
     diceHistory: [],
     presence: [],
   };
+}
+
+function findSceneObject(scene: SceneModel, objectId: string) {
+  return scene.objects.find((object) => object.id === objectId) ?? null;
+}
+
+function upsertSceneObject(scene: SceneModel, incoming: VttSceneObject) {
+  const existing = findSceneObject(scene, incoming.id);
+
+  if (!existing) {
+    return bumpScene(scene, {
+      objects: [...scene.objects, incoming],
+      selectedObjectId: incoming.id,
+    });
+  }
+
+  return bumpScene(scene, {
+    objects: scene.objects.map((object) => (object.id === incoming.id ? incoming : object)),
+  });
+}
+
+function withSceneRevision(scene: SceneModel, revision: number) {
+  return {
+    ...scene,
+    revision,
+  };
+}
+
+export function createSceneEvent(
+  scene: SceneModel,
+  type: SceneEventType,
+  payload: Record<string, unknown>,
+  pageId: string | null = scene.activePageId,
+  actorId: string | null = null,
+): SceneEvent {
+  return {
+    type,
+    sessionId: scene.sessionId,
+    pageId,
+    revision: scene.revision,
+    actorId,
+    createdAt: new Date().toISOString(),
+    payload,
+  };
+}
+
+export function applySceneEvent(scene: SceneModel, event: SceneEvent) {
+  if (event.sessionId !== scene.sessionId || event.revision <= scene.revision) {
+    return scene;
+  }
+
+  switch (event.type) {
+    case "TOKEN_MOVED": {
+      const tokenId = typeof event.payload.tokenId === "string" ? event.payload.tokenId : null;
+      const x = typeof event.payload.x === "number" ? event.payload.x : null;
+      const y = typeof event.payload.y === "number" ? event.payload.y : null;
+
+      if (!tokenId || x === null || y === null) {
+        return scene;
+      }
+
+      return withSceneRevision(moveSceneToken(scene, tokenId, x, y), event.revision);
+    }
+    case "TOKEN_UPDATED": {
+      const token = event.payload.token as VttSceneObject | undefined;
+
+      if (!token || token.objectType !== "token") {
+        return scene;
+      }
+
+      return withSceneRevision(upsertSceneObject(scene, token), event.revision);
+    }
+    case "OBJECT_CREATED": {
+      const object = event.payload.object as VttSceneObject | undefined;
+
+      if (!object) {
+        return scene;
+      }
+
+      return withSceneRevision(upsertSceneObject(scene, object), event.revision);
+    }
+    case "OBJECT_REMOVED": {
+      const objectId = typeof event.payload.objectId === "string" ? event.payload.objectId : null;
+
+      if (!objectId) {
+        return scene;
+      }
+
+      return withSceneRevision(bumpScene(scene, {
+        objects: scene.objects.filter((object) => object.id !== objectId),
+        selectedObjectId: scene.selectedObjectId === objectId ? null : scene.selectedObjectId,
+      }), event.revision);
+    }
+    case "FOG_UPDATED": {
+      const fog = event.payload.fog as FogState | undefined;
+
+      if (!fog || !event.pageId) {
+        return scene;
+      }
+
+      return withSceneRevision(bumpScene(scene, {
+        pages: scene.pages.map((page) =>
+          page.id === event.pageId
+            ? { ...page, fog }
+            : page,
+        ),
+      }), event.revision);
+    }
+    case "INITIATIVE_SNAPSHOT": {
+      const initiative = event.payload.initiative as InitiativeState | undefined;
+
+      if (!initiative) {
+        return scene;
+      }
+
+      return withSceneRevision(bumpScene(scene, { initiative }), event.revision);
+    }
+    case "CHAT_APPENDED": {
+      const message = event.payload.message as ChatMessage | undefined;
+
+      if (!message) {
+        return scene;
+      }
+
+      return withSceneRevision(bumpScene(scene, {
+        chatMessages: [
+          ...scene.chatMessages
+            .filter((entry) => entry.id !== message.id)
+            .slice(-39),
+          message,
+        ],
+      }), event.revision);
+    }
+    case "PAGE_SWITCHED": {
+      const nextPageId = typeof event.payload.pageId === "string" ? event.payload.pageId : null;
+
+      if (!nextPageId) {
+        return scene;
+      }
+
+      return withSceneRevision(bumpScene(scene, { activePageId: nextPageId }), event.revision);
+    }
+    case "PRESENCE_HEARTBEAT":
+    default:
+      return scene;
+  }
 }
 
 export function getActivePage(scene: SceneModel) {
@@ -785,6 +1134,370 @@ export function setSceneCamera(scene: SceneModel, camera: SceneCamera) {
   }));
 }
 
+export function addScenePage(
+  scene: SceneModel,
+  draft: {
+    name: string;
+    region?: string;
+    width?: number;
+    height?: number;
+    gridSize?: number;
+    focus?: boolean;
+  },
+) {
+  const page = createScenePage(scene.sessionId, draft.name.trim() || "Nova Area", {
+    region: draft.region?.trim() || draft.name.trim() || "Nova Area",
+    width: draft.width ?? getActivePage(scene)?.width ?? BOARD_COLUMNS,
+    height: draft.height ?? getActivePage(scene)?.height ?? BOARD_ROWS,
+    gridSize: draft.gridSize ?? getActivePage(scene)?.gridSize ?? DEFAULT_GRID_SIZE,
+  });
+
+  return bumpScene(scene, {
+    pages: [...scene.pages, page],
+    activePageId: draft.focus === false ? scene.activePageId : page.id,
+  });
+}
+
+export function connectScenePages(
+  scene: SceneModel,
+  options: {
+    pageId: string;
+    targetPageId: string;
+    edge: PageConnectionEdge;
+    label: string;
+    spawnX: number;
+    spawnY: number;
+  },
+) {
+  const targetPage = scene.pages.find((page) => page.id === options.targetPageId);
+
+  if (!targetPage) {
+    return scene;
+  }
+
+  const connection: PageConnection = {
+    id: makeId("connection"),
+    edge: options.edge,
+    label: options.label.trim() || targetPage.name,
+    targetPageId: options.targetPageId,
+    spawn: {
+      x: clampPosition(Math.round(options.spawnX), targetPage.width - 1),
+      y: clampPosition(Math.round(options.spawnY), targetPage.height - 1),
+    },
+  };
+
+  return bumpScene(scene, {
+    pages: scene.pages.map((page) =>
+      page.id === options.pageId
+        ? {
+            ...page,
+            connections: [
+              ...page.connections.filter(
+                (item) =>
+                  !(item.edge === options.edge && item.targetPageId === options.targetPageId),
+              ),
+              connection,
+            ],
+          }
+        : page,
+    ),
+  });
+}
+
+export function removeSceneConnection(
+  scene: SceneModel,
+  pageId: string,
+  connectionId: string,
+) {
+  return bumpScene(scene, {
+    pages: scene.pages.map((page) =>
+      page.id === pageId
+        ? {
+            ...page,
+            connections: page.connections.filter((connection) => connection.id !== connectionId),
+          }
+        : page,
+    ),
+  });
+}
+
+export function travelSceneConnection(
+  scene: SceneModel,
+  options: {
+    connectionId: string;
+    tokenId?: string | null;
+  },
+) {
+  const currentPage = getActivePage(scene);
+
+  if (!currentPage) {
+    return scene;
+  }
+
+  const connection = currentPage.connections.find((item) => item.id === options.connectionId);
+  const targetPage = scene.pages.find((page) => page.id === connection?.targetPageId);
+
+  if (!connection || !targetPage) {
+    return scene;
+  }
+
+  return bumpScene(scene, {
+    activePageId: targetPage.id,
+    selectedObjectId: options.tokenId ?? scene.selectedObjectId,
+    objects: scene.objects.map((object) => {
+      if (
+        object.objectType !== "token" ||
+        !options.tokenId ||
+        object.id !== options.tokenId
+      ) {
+        return object;
+      }
+
+      return {
+        ...object,
+        pageId: targetPage.id,
+        position: {
+          x: clampPosition(connection.spawn.x, targetPage.width - 1),
+          y: clampPosition(connection.spawn.y, targetPage.height - 1),
+        },
+        revision: object.revision + 1,
+        payload: {
+          ...object.payload,
+          x: clampPosition(connection.spawn.x, targetPage.width - 1),
+          y: clampPosition(connection.spawn.y, targetPage.height - 1),
+        },
+      };
+    }),
+  });
+}
+
+export function travelSceneEdge(
+  scene: SceneModel,
+  edge: PageConnectionEdge,
+  tokenId?: string | null,
+) {
+  const currentPage = getActivePage(scene);
+  const connection = currentPage?.connections.find((item) => item.edge === edge);
+
+  if (!connection) {
+    return scene;
+  }
+
+  return travelSceneConnection(scene, {
+    connectionId: connection.id,
+    tokenId,
+  });
+}
+
+export function configureSceneBattlemap(
+  scene: SceneModel,
+  config: {
+    width: number;
+    height: number;
+    gridSize: number;
+    backgroundAssetId?: string | null;
+    backgroundAssetUrl?: string | null;
+    resetFrame?: boolean;
+  },
+) {
+  const activePage = getActivePage(scene);
+
+  if (!activePage) {
+    return scene;
+  }
+
+  const width = Math.max(1, Math.round(config.width));
+  const height = Math.max(1, Math.round(config.height));
+  const gridSize = Math.max(32, Math.round(config.gridSize));
+  const receivedNewAsset =
+    config.backgroundAssetId !== undefined || config.backgroundAssetUrl !== undefined;
+  const hasBattlemapAsset = Boolean(
+    config.backgroundAssetId ?? config.backgroundAssetUrl ?? activePage.backgroundAssetId ?? activePage.backgroundAssetUrl,
+  );
+  const backgroundFrame = config.resetFrame || receivedNewAsset
+    ? hasBattlemapAsset
+      ? createFullBoardBattlemapFrame(width, height)
+      : null
+    : normalizeBattlemapFrame(activePage.backgroundFrame, width, height);
+  const nextFog = config.resetFrame || receivedNewAsset
+    ? revealAllFog(width, height)
+    : shiftFogState(activePage.fog, activePage.width, activePage.height, width, height, 0, 0);
+
+  return bumpScene(scene, {
+    pages: scene.pages.map((page) =>
+      page.id === activePage.id
+        ? {
+            ...page,
+            width,
+            height,
+            gridSize,
+            backgroundAssetId:
+              config.backgroundAssetId !== undefined
+                ? config.backgroundAssetId
+                : page.backgroundAssetId,
+            backgroundAssetUrl:
+              config.backgroundAssetUrl !== undefined
+                ? config.backgroundAssetUrl
+                : page.backgroundAssetUrl,
+            backgroundFrame,
+            cells: createBoard(width, height),
+            fog: nextFog,
+          }
+        : page,
+    ),
+    objects: scene.objects.map((object) => {
+      if (object.pageId !== activePage.id || object.objectType !== "token") {
+        return object;
+      }
+
+      const nextX = Math.max(0, Math.min(width - 1, object.position.x));
+      const nextY = Math.max(0, Math.min(height - 1, object.position.y));
+
+      if (nextX === object.position.x && nextY === object.position.y) {
+        return object;
+      }
+
+      return {
+        ...object,
+        position: { x: nextX, y: nextY },
+        revision: object.revision + 1,
+        payload: {
+          ...object.payload,
+          x: nextX,
+          y: nextY,
+        },
+      };
+    }),
+  });
+}
+
+export function expandScenePage(
+  scene: SceneModel,
+  edge: PageConnectionEdge,
+  amount: number = 2,
+) {
+  const activePage = getActivePage(scene);
+
+  if (!activePage) {
+    return scene;
+  }
+
+  const growth = Math.max(1, Math.round(amount));
+  const offsetX = edge === "west" ? growth : 0;
+  const offsetY = edge === "north" ? growth : 0;
+  const nextWidth =
+    edge === "east" || edge === "west" ? activePage.width + growth : activePage.width;
+  const nextHeight =
+    edge === "north" || edge === "south" ? activePage.height + growth : activePage.height;
+
+  return bumpScene(scene, {
+    pages: scene.pages.map((page) => {
+      if (page.id !== activePage.id) {
+        return page;
+      }
+
+      const shiftedFrame = page.backgroundFrame
+        ? {
+            ...page.backgroundFrame,
+            x: page.backgroundFrame.x + offsetX,
+            y: page.backgroundFrame.y + offsetY,
+          }
+        : null;
+
+      return {
+        ...page,
+        width: nextWidth,
+        height: nextHeight,
+        backgroundFrame: normalizeBattlemapFrame(shiftedFrame, nextWidth, nextHeight),
+        cells: createBoard(nextWidth, nextHeight),
+        fog: shiftFogState(
+          page.fog,
+          page.width,
+          page.height,
+          nextWidth,
+          nextHeight,
+          offsetX,
+          offsetY,
+        ),
+        camera: {
+          ...page.camera,
+          x: Number((page.camera.x - offsetX * page.gridSize).toFixed(2)),
+          y: Number((page.camera.y - offsetY * page.gridSize).toFixed(2)),
+        },
+      };
+    }),
+    objects: scene.objects.map((object) => {
+      if (object.pageId !== activePage.id) {
+        return object;
+      }
+
+      const position = {
+        x: object.position.x + offsetX,
+        y: object.position.y + offsetY,
+      };
+
+      if (object.objectType === "token") {
+        const clampedX = clampPosition(position.x, nextWidth - 1);
+        const clampedY = clampPosition(position.y, nextHeight - 1);
+
+        return {
+          ...object,
+          position: {
+            x: clampedX,
+            y: clampedY,
+          },
+          revision: object.revision + 1,
+          payload: {
+            ...object.payload,
+            x: clampedX,
+            y: clampedY,
+          },
+        };
+      }
+
+      if (object.objectType === "measurement") {
+        return {
+          ...object,
+          position,
+          revision: object.revision + 1,
+          payload: {
+            ...object.payload,
+            from: {
+              x: object.payload.from.x + offsetX,
+              y: object.payload.from.y + offsetY,
+            },
+            to: {
+              x: object.payload.to.x + offsetX,
+              y: object.payload.to.y + offsetY,
+            },
+          },
+        };
+      }
+
+      if (object.objectType === "wall") {
+        return {
+          ...object,
+          position,
+          revision: object.revision + 1,
+          payload: {
+            ...object.payload,
+            points: object.payload.points.map((point) => ({
+              x: point.x + offsetX,
+              y: point.y + offsetY,
+            })),
+          },
+        };
+      }
+
+      return {
+        ...object,
+        position,
+        revision: object.revision + 1,
+      };
+    }),
+  });
+}
+
 export function toggleSceneFogCell(scene: SceneModel, cellIdValue: string) {
   return updateActivePage(scene, (page) => ({
     ...page,
@@ -861,7 +1574,7 @@ export function addSceneNpc(scene: SceneModel, draft: {
   }
 
   const token: TabletopToken = {
-    id: makeId("npc"),
+    id: makeEntityId(),
     name: draft.name.trim(),
     shortName: shortNameFrom(draft.name),
     team: draft.team ?? "npc",

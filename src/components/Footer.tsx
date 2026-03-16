@@ -15,17 +15,17 @@ const footerLinks = [
   {
     title: "Jogar",
     links: [
-      { label: "Criar ficha", path: "/jogar" },
-      { label: "Mesa virtual", path: "/jogar" },
-      { label: "Biblioteca de regras", path: "/universo" },
+      { label: "Criar ficha", path: "/criacao" },
+      { label: "Mesa virtual", path: "/mesa" },
+      { label: "Painel do mestre", path: "/mestre" },
     ],
   },
   {
     title: "Conta",
     links: [
-      { label: "Dashboard", path: "/conta" },
+      { label: "Arquivo pessoal", path: "/conta" },
       { label: "Biblioteca", path: "/conta" },
-      { label: "Downloads", path: "/conta" },
+      { label: "Mercado", path: "/loja" },
     ],
   },
 ];
@@ -38,18 +38,21 @@ export default function Footer() {
           <div className="space-y-5">
             <div className="flex items-center gap-3">
               <div className="rounded-full border border-primary/20 bg-background/60 p-2">
-                <img src={logoEmblem} alt="Realm emblem" className="h-8 w-8" />
+                <img src={logoEmblem} alt="Emblema da campanha" className="h-8 w-8" />
               </div>
               <div>
-                <p className="font-display text-lg tracking-[0.22em] text-brand-gradient">REALM</p>
+                <p className="font-display text-lg tracking-[0.22em] text-brand-gradient">
+                  AREIAS DE ZERRIKANIA
+                </p>
                 <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                  Noir Chronicle UI
+                  Arquivo vivo do continente
                 </p>
               </div>
             </div>
 
             <p className="max-w-sm text-sm leading-7 text-muted-foreground">
-              Um universo de dark fantasy original com foco em cronicas, personagens, combate e conteudo digital propio.
+              Um ecossistema de campanha focado em estrada, rumor, combate, mercado e cronicas publicadas pelo mestre
+              sem quebrar a imersao.
             </p>
 
             <Badge variant="outline" className="border-primary/25 text-primary">
@@ -79,8 +82,8 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-border/70 pt-6 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
-          <p>(c) 2026 Realm. Todos os direitos reservados.</p>
-          <p>Dark fantasy original, sem referencia direta a IPs de terceiros.</p>
+          <p>(c) 2026 Areias de Zerrikania. Todos os direitos reservados.</p>
+          <p>Ambientacao autoral inspirada no tom dark fantasy da campanha.</p>
         </div>
       </div>
     </footer>

@@ -199,6 +199,36 @@ export const NOIR_CHRONICLE_SHEET: SheetDefinition = {
     { id: "inventory", label: "Inventario", binding: "inventory", itemType: "inventory" },
     { id: "spellbook", label: "Magias", binding: "spellbook", itemType: "spellbook" },
   ],
+  validationRules: [
+    {
+      id: "identity-name-required",
+      scope: "field",
+      target: "name",
+      message: "Nome do personagem e obrigatorio.",
+    },
+    {
+      id: "attributes-point-budget",
+      scope: "step",
+      target: "attributes",
+      message: "O point-buy excedeu o limite de 27 pontos.",
+    },
+  ],
+  formulaDeps: [
+    { binding: "hp_max", dependsOn: ["class", "level", "constituicao"] },
+    { binding: "mp_max", dependsOn: ["class", "inteligencia", "sabedoria", "carisma"] },
+    { binding: "armor_class", dependsOn: ["destreza"] },
+    { binding: "initiative_bonus", dependsOn: ["destreza"] },
+    { binding: "xp_next", dependsOn: ["level"] },
+    { binding: "point_budget_used", dependsOn: ATTRIBUTES.map((attribute) => attribute.key) },
+  ],
+  presentationHints: [
+    { binding: "hp_max", surface: "metric", emphasis: "strong", icon: "heart" },
+    { binding: "mp_max", surface: "metric", emphasis: "strong", icon: "droplets" },
+    { binding: "armor_class", surface: "metric", emphasis: "default", icon: "shield" },
+    { binding: "initiative_bonus", surface: "quiet", emphasis: "default", icon: "zap" },
+    { binding: "inventory", surface: "panel", emphasis: "default", icon: "package" },
+    { binding: "spellbook", surface: "panel", emphasis: "default", icon: "book-open-text" },
+  ],
   bindings: {
     inventory: "inventory",
     spellbook: "spellbook",

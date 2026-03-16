@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import {
   Application,
   Assets,
@@ -12,7 +12,7 @@ import {
 
 import type {
   BoardMode,
-  LightSourceData,
+  PageConnectionEdge,
   SceneCamera,
   TabletopCell,
   VttPage,
@@ -37,6 +37,8 @@ interface Props {
   onCellClick: (cell: TabletopCell) => void;
   onSelectToken: (tokenId: string) => void;
   onMoveToken: (tokenId: string, x: number, y: number) => void;
+  onExpandMap?: (edge: PageConnectionEdge) => void;
+  onTravelEdge?: (edge: PageConnectionEdge, tokenId: string) => Promise<boolean> | boolean;
   onCameraChange: (camera: SceneCamera) => void;
   onDropEntry: (entrySlug: string, cell: TabletopCell) => void;
   onAddWall?: (x1: number, y1: number, x2: number, y2: number) => void;
@@ -131,6 +133,8 @@ export default function VttPixiStage({
   onCellClick,
   onSelectToken,
   onMoveToken,
+  onExpandMap,
+  onTravelEdge,
   onCameraChange,
   onDropEntry,
   onAddWall,
@@ -142,6 +146,8 @@ export default function VttPixiStage({
   const pageRef = useRef(page);
   const cameraChangeRef = useRef(onCameraChange);
   const dropEntryRef = useRef(onDropEntry);
+  const moveTokenRef = useRef(onMoveToken);
+  const selectTokenRef = useRef(onSelectToken);
   const panStateRef = useRef({
     active: false,
     originX: 0,
@@ -169,6 +175,24 @@ export default function VttPixiStage({
     endY: number;
   } | null>(null);
   const [wallPreview, setWallPreview] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const dragStateRef = useRef<{
+    tokenId: string | null;
+    container: Container | null;
+    offsetX: number;
+    offsetY: number;
+    originX: number;
+    originY: number;
+    moved: boolean;
+  }>({
+    tokenId: null,
+    container: null,
+    offsetX: 0,
+    offsetY: 0,
+    originX: 0,
+    originY: 0,
+    moved: false,
+  });
+  const [viewportSize, setViewportSize] = useState({ width: 960, height: 560 });
 
   useEffect(() => {
     pageRef.current = page;
@@ -177,7 +201,18 @@ export default function VttPixiStage({
     boardModeRef.current = boardMode;
     onAddWallRef.current = onAddWall;
     onAddLightRef.current = onAddLight;
-  }, [onCameraChange, onDropEntry, page, boardMode, onAddWall, onAddLight]);
+    moveTokenRef.current = onMoveToken;
+    selectTokenRef.current = onSelectToken;
+  }, [
+    onAddLight,
+    onAddWall,
+    onCameraChange,
+    onDropEntry,
+    onMoveToken,
+    onSelectToken,
+    page,
+    boardMode,
+  ]);
 
   // Clear interactive state when leaving modes
   useEffect(() => {
@@ -250,6 +285,10 @@ export default function VttPixiStage({
       host.appendChild(app.canvas);
       appRef.current = app;
       worldRef.current = world;
+      setViewportSize({
+        width: Math.max(320, host.clientWidth || 960),
+        height: Math.max(320, host.clientHeight || 560),
+      });
 
       const resizeObserver = new ResizeObserver((entries) => {
         const entry = entries[0];
@@ -261,11 +300,96 @@ export default function VttPixiStage({
         const width = Math.max(320, entry.contentRect.width);
         const height = Math.max(320, entry.contentRect.height);
         app.renderer.resize(width, height);
+        setViewportSize({ width, height });
       });
 
       const stopPan = () => {
         panStateRef.current.active = false;
         host.style.cursor = "";
+      };
+
+      const toRendererPoint = (clientX: number, clientY: number) => {
+        const rect = app.canvas.getBoundingClientRect();
+
+        if (rect.width <= 0 || rect.height <= 0) {
+          return null;
+        }
+
+        return {
+          x: ((clientX - rect.left) / rect.width) * app.renderer.width,
+          y: ((clientY - rect.top) / rect.height) * app.renderer.height,
+        };
+      };
+
+      const stopTokenDrag = (globalX?: number, globalY?: number) => {
+        const dragState = dragStateRef.current;
+
+        if (!dragState.tokenId || !dragState.container) {
+          return;
+        }
+
+        const currentPage = pageRef.current;
+        const local =
+          typeof globalX === "number" && typeof globalY === "number"
+            ? world.toLocal({ x: globalX, y: globalY })
+            : dragState.container.position;
+        const boardWidth = currentPage.width * currentPage.gridSize;
+        const boardHeight = currentPage.height * currentPage.gridSize;
+        let overflowEdge: PageConnectionEdge | null = null;
+
+        if (local.x < 0) {
+          overflowEdge = "west";
+        } else if (local.x > boardWidth) {
+          overflowEdge = "east";
+        } else if (local.y < 0) {
+          overflowEdge = "north";
+        } else if (local.y > boardHeight) {
+          overflowEdge = "south";
+        }
+
+        const cellX = clamp(Math.floor(local.x / currentPage.gridSize), 0, currentPage.width - 1);
+        const cellY = clamp(Math.floor(local.y / currentPage.gridSize), 0, currentPage.height - 1);
+
+        dragState.container.alpha = 1;
+        dragState.container.scale.set(1);
+        host.style.cursor = "";
+
+        selectTokenRef.current(dragState.tokenId);
+
+        if (dragState.moved && overflowEdge && onTravelEdge) {
+          void onTravelEdge(overflowEdge, dragState.tokenId);
+        } else if (dragState.moved) {
+          moveTokenRef.current(dragState.tokenId, cellX, cellY);
+        }
+
+        dragStateRef.current = {
+          tokenId: null,
+          container: null,
+          offsetX: 0,
+          offsetY: 0,
+          originX: 0,
+          originY: 0,
+          moved: false,
+        };
+      };
+
+      const handleTokenDragMove = (globalX: number, globalY: number) => {
+        const dragState = dragStateRef.current;
+
+        if (!dragState.tokenId || !dragState.container) {
+          return;
+        }
+
+        const local = world.toLocal({ x: globalX, y: globalY });
+        const distanceX = Math.abs(globalX - dragState.originX);
+        const distanceY = Math.abs(globalY - dragState.originY);
+
+        if (!dragState.moved && distanceX + distanceY > 3) {
+          dragState.moved = true;
+          host.style.cursor = "grabbing";
+        }
+
+        dragState.container.position.set(local.x + dragState.offsetX, local.y + dragState.offsetY);
       };
 
       const handleWheel = (event: WheelEvent) => {
@@ -404,21 +528,48 @@ export default function VttPixiStage({
           return;
         }
 
-        if (!panStateRef.current.active) {
+        if (panStateRef.current.active) {
+          const currentPage = pageRef.current;
+
+          cameraChangeRef.current({
+            x: Number(
+              (panStateRef.current.cameraX + (event.clientX - panStateRef.current.originX)).toFixed(2),
+            ),
+            y: Number(
+              (panStateRef.current.cameraY + (event.clientY - panStateRef.current.originY)).toFixed(2),
+            ),
+            scale: currentPage.camera.scale,
+          });
+        }
+
+        if (!dragStateRef.current.tokenId) {
           return;
         }
 
-        const currentPage = pageRef.current;
+        const global = toRendererPoint(event.clientX, event.clientY);
 
-        cameraChangeRef.current({
-          x: Number(
-            (panStateRef.current.cameraX + (event.clientX - panStateRef.current.originX)).toFixed(2),
-          ),
-          y: Number(
-            (panStateRef.current.cameraY + (event.clientY - panStateRef.current.originY)).toFixed(2),
-          ),
-          scale: currentPage.camera.scale,
-        });
+        if (!global) {
+          return;
+        }
+
+        handleTokenDragMove(global.x, global.y);
+      };
+
+      const handleWindowPointerUp = (event: PointerEvent) => {
+        stopPan();
+
+        if (!dragStateRef.current.tokenId) {
+          return;
+        }
+
+        const global = toRendererPoint(event.clientX, event.clientY);
+
+        if (!global) {
+          stopTokenDrag();
+          return;
+        }
+
+        stopTokenDrag(global.x, global.y);
       };
 
       const handleContextMenu = (event: MouseEvent) => {
@@ -461,7 +612,7 @@ export default function VttPixiStage({
       host.addEventListener("wheel", handleWheel, { passive: false });
       host.addEventListener("pointerdown", handlePointerDown);
       window.addEventListener("pointermove", handlePointerMove);
-      window.addEventListener("pointerup", stopPan);
+      window.addEventListener("pointerup", handleWindowPointerUp);
       host.addEventListener("contextmenu", handleContextMenu);
       host.addEventListener("dragover", handleDragOver);
       host.addEventListener("drop", handleDrop);
@@ -475,7 +626,7 @@ export default function VttPixiStage({
         host.removeEventListener("wheel", handleWheel);
         host.removeEventListener("pointerdown", handlePointerDown);
         window.removeEventListener("pointermove", handlePointerMove);
-        window.removeEventListener("pointerup", stopPan);
+        window.removeEventListener("pointerup", handleWindowPointerUp);
         host.removeEventListener("contextmenu", handleContextMenu);
         host.removeEventListener("dragover", handleDragOver);
         host.removeEventListener("drop", handleDrop);
@@ -549,10 +700,30 @@ export default function VttPixiStage({
     frameLayer.addChild(background);
 
     if (mapTexture) {
+      const mapFrame = page.backgroundFrame ?? {
+        x: 0,
+        y: 0,
+        width: page.width,
+        height: page.height,
+      };
       const mapSprite = new Sprite(mapTexture);
-      mapSprite.width = boardWidth;
-      mapSprite.height = boardHeight;
+      mapSprite.x = mapFrame.x * page.gridSize;
+      mapSprite.y = mapFrame.y * page.gridSize;
+      mapSprite.width = mapFrame.width * page.gridSize;
+      mapSprite.height = mapFrame.height * page.gridSize;
       mapLayer.addChild(mapSprite);
+
+      const mapFrameOutline = new Graphics();
+      mapFrameOutline.roundRect(
+        mapFrame.x * page.gridSize,
+        mapFrame.y * page.gridSize,
+        mapFrame.width * page.gridSize,
+        mapFrame.height * page.gridSize,
+        10,
+      );
+      mapFrameOutline.stroke({ color: 0xcfab67, alpha: 0.32, width: 2 });
+      mapFrameOutline.fill({ color: 0x0c0907, alpha: 0.06 });
+      mapLayer.addChild(mapFrameOutline);
     } else {
       const surface = new Graphics();
       surface.rect(0, 0, boardWidth, boardHeight);
@@ -717,60 +888,33 @@ export default function VttPixiStage({
         container.addChild(gmTag);
       }
 
-      let dragging = false;
-      let dragOffset = { x: 0, y: 0 };
-
-      const endDrag = (globalX: number, globalY: number) => {
-        if (!dragging) {
-          return;
-        }
-
-        dragging = false;
-        container.alpha = 1;
-
-        const localX = (globalX - world.x) / world.scale.x;
-        const localY = (globalY - world.y) / world.scale.y;
-        const cellX = clamp(Math.floor(localX / page.gridSize), 0, page.width - 1);
-        const cellY = clamp(Math.floor(localY / page.gridSize), 0, page.height - 1);
-
-        onMoveToken(token.id, cellX, cellY);
-      };
-
       container.eventMode = "static";
       container.cursor = boardMode === "move" ? "grab" : "pointer";
-      container.on("pointertap", () => onSelectToken(token.id));
       container.on("pointerdown", (event) => {
         if (event.button === 2) {
           return;
         }
 
-        onSelectToken(token.id);
+        event.stopPropagation();
 
         if (boardMode !== "move") {
+          selectTokenRef.current(token.id);
           return;
         }
 
-        dragging = true;
         container.alpha = 0.92;
-
+        container.scale.set(1.05);
         const local = world.toLocal(event.global);
-
-        dragOffset = {
-          x: container.x - local.x,
-          y: container.y - local.y,
+        dragStateRef.current = {
+          tokenId: token.id,
+          container,
+          offsetX: container.x - local.x,
+          offsetY: container.y - local.y,
+          originX: event.global.x,
+          originY: event.global.y,
+          moved: false,
         };
       });
-      container.on("globalpointermove", (event) => {
-        if (!dragging) {
-          return;
-        }
-
-        const local = world.toLocal(event.global);
-
-        container.position.set(local.x + dragOffset.x, local.y + dragOffset.y);
-      });
-      container.on("pointerup", (event) => endDrag(event.global.x, event.global.y));
-      container.on("pointerupoutside", (event) => endDrag(event.global.x, event.global.y));
 
       renderLayer.addChild(container);
     }
@@ -1029,10 +1173,87 @@ export default function VttPixiStage({
   ]);
 
   return (
-    <div
-      ref={hostRef}
-      className="absolute inset-0 w-full h-full overflow-hidden bg-background-strong"
-      title="Use o scroll para zoom, botao direito para pan e arraste monstros do codex para o mapa."
-    />
+    <div className="absolute inset-0 h-full w-full overflow-hidden bg-background-strong">
+      <div
+        ref={hostRef}
+        className="absolute inset-0 h-full w-full overflow-hidden"
+        title="Use o scroll para zoom, botao direito para pan, arraste tokens pelo mapa e solte criaturas do codex no grid."
+      />
+      {onExpandMap && (() => {
+        const metrics = getBoardMetrics(page, viewportSize.width, viewportSize.height);
+        const safeMargin = 26;
+        const bounds = {
+          left: metrics.paddingX + page.camera.x,
+          top: metrics.paddingY + page.camera.y,
+          width: metrics.boardWidth * page.camera.scale,
+          height: metrics.boardHeight * page.camera.scale,
+        };
+        const clampToViewport = (value: number, axis: "x" | "y") =>
+          clamp(
+            value,
+            safeMargin,
+            (axis === "x" ? viewportSize.width : viewportSize.height) - safeMargin,
+          );
+        const controls: Array<{
+          edge: PageConnectionEdge;
+          style: CSSProperties;
+          label: string;
+        }> = [
+          {
+            edge: "north",
+            label: "Expandir para o norte",
+          style: {
+              left: clampToViewport(bounds.left + bounds.width / 2, "x"),
+              top: clampToViewport(bounds.top + 20, "y"),
+              transform: "translate(-50%, -50%)",
+            } as CSSProperties,
+          },
+          {
+            edge: "south",
+            label: "Expandir para o sul",
+          style: {
+              left: clampToViewport(bounds.left + bounds.width / 2, "x"),
+              top: clampToViewport(bounds.top + bounds.height - 20, "y"),
+              transform: "translate(-50%, -50%)",
+            } as CSSProperties,
+          },
+          {
+            edge: "west",
+            label: "Expandir para o oeste",
+          style: {
+              left: clampToViewport(bounds.left + 20, "x"),
+              top: clampToViewport(bounds.top + bounds.height / 2, "y"),
+              transform: "translate(-50%, -50%)",
+            } as CSSProperties,
+          },
+          {
+            edge: "east",
+            label: "Expandir para o leste",
+          style: {
+              left: clampToViewport(bounds.left + bounds.width - 20, "x"),
+              top: clampToViewport(bounds.top + bounds.height / 2, "y"),
+              transform: "translate(-50%, -50%)",
+            } as CSSProperties,
+          },
+        ];
+
+        return (
+          <div className="pointer-events-none absolute inset-0 z-20">
+            {controls.map((control) => (
+              <button
+                key={control.edge}
+                type="button"
+                title={control.label}
+                onClick={() => onExpandMap(control.edge)}
+                className="pointer-events-auto absolute flex h-9 w-9 items-center justify-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-[0_10px_24px_rgba(0,0,0,0.35)] backdrop-blur transition-all hover:scale-105 hover:border-primary hover:bg-background"
+                style={control.style}
+              >
+                <span className="text-lg leading-none">+</span>
+              </button>
+            ))}
+          </div>
+        );
+      })()}
+    </div>
   );
 }

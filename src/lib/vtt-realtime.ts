@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { resolveBattlemapPublicUrl } from "@/lib/vtt-assets";
 import {
+  applySceneEvent,
   createBoard,
   createInitialFog,
   type ChatMessage,
   type InitiativeState,
   type PresenceMember,
+  type SceneEvent,
   type SceneModel,
   type VttLayer,
   type VttPage,
@@ -138,6 +141,44 @@ function normalizeSceneObject(row: Record<string, any>): VttSceneObject {
     };
   }
 
+  if (objectType === "map-decal") {
+    return {
+      ...baseObject,
+      objectType: "map-decal",
+      layer: row.layer === "foreground" ? "foreground" : "map",
+      payload: {
+        assetId: typeof row.payload?.assetId === "string" ? row.payload.assetId : null,
+        imageUrl: typeof row.payload?.imageUrl === "string" ? row.payload.imageUrl : null,
+        opacity: Number(row.payload?.opacity ?? 1),
+        blendMode:
+          row.payload?.blendMode === "multiply" || row.payload?.blendMode === "screen"
+            ? row.payload.blendMode
+            : "normal",
+      },
+    };
+  }
+
+  if (objectType === "measurement") {
+    return {
+      ...baseObject,
+      objectType: "measurement",
+      layer: row.layer === "gm" ? "gm" : "foreground",
+      payload: {
+        from: {
+          x: Number(row.payload?.from?.x ?? 0),
+          y: Number(row.payload?.from?.y ?? 0),
+        },
+        to: {
+          x: Number(row.payload?.to?.x ?? 0),
+          y: Number(row.payload?.to?.y ?? 0),
+        },
+        distance: Number(row.payload?.distance ?? 0),
+        unit: String(row.payload?.unit ?? "ft"),
+        label: String(row.payload?.label ?? ""),
+      },
+    };
+  }
+
   return {
     ...baseObject,
     objectType: "token",
@@ -169,6 +210,7 @@ export async function loadSceneSnapshot(sessionId: string) {
       { data: fogRows },
       { data: objectRows },
       { data: chatRows },
+      { data: assetRows },
       { data: initiativeRows },
     ] = await Promise.all([
       db.from("vtt_pages")
@@ -186,6 +228,9 @@ export async function loadSceneSnapshot(sessionId: string) {
         .eq("session_id", sessionId)
         .order("created_at", { ascending: true })
         .limit(40),
+      db.from("vtt_page_assets")
+        .select("*")
+        .eq("session_id", sessionId),
       db.from("vtt_event_log")
         .select("*")
         .eq("session_id", sessionId)
@@ -201,24 +246,72 @@ export async function loadSceneSnapshot(sessionId: string) {
     const fogByPage = new Map(
       (Array.isArray(fogRows) ? fogRows : []).map((row) => [String(row.page_id), row]),
     );
+    const assetsById = new Map(
+      (Array.isArray(assetRows) ? assetRows : []).map((row) => [String(row.id), row as Record<string, any>]),
+    );
 
     const pages: VttPage[] = pageRows.map((row) => {
       const width = Number(row.width ?? 12);
       const height = Number(row.height ?? 8);
       const fogRow = fogByPage.get(String(row.id));
+      const backgroundAssetId = row.background_asset_id ? String(row.background_asset_id) : null;
+      const backgroundAsset = backgroundAssetId ? assetsById.get(backgroundAssetId) : null;
+      const backgroundFrame =
+        row.background_frame &&
+        typeof row.background_frame === "object" &&
+        !Array.isArray(row.background_frame)
+          ? {
+              x: Number(row.background_frame.x ?? 0),
+              y: Number(row.background_frame.y ?? 0),
+              width: Number(row.background_frame.width ?? width),
+              height: Number(row.background_frame.height ?? height),
+            }
+          : backgroundAssetId
+            ? {
+                x: 0,
+                y: 0,
+                width,
+                height,
+              }
+            : null;
 
       return {
         id: String(row.id),
         sessionId,
         name: String(row.name ?? "Mapa"),
+        region: String(row.region ?? row.name ?? "Mapa"),
         gridType: "square",
         gridSize: Number(row.grid_size ?? 72),
         width,
         height,
-        backgroundAssetId: row.background_asset_id ? String(row.background_asset_id) : null,
+        backgroundAssetId,
+        backgroundAssetUrl:
+          resolveBattlemapPublicUrl(
+            (backgroundAsset?.board_variant_path as string | undefined)
+              ?? (backgroundAsset?.original_path as string | undefined),
+          ) ?? null,
+        backgroundFrame,
         layerOrder: Array.isArray(row.layer_order)
           ? (row.layer_order as VttLayer[])
           : defaultLayerOrder(),
+        connections: Array.isArray(row.connections)
+          ? row.connections.map((connection: Record<string, any>) => ({
+              id: String(connection.id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 8)),
+              edge:
+                connection.edge === "north" ||
+                connection.edge === "east" ||
+                connection.edge === "south" ||
+                connection.edge === "west"
+                  ? connection.edge
+                  : "east",
+              label: String(connection.label ?? "Passagem"),
+              targetPageId: String(connection.targetPageId ?? ""),
+              spawn: {
+                x: Number(connection.spawn?.x ?? 0),
+                y: Number(connection.spawn?.y ?? 0),
+              },
+            }))
+          : [],
         cells: createBoard(width, height),
         fog: (fogRow?.fog_state as Record<string, boolean> | undefined) ?? createInitialFog(width, height),
         camera: {
@@ -286,54 +379,91 @@ export async function loadSceneSnapshot(sessionId: string) {
 }
 
 export async function persistSceneSnapshot(scene: SceneModel) {
-  const activePage = scene.pages.find((page) => page.id === scene.activePageId);
-
-  if (!activePage) {
+  if (!scene.pages.length) {
     return;
   }
 
   try {
-    await db.from("vtt_pages").upsert({
-      id: activePage.id,
-      session_id: scene.sessionId,
-      name: activePage.name,
-      grid_type: activePage.gridType,
-      grid_size: activePage.gridSize,
-      width: activePage.width,
-      height: activePage.height,
-      background_asset_id: activePage.backgroundAssetId,
-      layer_order: activePage.layerOrder,
-      revision: scene.revision,
-    });
-
-    await db.from("vtt_fog_states").upsert({
-      page_id: activePage.id,
-      session_id: scene.sessionId,
-      fog_state: activePage.fog,
-      revision: scene.revision,
-    });
-
-    const sceneObjects = scene.objects
-      .filter((object) => object.pageId === activePage.id)
-      .map((object) => ({
-        id: object.id,
-        session_id: scene.sessionId,
-        page_id: object.pageId,
-        object_type: object.objectType,
-        layer: object.layer,
-        position: object.position,
-        size: object.size,
-        rotation: object.rotation,
-        payload: object.payload,
-        revision: object.revision,
-      }));
-
-    if (sceneObjects.length > 0) {
-      await db.from("vtt_scene_objects").upsert(sceneObjects);
-    }
+    await Promise.all([
+      ...scene.pages.map((page) => persistScenePage(scene.sessionId, page, scene.revision)),
+      ...scene.pages.map((page) => persistFogState(scene.sessionId, page.id, page.fog, scene.revision)),
+      persistSceneObjects(scene.sessionId, scene.objects),
+    ]);
   } catch {
     // The migration may not be applied in all environments yet. Keep the VTT usable locally.
   }
+}
+
+export async function persistScenePage(sessionId: string, page: VttPage, revision: number) {
+  await db.from("vtt_pages").upsert({
+    id: page.id,
+    session_id: sessionId,
+    name: page.name,
+    region: page.region,
+    grid_type: page.gridType,
+    grid_size: page.gridSize,
+    width: page.width,
+    height: page.height,
+    background_asset_id: page.backgroundAssetId,
+    background_frame: page.backgroundFrame,
+    layer_order: page.layerOrder,
+    connections: page.connections,
+    revision,
+  });
+}
+
+export async function persistFogState(
+  sessionId: string,
+  pageId: string,
+  fog: Record<string, boolean>,
+  revision: number,
+) {
+  await db.from("vtt_fog_states").upsert({
+    page_id: pageId,
+    session_id: sessionId,
+    fog_state: fog,
+    revision,
+  });
+}
+
+export async function persistSceneObjects(sessionId: string, objects: VttSceneObject[]) {
+  if (!objects.length) {
+    return;
+  }
+
+  await db.from("vtt_scene_objects").upsert(
+    objects.map((object) => ({
+      id: object.id,
+      session_id: sessionId,
+      page_id: object.pageId,
+      object_type: object.objectType,
+      layer: object.layer,
+      position: object.position,
+      size: object.size,
+      rotation: object.rotation,
+      payload: object.payload,
+      revision: object.revision,
+    })),
+  );
+}
+
+export async function removeSceneObject(sessionId: string, objectId: string) {
+  await db
+    .from("vtt_scene_objects")
+    .delete()
+    .eq("session_id", sessionId)
+    .eq("id", objectId);
+}
+
+export async function persistSceneEventLog(event: SceneEvent) {
+  await db.from("vtt_event_log").insert({
+    session_id: event.sessionId,
+    page_id: event.pageId,
+    actor_id: event.actorId,
+    event_type: event.type.toLowerCase(),
+    revision: event.revision,
+    payload: event.payload,
+  });
 }
 
 export async function persistChatMessage(sessionId: string, pageId: string, message: ChatMessage) {
@@ -380,6 +510,7 @@ interface UseVttRealtimeOptions {
   displayName: string;
   role: "gm" | "player";
   onRemoteScene: (scene: SceneModel) => void;
+  onRemoteEvent?: (event: SceneEvent) => void;
 }
 
 export function useVttRealtime({
@@ -387,14 +518,17 @@ export function useVttRealtime({
   displayName,
   role,
   onRemoteScene,
+  onRemoteEvent,
 }: UseVttRealtimeOptions) {
   const [presence, setPresence] = useState<PresenceMember[]>([]);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceKeyRef = useRef(makePresenceKey());
   const onRemoteSceneRef = useRef(onRemoteScene);
+  const onRemoteEventRef = useRef(onRemoteEvent);
   const reloadTimerRef = useRef<number | null>(null);
 
   onRemoteSceneRef.current = onRemoteScene;
+  onRemoteEventRef.current = onRemoteEvent;
 
   useEffect(() => {
     let active = true;
@@ -438,6 +572,24 @@ export function useVttRealtime({
         }
 
         onRemoteSceneRef.current(payload.scene as SceneModel);
+      })
+      .on("broadcast", { event: "scene_event" }, ({ payload }) => {
+        const event = payload?.event as SceneEvent | undefined;
+
+        if (!event) {
+          return;
+        }
+
+        if (onRemoteEventRef.current) {
+          onRemoteEventRef.current(event);
+          return;
+        }
+
+        void loadSceneSnapshot(sessionId).then((nextScene) => {
+          if (nextScene) {
+            onRemoteSceneRef.current(nextScene);
+          }
+        });
       })
       .on("postgres_changes", {
         event: "*",
@@ -511,8 +663,24 @@ export function useVttRealtime({
     });
   };
 
+  const broadcastSceneEvent = async (scene: SceneModel, event: SceneEvent) => {
+    if (!channelRef.current) {
+      return;
+    }
+
+    await channelRef.current.send({
+      type: "broadcast",
+      event: "scene_event",
+      payload: {
+        scene: applySceneEvent(scene, event),
+        event,
+      },
+    });
+  };
+
   return {
     presence,
     broadcastScene,
+    broadcastSceneEvent,
   };
 }

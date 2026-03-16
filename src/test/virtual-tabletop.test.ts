@@ -9,8 +9,13 @@ import {
   getNextInitiativeTurn,
   getNextOpenPosition,
   addSceneNpc,
+  addScenePage,
+  connectScenePages,
+  configureSceneBattlemap,
+  expandScenePage,
   moveSceneToken,
   recordSceneRoll,
+  travelSceneEdge,
   revealFogArea,
   setSceneCamera,
   setSceneCameraScale,
@@ -169,6 +174,111 @@ describe("virtual tabletop helpers", () => {
     if (token?.objectType === "token") {
       expect(token.position).toEqual({ x: 5, y: 1 });
       expect(token.payload.hp).toBe(24);
+    }
+  });
+
+  it("configures a battlemap and clamps tokens inside the new grid", () => {
+    const scene = createSceneModel();
+    const moved = moveSceneToken(scene, scene.selectedObjectId!, 11, 7);
+    const configured = configureSceneBattlemap(moved, {
+      width: 6,
+      height: 4,
+      gridSize: 64,
+      backgroundAssetId: "asset-map-1",
+      backgroundAssetUrl: "https://example.com/map.webp",
+    });
+    const token = configured.objects.find((entry) => entry.id === configured.selectedObjectId);
+
+    expect(configured.pages[0]).toMatchObject({
+      width: 6,
+      height: 4,
+      gridSize: 64,
+      backgroundAssetId: "asset-map-1",
+      backgroundAssetUrl: "https://example.com/map.webp",
+      backgroundFrame: {
+        x: 0,
+        y: 0,
+        width: 6,
+        height: 4,
+      },
+    });
+    expect(configured.pages[0].cells).toHaveLength(24);
+    expect(Object.values(configured.pages[0].fog).every(Boolean)).toBe(true);
+
+    expect(token?.objectType).toBe("token");
+    if (token?.objectType === "token") {
+      expect(token.position).toEqual({ x: 5, y: 3 });
+      expect(token.payload.x).toBe(5);
+      expect(token.payload.y).toBe(3);
+    }
+  });
+
+  it("creates connected pages and travels a token through an edge", () => {
+    const scene = createSceneModel();
+    const expanded = addScenePage(scene, {
+      name: "Dunas Externas",
+      region: "Korath",
+      focus: false,
+    });
+    const targetPage = expanded.pages.find((page) => page.name === "Dunas Externas");
+
+    expect(targetPage).toBeTruthy();
+
+    if (!targetPage) {
+      return;
+    }
+
+    const linked = connectScenePages(expanded, {
+      pageId: expanded.activePageId,
+      targetPageId: targetPage.id,
+      edge: "east",
+      label: "Passagem para as dunas",
+      spawnX: 1,
+      spawnY: 2,
+    });
+    const travelled = travelSceneEdge(linked, "east", linked.selectedObjectId);
+    const token = travelled.objects.find((entry) => entry.id === travelled.selectedObjectId);
+
+    expect(linked.pages[0].connections).toHaveLength(1);
+    expect(travelled.activePageId).toBe(targetPage.id);
+    expect(token?.objectType).toBe("token");
+
+    if (token?.objectType === "token") {
+      expect(token.pageId).toBe(targetPage.id);
+      expect(token.position).toEqual({ x: 1, y: 2 });
+    }
+  });
+
+  it("expands a page to the west without stretching the imported battlemap", () => {
+    const scene = createSceneModel();
+    const configured = configureSceneBattlemap(scene, {
+      width: 6,
+      height: 4,
+      gridSize: 64,
+      backgroundAssetId: "asset-map-2",
+      backgroundAssetUrl: "https://example.com/map-2.webp",
+      resetFrame: true,
+    });
+    const moved = moveSceneToken(configured, configured.selectedObjectId!, 2, 1);
+    const expanded = expandScenePage(moved, "west", 2);
+    const token = expanded.objects.find((entry) => entry.id === expanded.selectedObjectId);
+
+    expect(expanded.pages[0]).toMatchObject({
+      width: 8,
+      height: 4,
+      backgroundFrame: {
+        x: 2,
+        y: 0,
+        width: 6,
+        height: 4,
+      },
+    });
+
+    expect(token?.objectType).toBe("token");
+    if (token?.objectType === "token") {
+      expect(token.position).toEqual({ x: 4, y: 1 });
+      expect(token.payload.x).toBe(4);
+      expect(token.payload.y).toBe(1);
     }
   });
 });

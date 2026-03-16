@@ -1,33 +1,43 @@
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
 import { Badge } from "@/components/ui/badge";
 import CharacterCreator, { type CharacterData } from "@/components/rpg/CharacterCreator";
-import { buildCharacterFromCreator, type CharacterRow } from "@/lib/rpg-ui";
+import { createCharacterBundle } from "@/lib/sheets/persistence";
+import type { CharacterRow } from "@/lib/rpg-ui";
 
 export default function CriacaoPage() {
-  const handleCreateCharacter = (draft: CharacterData) => {
-    const character = buildCharacterFromCreator({
+  const navigate = useNavigate();
+
+  const handleCreateCharacter = async (draft: CharacterData) => {
+    const bundle = await createCharacterBundle({
       ...draft,
       race: draft.race as CharacterRow["race"],
       class: draft.class as CharacterRow["class"],
     });
-    // TODO: persist to database
-    toast.success(`${character.name} criado com sucesso!`);
+
+    toast.success(
+      bundle.source === "remote"
+        ? `${bundle.character.name} criado e salvo no grimorio da conta.`
+        : `${bundle.character.name} criado com fallback local.`,
+    );
+    navigate(`/ficha?character=${bundle.character.id}`);
   };
 
   return (
     <div className="container py-20">
       <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
         <div className="mx-auto max-w-4xl text-center">
-          <Badge variant="outline">Criação</Badge>
+          <Badge variant="outline">Criacao Persistida</Badge>
           <h1 className="mt-4 font-display text-4xl text-gold-gradient md:text-5xl">
             Criar Personagem
           </h1>
           <p className="mx-auto mt-4 max-w-3xl text-base leading-7 text-muted-foreground">
-            Monte seu personagem escolhendo raça, classe, atributos e história.
+            Monte seu personagem escolhendo raca, classe, atributos e historia.
           </p>
         </div>
-        <CharacterCreator onSave={handleCreateCharacter} />
+        <CharacterCreator onSave={(data) => void handleCreateCharacter(data)} />
       </motion.div>
     </div>
   );

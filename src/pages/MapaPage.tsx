@@ -1,31 +1,30 @@
-import { ArrowRight, Compass, Layers3, MapPinned, Route } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Compass, ExternalLink, MapPinned, Route } from "lucide-react";
 
 import AtlasBreadcrumbs from "@/components/world/AtlasBreadcrumbs";
-import ContinentMap from "@/components/world/ContinentMap";
+import MapGenieWitcherAtlas from "@/components/world/MapGenieWitcherAtlas";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { worldRegions } from "@/lib/world-map";
 
-const atlasLevels = [
+const atlasHighlights = [
   {
     icon: Compass,
-    title: "Continente",
-    description:
-      "Camada macro para localizar a companhia, medir viagem e decidir a rota.",
+    title: "Embeds prontos",
+    description: "Os mapas agora usam a estrutura de embed do MapGenie para navegacao imediata.",
   },
   {
     icon: Route,
-    title: "Regiao",
-    description:
-      "Cada reino ou zona abre um mapa proprio, com arte unica e marcos de aprofundamento.",
+    title: "Troca rapida",
+    description: "Skellige, White Orchard, Velen, Kaer Morhen e outros pontos em um hub unico.",
   },
   {
-    icon: Layers3,
-    title: "Local",
-    description:
-      "O terceiro nivel recebe imagens de cidade, ruina, vale ou enclave para jogo de perto.",
+    icon: MapPinned,
+    title: "Regioes centrais",
+    description: "A sessao de mapa passa a se apoiar nos cenarios jogaveis mais fortes de Witcher 3.",
+  },
+  {
+    icon: ExternalLink,
+    title: "Servico externo",
+    description: "A experiencia depende do embed do MapGenie e acompanha a disponibilidade deles.",
   },
 ];
 
@@ -37,29 +36,32 @@ export default function MapaPage() {
 
         <div className="space-y-4">
           <Badge variant="outline" className="border-primary/30 text-primary">
-            Navegacao em camadas
+            Hub de mapas
           </Badge>
           <h1 className="font-display text-4xl text-gold-gradient md:text-6xl">
-            Continente, regioes e pontos locais
+            Navegacao regional via MapGenie
           </h1>
           <p className="max-w-4xl text-base leading-8 text-muted-foreground">
-            O atlas agora trabalha em tres niveis. Primeiro voce ve o continente,
-            depois mergulha em uma regiao, e dali abre o mapa local do ponto que
-            interessa para a campanha.
+            A area de mapas foi reestruturada para usar os embeds do MapGenie nas
+            regioes principais do universo jogavel de The Witcher 3. Em vez de
+            simular um atlas interno, a pagina agora funciona como um hub de
+            navegacao para esses mapas externos.
           </p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
-          {atlasLevels.map((level) => (
-            <Card key={level.title} variant="panel">
+        <div className="grid gap-4 lg:grid-cols-4">
+          {atlasHighlights.map((highlight) => (
+            <Card key={highlight.title} variant="panel">
               <CardContent className="space-y-4 p-5">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 bg-background/60 text-primary">
-                  <level.icon className="h-5 w-5" />
+                  <highlight.icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="font-heading text-xl text-foreground">{level.title}</h2>
+                  <h2 className="font-heading text-xl text-foreground">
+                    {highlight.title}
+                  </h2>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {level.description}
+                    {highlight.description}
                   </p>
                 </div>
               </CardContent>
@@ -74,66 +76,23 @@ export default function MapaPage() {
                 <div className="flex items-center gap-3">
                   <MapPinned className="h-5 w-5 text-primary" />
                   <h2 className="font-heading text-2xl text-foreground">
-                    Entradas rapidas das regioes
+                    Como ficou a navegacao
                   </h2>
                 </div>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                  Use estes atalhos quando ja souber onde quer abrir o atlas em
-                  profundidade. O clique no continente continua funcionando no mapa
-                  principal logo abaixo.
+                  O foco agora e abrir rapidamente a regiao certa para a mesa ou para
+                  consulta, com busca simples, selecao lateral e o embed principal em
+                  destaque. Isso deixa a experiencia mais direta para jogo.
                 </p>
               </div>
               <Badge variant="outline" className="border-primary/25 text-primary">
-                {worldRegions.length} regioes ativas
+                Skellige, Velen, White Orchard, Kaer Morhen e mais
               </Badge>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {worldRegions.map((region) => (
-                <Card key={region.id} variant="elevated" className="h-full">
-                  <CardContent className="flex h-full flex-col gap-4 p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-heading text-xl text-foreground">
-                          {region.name}
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                          {region.subtitle}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={
-                          region.hue === "warning"
-                            ? "warning"
-                            : region.hue === "info"
-                              ? "info"
-                              : region.hue === "success"
-                                ? "success"
-                                : "default"
-                        }
-                      >
-                        {region.landmarks.length} locais
-                      </Badge>
-                    </div>
-
-                    <p className="text-sm leading-6 text-foreground/88">
-                      {region.summary}
-                    </p>
-
-                    <Button asChild variant="outline" className="mt-auto w-full justify-between">
-                      <Link to={`/mapa/${region.slug}`}>
-                        Abrir regiao
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
             </div>
           </CardContent>
         </Card>
 
-        <ContinentMap mode="explorer" />
+        <MapGenieWitcherAtlas />
       </div>
     </div>
   );

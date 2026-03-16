@@ -31,6 +31,25 @@ export interface SheetOption {
   value: string;
 }
 
+export interface SheetValidationRule {
+  id: string;
+  scope: "field" | "step" | "sheet";
+  target: string;
+  message: string;
+}
+
+export interface SheetFormulaDependency {
+  binding: DerivedBinding;
+  dependsOn: Array<SheetBinding | DerivedBinding>;
+}
+
+export interface SheetPresentationHint {
+  binding: SheetBinding | DerivedBinding | string;
+  surface?: "card" | "panel" | "metric" | "quiet";
+  emphasis?: "default" | "strong" | "muted";
+  icon?: string;
+}
+
 export interface SheetSectionDefinition {
   id: string;
   label: string;
@@ -84,6 +103,9 @@ export interface SheetDefinition {
   wizardSteps: WizardStepDefinition[];
   derivedFields: DerivedFieldDefinition[];
   repeatingGroups: SheetRepeatingGroupDefinition[];
+  validationRules?: SheetValidationRule[];
+  formulaDeps?: SheetFormulaDependency[];
+  presentationHints?: SheetPresentationHint[];
   bindings: {
     inventory: string;
     spellbook: string;

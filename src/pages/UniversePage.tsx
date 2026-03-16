@@ -1,11 +1,17 @@
+import characterIllustration from "@/assets/encyclopedia/character-illustration.svg";
+import factionIllustration from "@/assets/encyclopedia/faction-illustration.svg";
+import historyIllustration from "@/assets/encyclopedia/history-illustration.svg";
+import locationIllustration from "@/assets/encyclopedia/location-illustration.svg";
+import monsterIllustration from "@/assets/encyclopedia/monster-illustration.svg";
 import type { ComponentType } from "react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
   BookMarked,
   Clock3,
   Flag,
+  Maximize2,
   MapPin,
   Network,
   Search,
@@ -15,12 +21,29 @@ import {
   Users,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import ContinentMap from "@/components/world/ContinentMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CURRENT_PROTAGONISTS, sanitizeImmersiveEntry, sanitizeImmersiveTimeline } from "@/lib/immersive-lore";
 import {
   encyclopediaCategories,
   encyclopediaEntries,
@@ -33,6 +56,12 @@ import {
   type EncyclopediaEntry,
   type EncyclopediaTimelineEvent,
 } from "@/lib/encyclopedia";
+import {
+  getWitcherBestiaryMetadata,
+  witcherBestiaryRegions,
+  witcherBestiaryTypes,
+} from "@/lib/witcher-bestiary";
+import { cn } from "@/lib/utils";
 
 type CategoryFilter = "todas" | EncyclopediaCategory;
 
@@ -43,6 +72,136 @@ const categoryIcons: Record<EncyclopediaCategory, ComponentType<{ className?: st
   faccoes: Flag,
   historia: ScrollText,
 };
+
+const categoryFallbackImages: Record<EncyclopediaCategory, string> = {
+  personagens: characterIllustration,
+  monstros: monsterIllustration,
+  locais: locationIllustration,
+  faccoes: factionIllustration,
+  historia: historyIllustration,
+};
+
+function EncyclopediaImage({
+  entry,
+  className,
+}: {
+  entry: EncyclopediaEntry;
+  className?: string;
+}) {
+  const fallbackImage = categoryFallbackImages[entry.category];
+  const [imageSrc, setImageSrc] = useState(entry.image);
+
+  useEffect(() => {
+    setImageSrc(entry.image);
+  }, [entry.image]);
+
+  return (
+    <img
+      src={imageSrc}
+      alt={entry.imageAlt}
+      className={className}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => {
+        if (imageSrc !== fallbackImage) {
+          setImageSrc(fallbackImage);
+        }
+      }}
+    />
+  );
+}
+
+function EntryArtworkPreview({
+  entry,
+  frameClassName,
+  imageClassName,
+  buttonLabel = "Tela cheia",
+}: {
+  entry: EncyclopediaEntry;
+  frameClassName?: string;
+  imageClassName?: string;
+  buttonLabel?: string;
+}) {
+  const bestiaryMeta = getWitcherBestiaryMetadata(entry.slug);
+
+  return (
+    <Dialog>
+      <div
+        className={cn(
+          "group relative overflow-hidden rounded-[var(--radius)] border border-border/70 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.14),transparent_42%),linear-gradient(180deg,hsl(var(--background-strong)),hsl(var(--card)))]",
+          frameClassName,
+        )}
+      >
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,transparent_60%,hsl(var(--background-strong)/0.72))]" />
+        <EncyclopediaImage
+          entry={entry}
+          className={cn("relative h-full w-full", imageClassName)}
+        />
+        <DialogTrigger asChild>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="absolute right-3 top-3 z-10 border border-border/70 bg-background/78 text-foreground shadow-sm backdrop-blur-sm"
+          >
+            <Maximize2 className="mr-2 h-3.5 w-3.5" />
+            {buttonLabel}
+          </Button>
+        </DialogTrigger>
+      </div>
+
+      <DialogContent className="max-w-[min(96vw,1380px)] border-border/70 bg-background/96 p-4 sm:p-6">
+        <DialogHeader className="pr-12">
+          <DialogTitle>{entry.title}</DialogTitle>
+          <DialogDescription>{entry.subtitle}</DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="overflow-hidden rounded-[var(--radius)] border border-border/70 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.12),transparent_44%),linear-gradient(180deg,hsl(var(--background-strong)),hsl(var(--card)))]">
+            <EncyclopediaImage
+              entry={entry}
+              className="max-h-[78vh] w-full object-contain p-4 md:p-6"
+            />
+          </div>
+
+          <div className="space-y-4 rounded-[var(--radius)] border border-border/70 bg-background/40 p-4">
+            <p className="text-sm leading-7 text-foreground/90">{entry.summary}</p>
+
+            <div className="grid gap-3">
+              {entry.stats.slice(0, 4).map((stat) => (
+                <DataSection
+                  key={`${entry.slug}-${stat.label}-fullscreen`}
+                  label={stat.label}
+                  value={stat.value}
+                  variant="quiet"
+                />
+              ))}
+            </div>
+
+            {bestiaryMeta ? (
+              <div className="space-y-2 rounded-xl border border-border/60 bg-background/50 p-4">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
+                  Dossie de caca
+                </p>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Fraquezas: {bestiaryMeta.weaknesses.join(", ")}.
+                </p>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Regioes: {bestiaryMeta.regions.join(", ")}.
+                </p>
+                {entry.vtt ? (
+                  <Button asChild className="mt-2 w-full">
+                    <Link to={`/mesa?spawn=${entry.slug}`}>Levar criatura para a mesa</Link>
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function TimelineRail({
   title,
@@ -97,15 +256,20 @@ function TimelineRail({
 function EncyclopediaEntryCard({ entry }: { entry: EncyclopediaEntry }) {
   const Icon = categoryIcons[entry.category];
   const vttReady = getVttReadyEntries().some((candidate) => candidate.slug === entry.slug);
+  const bestiaryMeta = getWitcherBestiaryMetadata(entry.slug);
 
   return (
     <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
-      <Card variant="panel" className="h-full overflow-hidden transition-colors hover:border-primary/30">
-        <CardContent className="flex h-full flex-col gap-5 p-0">
-          <img
-            src={entry.image}
-            alt={entry.imageAlt}
-            className="h-48 w-full object-cover"
+        <Card variant="panel" className="h-full overflow-hidden transition-colors hover:border-primary/30">
+          <CardContent className="flex h-full flex-col gap-5 p-0">
+          <EntryArtworkPreview
+            entry={entry}
+            frameClassName="h-56"
+            imageClassName={cn(
+              "transition-transform duration-300 group-hover:scale-[1.015]",
+              entry.category === "monstros" ? "object-contain p-4" : "object-cover",
+            )}
+            buttonLabel="Ampliar"
           />
           <div className="flex h-full flex-col gap-4 p-6">
             <div className="flex items-center justify-between gap-3">
@@ -129,6 +293,20 @@ function EncyclopediaEntryCard({ entry }: { entry: EncyclopediaEntry }) {
 
             <p className="text-sm leading-6 text-foreground/90">{entry.summary}</p>
 
+            {bestiaryMeta ? (
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="bg-background/70 text-foreground">
+                  {bestiaryMeta.type}
+                </Badge>
+                <Badge variant="outline" className="border-primary/30 text-primary">
+                  Perigo {bestiaryMeta.dangerLevel}/5
+                </Badge>
+                <Badge variant="secondary" className="bg-background/70 text-foreground">
+                  {bestiaryMeta.regions[0] ?? "Regiao desconhecida"}
+                </Badge>
+              </div>
+            ) : null}
+
             <div className="flex flex-wrap gap-2">
               {entry.internalLinks.slice(0, 3).map((slug) => {
                 const linkedEntry = getEncyclopediaEntry(slug);
@@ -145,8 +323,13 @@ function EncyclopediaEntryCard({ entry }: { entry: EncyclopediaEntry }) {
               })}
             </div>
 
-            <div className="mt-auto pt-2">
-              <Button asChild className="w-full">
+            <div className="mt-auto flex gap-2 pt-2">
+              {entry.category === "monstros" && entry.vtt ? (
+                <Button asChild variant="outline" className="flex-1">
+                  <Link to={`/mesa?spawn=${entry.slug}`}>Levar para a mesa</Link>
+                </Button>
+              ) : null}
+              <Button asChild className={entry.category === "monstros" && entry.vtt ? "flex-1" : "w-full"}>
                 <Link to={`/universo/${entry.slug}`}>Abrir verbete</Link>
               </Button>
             </div>
@@ -428,15 +611,66 @@ function RelationshipMap({
 function UniverseIndex() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("todas");
+  const [monsterType, setMonsterType] = useState("all");
+  const [monsterRegion, setMonsterRegion] = useState("all");
+  const [monsterDanger, setMonsterDanger] = useState("all");
+  const immersiveEntries = useMemo(
+    () => encyclopediaEntries.map(sanitizeImmersiveEntry),
+    [],
+  );
+  const immersiveTimeline = useMemo(
+    () => sanitizeImmersiveTimeline(globalTimeline),
+    [],
+  );
+  const showMonsterFilters = activeCategory === "monstros";
+  const hasMonsterFilters =
+    monsterType !== "all" || monsterRegion !== "all" || monsterDanger !== "all";
 
-  const filteredEntries = encyclopediaEntries.filter((entry) => {
-    const matchesCategory =
-      activeCategory === "todas" ? true : entry.category === activeCategory;
-    const searchable = `${entry.title} ${entry.subtitle} ${entry.summary}`.toLowerCase();
-    const matchesSearch = searchable.includes(search.trim().toLowerCase());
+  const filteredEntries = useMemo(
+    () =>
+      immersiveEntries.filter((entry) => {
+        const matchesCategory =
+          activeCategory === "todas" ? true : entry.category === activeCategory;
+        const searchable = `${entry.title} ${entry.subtitle} ${entry.summary}`.toLowerCase();
+        const matchesSearch = searchable.includes(search.trim().toLowerCase());
 
-    return matchesCategory && matchesSearch;
-  });
+        if (!matchesCategory || !matchesSearch) {
+          return false;
+        }
+
+        if (!showMonsterFilters) {
+          return true;
+        }
+
+        if (entry.category !== "monstros") {
+          return false;
+        }
+
+        const bestiaryMeta = getWitcherBestiaryMetadata(entry.slug);
+
+        if (!bestiaryMeta) {
+          return !hasMonsterFilters;
+        }
+
+        const matchesType = monsterType === "all" ? true : bestiaryMeta.type === monsterType;
+        const matchesRegion =
+          monsterRegion === "all" ? true : bestiaryMeta.regions.includes(monsterRegion);
+        const matchesDanger =
+          monsterDanger === "all" ? true : String(bestiaryMeta.dangerLevel) === monsterDanger;
+
+        return matchesType && matchesRegion && matchesDanger;
+      }),
+    [
+      activeCategory,
+      hasMonsterFilters,
+      immersiveEntries,
+      monsterDanger,
+      monsterRegion,
+      monsterType,
+      search,
+      showMonsterFilters,
+    ],
+  );
 
   return (
     <div className="container py-24">
@@ -451,8 +685,8 @@ function UniverseIndex() {
             Enciclopedia do Universo
           </h1>
           <p className="mx-auto max-w-2xl text-muted-foreground">
-            Explore personagens, monstros, locais, faccoes e historia em um arquivo
-            vivo do Realm of Shadows, com paginas interligadas e linha do tempo.
+            Explore personagens, monstros, locais, faccoes e historia sem comentario de bastidor:
+            o foco agora recai sobre as trilhas de {CURRENT_PROTAGONISTS.join(", ")} e as regioes que os cercam.
           </p>
         </div>
 
@@ -478,7 +712,12 @@ function UniverseIndex() {
                 <Button
                   size="sm"
                   variant={activeCategory === "todas" ? "default" : "outline"}
-                  onClick={() => setActiveCategory("todas")}
+                  onClick={() => {
+                    setActiveCategory("todas");
+                    setMonsterType("all");
+                    setMonsterRegion("all");
+                    setMonsterDanger("all");
+                  }}
                 >
                   Todas
                 </Button>
@@ -488,13 +727,95 @@ function UniverseIndex() {
                       key={category}
                       size="sm"
                       variant={activeCategory === category ? "default" : "outline"}
-                      onClick={() => setActiveCategory(category)}
+                      onClick={() => {
+                        setActiveCategory(category);
+                        if (category !== "monstros") {
+                          setMonsterType("all");
+                          setMonsterRegion("all");
+                          setMonsterDanger("all");
+                        }
+                      }}
                     >
                       {encyclopediaCategories[category].label}
                     </Button>
                   ),
                 )}
               </div>
+
+              {showMonsterFilters ? (
+                <div className="grid gap-3 rounded-xl border border-border/70 bg-background/40 p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_auto]">
+                  <div className="space-y-2">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
+                      Tipo
+                    </p>
+                    <Select value={monsterType} onValueChange={setMonsterType}>
+                      <SelectTrigger className="bg-background/70">
+                        <SelectValue placeholder="Todos os tipos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os tipos</SelectItem>
+                        {witcherBestiaryTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
+                      Regiao
+                    </p>
+                    <Select value={monsterRegion} onValueChange={setMonsterRegion}>
+                      <SelectTrigger className="bg-background/70">
+                        <SelectValue placeholder="Todas as regioes" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as regioes</SelectItem>
+                        {witcherBestiaryRegions.map((region) => (
+                          <SelectItem key={region} value={region}>
+                            {region}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
+                      Perigo
+                    </p>
+                    <Select value={monsterDanger} onValueChange={setMonsterDanger}>
+                      <SelectTrigger className="bg-background/70">
+                        <SelectValue placeholder="Todos" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {[1, 2, 3, 4, 5].map((danger) => (
+                          <SelectItem key={danger} value={String(danger)}>
+                            {danger}/5
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-end">
+                    <Button
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => {
+                        setMonsterType("all");
+                        setMonsterRegion("all");
+                        setMonsterDanger("all");
+                      }}
+                    >
+                      Limpar filtros
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {(Object.keys(encyclopediaCategories) as EncyclopediaCategory[]).map(
@@ -505,7 +826,14 @@ function UniverseIndex() {
                       <button
                         key={category}
                         type="button"
-                        onClick={() => setActiveCategory(category)}
+                        onClick={() => {
+                          setActiveCategory(category);
+                          if (category !== "monstros") {
+                            setMonsterType("all");
+                            setMonsterRegion("all");
+                            setMonsterDanger("all");
+                          }
+                        }}
                         className="rounded-xl border border-border/70 bg-background/50 p-4 text-left transition-colors hover:border-primary/30"
                       >
                         <div className="flex items-center gap-3">
@@ -532,26 +860,62 @@ function UniverseIndex() {
             </CardContent>
           </Card>
 
-          <TimelineRail title="Linha do tempo geral" events={globalTimeline} />
+          <TimelineRail title="Linha do tempo geral" events={immersiveTimeline} />
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-3">
-          {filteredEntries.map((entry) => (
-            <EncyclopediaEntryCard key={entry.slug} entry={entry} />
-          ))}
-        </div>
+        <ContinentMap />
+
+        {filteredEntries.length > 0 ? (
+          <div className="grid gap-6 xl:grid-cols-3">
+            {filteredEntries.map((entry) => (
+              <EncyclopediaEntryCard key={entry.slug} entry={entry} />
+            ))}
+          </div>
+        ) : (
+          <Card variant="panel">
+            <CardContent className="space-y-3 p-8 text-center">
+              <Skull className="mx-auto h-10 w-10 text-primary" />
+              <h2 className="font-heading text-2xl text-foreground">
+                Nenhum verbete encontrado
+              </h2>
+              <p className="mx-auto max-w-2xl text-sm leading-6 text-muted-foreground">
+                Ajuste os filtros do bestiario ou refine a busca para encontrar outra criatura,
+                regiao ou cronica.
+              </p>
+              {showMonsterFilters ? (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setMonsterType("all");
+                    setMonsterRegion("all");
+                    setMonsterDanger("all");
+                    setSearch("");
+                  }}
+                >
+                  Limpar busca e filtros
+                </Button>
+              ) : null}
+            </CardContent>
+          </Card>
+        )}
       </motion.div>
     </div>
   );
 }
 
 function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
-  const linkedEntries = getLinkedEntries(entry);
-  const categoryEntries = getEntriesByCategory(entry.category).filter(
-    (relatedEntry) => relatedEntry.slug !== entry.slug,
-  );
+  const linkedEntries = getLinkedEntries(entry).map(sanitizeImmersiveEntry);
+  const categoryEntries = getEntriesByCategory(entry.category)
+    .filter((relatedEntry) => relatedEntry.slug !== entry.slug)
+    .map(sanitizeImmersiveEntry);
   const Icon = categoryIcons[entry.category];
+  const bestiaryMeta = getWitcherBestiaryMetadata(entry.slug);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const [heroImage, setHeroImage] = useState(entry.image);
+
+  useEffect(() => {
+    setHeroImage(entry.image);
+  }, [entry.image]);
 
   return (
     <div className="container py-16 md:py-20">
@@ -579,7 +943,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
           onMouseLeave={() => setParallax({ x: 0, y: 0 })}
         >
           <motion.img
-            src={entry.image}
+            src={heroImage}
             alt={entry.imageAlt}
             className="absolute inset-0 h-full w-full object-cover"
             animate={{
@@ -588,6 +952,13 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
               scale: 1.08,
             }}
             transition={{ type: "spring", stiffness: 70, damping: 18 }}
+            referrerPolicy="no-referrer"
+            onError={() => {
+              const fallbackImage = categoryFallbackImages[entry.category];
+              if (heroImage !== fallbackImage) {
+                setHeroImage(fallbackImage);
+              }
+            }}
           />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--background)/0.16),hsl(var(--background)/0.42)_34%,hsl(var(--background-strong)/0.92)_74%,hsl(var(--background-strong))_100%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.16),transparent_30%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.16),transparent_26%)]" />
@@ -655,10 +1026,83 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
                     variant="quiet"
                   />
                 </div>
+                {bestiaryMeta ? (
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                      <DataSection label="Tipo" value={bestiaryMeta.type} variant="quiet" />
+                      <DataSection
+                        label="Nivel de perigo"
+                        value={`${bestiaryMeta.dangerLevel}/5`}
+                        variant="quiet"
+                      />
+                    </div>
+                    <Button asChild className="w-full">
+                      <Link to={`/mesa?spawn=${entry.slug}`}>Levar criatura para a mesa</Link>
+                    </Button>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
         </section>
+
+        <Card variant="panel" className="overflow-hidden">
+          <CardContent className="grid gap-6 p-6 md:p-8 lg:grid-cols-[minmax(0,1.15fr)_320px]">
+            <EntryArtworkPreview
+              entry={entry}
+              frameClassName="min-h-[320px] md:min-h-[420px]"
+              imageClassName="object-contain p-5 md:p-8"
+              buttonLabel="Ver em tela cheia"
+            />
+
+            <div className="space-y-4 rounded-[var(--radius)] border border-border/70 bg-background/40 p-5">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
+                  Visual do verbete
+                </p>
+                <h2 className="mt-2 font-heading text-2xl text-foreground">
+                  Leitura clara da arte
+                </h2>
+              </div>
+
+              <p className="text-sm leading-7 text-muted-foreground">
+                A ilustracao agora fica em quadro proprio, sem cortes agressivos, para facilitar a
+                leitura da criatura, do personagem ou do local antes de abrir em tela cheia.
+              </p>
+
+              <div className="grid gap-3">
+                <DataSection
+                  label="Categoria"
+                  value={encyclopediaCategories[entry.category].label}
+                  variant="quiet"
+                />
+                <DataSection
+                  label="Imagem"
+                  value={entry.imageAlt}
+                  variant="quiet"
+                />
+                <DataSection
+                  label="Modo"
+                  value={entry.category === "monstros" ? "Enquadramento completo" : "Painel ampliado"}
+                  variant="quiet"
+                />
+              </div>
+
+              {bestiaryMeta ? (
+                <div className="rounded-xl border border-border/60 bg-background/50 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
+                    Caca em campo
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Perigo {bestiaryMeta.dangerLevel}/5, tipo {bestiaryMeta.type.toLowerCase()}.
+                    Use a arte em tela cheia para identificar silhueta, volume e postura antes da
+                    cena.
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
 
         <EntryShowcase entry={entry} />
 
@@ -757,5 +1201,5 @@ export default function UniversePage() {
     );
   }
 
-  return <UniverseEntryPage entry={entry} />;
+  return <UniverseEntryPage entry={sanitizeImmersiveEntry(entry)} />;
 }

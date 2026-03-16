@@ -88,28 +88,32 @@ interface UseCharacterSheetRuntimeOptions {
   definition: SheetDefinition;
   character?: CharacterRow | null;
   initialValues?: Record<string, SheetScalarValue>;
+  initialStore?: AttributeStore | null;
 }
 
 export function useCharacterSheetRuntime({
   definition,
   character,
   initialValues,
+  initialStore,
 }: UseCharacterSheetRuntimeOptions) {
   const initialPayload = useMemo(
     () => ({
-      characterId: character?.id ?? "draft-character",
-      values: character ? buildAttributeValuesFromCharacterRow(character) : initialValues,
+      characterId: initialStore?.characterId ?? character?.id ?? "draft-character",
+      values: initialStore?.values ?? (character ? buildAttributeValuesFromCharacterRow(character) : initialValues),
+      repeaters: initialStore?.repeaters ?? {},
     }),
-    [character, initialValues],
+    [character, initialStore, initialValues],
   );
   const fallbackStore = useMemo(
-    () =>
+    () => initialStore ??
       createAttributeStore(
         definition,
         initialPayload.characterId,
         initialPayload.values,
+        initialPayload.repeaters,
       ),
-    [definition, initialPayload],
+    [definition, initialPayload, initialStore],
   );
   const [store, setStore] = useState<AttributeStore>(fallbackStore);
   const [validation, setValidation] = useState<Record<string, SheetStepValidation>>({});
@@ -129,6 +133,7 @@ export function useCharacterSheetRuntime({
         definition,
         characterId: initialPayload.characterId,
         initialValues: initialPayload.values,
+        repeaters: initialPayload.repeaters,
       },
     })
       .then((response) => {

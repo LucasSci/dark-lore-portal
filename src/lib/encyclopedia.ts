@@ -3,6 +3,7 @@ import factionIllustration from "@/assets/encyclopedia/faction-illustration.svg"
 import historyIllustration from "@/assets/encyclopedia/history-illustration.svg";
 import locationIllustration from "@/assets/encyclopedia/location-illustration.svg";
 import monsterIllustration from "@/assets/encyclopedia/monster-illustration.svg";
+import { witcherBestiaryEntries } from "@/lib/witcher-bestiary";
 
 export type EncyclopediaCategory =
   | "personagens"
@@ -60,570 +61,983 @@ export const encyclopediaCategories: Record<
 > = {
   personagens: {
     label: "Personagens",
-    description: "Herois, governantes, profetas e nomes que moldam o conflito.",
+    description: "Eruditos, escolhidos, mercenarios e sobreviventes que atravessam o colapso do Veu.",
   },
   monstros: {
     label: "Monstros",
-    description: "Criaturas, horrores e predadores que surgem da escuridao.",
+    description: "Aparicoes, guardioes e criaturas que surgem quando o mundo deixa de se comportar como deveria.",
   },
   locais: {
     label: "Locais",
-    description: "Ruinas, torres e fronteiras onde o mundo deixa suas cicatrizes.",
+    description: "Costas, desertos, adegas e limiares onde a realidade se rasga e volta diferente.",
   },
   faccoes: {
     label: "Faccoes",
-    description: "Ordens, conclaves e alianzas que disputam o destino do reino.",
+    description: "Conclaves, templos e agrupamentos que tentam interpretar ou controlar a crise.",
   },
   historia: {
     label: "Historia",
-    description: "Eras, colapsos e pactos que explicam o presente do universo.",
+    description: "Quedas, profecias e convergencias que reorganizam a cronica de Zerrikania.",
   },
 };
 
 export const globalTimeline: EncyclopediaTimelineEvent[] = [
   {
-    period: "Era das Runas",
-    title: "As runas ancoram o poder dos reinos",
-    description: "Os primeiros arcanistas aprendem a gravar memoria e magia em pedra viva.",
+    period: "Prologo",
+    title: "O Veu comeca a ceder",
+    description:
+      "A fronteira invisivel entre mundos afrouxa, e a realidade deixa de manter sozinha a antiga distancia entre o que deveria permanecer separado.",
   },
   {
-    period: "Ano 0 da Ruina",
-    title: "A Grande Ruina rompe o equilibrio",
-    description: "Um ritual de contencao falha e abre fendas por todo o continente central.",
+    period: "Capitulos 1-5",
+    title: "Merlin testemunha as Irmas de Prata",
+    description:
+      "Na costa, o erudito passa de observador a cronista do colapso enquanto mulheres de prata, portais e medos coletivos surgem como consequencia da fissura.",
   },
   {
-    period: "Ano 17",
-    title: "A Ordem da Brasa Negra assume as fronteiras",
-    description: "Milicias e inquisidores tomam antigas fortalezas para segurar as fendas.",
+    period: "Capitulos 6-11",
+    title: "Nashara recusa a correcao total",
+    description:
+      "Em Zerrikania, a profecia, os Guardioes e o Dragao Negro empurram o mundo para uma escolha entre sobrevivencia sem excecao e um futuro ainda imperfeito.",
   },
   {
-    period: "Ano 31",
-    title: "A Cripta de Velkyn volta a pulsar",
-    description: "Runas esquecidas despertam sob o vale e atraem faccoes rivais.",
+    period: "Capitulo 12",
+    title: "O Espectro recalcula com os Fragmentos de Luna",
+    description:
+      "Depois da recusa de Nashara, a crise passa a operar por convergencia: vidas distantes se tornam vetores de uma nova leitura do colapso.",
+  },
+  {
+    period: "Capitulos 12-17",
+    title: "Alaric, Sorrow e Hauz sao reunidos",
+    description:
+      "O Grimorio Lunar, o deserto, Elarion e Vaz'hir puxam tres trajetorias diferentes para o mesmo limiar.",
   },
 ];
 
-export const encyclopediaEntries: EncyclopediaEntry[] = [
+const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
   {
-    slug: "elara-voss",
-    title: "Elara Voss",
+    slug: "merlin",
+    title: "Merlin",
     category: "personagens",
-    subtitle: "Arcanista exilada e principal cartografa das fendas de Velkyn.",
-    summary: "Elara transformou o estudo das fendas em uma arte de sobrevivencia, ligando academias mortas, faccoes vivas e o mapa ritual do vale.",
+    subtitle: "Erudito costeiro que presencia o inicio visivel do rasgo no Veu e decide nao organizar tudo em um livro seguro demais.",
+    summary:
+      "No PDF correto, Merlin deixa de ser apenas testemunha e se torna referencia moral da primeira metade da cronica: ele ve cedo o que esta acontecendo e entende cedo demais o perigo de transformar isso em sistema fechadinho.",
     image: characterIllustration,
-    imageAlt: "Retrato ilustrado de uma arcanista em estilo de cronica.",
+    imageAlt: "Retrato ilustrado de um erudito envelhecido diante do mar.",
     narrative: [
       {
-        heading: "Voz da margem",
-        body: "Filha de uma linhagem menor da capital, Elara recusou o conforto da corte para seguir os relatos de campo sobre runas que respiravam. Quando o Conclave das Cinzas decidiu censurar suas anotacoes, ela levou os cadernos para as fronteiras e passou a registrar os locais onde o tecido do mundo rasga.",
+        heading: "O observador da costa",
+        body:
+          "Merlin aparece quando o colapso ainda pode ser confundido com boato, delirio ou mau pressagio. Sua grande funcao no texto e notar que o mundo nao esta so produzindo monstros novos, mas desaprendendo a ser inteiro.",
       },
       {
-        heading: "Cartografia viva",
-        body: "Seu metodo mistura calculo, supersticao e coragem. Elara desenha mapas sobre pergaminhos tratados com cinza de vela e sangue de tinta, porque acredita que certos lugares so podem ser lembrados se a memoria pagar um preco. Por isso, suas cartas sao cobicadas tanto pela Ordem da Brasa Negra quanto por saqueadores da Cripta de Velkyn.",
+        heading: "O homem que nomeia sem domesticar",
+        body:
+          "Ele observa as Irmas de Prata, escuta pescadores, sacerdotes, reis e magos, mas se recusa a tratar o problema como uma equacao confortável. O PDF insiste que Merlin compreende algo raro: conhecimento arrancado do conjunto pode ser mais perigoso do que ignorancia.",
       },
       {
-        heading: "Papel na campanha",
-        body: "Na enciclopedia, Elara funciona como ponte entre personagens, faccoes e historia. Seguir seus registros leva direto a locais como a Torre de Obsidiana e ajuda a entender por que a Grande Ruina nunca terminou de fato.",
+        heading: "Legado de fragmento",
+        body:
+          "Sua morte importa porque ele nao entrega ao mundo um tratado definitivo. Em vez disso, deixa margens, observacoes e restos, como se quisesse impedir que leitores tardios transformassem a ferida do Veu em ferramenta de poder rapido.",
       },
     ],
-    internalLinks: [
-      "cripta-de-velkyn",
-      "conclave-das-cinzas",
-      "grande-ruina",
-    ],
+    internalLinks: ["cedencia-do-veu", "irmas-de-prata", "fragmentos-de-luna"],
     timeline: [
       {
-        period: "Ano 21",
-        title: "Expulsao do Conclave",
-        description: "Elara e removida dos arquivos depois de publicar um mapa proibido das fendas do sul.",
+        period: "Capitulos 1-5",
+        title: "Reconhece a mudanca na costa",
+        description:
+          "Entre mar, falas de aldeia e sinais de passagem, Merlin percebe que a realidade esta cedendo antes de todo o resto aceitar isso.",
       },
       {
-        period: "Ano 27",
-        title: "Primeira expedicao a Velkyn",
-        description: "Ela registra anomalias na cripta e prova que as runas da Ruina continuam ativas.",
+        period: "Crise do medo",
+        title: "Enfrenta sacerdotes, magos e curiosos",
+        description:
+          "Sua cabana vira ponto de consulta para quem quer respostas simples num fenomeno que so oferece consequencias.",
       },
       {
-        period: "Ano 31",
-        title: "Mapa das respiracoes",
-        description: "Seu atlas passa a circular entre aventureiros e muda a disputa pela regiao.",
+        period: "Capitulo 12",
+        title: "Morre sem fechar o sentido do que viu",
+        description:
+          "A ausencia de um texto final vira parte da propria defesa contra leituras convenientes do colapso.",
       },
     ],
     stats: [
-      { label: "Afiliacao", value: "Independente" },
-      { label: "Especialidade", value: "Mapas runicos" },
-      { label: "Ligacao central", value: "Cripta de Velkyn" },
+      { label: "Papel", value: "Cronista da fissura" },
+      { label: "Ambiente", value: "Costa e abrigo de observacao" },
+      { label: "Legado", value: "Fragmentos, margens e prudencia" },
     ],
   },
   {
-    slug: "rei-aedric-iv",
-    title: "Rei Aedric IV",
+    slug: "nashara",
+    title: "Nashara",
     category: "personagens",
-    subtitle: "Soberano que governa um reino cansado, preso entre fe e pragmatismo.",
-    summary: "Aedric IV segura o trono com discursos de unidade, mas depende de faccoes que ja nao compartilham o mesmo futuro.",
+    subtitle: "Figura profetizada de Zerrikania que caminha entre Guardioes e recusa a solucao perfeita demais.",
+    summary:
+      "No PDF correto, Nashara nao e so heroina do deserto. Ela se torna o ponto em que a historia pergunta se o mundo vale mais inteiro sem excecoes ou ferido, mas ainda capaz de mudar.",
     image: characterIllustration,
-    imageAlt: "Retrato ilustrado de um rei em tons dourados e sombrios.",
+    imageAlt: "Retrato ilustrado de uma mulher do deserto sob um ceu rachado.",
     narrative: [
       {
-        heading: "Trono rachado",
-        body: "Aedric herdou o reino depois de uma sucessao curta e brutal. Desde entao, tenta parecer maior do que a crise que comanda. Seus decretos falam em restauracao, mas seu conselho trabalha no modo de contingencia ha mais de uma decada.",
+        heading: "Nome preparado pelo medo",
+        body:
+          "A profecia faz de Nashara uma resposta aguardada por reis, templos, magos e povos exaustos. Isso pesa sobre sua vida inteira: ela cresce entre versos repetidos por outros, mesmo antes de decidir o que pensa deles.",
       },
       {
-        heading: "Aliancas custosas",
-        body: "Sem tropas suficientes para guardar todas as estradas, o rei entregou fortalezas inteiras a ordens militares e tolerou o crescimento de conclaves de estudo. Essa escolha manteve o reino de pe, mas fragmentou a autoridade real.",
+        heading: "Entre Guardioes e destino",
+        body:
+          "A cronica a aproxima dos Guardioes, da areia negra, da serpente alada e do Dragao Negro. Mas sua importancia real nao esta em obedecer ao papel escrito; esta em entender que muita gente queria que ela confirmasse uma conclusao pronta.",
       },
       {
-        heading: "Figura de tensao",
-        body: "As paginas sobre Aedric ligam politica e campo de batalha. Quem entende o rei entende por que faccoes como a Ordem da Brasa Negra agem com tanta autonomia e por que locais como a Torre de Obsidiana ainda escapam ao controle da coroa.",
+        heading: "A recusa que muda o eixo",
+        body:
+          "Diante da promessa de uma correcao absoluta, Nashara escolhe a falha viva em vez da paz sem excecao. Essa negativa reposiciona todo o universo: o mundo continua doente, mas nao se entrega a um conserto que mataria o que escapa ao calculo.",
       },
     ],
-    internalLinks: [
-      "ordem-da-brasa-negra",
-      "torre-de-obsidiana",
-      "era-das-runas",
-    ],
+    internalLinks: ["profecia-de-nashara", "zerrikania-de-areia-negra", "dragao-negro"],
     timeline: [
       {
-        period: "Ano 14",
-        title: "Coroacao em tempos de fome",
-        description: "Aedric assume o trono em meio a saques nas estradas do norte.",
+        period: "Capitulos 6-8",
+        title: "Passa a ser lida como centro da profecia",
+        description:
+          "Os versos deixam de ser rumor disperso e passam a convergir explicitamente para o nome de Nashara.",
       },
       {
-        period: "Ano 19",
-        title: "Pacto das fortalezas",
-        description: "Ele delega trechos da fronteira a ordens militares e perde poder direto.",
+        period: "Capitulo 9",
+        title: "Confronta o Dragao Negro",
+        description:
+          "Sua escolha diante da solucao total redefiniria a direcao da crise.",
       },
       {
-        period: "Ano 30",
-        title: "Conselho dividido",
-        description: "A coroa passa a depender de informacoes trazidas por exploradores independentes.",
+        period: "Capitulos 10-11",
+        title: "Vira memoria disputada",
+        description:
+          "Depois da recusa, Zerrikania continua sangrando e a historia dela comeca a ser recontada, aparada e usada por outros.",
       },
     ],
     stats: [
-      { label: "Titulo", value: "Rei de Aldren" },
-      { label: "Forca politica", value: "Fragil e ritualizada" },
-      { label: "Aliados", value: "Ordens militares" },
+      { label: "Funcao narrativa", value: "Escolhida que diz nao" },
+      { label: "Dominio", value: "Zerrikania e os Guardioes" },
+      { label: "Conflito central", value: "Destino contra excecao" },
     ],
   },
   {
-    slug: "sentinela-sombria",
-    title: "Sentinela Sombria",
+    slug: "alaric-dorne",
+    title: "Alaric Dorne",
+    category: "personagens",
+    subtitle: "Erudito de Novigrad que usa o Grimorio Lunar para medir uma falha e acaba puxado para dentro dela.",
+    summary:
+      "Alaric representa a segunda metade do PDF: um homem de metodo, desconfiado do sobrenatural teatral, que descobre tarde demais que o livro ja estava lendo ele de volta.",
+    image: characterIllustration,
+    imageAlt: "Retrato ilustrado de um mago erudito com grimorio fechado.",
+    narrative: [
+      {
+        heading: "Metodo antes de fe",
+        body:
+          "Alaric nao entra na historia como devoto ou aventureiro romântico. Ele prepara circulos, mede prata, corta a propria palma e trata o ritual como experimento controlado, o que torna o fracasso ainda mais significativo.",
+      },
+      {
+        heading: "O Grimorio escolhe mais do que responde",
+        body:
+          "Ao usar o Grimorio Lunar para tatear a margem do fenomeno, Alaric descobre que o portal nao foi somente aberto. Ele foi reconhecido. O texto trabalha isso como violacao reciproca: ele toca o outro lado e o outro lado toca de volta.",
+      },
+      {
+        heading: "Leitor puxado para dentro",
+        body:
+          "Nos capitulos finais, Alaric continua sendo o homem do livro, da leitura e da analise, mas agora num espaco em que parede, taverna, caverna e deserto se comportam como camadas sobrepostas. Seu papel passa a ser menos iniciar e mais interpretar sob pressao.",
+      },
+    ],
+    internalLinks: ["novigrad-subterranea", "fragmentos-de-luna", "elarion"],
+    timeline: [
+      {
+        period: "Capitulo 12",
+        title: "Executa o ritual do Grimorio Lunar",
+        description:
+          "Na adega escondida de Novigrad, Alaric corta a propria mao e descobre que a pagina responde a outra coisa.",
+      },
+      {
+        period: "Travessia",
+        title: "E puxado para o deserto por ressonancia",
+        description:
+          "A experiencia deixa claro que a ruptura entre mundos ja nao e passiva.",
+      },
+      {
+        period: "Capitulos 16-17",
+        title: "Passa a compor o trio de leitura de Vaz'hir",
+        description:
+          "Sua funcao muda de experimentador isolado para vetor consciente dentro de uma convergencia maior.",
+      },
+    ],
+    stats: [
+      { label: "Origem", value: "Novigrad" },
+      { label: "Ferramenta central", value: "Grimorio Lunar" },
+      { label: "Traco dominante", value: "Metodo e desconfiança" },
+    ],
+  },
+  {
+    slug: "sorrow-noxmourn",
+    title: "Sorrow Noxmourn",
+    category: "personagens",
+    subtitle: "Mercenario elfico de ironia seca, arrastado por contratos ruins e por uma relacao nada natural com a morte.",
+    summary:
+      "Sorrow entra no PDF como o personagem que mais rapidamente fareja falsidade em cenas construidas demais, mas isso nao o impede de ser escolhido pela propria distorcao do mundo.",
+    image: characterIllustration,
+    imageAlt: "Retrato ilustrado de um elfo com taça e alaude ao alcance da mao.",
+    narrative: [
+      {
+        heading: "Cinismo profissional",
+        body:
+          "Sorrow aceita servicos por dinheiro, conveniencia e curiosidade mal resolvida, mas raramente por crença. Seu modo de ler carruagens, estalagens, clientes e vinho funciona como defesa contra qualquer sistema que tente se fingir de mais limpo do que e.",
+      },
+      {
+        heading: "Proximidade errada com a morte",
+        body:
+          "Vaz'hir diz que a relacao dele com a morte nao e natural, e o texto trata isso como traço estrutural, nao como susto momentaneo. Isso torna Sorrow uma peca anomala: alguem vivo, funcional e, ainda assim, tocado por um tipo de continuidade que o resto do grupo nao partilha.",
+      },
+      {
+        heading: "O humor como autodefesa",
+        body:
+          "Nas cenas com Alaric e Hauz, Sorrow usa sarcasmo para desarmar hierarquias e testar o espaco. O que o torna importante nao e apenas a lingua ferina, mas a capacidade de sentir quando uma mentira esta estavel demais para ser casual.",
+      },
+    ],
+    internalLinks: ["alaric-dorne", "hauz-darnen", "elarion"],
+    timeline: [
+      {
+        period: "Capitulo 13",
+        title: "Aceita a carruagem e o contrato torto",
+        description:
+          "O pedido ligado a cancao, retorno e deserto o coloca na rota da convergencia.",
+      },
+      {
+        period: "Travessia",
+        title: "Chega ao mesmo dominio limiar que os outros vetores",
+        description:
+          "Seu sarcasmo sobrevive, mas a cena ja nao permite tratar tudo como mero golpe de contratante rico.",
+      },
+      {
+        period: "Capitulos 16-17",
+        title: "Assume papel de leitor agressivo do espaco",
+        description:
+          "Sorrow testa a mentira do ambiente com o proprio corpo e com a recusa de aceitar conforto rapido.",
+      },
+    ],
+    stats: [
+      { label: "Natureza", value: "Mercenario elfico" },
+      { label: "Instrumentos", value: "Alaude, sarcasmo e observacao" },
+      { label: "Anomalia", value: "Ligacao inadequada com a morte" },
+    ],
+  },
+  {
+    slug: "hauz-darnen",
+    title: "Hauz Darnen",
+    category: "personagens",
+    subtitle: "Guerreiro de leitura economica, guiado por uma espada que reconhece nomes antes da mente aceitar o que eles significam.",
+    summary:
+      "Hauz carrega o polo mais fisico da convergencia, mas o PDF faz questao de mostrar que sua arma e seu instinto lembram coisas mais antigas do que ele gostaria.",
+    image: characterIllustration,
+    imageAlt: "Retrato ilustrado de um guerreiro com espada envolta em pano.",
+    narrative: [
+      {
+        heading: "Poucas perguntas, muita memoria",
+        body:
+          "Hauz e apresentado como alguem que atravessa vilarejos, ruinas e cavernas sem desperdiçar palavras. O silencio dele nao e vazio; e economia de quem aprendeu a nao oferecer ao mundo mais superficie do que o necessario.",
+      },
+      {
+        heading: "A espada conhece Elarion",
+        body:
+          "Quando o nome Elarion surge, a lamina reage antes de qualquer explicacao satisfatoria. Isso faz de Hauz um personagem particularmente interessante: ele nao e o erudito do grupo, mas carrega um arquivo de reconhecimento no proprio metal que empunha.",
+      },
+      {
+        heading: "Centro de gravidade do trio",
+        body:
+          "Ao lado de Alaric e Sorrow, Hauz funciona como eixo de materialidade. Ele mede risco pelo corpo, pelo cabo da espada e pelo comportamento das paredes, mantendo a leitura da cena aterrada mesmo quando o mundo insiste em se dobrar.",
+      },
+    ],
+    internalLinks: ["alaric-dorne", "sorrow-noxmourn", "elarion"],
+    timeline: [
+      {
+        period: "Capitulos 15-16",
+        title: "E puxado para a caverna do encontro",
+        description:
+          "Sua rota chega a um limiar onde espada, grimorio e deserto passam a conversar entre si.",
+      },
+      {
+        period: "Nome revelado",
+        title: "Pronuncia Elarion e sente a resposta",
+        description:
+          "O reconhecimento pela lamina indica que Hauz ja vinha carregando mais passado do que sabia.",
+      },
+      {
+        period: "Capitulo 17",
+        title: "Mantem o olhar armado dentro do ambiente falso-estavel",
+        description:
+          "Quando o trio desperta na estalagem improvavel, Hauz e o primeiro a tratar a estabilidade como suspeita.",
+      },
+    ],
+    stats: [
+      { label: "Papel", value: "Guerreiro e ancora fisica" },
+      { label: "Marca central", value: "Espada que reconhece Elarion" },
+      { label: "Metodo", value: "Economia, instinto e pressao corporal" },
+    ],
+  },
+  {
+    slug: "irmas-de-prata",
+    title: "Irmas de Prata",
     category: "monstros",
-    subtitle: "Guardiao runico despertado por presencas vivas em zonas seladas.",
-    summary: "As sentinelas nao cacam por fome; elas patrulham para manter um juramento antigo, mesmo depois da queda de seus criadores.",
+    subtitle: "Nome dado pelos vivos a aparicoes femininas ligadas ao afrouxamento do Veu e ao medo que aprende a se repetir.",
+    summary:
+      "As Irmas de Prata nao sao santas, nem simplesmente espectros. O PDF as apresenta como um dos primeiros sinais de que a realidade parou de obedecer ao costume.",
     image: monsterIllustration,
-    imageAlt: "Placa de bestiario com um rosto monstruoso e olhos dourados.",
+    imageAlt: "Ilustracao de figuras prateadas junto ao mar.",
     narrative: [
       {
-        heading: "Origem ritual",
-        body: "As sentinelas nasceram na Era das Runas como servos de vigia, fundidas com metal escuro, osso e um fragmento de eco espiritual. Quando as casas runicas ruiram, muitas permaneceram nos corredores que haviam jurado proteger.",
+        heading: "Aparicao antes da explicacao",
+        body:
+          "Elas surgem na costa quando ainda seria confortavel chamar tudo de boato ou histeria. Caminham, tocam agua, olham demais e obrigam homens, mulheres e velhos a inventar nomes para aquilo que nao cabe mais na ordem comum.",
       },
       {
-        heading: "Comportamento",
-        body: "Elas nao falam, mas respondem a gravacoes antigas, sinos votivos e padroes de luz. Exploradores experientes dizem que cada sentinela repete um pedaco do ultimo comando que ouviu, preso num ciclo que mistura disciplina e fantasma.",
+        heading: "Medo com forma humana",
+        body:
+          "O terror causado pelas Irmas de Prata nao vem de massacre facil. Vem da naturalidade errada. Elas parecem proximas demais de um corpo, de uma fala e de uma presenca reconhecivel, como se o mundo tivesse produzido duplicatas sem decidir o que fazer com elas.",
       },
       {
-        heading: "Uso enciclopedico",
-        body: "Este verbete conecta monstros e historia: entender a sentinela ajuda a ler a Cripta de Velkyn e a perceber como a Grande Ruina deixou maquinas vivas espalhadas pelo mapa.",
+        heading: "Marco do inicio do colapso",
+        body:
+          "Na enciclopedia, elas servem para mostrar o ponto exato em que a crise deixa de ser teoria de mago e vira experiencia social. A partir delas, medo, conselho e política deixam de poder fingir que ainda estao lidando com o mesmo mundo.",
       },
     ],
-    internalLinks: [
-      "cripta-de-velkyn",
-      "era-das-runas",
-      "grande-ruina",
-    ],
+    internalLinks: ["merlin", "cedencia-do-veu", "conclaves-do-veu"],
     timeline: [
       {
-        period: "Era das Runas",
-        title: "Primeiras forjas de vigia",
-        description: "As casas runicas criam guardioes para proteger laboratorios e criptas.",
+        period: "Capitulos 1-3",
+        title: "Surgem nas falésias e na costa",
+        description:
+          "Os primeiros relatos insistem em mulheres que andam sobre a agua, tocam gente e deixam a normalidade parecer fraca demais.",
       },
       {
-        period: "Ano 0 da Ruina",
-        title: "Quebra dos comandos",
-        description: "A maioria das sentinelas perde cadeia de comando e entra em patrulha eterna.",
+        period: "Difusao do medo",
+        title: "Viram nome coletivo para a falha",
+        description:
+          "Pescadores, aldeias e templos passam a repetir o termo como modo de dar figura ao inexplicavel.",
       },
       {
-        period: "Ano 31",
-        title: "Despertar em Velkyn",
-        description: "O retorno das runas faz novas sentinelas sairem das paredes da cripta.",
+        period: "Legado",
+        title: "Se tornam sinal de que o Veu ja afrouxou demais",
+        description:
+          "Mesmo quando outras criaturas mais vastas surgem, elas seguem marcando o ponto em que a cronica deixou de parecer apenas rumor.",
       },
     ],
     stats: [
-      { label: "Tipo", value: "Guardiao runico" },
-      { label: "HP", value: "34" },
-      { label: "CA", value: "15" },
-      { label: "Ameaca", value: "Alta em corredores fechados" },
-      { label: "Fraqueza", value: "Comandos rituais incompletos" },
+      { label: "Natureza", value: "Aparicoes do Veu" },
+      { label: "Ambiente", value: "Costa, agua e transicao" },
+      { label: "Perigo", value: "Desorientacao e medo social" },
+    ],
+  },
+  {
+    slug: "escorpiao-sob-as-areias",
+    title: "Escorpiao sob as Areias",
+    category: "monstros",
+    subtitle: "Colosso que se move sob o deserto e opera menos como predador comum do que como peso cravado na ferida do mundo.",
+    summary:
+      "O grande escorpiao do PDF certo nao e so besta do deserto. Ele representa a classe dos Guardioes: criaturas antigas cuja simples permanencia segura um pedaço do rasgo.",
+    image: monsterIllustration,
+    imageAlt: "Ilustracao de um escorpiao colossal sob dunas escuras.",
+    narrative: [
+      {
+        heading: "Guardiao antes de monstro",
+        body:
+          "Os relatos insistem que o escorpiao nao vinha para aldeias, nao pedia culto e nao caçava por sadismo. Permanecia. Essa permanencia muda tudo, porque faz a criatura parecer parte da estrutura do mundo, e nao somente algo que escapou dela.",
+      },
+      {
+        heading: "Areia negra e contençao viva",
+        body:
+          "Quando Zerrikania escurece, o escorpiao deixa de ser apenas imagem de poder antigo e passa a reagir como musculo tenso ao redor de uma ferida. Sua presença e lida como contençao viva, ainda que parcial, do que o Veu deixou passar.",
+      },
+      {
+        heading: "Ameaca de campanha",
+        body:
+          "Para o site, este verbete permite unir a escala cosmologica do PDF com uso imediato de mesa. O escorpiao pode ser lido como boss, guardiao regional ou prova de que alguem esta perto demais de uma rachadura sensivel.",
+      },
+    ],
+    internalLinks: ["guardioes-do-veu", "zerrikania-de-areia-negra", "profecia-de-nashara"],
+    timeline: [
+      {
+        period: "Capitulos 6-8",
+        title: "E visto como um dos primeiros Guardioes nomeados",
+        description:
+          "Caravanas, pastores e viajantes passam a reconhecer o colosso sob as dunas como presença constante demais para ser acaso.",
+      },
+      {
+        period: "Capitulos 10-11",
+        title: "Reage a recusa de Nashara",
+        description:
+          "O deserto ao redor muda de qualidade e o escorpiao deixa de parecer simples peso imovel.",
+      },
+      {
+        period: "Legado",
+        title: "Vira emblema da ferida que ainda segura",
+        description:
+          "Mesmo quando a história avança para Elarion e para o Grimorio Lunar, o escorpiao continua simbolizando contençao instavel.",
+      },
+    ],
+    stats: [
+      { label: "Tipo", value: "Guardiao colossal do deserto" },
+      { label: "Funçao", value: "Contençao viva e pressao territorial" },
+      { label: "Tatica", value: "Movimento subterraneo e investida esmagadora" },
+      { label: "Risco", value: "Altissimo perto de rachaduras do Veu" },
     ],
     vtt: {
-      hp: 34,
-      ac: 15,
+      hp: 58,
+      ac: 17,
       initiativeBonus: 2,
-      role: "Guardiao runico",
-      note: "Patrulha corredores selados e responde a comandos rituais incompletos.",
-      color: "linear-gradient(145deg, rgba(214, 175, 103, 0.94), rgba(88, 65, 38, 0.98))",
+      role: "guardiao colossal",
+      note: "Ataca saindo da areia e pune alvos agrupados com ferrão e esmagamento.",
+      color: "#7d5b2f",
     },
   },
   {
-    slug: "devorador-de-cinzas",
-    title: "Devorador de Cinzas",
+    slug: "dragao-negro",
+    title: "Dragao Negro",
     category: "monstros",
-    subtitle: "Predador de campos queimados que se alimenta de memoria e calor.",
-    summary: "Nas areas em que a Ruina queimou a historia local, o Devorador aparece como se estivesse recolhendo o que sobrou do mundo.",
+    subtitle: "Criatura-voz que oferece correcao absoluta e trata a excecao como o custo inaceitavel de um mundo imperfeito.",
+    summary:
+      "O Dragao Negro e um dos seres mais perigosos do PDF porque nao convence pela força bruta primeiro, mas por um raciocinio de paz total que elimina aquilo que escapa.",
     image: monsterIllustration,
-    imageAlt: "Ilustracao de um monstro enciclopedia em tons vermelhos e dourados.",
+    imageAlt: "Ilustracao de um dragao negro emergindo de rochas escuras.",
     narrative: [
       {
-        heading: "Rastro de brasas",
-        body: "Ninguem sabe se ele evoluiu de um animal real ou de uma maldicao. O que se sabe e que sempre surge depois de incendios ritualisticos, quando a fumaca ainda carrega nomes que ninguem mais lembra.",
+        heading: "Monstro com argumento",
+        body:
+          "Ao contrario de criaturas que ferem pela fome ou pelo territorio, o Dragao Negro fala. E fala com a conviccao de quem ja transformou a propria visao em mecanismo de mundo. Por isso o encontro com Nashara pesa mais do que simples combate.",
       },
       {
-        heading: "Caca e territorio",
-        body: "O Devorador ronda ruinas frias como se procurasse calor residual. Ele evita cidades grandes e prefere fronteiras devastadas, onde a presenca humana ainda nao conseguiu dar significado novo ao espaco destruido.",
+        heading: "Paz sem excecao",
+        body:
+          "Sua proposta e clara: remover os atrasos, as anomalias, os Guardioes e tudo o que insiste em escapar do calculo para que o mundo finalmente cesse de sangrar. O horror nao esta so na escala disso, mas no fato de a ideia soar racional por alguns instantes.",
       },
       {
-        heading: "Ligacoes narrativas",
-        body: "Este monstro faz pontes entre locais devastados, faccoes incendiarias e eventos da Grande Ruina. Muitas cronicas da Ordem da Brasa Negra o tratam como mau agouro de uma nova abertura de fenda.",
+        heading: "Ruptura filosofica da campanha",
+        body:
+          "Este verbete concentra o conflito moral mais forte do arquivo. Com ele, a lore de Zerrikania deixa de ser apenas cronica de sobrevivencia e passa a discutir se salvar o mundo ainda vale quando o preço e amputar toda diferença.",
       },
     ],
-    internalLinks: [
-      "ordem-da-brasa-negra",
-      "grande-ruina",
-      "torre-de-obsidiana",
-    ],
+    internalLinks: ["nashara", "profecia-de-nashara", "guardioes-do-veu"],
     timeline: [
       {
-        period: "Ano 3",
-        title: "Primeiros relatos no leste",
-        description: "Patrulhas encontram pegadas carbonizadas em campos abandonados.",
+        period: "Capitulo 9",
+        title: "Confronta Nashara",
+        description:
+          "O Dragao Negro oferece uma sobrevivencia organizada demais para nao soar monstruosa.",
       },
       {
-        period: "Ano 18",
-        title: "Fogueiras do norte",
-        description: "O monstro aparece apos o incendio de tres vilas perto das fortalezas fronteiricas.",
+        period: "Recusa",
+        title: "Perde a correcao total",
+        description:
+          "A resposta de Nashara falha o calculo que ele vinha preparando.",
       },
       {
-        period: "Ano 29",
-        title: "Cacada falha",
-        description: "Uma companhia inteira some ao tentar persegui-lo alem da cinza funda.",
+        period: "Depois do recuo",
+        title: "Sua ausencia pesa mais do que a presenca",
+        description:
+          "O deserto passa a carregar o vazio deixado por uma soluçao recusada, nao um alivio verdadeiro.",
       },
     ],
     stats: [
-      { label: "Tipo", value: "Aberracao de ruina" },
-      { label: "HP", value: "48" },
-      { label: "CA", value: "13" },
-      { label: "Habitat", value: "Campos queimados" },
-      { label: "Sinal", value: "Cinza morna ao amanhecer" },
+      { label: "Tipo", value: "Guardiao draconico e agente de correcao" },
+      { label: "Poder", value: "Violencia cosmologica e persuasao" },
+      { label: "Ameaca", value: "Apagamento das excecoes" },
     ],
     vtt: {
-      hp: 48,
-      ac: 13,
-      initiativeBonus: 3,
-      role: "Predador de ruina",
-      note: "Se move pelas bordas do mapa em busca de alvos isolados e calor residual.",
-      color: "linear-gradient(145deg, rgba(213, 92, 56, 0.96), rgba(96, 24, 22, 0.98))",
+      hp: 86,
+      ac: 19,
+      initiativeBonus: 5,
+      role: "boss cosmologico",
+      note: "Usa presenca esmagadora, desloca terreno e obriga testes contra medo e obediência.",
+      color: "#3a332d",
     },
   },
   {
-    slug: "cripta-de-velkyn",
-    title: "Cripta de Velkyn",
+    slug: "guardioes-do-veu",
+    title: "Guardioes do Veu",
+    category: "monstros",
+    subtitle: "Classe de criaturas antigas que nao existe para ser entendida como fauna comum, mas como contençao viva da ferida do mundo.",
+    summary:
+      "O PDF correto trata os Guardioes como entidades cuja permanencia pesa mais do que qualquer ataque isolado. Eles seguram, atrasam e estabilizam partes do rasgo, mesmo quando ninguem compreende totalmente o custo disso.",
+    image: monsterIllustration,
+    imageAlt: "Ilustracao de guardioes antigos surgindo entre areia, asa e rocha.",
+    narrative: [
+      {
+        heading: "Nao sao apenas monstros",
+        body:
+          "Os primeiros relatos insistem numa diferenca importante: Guardioes nao invadem vilas, nao pedem culto e nao se comportam como simples predadores. Eles permanecem onde o mundo precisa de peso, o que os torna mais perturbadores do que uma criatura de caça.",
+      },
+      {
+        heading: "Contençao viva",
+        body:
+          "Escorpiao sob as areias, serpente alada e Dragao Negro participam da mesma logica maior. Cada um encarna uma forma de retardar, estabilizar ou reinterpretar a ferida deixada pelo Veu, ainda que isso nunca seja apresentado como soluçao limpa.",
+      },
+      {
+        heading: "Problema e defesa ao mesmo tempo",
+        body:
+          "Os Guardioes ajudam a segurar o colapso, mas tambem podem ser parte do impasse que impede o mundo de sair de seu estado doente. Por isso, a cronica os trata como criaturas indispensaveis e insuportaveis ao mesmo tempo.",
+      },
+    ],
+    internalLinks: ["cedencia-do-veu", "escorpiao-sob-as-areias", "dragao-negro"],
+    timeline: [
+      {
+        period: "Primeiros registros",
+        title: "Sao nomeados quando a contençao deixa de parecer coincidencia",
+        description:
+          "Homens, magos e reis passam a chamar de Guardioes aquilo que continua parado exatamente onde o rasgo mais pressiona.",
+      },
+      {
+        period: "Ascensao de Nashara",
+        title: "Entram no centro da profecia",
+        description:
+          "A escolhida passa a ser lida como alguem capaz de caminhar entre eles e decidir pelo mundo.",
+      },
+      {
+        period: "Pos-recusa",
+        title: "Permanecem, mas de outro modo",
+        description:
+          "Depois que a correcao total falha, os Guardioes deixam de ser apenas peso estavel e passam a participar de um equilibrio mais perigoso.",
+      },
+    ],
+    stats: [
+      { label: "Natureza", value: "Classe de criaturas-ancora" },
+      { label: "Funçao", value: "Contençao e atraso do colapso" },
+      { label: "Paradoxo", value: "Defesa e impasse ao mesmo tempo" },
+    ],
+  },
+  {
+    slug: "zerrikania-de-areia-negra",
+    title: "Zerrikania de Areia Negra",
     category: "locais",
-    subtitle: "Santuario subterraneo em que runas antigas voltaram a pulsar.",
-    summary: "Velkyn e ao mesmo tempo mausoleu, laboratorio e cofre de erros antigos. Por isso o local concentra aventureiros, faccoes e monstros como nenhum outro ponto do reino.",
+    subtitle: "Versao ferida do deserto em que a areia escurece, o horizonte se move errado e o mundo inteiro passa a soar gasto.",
+    summary:
+      "No PDF certo, Zerrikania deixa de ser so paisagem exotica. Ela vira o corpo visivel da crise: um territorio onde o Veu falhou de forma persistente.",
     image: locationIllustration,
-    imageAlt: "Paisagem ilustrada de ruinas e torres em estilo atlas.",
+    imageAlt: "Ilustracao de dunas escuras sob um ceu quebrado.",
     narrative: [
       {
-        heading: "Camadas de pedra e sigilo",
-        body: "A cripta foi escavada em epocas diferentes. Os niveis superiores guardam sepulturas nobres, enquanto os inferiores escondem corredores de pesquisa runica que jamais deveriam ter sido anexados a um santuario funerario.",
+        heading: "O deserto escurecido",
+        body:
+          "A areia negra nao toma tudo de uma vez. Ela surge em veios, manchas e superficies que brilham sem o brilho certo, como se a materia tivesse sido chamuscada por dentro. O arquivo insiste nessa mudança lenta porque ela revela um mundo adoecendo sem clarão conveniente.",
       },
       {
-        heading: "Centro da disputa",
-        body: "Toda faccao importante quer algo dali: armas, mapas, provas, reliquias ou simplesmente o direito de dizer que controla o lugar. Isso faz de Velkyn um palco natural para conflitos e uma pagina central da enciclopedia.",
+        heading: "Territorio de ressonancia",
+        body:
+          "Em Zerrikania, dunas mudam de lugar, vozes caminham ao lado de passos e rotas inteiras perdem a honestidade. E um lugar em que geografia, medo e memoria se contagiam mutuamente.",
       },
       {
-        heading: "Ponto de referencia",
-        body: "Quem entra por Velkyn rapidamente esbarra em Elara Voss, sentinelas sombrias e registros da Grande Ruina. O local foi pensado para funcionar como nodo de ligacoes internas entre as principais areas do universo.",
+        heading: "Paisagem da recusa",
+        body:
+          "Depois de Nashara dizer nao a correçao total, Zerrikania continua sangrando. Isso a torna o grande palco visivel da escolha: um mundo ainda aberto ao imprevisivel, mas incapaz de voltar ao que era antes.",
       },
     ],
-    internalLinks: [
-      "elara-voss",
-      "sentinela-sombria",
-      "conclave-das-cinzas",
-    ],
+    internalLinks: ["nashara", "escorpiao-sob-as-areias", "profecia-de-nashara"],
     timeline: [
       {
-        period: "Antes da Ruina",
-        title: "Fundacao funeraria",
-        description: "Nobres do vale constroem uma cripta cerimonial sobre cavidades mais antigas.",
+        period: "Capitulos 10-11",
+        title: "A areia escurece",
+        description:
+          "O deserto passa a exibir a ferida do Veu de modo visivel e territorial.",
       },
       {
-        period: "Ano 0",
-        title: "Selamento apressado",
-        description: "Depois da Grande Ruina, corredores inferiores sao lacrados com runas de emergencia.",
+        period: "Pos-recusa",
+        title: "Ritmos do mundo ficam errados",
+        description:
+          "Dunas, sonhos, vozes e caminhos deixam de obedecer ao costume anterior.",
       },
       {
-        period: "Ano 31",
-        title: "Pulso reativado",
-        description: "As runas retornam e revelam passagens que nao constavam nos mapas da corte.",
+        period: "Memoria historica",
+        title: "O territorio vira prova viva da escolha",
+        description:
+          "Toda narrativa sobre Nashara ou Guardioes volta, cedo ou tarde, ao estado de Zerrikania.",
       },
     ],
     stats: [
-      { label: "Regiao", value: "Vale de Velkyn" },
-      { label: "Estado", value: "Instavel e disputado" },
-      { label: "Acesso", value: "Expedicoes autorizadas ou clandestinas" },
+      { label: "Natureza", value: "Deserto rasgado pelo Veu" },
+      { label: "Sintoma principal", value: "Areia negra e rotas instaveis" },
+      { label: "Valor narrativo", value: "Corpo visivel da crise" },
     ],
   },
   {
-    slug: "torre-de-obsidiana",
-    title: "Torre de Obsidiana",
+    slug: "novigrad-subterranea",
+    title: "Novigrad Subterranea",
     category: "locais",
-    subtitle: "Observatorio vertical onde a coroa perdeu o controle da propria memoria.",
-    summary: "A Torre de Obsidiana domina a fronteira oriental e guarda arquivos que foram reescritos tantas vezes que ja parecem uma forma de magia.",
+    subtitle: "Rede de adegas, alçapoes e camaras escondidas onde o metodo de Alaric encontra o perigo de um livro que responde demais.",
+    summary:
+      "O trecho de Novigrad no PDF correto e importante porque mostra que a crise ja nao pertence apenas ao deserto: cidades racionais tambem possuem porões prontos para falhar.",
     image: locationIllustration,
-    imageAlt: "Ilustracao de uma torre sombria destacada em um atlas fantastico.",
+    imageAlt: "Ilustracao de uma adega escondida sob a cidade.",
     narrative: [
       {
-        heading: "Arquivo acima da guerra",
-        body: "A torre foi desenhada para observar ceu, fronteira e fluxo ritual. Em teoria, ela serviria ao trono. Na pratica, virou um espaco de negociacao entre burocratas, magos e vigias que alteram registros para manter certas verdades fora da corte.",
+        heading: "Esconderijo de metodo",
+        body:
+          "A camara usada por Alaric nao e templo nem palacio. E adega, deposito e laboratório improvisado, um lugar onde o saber tenta reduzir o sobrenatural a algo medivel sem admitir o quanto depende de sorte.",
       },
       {
-        heading: "Biblioteca opaca",
-        body: "Seus andares guardam espelhos de obsidiana que respondem a nomes esquecidos. Alguns documentos so podem ser lidos quando refletidos nesses espelhos, e outros simplesmente devolvem imagens de eventos que jamais foram oficialmente admitidos.",
+        heading: "Cidade que finge nao olhar",
+        body:
+          "Novigrad aparece como centro urbano capaz de fornecer dicionarios, objetos raros, corredores discretos e intermediarios duvidosos. Sua grande ironia e parecer estável o bastante para mascarar o fato de que ja abriga brechas demais.",
       },
       {
-        heading: "Funcao enciclopedica",
-        body: "A torre conecta personagens politicos, faccoes e a linha maior da historia. Nela, o leitor percebe como o passado do reino foi administrado, escondido e vendido como estabilidade.",
+        heading: "Porta para o outro lado",
+        body:
+          "Quando o Grimorio Lunar responde, a adega subterranea deixa de ser só esconderijo e se torna dobradiça entre o mundo conhecido e o deserto impossível que espera do outro lado da fissura.",
       },
     ],
-    internalLinks: [
-      "rei-aedric-iv",
-      "devorador-de-cinzas",
-      "grande-ruina",
-    ],
+    internalLinks: ["alaric-dorne", "fragmentos-de-luna", "elarion"],
     timeline: [
       {
-        period: "Era das Runas",
-        title: "Levantamento da torre",
-        description: "Astronomos runicos constroem a estrutura para monitorar correntes celestes.",
+        period: "Capitulo 12",
+        title: "Alaric prepara o ritual",
+        description:
+          "A cidade fornece o ambiente aparentemente controlavel em que o erro pode parecer só detalhe tecnico.",
       },
       {
-        period: "Ano 11",
-        title: "Militarizacao do arquivo",
-        description: "A coroa converte o observatorio em posto de inteligencia e censura.",
+        period: "Abertura",
+        title: "A adega se torna portal",
+        description:
+          "O espaço é reclassificado de esconderijo para limiar operativo do colapso.",
       },
       {
-        period: "Ano 28",
-        title: "Apagao de registros",
-        description: "Andares inteiros desaparecem dos inventarios oficiais sem explicacao convincente.",
+        period: "Legado",
+        title: "Novigrad entra na cronica do Veu",
+        description:
+          "O colapso deixa de ser assunto distante do deserto e passa a tocar o coração urbano do conhecimento pragmático.",
       },
     ],
     stats: [
-      { label: "Tipo", value: "Observatorio e arquivo" },
-      { label: "Controle", value: "Coroa e burocracias rivais" },
-      { label: "Perigo", value: "Memoria distorcida" },
+      { label: "Tipo", value: "Adega e câmara ritual" },
+      { label: "Ligacao", value: "Grimorio Lunar" },
+      { label: "Tema", value: "Metodo que perde controle" },
     ],
   },
   {
-    slug: "ordem-da-brasa-negra",
-    title: "Ordem da Brasa Negra",
-    category: "faccoes",
-    subtitle: "Milicia sagrada que protege fronteiras enquanto negocia poder politico.",
-    summary: "A Ordem nasceu para conter a Ruina, mas sobreviveu tempo suficiente para desenvolver uma ambicao propria.",
-    image: factionIllustration,
-    imageAlt: "Sigilo ilustrado de uma faccao militar e religiosa.",
+    slug: "elarion",
+    title: "Elarion",
+    category: "locais",
+    subtitle: "Nome-lugar reconhecido por espada, portal e sombra antes que qualquer personagem consiga explica-lo de forma segura.",
+    summary:
+      "Elarion funciona no PDF como destino e conceito ao mesmo tempo: uma borda onde caverna, estalagem, leitura e captura coexistem sem se resolver totalmente.",
+    image: locationIllustration,
+    imageAlt: "Ilustracao de um limiar rochoso que se dobra em sala iluminada.",
     narrative: [
       {
-        heading: "Mandato de fronteira",
-        body: "A Ordem recebeu fortalezas, permissao de patrulha e imunidades juridicas em troca de vigiar fendas e comboios. O acordo parecia emergencial, mas se tornou permanente e fez da ordem um poder paralelo.",
+        heading: "Lugar pronunciado antes de entendido",
+        body:
+          "O nome Elarion surge quando a espada de Hauz reage e quando Alaric percebe que o portal nao o levou apenas ao deserto. Isso faz do local algo mais antigo do que a capacidade imediata de descreve-lo.",
       },
       {
-        heading: "Doutrina de fogo",
-        body: "Seus capitulos acreditam que toda corrupcao pode ser contida com disciplina, vigia e purga. Essa visao os torna eficientes contra monstros, mas perigosos para aldeias inteiras quando suspeitam de contagio ritual.",
+        heading: "Caverna, taverna e leitura",
+        body:
+          "Nas cenas finais, Elarion parece aceitar sobreposicoes: rocha, calor, mesa, vinho, caverna e uma estalagem falsa-estavel coexistem. O resultado e um ambiente que nao nega a materialidade, mas a organiza sob regras que ninguem controla por inteiro.",
       },
       {
-        heading: "Posicao no mundo",
-        body: "Na enciclopedia, a Ordem serve como elo entre politica, locais e monstros. Ela cruza o caminho de Aedric, do Devorador de Cinzas e de praticamente toda expedicao que tenta agir fora da fronteira oficial.",
+        heading: "Espaco de triagem",
+        body:
+          "Com Vaz'hir e o Grimorio Lunar por perto, Elarion se torna lugar de leitura. Nao leitura de pagina apenas, mas de gente, limite, falha, obediência e ruptura. E um local em que a propria cena parece avaliar os presentes.",
       },
     ],
-    internalLinks: [
-      "rei-aedric-iv",
-      "devorador-de-cinzas",
-      "grande-ruina",
-    ],
+    internalLinks: ["alaric-dorne", "hauz-darnen", "fragmentos-de-luna"],
     timeline: [
       {
-        period: "Ano 2",
-        title: "Fundacao emergencial",
-        description: "Veteranos e inquisidores se unem para proteger povoados proximos das fendas.",
+        period: "Travessia",
+        title: "Elarion e reconhecido antes de ser descrito",
+        description:
+          "O nome antecede a compreensão e funciona como gatilho para espada, memória e portal.",
       },
       {
-        period: "Ano 17",
-        title: "Autonomia armada",
-        description: "A ordem assume fortalezas e passa a responder mais ao proprio concilio do que ao trono.",
+        period: "Capitulos 16-17",
+        title: "Vira sala de convergencia",
+        description:
+          "Alaric, Sorrow e Hauz descobrem que ja nao estao apenas presos, mas sendo lidos dentro dele.",
       },
       {
-        period: "Ano 30",
-        title: "Campanha de purga",
-        description: "Capitulos rivais discordam sobre como lidar com locais reativados como Velkyn.",
+        period: "Limiar persistente",
+        title: "Permanece como ponto de passagem incompleto",
+        description:
+          "O local não fecha seus significados; ele os sustenta em tensão.",
       },
     ],
     stats: [
-      { label: "Natureza", value: "Milicia religiosa" },
-      { label: "Base", value: "Fortalezas da fronteira" },
-      { label: "Influencia", value: "Alta fora da capital" },
+      { label: "Natureza", value: "Limiar e nome antigo" },
+      { label: "Funçao", value: "Convergencia e leitura" },
+      { label: "Sinal", value: "Reconhecimento pela espada e pelo portal" },
     ],
   },
   {
-    slug: "conclave-das-cinzas",
-    title: "Conclave das Cinzas",
+    slug: "conclaves-do-veu",
+    title: "Conclaves do Veu",
     category: "faccoes",
-    subtitle: "Rede de estudiosos que coleta, esconde e vende conhecimento perigoso.",
-    summary: "O Conclave afirma preservar saber. Seus criticos respondem que ele preserva, acima de tudo, o monopolio sobre a interpretacao do passado.",
+    subtitle: "Rede dispersa de magos, eruditos e copistas que tenta medir, conter e nomear a falha sem jamais controlá-la por inteiro.",
+    summary:
+      "O PDF correto mostra que o estudo do colapso nunca pertenceu a um único centro. Conclaves, magos e escribas aparecem como infraestrutura intelectual da crise, ao mesmo tempo útil e insuficiente.",
     image: factionIllustration,
-    imageAlt: "Sigilo ilustrado de uma ordem erudita e secreta.",
+    imageAlt: "Ilustracao de um conclave de estudiosos sobre mapas e runas.",
     narrative: [
       {
-        heading: "Arquivo e mercado",
-        body: "O Conclave nasceu das ruinas de bibliotecas queimadas. Seus membros juraram salvar o maximo de textos possivel, mas logo perceberam que controlar a leitura de certos textos lhes dava poder sobre reis e aventureiros.",
+        heading: "Saber reunido sob atraso",
+        body:
+          "Quando o Veu começa a ceder, conclaves sao reunidos, tratados antigos voltam a circular e magos que antes pareciam periféricos reaparecem com linguagem de contençao, continuidade e remendo. O problema e que quase sempre chegam tarde ao que ja mudou.",
       },
       {
-        heading: "Censura elegante",
-        body: "Ao inves de destruir tudo o que teme, o Conclave prefere trancar, recortar e editar. Foi essa politica que colocou Elara Voss contra seus superiores e espalhou copias incompletas de mapas e rituais por toda a fronteira.",
+        heading: "Controle por vocabulário",
+        body:
+          "A força dessa facção está em nomear, comparar mapas, registrar ciclos e tentar dar forma ao que assusta. Sua fragilidade está em acreditar, repetidas vezes, que o vocabulário correto basta para reduzir a falha a sistema administrável.",
       },
       {
-        heading: "Papel na enciclopedia",
-        body: "A faccao cria ligacoes internas naturais com historia, locais e personagens. Sempre que o leitor encontra uma lacuna no passado do reino, quase sempre existe uma sala do Conclave onde essa lacuna foi produzida de proposito.",
+        heading: "Porta para o segundo arco",
+        body:
+          "Sem esse fundo de estudos, Grimorio Lunar, Fragmentos de Luna e o próprio método de Alaric perderiam contexto. Os conclaves nao resolvem a crise, mas constroem o idioma pelo qual o colapso passa a ser perseguido.",
       },
     ],
-    internalLinks: [
-      "elara-voss",
-      "cripta-de-velkyn",
-      "era-das-runas",
-    ],
+    internalLinks: ["cedencia-do-veu", "merlin", "fragmentos-de-luna"],
     timeline: [
       {
-        period: "Ano 4",
-        title: "Fundacao dos arquivos cinzentos",
-        description: "Scribas e sobreviventes organizam os primeiros depositos secretos de conhecimento.",
+        period: "Primeira resposta",
+        title: "Conclaves sao formados para registrar as falhas",
+        description:
+          "As anomalias deixam de ser apenas susto local e passam a gerar mobilização erudita organizada.",
       },
       {
-        period: "Ano 21",
-        title: "Censura das cartas runicas",
-        description: "O Conclave expulsa Elara e confisca parte de seus mapas.",
+        period: "Escalada",
+        title: "Mapas, runas e linguagem de contençao ganham centralidade",
+        description:
+          "O saber técnico tenta acompanhar um mundo que muda mais rápido do que os relatórios.",
       },
       {
-        period: "Ano 31",
-        title: "Retorno a Velkyn",
-        description: "Delegacoes discretas tentam recuperar artefatos antes da coroa descobrir tudo.",
+        period: "Arco final",
+        title: "Seu legado reaparece no Grimorio Lunar",
+        description:
+          "A convergência de Alaric nasce sobre séculos de estudo acumulado e mal digerido.",
       },
     ],
     stats: [
       { label: "Natureza", value: "Rede erudita" },
-      { label: "Metodo", value: "Arquivar e controlar" },
-      { label: "Recurso central", value: "Conhecimento proibido" },
+      { label: "Metodo", value: "Registrar, comparar e conter" },
+      { label: "Fraqueza", value: "Sempre chegar um pouco tarde" },
     ],
   },
   {
-    slug: "grande-ruina",
-    title: "Grande Ruina",
-    category: "historia",
-    subtitle: "Evento fundador da era atual, quando o mundo passou a vazar por suas proprias costuras.",
-    summary: "A Grande Ruina nao foi um unico desastre, mas uma cadeia de falhas rituais que redesenhou politica, geografia e memoria.",
-    image: historyIllustration,
-    imageAlt: "Codice ilustrado com linha do tempo dourada.",
+    slug: "templos-da-profecia",
+    title: "Templos da Profecia",
+    category: "faccoes",
+    subtitle: "Sacerdotes, santuários e tradições que absorvem os versos do colapso e os convertem em destino socialmente utilizável.",
+    summary:
+      "Os templos do PDF correto nao apenas rezam. Eles recortam versos, transformam rumor em profecia compartilhável e ajudam a produzir a forma pública de figuras como Nashara.",
+    image: factionIllustration,
+    imageAlt: "Ilustracao de templos e sacerdotes em torno de pergaminhos profeticos.",
     narrative: [
       {
-        heading: "Falha em cascata",
-        body: "Tudo indica que a Ruina comecou como um esforco coordenado para estabilizar redes de runas continentais. Quando uma casa principal caiu, as outras tentaram compensar o fluxo e produziram uma reacao em cadeia que abriu fendas e apagou regioes inteiras dos mapas.",
+        heading: "A profecia como administração do medo",
+        body:
+          "Quando os versos surgem, sacerdotes e templos passam a selecionar o que convém citar, o que deve ser aparado e o que pode soar como sentido para povos exaustos. O resultado e menos revelação pura do que política de sobrevivência simbólica.",
       },
       {
-        heading: "Depois do rasgo",
-        body: "Povoados desapareceram, fortalezas viraram ilhas e arquivos passaram a contradizer uns aos outros. A Ruina nao apenas matou pessoas; ela embaralhou a forma como o reino lembrava de si mesmo.",
+        heading: "Fabricantes de centro",
+        body:
+          "Ao repetir trechos, interpretar sinais e colar nomes a imagens, os templos ajudam a transformar Nashara numa figura organizada pelo desejo coletivo. Isso da direção a muita gente, mas também reduz a complexidade daquilo que realmente aconteceu.",
       },
       {
-        heading: "Centro da enciclopedia",
-        body: "Este verbete e o eixo de navegacao do sistema. Quase todas as paginas se conectam a ele porque a Ruina explica a origem dos monstros, a fragmentacao das faccoes e a importancia de locais como Velkyn e a Torre de Obsidiana.",
+        heading: "Memória aparada",
+        body:
+          "Depois da recusa, o mesmo aparelho templário que ajudou a erguer a expectativa trabalha para limpar a parte mais ofensiva da verdade. A memória pública preserva o nome, mas amputa a recusa e a profundidade do custo.",
       },
     ],
-    internalLinks: [
-      "era-das-runas",
-      "torre-de-obsidiana",
-      "ordem-da-brasa-negra",
-    ],
+    internalLinks: ["profecia-de-nashara", "nashara", "zerrikania-de-areia-negra"],
     timeline: [
       {
-        period: "Ano 0",
-        title: "Ruptura inicial",
-        description: "A malha runica continental entra em colapso e as fendas se multiplicam.",
+        period: "Capitulos 7-8",
+        title: "Os versos deixam de ser rumor e entram nos templos",
+        description:
+          "A profecia ganha repetição, autoridade e recorte institucional.",
       },
       {
-        period: "Ano 1 a 5",
-        title: "Cartografia perdida",
-        description: "A corte reescreve mapas sem conseguir acompanhar o que realmente mudou.",
+        period: "Ascensao de Nashara",
+        title: "Templos ajudam a fixar um nome ao centro dos versos",
+        description:
+          "A leitura coletiva começa a produzir destino socialmente reconhecível.",
       },
       {
-        period: "Ano 17 em diante",
-        title: "Normalizacao da crise",
-        description: "Ordens militares e conclaves passam a administrar o que deveria ser emergencia.",
+        period: "Depois da recusa",
+        title: "A facção reescreve a memória para torná-la suportável",
+        description:
+          "O passado permanece, mas as partes mais desconfortáveis são as primeiras a desaparecer do registro compartilhado.",
       },
     ],
     stats: [
-      { label: "Escopo", value: "Continental" },
-      { label: "Consequencia", value: "Fendas e apagamentos" },
-      { label: "Legado", value: "Estado de crise permanente" },
+      { label: "Natureza", value: "Rede sacerdotal e ritual" },
+      { label: "Funçao", value: "Interpretar e aparar a profecia" },
+      { label: "Recurso central", value: "Autoridade sobre o sentido público" },
     ],
   },
   {
-    slug: "era-das-runas",
-    title: "Era das Runas",
+    slug: "cedencia-do-veu",
+    title: "Cedencia do Veu",
     category: "historia",
-    subtitle: "Periodo em que casas arcanas estruturaram o reino sobre escrita viva.",
-    summary: "Antes da Ruina, as runas eram arquitetura, lei, medicina e guerra. A era terminou, mas seus alicerces ainda sustentam o presente.",
+    subtitle: "Momento em que a fronteira entre mundos deixa de se sustentar sozinha e obriga a realidade a conviver com passagem, eco e erro.",
+    summary:
+      "O prologo do PDF correto redefine a base do universo: antes de qualquer cidade, profecia ou espada, existe o fato de que o Veu cedeu e nunca mais deixou o mundo plenamente inteiro.",
     image: historyIllustration,
-    imageAlt: "Pergaminho ilustrado com marcas de linha do tempo e runas.",
+    imageAlt: "Ilustracao de cronica com uma fissura luminosa entre mundos.",
     narrative: [
       {
-        heading: "Escrita como engenharia",
-        body: "Durante a Era das Runas, conhecimento e construcao eram praticamente a mesma coisa. Pontes, muralhas, arquivos e juramentos eram gravados em superficies capazes de responder a voz, sangue ou memoria.",
+        heading: "Quando o mundo bastava a si mesmo",
+        body:
+          "A abertura insiste numa ordem antiga em que mar, florestas, estradas e céu ainda pertenciam ao seu lugar costumeiro. Isso torna a queda mais forte, porque a ruptura nao nasce num mundo ja arruinado, mas num mundo que acreditava poder continuar igual.",
       },
       {
-        heading: "Ascensao das casas",
-        body: "As grandes casas runicas competiam por precisao, alcance e prestigio. Dessa corrida surgiram observatorios, guardioes artificiais e criptas tao complexas que sobreviveram a seus fundadores.",
+        heading: "Fronteira sem forma simples",
+        body:
+          "O Veu não e descrito como porta, linha ou muro. E uma distância necessária. Quando ela afrouxa, o desastre nao aparece apenas como explosão; aparece como erro fino, recorrência, detalhe fora de eixo e caminho que responde ao lugar errado.",
       },
       {
-        heading: "Importancia enciclopedica",
-        body: "Este verbete da contexto para monstros como a Sentinela Sombria e para locais como a Torre de Obsidiana. Ele funciona como porta de entrada para tudo que parece antigo demais para a politica atual.",
+        heading: "Catastrofe lenta",
+        body:
+          "A grande força desse evento histórico esta na lentidão. O mundo não desaba de uma vez; ele aprende a piorar sem clarão suficiente para convencer todo mundo ao mesmo tempo.",
       },
     ],
-    internalLinks: [
-      "sentinela-sombria",
-      "torre-de-obsidiana",
-      "conclave-das-cinzas",
-    ],
+    internalLinks: ["merlin", "irmas-de-prata", "conclaves-do-veu"],
     timeline: [
       {
-        period: "Seculos iniciais",
-        title: "Fundacao das casas runicas",
-        description: "Mestres de inscricao transformam cidades em sistemas de escrita funcional.",
+        period: "Prologo",
+        title: "O Veu afrouxa",
+        description:
+          "A distância entre realidades deixa de manter-se inteira e começa a permitir passagem, resíduo e erro.",
       },
       {
-        period: "Apice",
-        title: "Expansao dos observatorios",
-        description: "Torres e criptas ganham funcao cientifica, ritual e politica ao mesmo tempo.",
+        period: "Primeiras reações",
+        title: "Magos, reis e sacerdotes tentam nomear a crise",
+        description:
+          "O mundo ainda resiste a acreditar no tamanho do problema.",
       },
       {
-        period: "Declinio",
-        title: "Sobrecarga da rede",
-        description: "A ambicao por integrar tudo na mesma malha prepara o terreno para a Ruina.",
+        period: "Longa duração",
+        title: "A falha vira condição histórica",
+        description:
+          "Deixa de ser incidente e se transforma em ambiente.",
       },
     ],
     stats: [
-      { label: "Tema central", value: "Magia estrutural" },
-      { label: "Instituicoes", value: "Casas runicas" },
-      { label: "Heranca", value: "Ruinas vivas e artefatos" },
+      { label: "Escala", value: "Cosmologica" },
+      { label: "Sintoma", value: "Passagem, eco e erro" },
+      { label: "Marca", value: "Catastrofe lenta" },
     ],
   },
+  {
+    slug: "profecia-de-nashara",
+    title: "Profecia de Nashara",
+    category: "historia",
+    subtitle: "Conjunto de versos, medos e expectativas que transforma uma vida em ponto de apoio para reis, templos e povos exaustos.",
+    summary:
+      "A profecia no PDF correto nao e só mensagem sobrenatural. E uma estrutura de repetição social que prepara o mundo para desejar uma figura que resolva aquilo que ninguem mais consegue suportar.",
+    image: historyIllustration,
+    imageAlt: "Ilustracao de um pergaminho profetico sobre areia escura.",
+    narrative: [
+      {
+        heading: "Nascimento difuso",
+        body:
+          "A profecia nao nasce limpa nem assinada. Ela se espalha por bocas, templos, velhos, soldados, copistas e sonhos, ganhando forma aos poucos até parecer anterior a si mesma.",
+      },
+      {
+        heading: "Produzindo uma escolhida",
+        body:
+          "O ponto mais forte do evento e mostrar que o mundo nao espera apenas uma pessoa; ele fabrica uma necessidade. Nashara cresce dentro dessa necessidade, cercada por versos que a antecedem e por instituições interessadas em dar corpo a eles.",
+      },
+      {
+        heading: "Recusa e mutilaçao da memoria",
+        body:
+          "Quando a escolhida diz nao ao conserto absoluto, a profecia nao some. Ela muda de uso. Parte dela vira justificativa, parte vira lenda, e a fraçao mais ofensiva da verdade começa a ser retirada do registro comum.",
+      },
+    ],
+    internalLinks: ["nashara", "templos-da-profecia", "dragao-negro"],
+    timeline: [
+      {
+        period: "Capitulos 7-8",
+        title: "Os versos circulam por reis, templos e desertos",
+        description:
+          "A profecia deixa de ser ruído isolado e ganha autoridade coletiva.",
+      },
+      {
+        period: "Ascensao",
+        title: "Nashara e fixada como centro dos sinais",
+        description:
+          "O mundo escolhe um nome para organizar o proprio pavor.",
+      },
+      {
+        period: "Depois",
+        title: "A memoria da recusa e aparada",
+        description:
+          "Sobrevive o mito; some a parte da decisão que mais ofende o desejo de ordem.",
+      },
+    ],
+    stats: [
+      { label: "Forma", value: "Versos, repeticao e espera coletiva" },
+      { label: "Funçao", value: "Dar centro ao medo historico" },
+      { label: "Consequencia", value: "Escolhida produzida e depois recontada" },
+    ],
+  },
+  {
+    slug: "fragmentos-de-luna",
+    title: "Fragmentos de Luna",
+    category: "historia",
+    subtitle: "Residuos de passagem e memoria imperfeita que tornam possivel a convergencia da segunda metade do PDF.",
+    summary:
+      "Os Fragmentos de Luna explicam por que o colapso deixa de agir apenas por paisagem e passa a agir por pessoas, vidas e vetores capazes de serem lidos e rearranjados.",
+    image: historyIllustration,
+    imageAlt: "Ilustracao de estilhaços de memoria sobre um grimorio aberto.",
+    narrative: [
+      {
+        heading: "Resíduo que atravessa gente",
+        body:
+          "Os fragmentos não se manifestam apenas como objeto. Eles aparecem como memória deslocada, eco estrutural e sensibilidade incorreta em vidas distintas, fazendo o Veu ficar mais poroso onde quase ninguem perceberia um padrâo.",
+      },
+      {
+        heading: "Doença de convergencia",
+        body:
+          "Depois da recusa de Nashara, o Espectro do Caos deixa de buscar linha reta e passa a trabalhar por aproximaçao. Alaric, Sorrow e Hauz se tornam importantes porque encarnam modos diferentes de sustentar, ler ou romper essa convergência.",
+      },
+      {
+        heading: "Historia que entra no limiar",
+        body:
+          "Este evento e o elo entre a primeira grande cronica de Zerrikania e a segunda, mais fechada em leitura, grimorio e captura. Sem ele, o arco de Elarion pareceria outro livro. Com ele, vira continuidade deformada do mesmo colapso.",
+      },
+    ],
+    internalLinks: ["merlin", "alaric-dorne", "elarion"],
+    timeline: [
+      {
+        period: "Pos-recusa",
+        title: "O Espectro abandona a linha reta",
+        description:
+          "A crise passa a operar por convergencia em vez de depender de um unico agente central.",
+      },
+      {
+        period: "Capitulo 12",
+        title: "O Grimorio Lunar reconhece o primeiro vetor",
+        description:
+          "Alaric toca uma estrutura que já esperava por contato.",
+      },
+      {
+        period: "Capitulos 16-17",
+        title: "Os vetores sao reunidos em Elarion",
+        description:
+          "Fragmentos de memória, espada, morte e livro deixam de estar separados.",
+      },
+    ],
+    stats: [
+      { label: "Natureza", value: "Residuo de memoria e passagem" },
+      { label: "Efeito", value: "Convergencia de vetores" },
+      { label: "Ponte", value: "Une Nashara ao arco de Alaric" },
+    ],
+  },
+];
+
+export const encyclopediaEntries: EncyclopediaEntry[] = [
+  ...handcraftedEncyclopediaEntries,
+  ...witcherBestiaryEntries,
 ];
 
 export function getEncyclopediaEntry(slug: string) {

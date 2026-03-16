@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
+
 import GameMasterPanel from "@/components/rpg/GameMasterPanel";
+import { Badge } from "@/components/ui/badge";
 
 export default function MestrePage() {
   return (
@@ -9,10 +10,10 @@ export default function MestrePage() {
         <div className="mx-auto max-w-4xl text-center">
           <Badge variant="outline">Painel do Mestre</Badge>
           <h1 className="mt-4 font-display text-4xl text-gold-gradient md:text-5xl">
-            Game Master
+            Direcao da Campanha
           </h1>
           <p className="mx-auto mt-4 max-w-3xl text-base leading-7 text-muted-foreground">
-            Ferramentas de narrativa e gestão de sessão para o mestre da campanha.
+            Ferramentas de narrativa, combate, NPCs e publicacoes para manter o continente vivo entre uma sessao e outra.
           </p>
         </div>
         <GameMasterPanel />

@@ -232,7 +232,7 @@ export default function AccountPage() {
                 </p>
 
                 <div className="space-y-3 text-sm text-foreground/90">
-                  <p>1. Crie sua conta Realm of Shadows.</p>
+                  <p>1. Crie sua conta do arquivo de campanha.</p>
                   <p>2. Compre pelo Stripe em ambiente seguro.</p>
                   <p>3. Receba o arquivo e guarde tudo na sua biblioteca.</p>
                 </div>
