@@ -1014,42 +1014,48 @@ export default function MesaPage() {
       {/* Center: canvas area */}
       <div className="relative flex-1 flex flex-col overflow-hidden">
         {/* Top bar inside canvas */}
-        <div className="flex h-10 items-center justify-between border-b border-border/40 bg-surface-raised/80 px-3">
-          <div className="flex items-center gap-3">
-            <span className="font-heading text-xs uppercase tracking-[0.2em] text-primary/80">
+        <div className="flex h-10 items-center justify-between border-b border-border/40 bg-surface-raised/80 px-2 sm:px-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Mobile back button */}
+            <Link
+              to="/jogar"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground sm:hidden"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <span className="truncate font-heading text-xs uppercase tracking-[0.2em] text-primary/80">
               {activePage?.name ?? "Pagina"}
             </span>
-            <Badge variant="outline" className="border-border/40 text-[10px]">
+            <Badge variant="outline" className="hidden border-border/40 text-[10px] sm:inline-flex">
               Rev {scene.revision}
             </Badge>
             {activePage && (
-              <>
-                <Badge variant="outline" className="border-border/40 text-[10px]">
-                  {activePage.width}x{activePage.height} grids
-                </Badge>
-                <Badge variant="outline" className="border-border/40 text-[10px]">
-                  {activePage.gridSize}px
-                </Badge>
-              </>
+              <Badge variant="outline" className="hidden border-border/40 text-[10px] md:inline-flex">
+                {activePage.width}x{activePage.height}
+              </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <Badge variant={sessionReady ? "success" : "outline"} className="border-border/40 text-[10px]">
-              {sessionReady ? "Sessao ativa" : "Sincronizando"}
+              {sessionReady ? "Ativa" : "Sync"}
             </Badge>
-            <Badge variant={battlemapUrl ? "success" : "outline"} className="border-border/40 text-[10px]">
-              {battlemapUrl ? "Battlemap pronto" : "Sem battlemap"}
-            </Badge>
-            <Badge variant="outline" className="border-border/40 text-[10px]">
+            <Badge variant="outline" className="hidden border-border/40 text-[10px] sm:inline-flex">
               <Users className="mr-1 h-3 w-3" />
               {scene.presence.length || 1}
             </Badge>
             {activeTurn && (
               <Badge variant="info" className="text-[10px]">
                 <Sword className="mr-1 h-3 w-3" />
-                {activeTurn.name} — R{scene.initiative.round}
+                <span className="hidden sm:inline">{activeTurn.name} —</span> R{scene.initiative.round}
               </Badge>
             )}
+            {/* Mobile panel toggle */}
+            <button
+              onClick={() => setMobilePanel((v) => !v)}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground sm:hidden"
+            >
+              <MessageSquare className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
