@@ -24,43 +24,37 @@ const featureCards = [
   {
     icon: ScrollText,
     title: "Arquivo da Campanha",
-    description:
-      "Cronicas, contratos, rumores e informes publicados pelo mestre para manter o mundo respirando.",
+    description: "Cronicas, contratos, rumores e informes publicados pelo mestre.",
     path: "/campanha",
   },
   {
     icon: Dice6,
     title: "Mesa Virtual",
-    description:
-      "Battlemaps, grids, conexoes de area, tokens e deslocamento narrativo guiado pelo mestre.",
+    description: "Battlemaps, grids, tokens e deslocamento narrativo guiado pelo mestre.",
     path: "/mesa",
   },
   {
     icon: Map,
     title: "Atlas do Continente",
-    description:
-      "Continente, regioes e pontos locais conectados em um atlas navegavel da campanha.",
+    description: "Continente, regioes e pontos locais em um atlas navegavel.",
     path: "/mapa",
   },
   {
     icon: ShoppingBag,
     title: "Mercado In-Game",
-    description:
-      "Negocie suprimentos, runas, componentes e curiosidades como se estivesse na estrada.",
+    description: "Negocie suprimentos, runas e curiosidades como na estrada.",
     path: "/loja",
   },
   {
     icon: Users,
     title: "Mural da Campanha",
-    description:
-      "Rumores, publicacoes e conversas que continuam dentro do mundo mesmo fora da mesa.",
+    description: "Rumores, publicacoes e conversas que continuam no mundo.",
     path: "/comunidade",
   },
   {
     icon: Shield,
     title: "Arquivo Pessoal",
-    description:
-      "Ficha, biblioteca e progresso do personagem sem quebrar o tom do universo.",
+    description: "Ficha, biblioteca e progresso do personagem.",
     path: "/conta",
   },
 ];
@@ -80,43 +74,42 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-hero-gradient" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--brand)/0.18),transparent_34%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.16),transparent_30%)]" />
 
-        <div className="container relative py-28 md:py-36">
+        <div className="container relative py-16 sm:py-28 md:py-36">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_340px]"
+            className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px]"
           >
-            <div className="max-w-3xl space-y-6">
+            <div className="max-w-3xl space-y-5">
               <Badge variant="outline" className="border-primary/25 text-primary">
                 <Flame className="mr-2 h-3.5 w-3.5" />
                 Areias de Zerrikania
               </Badge>
-              <div className="space-y-4">
-                <h1 className="font-display text-5xl leading-tight text-brand-gradient md:text-7xl">
+              <div className="space-y-3">
+                <h1 className="font-display text-3xl leading-tight text-brand-gradient sm:text-5xl md:text-7xl">
                   Alaric, Sorrow e Hauz atravessam um continente em ruptura
                 </h1>
-                <p className="max-w-2xl text-lg leading-8 text-foreground/86">
+                <p className="max-w-2xl text-sm leading-7 text-foreground/86 sm:text-lg sm:leading-8">
                   O foco da campanha agora esta nas rotas que unem Elarion, Vaz'hir,
-                  Korath e as areias negras de Zerrikania. A mesa, o atlas, o mercado e
-                  as publicacoes do mestre fazem parte do mesmo mundo.
+                  Korath e as areias negras de Zerrikania.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Button asChild size="lg">
+                <Button asChild size="lg" className="w-full sm:w-auto">
                   <Link to="/mesa">
                     <Sword className="mr-2 h-5 w-5" />
                     Abrir mesa
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline">
+                <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
                   <Link to="/mapa">Explorar o continente</Link>
                 </Button>
               </div>
             </div>
 
-            <Card variant="elevated" className="self-end">
+            <Card variant="elevated" className="hidden self-end xl:block">
               <CardHeader>
                 <CardTitle className="text-2xl">Frente Atual</CardTitle>
               </CardHeader>
@@ -138,23 +131,22 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="container py-24">
+      <section className="container py-12 sm:py-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-12 max-w-2xl"
+          className="mb-8 max-w-2xl sm:mb-12"
         >
-          <h2 className="font-display text-4xl text-brand-gradient">
+          <h2 className="font-display text-2xl text-brand-gradient sm:text-4xl">
             Ecossistema da Campanha
           </h2>
-          <p className="mt-4 text-base leading-7 text-muted-foreground">
-            Tudo foi reorganizado para parecer um mundo jogavel: rumor, contrato,
-            viagem, compra, preparacao e mesa.
+          <p className="mt-3 text-sm leading-7 text-muted-foreground sm:mt-4 sm:text-base">
+            Tudo foi reorganizado para parecer um mundo jogavel.
           </p>
         </motion.div>
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {featureCards.map((feature, index) => (
             <motion.div
               key={feature.title}
@@ -167,15 +159,15 @@ export default function HomePage() {
                 variant="panel"
                 className="h-full transition-transform duration-150 hover:-translate-y-1"
               >
-                <CardContent className="flex h-full flex-col gap-5 p-6">
-                  <div className="w-fit rounded-full border border-primary/20 bg-background/60 p-3 text-primary">
-                    <feature.icon className="h-6 w-6" />
+                <CardContent className="flex h-full flex-col gap-4 p-5 sm:gap-5 sm:p-6">
+                  <div className="w-fit rounded-full border border-primary/20 bg-background/60 p-2.5 text-primary sm:p-3">
+                    <feature.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="font-heading text-xl text-foreground">
+                  <div className="space-y-1.5">
+                    <h3 className="font-heading text-lg text-foreground sm:text-xl">
                       {feature.title}
                     </h3>
-                    <p className="text-sm leading-7 text-muted-foreground">
+                    <p className="text-sm leading-6 text-muted-foreground">
                       {feature.description}
                     </p>
                   </div>
@@ -189,39 +181,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="container pb-24">
+      <section className="container pb-12 sm:pb-24">
         <ContinentMap />
       </section>
 
       {spotlight.length > 0 ? (
         <section className="border-y border-border/70 bg-surface-strong/40">
-          <div className="container py-24">
+          <div className="container py-12 sm:py-24">
             <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
               <Card variant="panel">
                 <CardHeader>
-                  <CardTitle className="text-2xl">Arquivo em movimento</CardTitle>
+                  <CardTitle className="text-xl sm:text-2xl">Arquivo em movimento</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <DataSection
-                    label="Tom"
-                    value="Fronteira, estrada e pressao"
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Centro atual"
-                    value={CURRENT_PROTAGONISTS.join(" / ")}
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Ritmo"
-                    value="Publicacoes do mestre entre sessoes"
-                    tone="info"
-                    variant="quiet"
-                  />
+                  <DataSection label="Tom" value="Fronteira, estrada e pressao" variant="quiet" />
+                  <DataSection label="Centro atual" value={CURRENT_PROTAGONISTS.join(" / ")} variant="quiet" />
+                  <DataSection label="Ritmo" value="Publicacoes do mestre entre sessoes" tone="info" variant="quiet" />
                 </CardContent>
               </Card>
 
-              <div className="grid gap-5 md:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {spotlight.map((publication, index) => (
                   <motion.div
                     key={publication.id}
@@ -231,13 +210,13 @@ export default function HomePage() {
                     transition={{ delay: index * 0.06 }}
                   >
                     <Card variant="panel" className="h-full">
-                      <CardContent className="space-y-4 p-6">
+                      <CardContent className="space-y-3 p-5 sm:space-y-4 sm:p-6">
                         <Badge variant="secondary">{publication.kind}</Badge>
                         <div>
-                          <h3 className="font-heading text-xl text-foreground">
+                          <h3 className="font-heading text-lg text-foreground sm:text-xl">
                             {publication.title}
                           </h3>
-                          <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                          <p className="mt-2 text-sm leading-6 text-muted-foreground sm:mt-3 sm:leading-7">
                             {publication.excerpt}
                           </p>
                         </div>
@@ -251,24 +230,22 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      <section className="container py-24">
+      <section className="container py-12 sm:py-24">
         <Card variant="elevated">
-          <CardContent className="flex flex-col gap-6 p-8 md:flex-row md:items-center md:justify-between">
+          <CardContent className="flex flex-col gap-5 p-6 sm:gap-6 sm:p-8 md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
-              <h2 className="font-display text-3xl text-brand-gradient">
+              <h2 className="font-display text-2xl text-brand-gradient sm:text-3xl">
                 Entrar na estrada
               </h2>
-              <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-                Leia as publicacoes do mestre, prepare sua ficha, negocie no mercado e
-                siga viagem para a proxima area.
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:leading-7">
+                Leia as publicacoes do mestre, prepare sua ficha e siga viagem.
               </p>
             </div>
-
             <div className="flex flex-wrap gap-3">
-              <Button asChild>
+              <Button asChild className="w-full sm:w-auto">
                 <Link to="/criacao">Criar personagem</Link>
               </Button>
-              <Button asChild variant="secondary">
+              <Button asChild variant="secondary" className="w-full sm:w-auto">
                 <Link to="/campanha">Ler cronicas</Link>
               </Button>
             </div>
