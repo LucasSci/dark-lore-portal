@@ -1114,57 +1114,121 @@ export default function MesaPage() {
 
         {/* Selected token bar at the bottom */}
         {selectedToken && (
-          <div className="flex items-center gap-3 border-t border-border/40 bg-surface-raised/90 px-4 py-2">
+          <div className="flex items-center gap-2 border-t border-border/40 bg-surface-raised/90 px-2 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
             <div className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold",
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold sm:h-8 sm:w-8 sm:text-xs",
               selectedToken.payload.team === "party" ? "bg-info/20 text-info" : "bg-destructive/20 text-destructive",
             )}>
               {selectedToken.payload.shortName}
             </div>
-            <div className="min-w-0">
-              <p className="truncate font-heading text-sm text-foreground">{selectedToken.payload.name}</p>
-              <p className="text-[10px] text-muted-foreground">
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-heading text-xs text-foreground sm:text-sm">{selectedToken.payload.name}</p>
+              <p className="hidden text-[10px] text-muted-foreground sm:block">
                 {selectedToken.payload.role} · {getPositionLabel(selectedToken.position.x, selectedToken.position.y)}
               </p>
             </div>
-            <div className="ml-auto flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">HP</span>
-              <span className="font-heading text-sm text-foreground">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-[10px] text-muted-foreground sm:text-xs">HP</span>
+              <span className="font-heading text-xs text-foreground sm:text-sm">
                 {selectedToken.payload.hp}/{selectedToken.payload.hpMax}
               </span>
-              <span className="text-xs text-muted-foreground">CA</span>
-              <span className="font-heading text-sm text-foreground">{selectedToken.payload.ac}</span>
-              <div className="ml-2 flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground sm:text-xs">CA</span>
+              <span className="font-heading text-xs text-foreground sm:text-sm">{selectedToken.payload.ac}</span>
+              <div className="ml-1 flex items-center gap-0.5 sm:ml-2 sm:gap-1">
                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => void adjustHp(selectedToken.id, -5)}>
                   <Minus className="h-3 w-3" />
                 </Button>
                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => void adjustHp(selectedToken.id, +5)}>
                   <Plus className="h-3 w-3" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => {
-                  if (selectedToken) {
-                    void mutateScene((c) => revealSceneFogAround(c, selectedToken.position.x, selectedToken.position.y, 1));
-                  }
-                }}>
-                  <Eye className="h-3 w-3" />
-                </Button>
               </div>
             </div>
           </div>
         )}
+
+        {/* Mobile bottom toolbar */}
+        <div className="flex items-center justify-around border-t border-border/40 bg-surface-raised/95 px-1 py-1 sm:hidden">
+          {toolButtons.slice(0, 4).map((tool) => (
+            <button
+              key={tool.id}
+              onClick={() => setActiveTool(tool.id)}
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
+                currentTool === tool.id
+                  ? "bg-primary/20 text-primary"
+                  : "text-muted-foreground",
+              )}
+            >
+              {tool.icon}
+            </button>
+          ))}
+          <button
+            onClick={() => setShowGrid((v) => !v)}
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
+              showGrid ? "bg-primary/20 text-primary" : "text-muted-foreground",
+            )}
+          >
+            <Grid3X3 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors"
+          >
+            <ImagePlus className="h-4 w-4" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden sm:block"
+            onChange={(event) => void handleBattlemapImport(event)}
+          />
+        </div>
       </div>
 
-      {/* Right panel toggle */}
+      {/* Right panel toggle — desktop only */}
       <button
         onClick={() => setRightOpen((v) => !v)}
-        className="flex w-5 items-center justify-center border-l border-border/40 bg-surface-raised text-muted-foreground transition-colors hover:text-foreground"
+        className="hidden w-5 items-center justify-center border-l border-border/40 bg-surface-raised text-muted-foreground transition-colors hover:text-foreground sm:flex"
       >
         {rightOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
       </button>
 
-      {/* Right panel */}
+      {/* Mobile panel overlay */}
+      {mobilePanel && (
+        <div className="absolute inset-0 z-[70] flex flex-col bg-surface-raised/98 backdrop-blur sm:hidden">
+          <div className="flex items-center justify-between border-b border-border/40 px-3 py-2">
+            <span className="font-heading text-xs uppercase tracking-[0.16em] text-primary/80">Painel</span>
+            <button onClick={() => setMobilePanel(false)} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <Tabs value={rightTab} onValueChange={(v) => setRightTab(v as RightTab)} className="flex flex-1 flex-col">
+              <TabsList className="grid h-auto w-full grid-cols-3 gap-px rounded-none border-b border-border/40 bg-border/30 p-1">
+                {rightTabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    title={tab.label}
+                    className="flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent bg-transparent px-1 py-1.5 text-[10px] font-medium tracking-[0.12em] text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-background/70 data-[state=active]:text-foreground"
+                  >
+                    {tab.icon}
+                    <span className="uppercase">{tab.label}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+      {/* Reuse same tab content — rendered below for desktop */}
+            </Tabs>
+          </div>
+        </div>
+      )}
+
+      {/* Right panel — desktop */}
       {rightOpen && (
-        <div className="flex w-[min(26rem,calc(100vw-5rem))] flex-col border-l border-border/70 bg-surface-raised/95 backdrop-blur xl:w-[26rem] 2xl:w-[28rem]">
+        <div className="hidden w-[min(26rem,calc(100vw-5rem))] flex-col border-l border-border/70 bg-surface-raised/95 backdrop-blur sm:flex xl:w-[26rem] 2xl:w-[28rem]">
           <Tabs value={rightTab} onValueChange={(v) => setRightTab(v as RightTab)} className="flex flex-1 flex-col">
             <TabsList className="grid h-auto w-full grid-cols-3 gap-px rounded-none border-b border-border/40 bg-border/30 p-1">
               {rightTabs.map((tab) => (
