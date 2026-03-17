@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1080">
+  <defs>
+    <linearGradient id="sand" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#6f4d1e" />
+      <stop offset="45%" stop-color="#b38339" />
+      <stop offset="100%" stop-color="#4a2e10" />
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="1080" fill="#1a1309" />
+  <rect x="48" y="48" width="1344" height="984" rx="36" fill="url(#sand)" stroke="#d6b15f" stroke-width="10" />
+  <circle cx="720" cy="540" r="246" fill="#7a5423" stroke="#f1d28a" stroke-width="14" />
+  <circle cx="720" cy="540" r="168" fill="#2c1406" stroke="#d6b15f" stroke-width="10" stroke-dasharray="20 14" />
+  <rect x="168" y="154" width="222" height="144" rx="24" fill="#3d2410" stroke="#f1d28a" stroke-width="8" />
+  <rect x="1050" y="162" width="226" height="138" rx="24" fill="#3d2410" stroke="#f1d28a" stroke-width="8" />
+  <rect x="138" y="786" width="248" height="158" rx="24" fill="#3d2410" stroke="#f1d28a" stroke-width="8" />
+  <rect x="1052" y="774" width="248" height="164" rx="24" fill="#3d2410" stroke="#f1d28a" stroke-width="8" />
+  <path d="M470 178h498M454 904h530M178 520h216M1042 522h220" stroke="#f1d28a" stroke-width="8" stroke-linecap="round" />
+  <text x="720" y="104" fill="#f8f1de" font-size="48" font-family="Georgia, serif" text-anchor="middle">Arena das Areias</text>
+</svg>

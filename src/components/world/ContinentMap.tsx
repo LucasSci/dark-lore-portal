@@ -11,14 +11,14 @@ export default function ContinentMap({ compact = true }: ContinentMapProps) {
       <CardContent className="space-y-5 p-6">
         <div>
           <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-            Atlas externo
+            Atlas do continente
           </p>
           <h2 className="mt-2 font-heading text-2xl text-foreground">
-            Regioes principais do continente
+            Mundi e regioes principais do continente
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
-            Esta vitrine usa o hub de embeds do MapGenie para abrir rapidamente os
-            mapas jogaveis mais relevantes do universo.
+            Consulte primeiro o mundi do continente e depois aprofunde a leitura nos grandes
+            recortes geograficos para orientar deslocamentos, fronteiras e jornadas.
           </p>
         </div>
 

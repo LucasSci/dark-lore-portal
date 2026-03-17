@@ -1,0 +1,33 @@
+{
+    "width":  7840,
+    "height":  5651,
+    "trimLeft":  0,
+    "trimTop":  45,
+    "padding":  48,
+    "regions":  {
+                    "hos_velen":  {
+                                      "x":  1868,
+                                      "y":  123,
+                                      "width":  4669,
+                                      "height":  5253
+                                  },
+                    "skellige":  {
+                                     "x":  168,
+                                     "y":  923,
+                                     "width":  3664,
+                                     "height":  3664
+                                 },
+                    "kaer_morhen":  {
+                                        "x":  5868,
+                                        "y":  323,
+                                        "width":  1925,
+                                        "height":  2406
+                                    },
+                    "toussaint":  {
+                                      "x":  3228,
+                                      "y":  3323,
+                                      "width":  2166,
+                                      "height":  2166
+                                  }
+                }
+}

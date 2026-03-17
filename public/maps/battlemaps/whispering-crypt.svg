@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1080">
+  <rect width="1440" height="1080" fill="#040607" />
+  <rect x="42" y="42" width="1356" height="996" rx="30" fill="#111415" stroke="#cfcfcf" stroke-width="6" />
+  <rect x="138" y="126" width="1160" height="828" rx="28" fill="#151618" stroke="#818181" stroke-width="6" />
+  <rect x="246" y="216" width="210" height="190" rx="16" fill="#1e2024" stroke="#c8c8c8" stroke-width="4" />
+  <rect x="984" y="216" width="210" height="190" rx="16" fill="#1e2024" stroke="#c8c8c8" stroke-width="4" />
+  <rect x="246" y="656" width="210" height="182" rx="16" fill="#1e2024" stroke="#c8c8c8" stroke-width="4" />
+  <rect x="984" y="656" width="210" height="182" rx="16" fill="#1e2024" stroke="#c8c8c8" stroke-width="4" />
+  <path d="M456 310h528M456 748h528M610 310v438M830 310v438" stroke="#727272" stroke-width="6" />
+  <circle cx="720" cy="530" r="120" fill="#20242a" stroke="#f1d28a" stroke-width="6" />
+  <circle cx="720" cy="530" r="48" fill="#13161a" stroke="#a7d4ff" stroke-width="5" />
+  <text x="720" y="102" fill="#f8f1de" font-size="46" font-family="Georgia, serif" text-anchor="middle">Whispering Crypt</text>
+</svg>

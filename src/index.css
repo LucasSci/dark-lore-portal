@@ -299,6 +299,11 @@
 }
 
 @layer utilities {
+  .atlas-hires-image {
+    image-rendering: auto;
+    transform-origin: center center;
+  }
+
   .scrollbar-dark::-webkit-scrollbar {
     width: 8px;
     height: 8px;

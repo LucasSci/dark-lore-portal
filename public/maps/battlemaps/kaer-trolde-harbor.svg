@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1080">
+  <defs>
+    <linearGradient id="sea" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#18334f" />
+      <stop offset="100%" stop-color="#071420" />
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="1080" fill="#091018" />
+  <rect x="50" y="50" width="1340" height="980" rx="30" fill="url(#sea)" stroke="#9bd3f8" stroke-width="8" />
+  <rect x="126" y="120" width="420" height="828" rx="26" fill="#2f241e" stroke="#d6b15f" stroke-width="8" />
+  <rect x="570" y="160" width="712" height="120" rx="20" fill="#7a5c2a" stroke="#f1d28a" stroke-width="6" />
+  <rect x="570" y="336" width="580" height="86" rx="16" fill="#7a5c2a" stroke="#f1d28a" stroke-width="6" />
+  <rect x="570" y="504" width="468" height="86" rx="16" fill="#7a5c2a" stroke="#f1d28a" stroke-width="6" />
+  <rect x="570" y="688" width="616" height="86" rx="16" fill="#7a5c2a" stroke="#f1d28a" stroke-width="6" />
+  <path d="M546 220h22M546 380h22M546 548h22M546 732h22" stroke="#f1d28a" stroke-width="8" stroke-linecap="round" />
+  <path d="M330 188v682M264 252h132M264 430h132M264 612h132M264 786h132" stroke="#e5c98c" stroke-width="8" stroke-linecap="round" />
+  <text x="720" y="108" fill="#f8f1de" font-size="48" font-family="Georgia, serif" text-anchor="middle">Porto de Kaer Trolde</text>
+</svg>

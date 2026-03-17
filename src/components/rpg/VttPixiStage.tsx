@@ -47,6 +47,8 @@ interface Props {
 
 const CAMERA_SCALE_MIN = 0.55;
 const CAMERA_SCALE_MAX = 2.1;
+const BOARD_STAGE_MARGIN = 0;
+const EDGE_CONTROL_MARGIN = 28;
 const PARTY_TOKEN_COLOR = 0x6e92a6;
 const NPC_TOKEN_COLOR = 0xbb533b;
 const SELECTED_TOKEN_COLOR = 0xcfab67;
@@ -85,8 +87,9 @@ function getBoardMetrics(
 ) {
   const boardWidth = page.width * page.gridSize;
   const boardHeight = page.height * page.gridSize;
-  const paddingX = Math.max(24, (viewportWidth - boardWidth * scale) / 2);
-  const paddingY = Math.max(24, (viewportHeight - boardHeight * scale) / 2);
+
+  const paddingX = BOARD_STAGE_MARGIN;
+  const paddingY = BOARD_STAGE_MARGIN;
 
   return {
     boardWidth,
@@ -119,6 +122,96 @@ function getCellFromViewport(
   }
 
   return page.cells.find((cell) => cell.x === cellX && cell.y === cellY) ?? null;
+}
+
+function getViewportMinScale(page: VttPage, viewportWidth: number, viewportHeight: number) {
+  const boardWidth = Math.max(1, page.width * page.gridSize);
+  const boardHeight = Math.max(1, page.height * page.gridSize);
+
+  return clamp(
+    Math.max(viewportWidth / boardWidth, viewportHeight / boardHeight),
+    CAMERA_SCALE_MIN,
+    CAMERA_SCALE_MAX,
+  );
+}
+
+function getBoardPointFromViewport(
+  page: VttPage,
+  viewportWidth: number,
+  viewportHeight: number,
+  viewportX: number,
+  viewportY: number,
+  scale: number = page.camera.scale,
+  cameraX: number = page.camera.x,
+  cameraY: number = page.camera.y,
+) {
+  const metrics = getBoardMetrics(page, viewportWidth, viewportHeight, scale);
+
+  return {
+    x: (viewportX - metrics.paddingX - cameraX) / scale,
+    y: (viewportY - metrics.paddingY - cameraY) / scale,
+  };
+}
+
+function getCoverScale(page: VttPage, viewportWidth: number, viewportHeight: number) {
+  return getViewportMinScale(page, viewportWidth, viewportHeight);
+}
+
+function normalizeCameraForViewport(
+  page: VttPage,
+  viewportWidth: number,
+  viewportHeight: number,
+  camera: SceneCamera,
+): SceneCamera {
+  const scale = clamp(
+    camera.scale,
+    getViewportMinScale(page, viewportWidth, viewportHeight),
+    CAMERA_SCALE_MAX,
+  );
+  const metrics = getBoardMetrics(page, viewportWidth, viewportHeight, scale);
+  const scaledBoardWidth = metrics.boardWidth * scale;
+  const scaledBoardHeight = metrics.boardHeight * scale;
+  const minX = viewportWidth - metrics.paddingX - scaledBoardWidth;
+  const maxX = -metrics.paddingX;
+  const minY = viewportHeight - metrics.paddingY - scaledBoardHeight;
+  const maxY = -metrics.paddingY;
+  const resolvedX =
+    minX > maxX ? Number(((minX + maxX) / 2).toFixed(2)) : Number(clamp(camera.x, minX, maxX).toFixed(2));
+  const resolvedY =
+    minY > maxY ? Number(((minY + maxY) / 2).toFixed(2)) : Number(clamp(camera.y, minY, maxY).toFixed(2));
+
+  return {
+    x: resolvedX,
+    y: resolvedY,
+    scale: Number(scale.toFixed(2)),
+  };
+}
+
+function getCameraForViewportFocus(
+  page: VttPage,
+  viewportWidth: number,
+  viewportHeight: number,
+  viewportX: number,
+  viewportY: number,
+  boardX: number,
+  boardY: number,
+  nextScale: number,
+): SceneCamera {
+  const nextMetrics = getBoardMetrics(page, viewportWidth, viewportHeight, nextScale);
+
+  return {
+    x: Number((viewportX - nextMetrics.paddingX - boardX * nextScale).toFixed(2)),
+    y: Number((viewportY - nextMetrics.paddingY - boardY * nextScale).toFixed(2)),
+    scale: Number(nextScale.toFixed(2)),
+  };
+}
+
+function camerasDiffer(current: SceneCamera, next: SceneCamera) {
+  return (
+    Math.abs(current.x - next.x) > 0.5 ||
+    Math.abs(current.y - next.y) > 0.5 ||
+    Math.abs(current.scale - next.scale) > 0.01
+  );
 }
 
 export default function VttPixiStage({
@@ -182,6 +275,8 @@ export default function VttPixiStage({
     offsetY: number;
     originX: number;
     originY: number;
+    initialX: number;
+    initialY: number;
     moved: boolean;
   }>({
     tokenId: null,
@@ -190,7 +285,24 @@ export default function VttPixiStage({
     offsetY: 0,
     originX: 0,
     originY: 0,
+    initialX: 0,
+    initialY: 0,
     moved: false,
+  });
+  const touchPointsRef = useRef(new Map<number, { x: number; y: number }>());
+  const autoCoverKeyRef = useRef<string | null>(null);
+  const pinchStateRef = useRef<{
+    active: boolean;
+    startDistance: number;
+    startScale: number;
+    boardX: number;
+    boardY: number;
+  }>({
+    active: false,
+    startDistance: 0,
+    startScale: 1,
+    boardX: 0,
+    boardY: 0,
   });
   const [viewportSize, setViewportSize] = useState({ width: 960, height: 560 });
 
@@ -252,6 +364,43 @@ export default function VttPixiStage({
       cancelled = true;
     };
   }, [battlemapUrl]);
+
+  useEffect(() => {
+    const currentPage = pageRef.current;
+    const autoCoverKey = `${currentPage.id}:${currentPage.width}x${currentPage.height}:${currentPage.gridSize}`;
+    const normalizedCamera = normalizeCameraForViewport(
+      currentPage,
+      viewportSize.width,
+      viewportSize.height,
+      currentPage.camera,
+    );
+
+    if (!camerasDiffer(currentPage.camera, normalizedCamera)) {
+      autoCoverKeyRef.current = autoCoverKey;
+      return;
+    }
+
+    const cameraIsNearOrigin =
+      Math.abs(currentPage.camera.x) < 0.5 && Math.abs(currentPage.camera.y) < 0.5;
+
+    if (autoCoverKeyRef.current === autoCoverKey && !cameraIsNearOrigin) {
+      cameraChangeRef.current(normalizedCamera);
+      return;
+    }
+
+    autoCoverKeyRef.current = autoCoverKey;
+    cameraChangeRef.current(normalizedCamera);
+  }, [
+    page.id,
+    page.width,
+    page.height,
+    page.gridSize,
+    page.camera.x,
+    page.camera.y,
+    page.camera.scale,
+    viewportSize.width,
+    viewportSize.height,
+  ]);
 
   useEffect(() => {
     let disposed = false;
@@ -321,6 +470,134 @@ export default function VttPixiStage({
         };
       };
 
+      const updateTouchPoint = (pointerId: number, clientX: number, clientY: number) => {
+        const point = toRendererPoint(clientX, clientY);
+
+        if (!point) {
+          return null;
+        }
+
+        touchPointsRef.current.set(pointerId, point);
+        return point;
+      };
+
+      const clearPinchState = () => {
+        pinchStateRef.current = {
+          active: false,
+          startDistance: 0,
+          startScale: pageRef.current.camera.scale,
+          boardX: 0,
+          boardY: 0,
+        };
+      };
+
+      const cancelTokenDrag = () => {
+        const dragState = dragStateRef.current;
+
+        if (!dragState.tokenId || !dragState.container) {
+          return;
+        }
+
+        dragState.container.alpha = 1;
+        dragState.container.scale.set(1);
+        dragState.container.position.set(dragState.initialX, dragState.initialY);
+        host.style.cursor = "";
+
+        dragStateRef.current = {
+          tokenId: null,
+          container: null,
+          offsetX: 0,
+          offsetY: 0,
+          originX: 0,
+          originY: 0,
+          initialX: 0,
+          initialY: 0,
+          moved: false,
+        };
+      };
+
+      const getPinchPoints = () => {
+        const points = Array.from(touchPointsRef.current.values());
+
+        if (points.length < 2) {
+          return null;
+        }
+
+        const [firstPoint, secondPoint] = points;
+        return { firstPoint, secondPoint };
+      };
+
+      const startPinchGesture = () => {
+        const pinchPoints = getPinchPoints();
+
+        if (!pinchPoints) {
+          return;
+        }
+
+        stopPan();
+        cancelTokenDrag();
+
+        const { firstPoint, secondPoint } = pinchPoints;
+        const centerX = (firstPoint.x + secondPoint.x) / 2;
+        const centerY = (firstPoint.y + secondPoint.y) / 2;
+        const distance = Math.hypot(firstPoint.x - secondPoint.x, firstPoint.y - secondPoint.y);
+        const currentPage = pageRef.current;
+        const boardPoint = getBoardPointFromViewport(
+          currentPage,
+          app.renderer.width,
+          app.renderer.height,
+          centerX,
+          centerY,
+        );
+
+        pinchStateRef.current = {
+          active: true,
+          startDistance: Math.max(distance, 1),
+          startScale: currentPage.camera.scale,
+          boardX: boardPoint.x,
+          boardY: boardPoint.y,
+        };
+      };
+
+      const handlePinchMove = () => {
+        const pinchPoints = getPinchPoints();
+
+        if (!pinchPoints) {
+          clearPinchState();
+          return;
+        }
+
+        const { firstPoint, secondPoint } = pinchPoints;
+        const centerX = (firstPoint.x + secondPoint.x) / 2;
+        const centerY = (firstPoint.y + secondPoint.y) / 2;
+        const distance = Math.hypot(firstPoint.x - secondPoint.x, firstPoint.y - secondPoint.y);
+        const currentPage = pageRef.current;
+        const pinchState = pinchStateRef.current;
+        const nextScale = clamp(
+          pinchState.startScale * (distance / Math.max(pinchState.startDistance, 1)),
+          getViewportMinScale(currentPage, app.renderer.width, app.renderer.height),
+          CAMERA_SCALE_MAX,
+        );
+
+        cameraChangeRef.current(
+          normalizeCameraForViewport(
+            currentPage,
+            app.renderer.width,
+            app.renderer.height,
+            getCameraForViewportFocus(
+              currentPage,
+              app.renderer.width,
+              app.renderer.height,
+              centerX,
+              centerY,
+              pinchState.boardX,
+              pinchState.boardY,
+              nextScale,
+            ),
+          ),
+        );
+      };
+
       const stopTokenDrag = (globalX?: number, globalY?: number) => {
         const dragState = dragStateRef.current;
 
@@ -369,6 +646,8 @@ export default function VttPixiStage({
           offsetY: 0,
           originX: 0,
           originY: 0,
+          initialX: 0,
+          initialY: 0,
           moved: false,
         };
       };
@@ -396,37 +675,42 @@ export default function VttPixiStage({
         event.preventDefault();
 
         const currentPage = pageRef.current;
-        const rect = host.getBoundingClientRect();
-        const viewportX = event.clientX - rect.left;
-        const viewportY = event.clientY - rect.top;
-        const currentMetrics = getBoardMetrics(
+        const viewportPoint = toRendererPoint(event.clientX, event.clientY);
+
+        if (!viewportPoint) {
+          return;
+        }
+
+        const boardPoint = getBoardPointFromViewport(
           currentPage,
           app.renderer.width,
           app.renderer.height,
+          viewportPoint.x,
+          viewportPoint.y,
         );
-        const boardX =
-          (viewportX - currentMetrics.paddingX - currentPage.camera.x) /
-          currentPage.camera.scale;
-        const boardY =
-          (viewportY - currentMetrics.paddingY - currentPage.camera.y) /
-          currentPage.camera.scale;
         const nextScale = clamp(
           currentPage.camera.scale + (event.deltaY < 0 ? 0.12 : -0.12),
-          CAMERA_SCALE_MIN,
+          getViewportMinScale(currentPage, app.renderer.width, app.renderer.height),
           CAMERA_SCALE_MAX,
         );
-        const nextMetrics = getBoardMetrics(
-          currentPage,
-          app.renderer.width,
-          app.renderer.height,
-          nextScale,
-        );
 
-        cameraChangeRef.current({
-          x: Number((viewportX - nextMetrics.paddingX - boardX * nextScale).toFixed(2)),
-          y: Number((viewportY - nextMetrics.paddingY - boardY * nextScale).toFixed(2)),
-          scale: Number(nextScale.toFixed(2)),
-        });
+        cameraChangeRef.current(
+          normalizeCameraForViewport(
+            currentPage,
+            app.renderer.width,
+            app.renderer.height,
+            getCameraForViewportFocus(
+              currentPage,
+              app.renderer.width,
+              app.renderer.height,
+              viewportPoint.x,
+              viewportPoint.y,
+              boardPoint.x,
+              boardPoint.y,
+              nextScale,
+            ),
+          ),
+        );
       };
 
       const viewportToCell = (clientX: number, clientY: number) => {
@@ -445,6 +729,18 @@ export default function VttPixiStage({
       };
 
       const handlePointerDown = (event: PointerEvent) => {
+        if (event.pointerType !== "mouse") {
+          updateTouchPoint(event.pointerId, event.clientX, event.clientY);
+
+          if (touchPointsRef.current.size >= 2) {
+            event.preventDefault();
+            if (!pinchStateRef.current.active) {
+              startPinchGesture();
+            }
+            return;
+          }
+        }
+
         // Right-click = pan
         if (event.button === 2) {
           event.preventDefault();
@@ -499,6 +795,22 @@ export default function VttPixiStage({
       };
 
       const handlePointerMove = (event: PointerEvent) => {
+        if (event.pointerType !== "mouse" && touchPointsRef.current.has(event.pointerId)) {
+          updateTouchPoint(event.pointerId, event.clientX, event.clientY);
+
+          if (touchPointsRef.current.size >= 2) {
+            event.preventDefault();
+
+            if (!pinchStateRef.current.active) {
+              startPinchGesture();
+            } else {
+              handlePinchMove();
+            }
+
+            return;
+          }
+        }
+
         // Measure drag
         if (measureRef.current.active && boardModeRef.current === "measure") {
           const { cellX, cellY } = viewportToCell(event.clientX, event.clientY);
@@ -531,15 +843,17 @@ export default function VttPixiStage({
         if (panStateRef.current.active) {
           const currentPage = pageRef.current;
 
-          cameraChangeRef.current({
-            x: Number(
-              (panStateRef.current.cameraX + (event.clientX - panStateRef.current.originX)).toFixed(2),
-            ),
-            y: Number(
-              (panStateRef.current.cameraY + (event.clientY - panStateRef.current.originY)).toFixed(2),
-            ),
-            scale: currentPage.camera.scale,
-          });
+          cameraChangeRef.current(
+            normalizeCameraForViewport(currentPage, app.renderer.width, app.renderer.height, {
+              x: Number(
+                (panStateRef.current.cameraX + (event.clientX - panStateRef.current.originX)).toFixed(2),
+              ),
+              y: Number(
+                (panStateRef.current.cameraY + (event.clientY - panStateRef.current.originY)).toFixed(2),
+              ),
+              scale: currentPage.camera.scale,
+            }),
+          );
         }
 
         if (!dragStateRef.current.tokenId) {
@@ -556,6 +870,15 @@ export default function VttPixiStage({
       };
 
       const handleWindowPointerUp = (event: PointerEvent) => {
+        touchPointsRef.current.delete(event.pointerId);
+
+        if (pinchStateRef.current.active) {
+          if (touchPointsRef.current.size < 2) {
+            clearPinchState();
+          }
+          return;
+        }
+
         stopPan();
 
         if (!dragStateRef.current.tokenId) {
@@ -570,6 +893,17 @@ export default function VttPixiStage({
         }
 
         stopTokenDrag(global.x, global.y);
+      };
+
+      const handleWindowPointerCancel = (event: PointerEvent) => {
+        touchPointsRef.current.delete(event.pointerId);
+
+        if (pinchStateRef.current.active && touchPointsRef.current.size < 2) {
+          clearPinchState();
+        }
+
+        stopPan();
+        cancelTokenDrag();
       };
 
       const handleContextMenu = (event: MouseEvent) => {
@@ -613,6 +947,7 @@ export default function VttPixiStage({
       host.addEventListener("pointerdown", handlePointerDown);
       window.addEventListener("pointermove", handlePointerMove);
       window.addEventListener("pointerup", handleWindowPointerUp);
+      window.addEventListener("pointercancel", handleWindowPointerCancel);
       host.addEventListener("contextmenu", handleContextMenu);
       host.addEventListener("dragover", handleDragOver);
       host.addEventListener("drop", handleDrop);
@@ -627,6 +962,7 @@ export default function VttPixiStage({
         host.removeEventListener("pointerdown", handlePointerDown);
         window.removeEventListener("pointermove", handlePointerMove);
         window.removeEventListener("pointerup", handleWindowPointerUp);
+        window.removeEventListener("pointercancel", handleWindowPointerCancel);
         host.removeEventListener("contextmenu", handleContextMenu);
         host.removeEventListener("dragover", handleDragOver);
         host.removeEventListener("drop", handleDrop);
@@ -891,6 +1227,23 @@ export default function VttPixiStage({
       container.eventMode = "static";
       container.cursor = boardMode === "move" ? "grab" : "pointer";
       container.on("pointerdown", (event) => {
+        if (event.pointerType !== "mouse") {
+          touchPointsRef.current.set(event.pointerId, {
+            x: event.global.x,
+            y: event.global.y,
+          });
+
+          if (touchPointsRef.current.size >= 2) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!pinchStateRef.current.active) {
+              startPinchGesture();
+            }
+            return;
+          }
+        }
+
         if (event.button === 2) {
           return;
         }
@@ -912,6 +1265,8 @@ export default function VttPixiStage({
           offsetY: container.y - local.y,
           originX: event.global.x,
           originY: event.global.y,
+          initialX: container.x,
+          initialY: container.y,
           moved: false,
         };
       });
@@ -1176,24 +1531,11 @@ export default function VttPixiStage({
     <div className="absolute inset-0 h-full w-full overflow-hidden bg-background-strong">
       <div
         ref={hostRef}
-        className="absolute inset-0 h-full w-full overflow-hidden"
-        title="Use o scroll para zoom, botao direito para pan, arraste tokens pelo mapa e solte criaturas do codex no grid."
+        className="absolute inset-0 h-full w-full overflow-hidden touch-none"
+        style={{ touchAction: "none" }}
+        title="Use o scroll para zoom, botao direito para pan, pinça no mobile para aproximar, arraste tokens pelo mapa e solte criaturas do codex no grid."
       />
       {onExpandMap && (() => {
-        const metrics = getBoardMetrics(page, viewportSize.width, viewportSize.height);
-        const safeMargin = 26;
-        const bounds = {
-          left: metrics.paddingX + page.camera.x,
-          top: metrics.paddingY + page.camera.y,
-          width: metrics.boardWidth * page.camera.scale,
-          height: metrics.boardHeight * page.camera.scale,
-        };
-        const clampToViewport = (value: number, axis: "x" | "y") =>
-          clamp(
-            value,
-            safeMargin,
-            (axis === "x" ? viewportSize.width : viewportSize.height) - safeMargin,
-          );
         const controls: Array<{
           edge: PageConnectionEdge;
           style: CSSProperties;
@@ -1202,37 +1544,37 @@ export default function VttPixiStage({
           {
             edge: "north",
             label: "Expandir para o norte",
-          style: {
-              left: clampToViewport(bounds.left + bounds.width / 2, "x"),
-              top: clampToViewport(bounds.top + 20, "y"),
-              transform: "translate(-50%, -50%)",
+            style: {
+              left: "50%",
+              top: EDGE_CONTROL_MARGIN,
+              transform: "translateX(-50%)",
             } as CSSProperties,
           },
           {
             edge: "south",
             label: "Expandir para o sul",
-          style: {
-              left: clampToViewport(bounds.left + bounds.width / 2, "x"),
-              top: clampToViewport(bounds.top + bounds.height - 20, "y"),
-              transform: "translate(-50%, -50%)",
+            style: {
+              left: "50%",
+              bottom: EDGE_CONTROL_MARGIN,
+              transform: "translateX(-50%)",
             } as CSSProperties,
           },
           {
             edge: "west",
             label: "Expandir para o oeste",
-          style: {
-              left: clampToViewport(bounds.left + 20, "x"),
-              top: clampToViewport(bounds.top + bounds.height / 2, "y"),
-              transform: "translate(-50%, -50%)",
+            style: {
+              left: EDGE_CONTROL_MARGIN,
+              top: "50%",
+              transform: "translateY(-50%)",
             } as CSSProperties,
           },
           {
             edge: "east",
             label: "Expandir para o leste",
-          style: {
-              left: clampToViewport(bounds.left + bounds.width - 20, "x"),
-              top: clampToViewport(bounds.top + bounds.height / 2, "y"),
-              transform: "translate(-50%, -50%)",
+            style: {
+              right: EDGE_CONTROL_MARGIN,
+              top: "50%",
+              transform: "translateY(-50%)",
             } as CSSProperties,
           },
         ];

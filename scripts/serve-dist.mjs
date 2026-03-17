@@ -71,6 +71,12 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (safePath.startsWith("/local-witcher3map/")) {
+    response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    response.end("Tile nao encontrado.");
+    return;
+  }
+
   sendFile(path.join(distDir, "index.html"), response);
 });
 

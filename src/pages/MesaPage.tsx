@@ -42,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getVttReadyEntries } from "@/lib/encyclopedia";
 import { parseDiceNotation, rollDice } from "@/lib/rpg-utils";
+import { getAtlasBattlemapById, loadAtlasWorld } from "@/lib/hierarchical-atlas";
 import {
   readImageDimensions,
   recommendBattlemapGrid,
@@ -164,6 +165,7 @@ export default function MesaPage() {
   const presenceRef = useRef(scene.presence);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handledSpawnSlugRef = useRef<string | null>(null);
+  const handledAtlasBattlemapRef = useRef<string | null>(null);
 
   useEffect(() => {
     sceneRef.current = scene;
@@ -708,6 +710,51 @@ export default function MesaPage() {
       setSearchParams(nextSearchParams, { replace: true });
     })();
   }, [scene.sessionId, searchParams, sessionReady, setSearchParams, spawnLoreEntry]);
+
+  useEffect(() => {
+    const atlasBattlemapId = searchParams.get("atlasBattlemap");
+
+    if (!sessionReady || !atlasBattlemapId) {
+      return;
+    }
+
+    if (handledAtlasBattlemapRef.current === atlasBattlemapId) {
+      return;
+    }
+
+    handledAtlasBattlemapRef.current = atlasBattlemapId;
+
+    void (async () => {
+      const atlasWorld = loadAtlasWorld();
+      const battlemap = getAtlasBattlemapById(atlasWorld, atlasBattlemapId);
+
+      if (!battlemap) {
+        toast.error("Battlemap do atlas nao encontrado.");
+        return;
+      }
+
+      const width = Math.max(8, Math.round((battlemap.bounds.northEast.x - battlemap.bounds.southWest.x) / 4));
+      const height = Math.max(8, Math.round((battlemap.bounds.southWest.y - battlemap.bounds.northEast.y) / 4));
+      const nextScene = configureSceneBattlemap(sceneRef.current, {
+        width,
+        height,
+        gridSize: battlemap.gridSize,
+        backgroundAssetUrl: battlemap.imageUrl,
+        resetFrame: true,
+      });
+
+      await commitScene(nextScene);
+      setMapColumns(width);
+      setMapRows(height);
+      setMapGridSize(battlemap.gridSize);
+      setRightTab("map");
+
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete("atlasBattlemap");
+      setSearchParams(nextSearchParams, { replace: true });
+      toast.success(`${battlemap.name} carregado a partir do atlas.`);
+    })();
+  }, [commitScene, searchParams, sessionReady, setSearchParams]);
 
   const sendChat = async () => {
     if (!chatDraft.trim()) return;

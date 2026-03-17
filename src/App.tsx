@@ -11,6 +11,8 @@ import MesaPage from "./pages/MesaPage";
 import MapaPage from "./pages/MapaPage";
 import LocationMapPage from "./pages/LocationMapPage";
 import RegionMapPage from "./pages/RegionMapPage";
+import SubRegionMapPage from "./pages/SubRegionMapPage";
+import RegionalAtlasPage from "./pages/RegionalAtlasPage";
 import FichaPage from "./pages/FichaPage";
 import CriacaoPage from "./pages/CriacaoPage";
 import MestrePage from "./pages/MestrePage";
@@ -35,7 +37,9 @@ const App = () => (
             <Route path="/jogar" element={<PlayPage />} />
             <Route path="/mesa" element={<MesaPage />} />
             <Route path="/mapa" element={<MapaPage />} />
-            <Route path="/mapa/:regionSlug/:landmarkId" element={<LocationMapPage />} />
+            <Route path="/mapa/regional/:mapId" element={<RegionalAtlasPage />} />
+            <Route path="/mapa/:regionSlug/:subRegionSlug/:locationSlug" element={<LocationMapPage />} />
+            <Route path="/mapa/:regionSlug/:subRegionSlug" element={<SubRegionMapPage />} />
             <Route path="/mapa/:regionSlug" element={<RegionMapPage />} />
             <Route path="/ficha" element={<FichaPage />} />
             <Route path="/criacao" element={<CriacaoPage />} />

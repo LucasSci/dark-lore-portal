@@ -7,7 +7,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const isTabletopRoute = location.pathname.startsWith("/mesa");
   const isAtlasRoute = location.pathname.startsWith("/mapa");
 
-  if (isTabletopRoute) {
+  if (isTabletopRoute || isAtlasRoute) {
     return <>{children}</>;
   }
 
@@ -23,7 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
-      {!isAtlasRoute ? <Footer /> : null}
+      <Footer />
     </div>
   );
 }
