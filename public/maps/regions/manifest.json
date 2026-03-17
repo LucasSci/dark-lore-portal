@@ -1,5 +1,29 @@
 [
     {
+        "id":  "velen-novigrad",
+        "folder":  "hos_velen",
+        "zoom":  4,
+        "width":  4096,
+        "height":  4608,
+        "minX":  0,
+        "maxX":  15,
+        "minY":  0,
+        "maxY":  17,
+        "output":  "public/maps/regions/velen-novigrad.jpg"
+    },
+    {
+        "id":  "skellige",
+        "folder":  "skellige",
+        "zoom":  4,
+        "width":  3840,
+        "height":  3840,
+        "minX":  0,
+        "maxX":  14,
+        "minY":  0,
+        "maxY":  14,
+        "output":  "public/maps/regions/skellige.jpg"
+    },
+    {
         "id":  "kaer-morhen",
         "folder":  "kaer_morhen",
         "zoom":  5,

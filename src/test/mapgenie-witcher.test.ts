@@ -40,9 +40,9 @@ describe("mapgenie witcher helpers", () => {
 
   it("returns the active map entry by id", () => {
     expect(getMapGenieWitcherMap("skellige").tileFolder).toBe("skellige");
-    expect(getMapGenieWitcherMap("skellige").imagePath).toBeUndefined();
+    expect(getMapGenieWitcherMap("skellige").imagePath).toContain("/maps/regions/skellige.jpg");
     expect(getMapGenieWitcherMap("velen-novigrad").tileFolder).toBe("hos_velen");
-    expect(getMapGenieWitcherMap("velen-novigrad").imagePath).toBeUndefined();
+    expect(getMapGenieWitcherMap("velen-novigrad").imagePath).toContain("/maps/regions/velen-novigrad.jpg");
     expect(getMapGenieWitcherMap("mundi").imagePath).toContain("/maps/witcher-mundi.png");
     expect(getMapGenieWitcherMap("white-orchard").tileFolder).toBe("white_orchard");
     expect(getMapGenieWitcherMap("white-orchard").imagePath).toContain("/maps/regions/white-orchard.png");

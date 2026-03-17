@@ -38,6 +38,7 @@ export default function RegionalTileAtlas({
   const [activeMapId, setActiveMapId] = useState<MapGenieWitcherMapId>(initialMapId);
   const [query, setQuery] = useState("");
   const [isMapReady, setIsMapReady] = useState(false);
+  const [tileFallbackActive, setTileFallbackActive] = useState(false);
   const hostRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -57,7 +58,7 @@ export default function RegionalTileAtlas({
   }, [maps, query]);
 
   const activeMap = getMapGenieWitcherMap(activeMapId);
-  const usesImageOverlay = activeMap.kind === "image" || !activeMap.tileFolder;
+  const usesImageOverlay = tileFallbackActive || activeMap.kind === "image" || !activeMap.tileFolder;
   const overlayMaxZoom = usesImageOverlay
     ? Math.min(activeMap.maxZoom, activeMap.imageNativeZoom ?? activeMap.maxZoom)
     : activeMap.maxZoom;
@@ -74,6 +75,7 @@ export default function RegionalTileAtlas({
     }
 
     setIsMapReady(false);
+    setTileFallbackActive(false);
     host.innerHTML = "";
 
     const bounds = L.latLngBounds(activeMap.southWest, activeMap.northEast);
@@ -132,6 +134,19 @@ export default function RegionalTileAtlas({
         };
       }
 
+      let tileErrors = 0;
+      tileLayer.on("tileerror", () => {
+        tileErrors += 1;
+        if (tileErrors < 8) {
+          return;
+        }
+
+        // If tiles are missing on this machine/deploy, fall back to the bundled JPEG (when present).
+        if (activeMap.imagePath) {
+          setTileFallbackActive(true);
+        }
+      });
+
       tileLayer.addTo(map);
     }
 
@@ -152,7 +167,7 @@ export default function RegionalTileAtlas({
       map.remove();
       mapRef.current = null;
     };
-  }, [activeMap]);
+  }, [activeMap, usesImageOverlay]);
 
   return (
     <div className={cn("grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]", className)}>
@@ -250,6 +265,11 @@ export default function RegionalTileAtlas({
                 immersive ? "h-[calc(100vh-16rem)] min-h-[620px]" : "h-[70vh] min-h-[560px]",
               )}
             >
+              {tileFallbackActive ? (
+                <div className="absolute left-4 top-4 z-20 max-w-[360px] rounded-xl border border-warning/30 bg-background/80 px-4 py-3 text-sm text-foreground shadow-brand backdrop-blur-md">
+                  Tiles nao encontrados. Usando carta regional compacta como fallback.
+                </div>
+              ) : null}
               <div ref={hostRef} className="h-full w-full" />
             </div>
           </div>
