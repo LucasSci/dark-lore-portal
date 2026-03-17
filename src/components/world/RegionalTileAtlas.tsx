@@ -117,7 +117,8 @@ export default function RegionalTileAtlas({
         tms: false,
         keepBuffer: 8,
         maxNativeZoom: activeMap.maxZoom,
-        detectRetina: true,
+        // Our tile packs are already "baked" at 256px; Leaflet's retina mode can shift zoom math and cause artifacts.
+        detectRetina: false,
         updateWhenIdle: true,
         updateWhenZooming: true,
       };

@@ -1026,6 +1026,8 @@ export default function MapGenieWitcherAtlas({
         // witcher3map tiles are standard XYZ (not TMS). We handle Y inversion ourselves for the Simple CRS packs.
         tms: false,
         keepBuffer: 6,
+        maxNativeZoom: regionalMap?.maxZoom,
+        detectRetina: false,
         updateWhenIdle: true,
         updateWhenZooming: true,
       };
