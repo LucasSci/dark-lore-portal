@@ -13,6 +13,10 @@ dist-ssr
 *.local
 .codex_tmp/
 
+# Python vendor bundles (do not commit)
+.vendor/
+vendor_lib/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

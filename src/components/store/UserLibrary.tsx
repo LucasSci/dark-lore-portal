@@ -9,7 +9,7 @@ import {
   formatStorePrice,
   productTypeLabels,
   type LibraryItem,
-} from "@/lib/store";
+} from "@/lib/storefront";
 
 interface UserLibraryProps {
   items: LibraryItem[];

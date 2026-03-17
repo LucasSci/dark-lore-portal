@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { createDownloadLink, fetchStorefrontData } from "@/lib/store-api";
-import { formatStorePrice } from "@/lib/store";
+import { formatStorePrice } from "@/lib/storefront";
 
 export default function AccountPage() {
   const queryClient = useQueryClient();

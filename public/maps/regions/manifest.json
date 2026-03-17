@@ -1,0 +1,38 @@
+[
+    {
+        "id":  "kaer-morhen",
+        "folder":  "kaer_morhen",
+        "zoom":  5,
+        "width":  4096,
+        "height":  5120,
+        "minX":  0,
+        "maxX":  15,
+        "minY":  0,
+        "maxY":  19,
+        "output":  "public/maps/regions/kaer-morhen.png"
+    },
+    {
+        "id":  "toussaint",
+        "folder":  "toussaint",
+        "zoom":  5,
+        "width":  4608,
+        "height":  4608,
+        "minX":  0,
+        "maxX":  17,
+        "minY":  0,
+        "maxY":  17,
+        "output":  "public/maps/regions/toussaint.png"
+    },
+    {
+        "id":  "white-orchard",
+        "folder":  "white_orchard",
+        "zoom":  5,
+        "width":  5120,
+        "height":  4096,
+        "minX":  0,
+        "maxX":  19,
+        "minY":  0,
+        "maxY":  15,
+        "output":  "public/maps/regions/white-orchard.png"
+    }
+]

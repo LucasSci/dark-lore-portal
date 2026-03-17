@@ -127,12 +127,6 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
       "pontar",
     ],
     regions: ["velen", "novigrad", "redania", "temeria", "northern-kingdoms"],
-    imagePath: `/maps/regions/velen-novigrad.png?v=${WITCHER_MAP_ASSET_VERSION}`,
-    imageNativeZoom: 5,
-    imageSize: {
-      width: 8192,
-      height: 9216,
-    },
     tileRowsByZoom: {
       1: 3,
       2: 5,
@@ -158,12 +152,6 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     northEast: [79.3, 135],
     aliases: ["skellige", "ard skellig", "an skellig", "kaer trolde"],
     regions: ["skellige"],
-    imagePath: `/maps/regions/skellige.png?v=${WITCHER_MAP_ASSET_VERSION}`,
-    imageNativeZoom: 5,
-    imageSize: {
-      width: 7424,
-      height: 7424,
-    },
   },
   {
     id: "kaer-morhen",

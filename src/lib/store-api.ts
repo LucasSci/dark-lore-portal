@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { StorefrontData } from "@/lib/store";
+import type { StorefrontData } from "@/lib/storefront";
 
 async function invokeFunction<T>(name: string, body?: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke(name, body ? { body } : undefined);

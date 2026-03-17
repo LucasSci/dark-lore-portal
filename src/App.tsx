@@ -1,35 +1,39 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import AppErrorBoundary from "@/components/app/AppErrorBoundary";
+import RouteFallback from "@/components/app/RouteFallback";
 import Layout from "./components/Layout";
-import HomePage from "./pages/HomePage";
-import CampaignPage from "./pages/CampaignPage";
-import PlayPage from "./pages/PlayPage";
-import MesaPage from "./pages/MesaPage";
-import MapaPage from "./pages/MapaPage";
-import LocationMapPage from "./pages/LocationMapPage";
-import RegionMapPage from "./pages/RegionMapPage";
-import SubRegionMapPage from "./pages/SubRegionMapPage";
-import RegionalAtlasPage from "./pages/RegionalAtlasPage";
-import FichaPage from "./pages/FichaPage";
-import CriacaoPage from "./pages/CriacaoPage";
-import MestrePage from "./pages/MestrePage";
-import UniversePage from "./pages/UniversePage";
-import CommunityPage from "./pages/CommunityPage";
-import StorePage from "./pages/StorePage";
-import AccountPage from "./pages/AccountPage";
-import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+const HomePage = lazy(() => import("./pages/HomePage"));
+const CampaignPage = lazy(() => import("./pages/CampaignPage"));
+const PlayPage = lazy(() => import("./pages/PlayPage"));
+const MesaPage = lazy(() => import("./pages/MesaPage"));
+const MapaPage = lazy(() => import("./pages/MapaPage"));
+const LocationMapPage = lazy(() => import("./pages/LocationMapPage"));
+const RegionMapPage = lazy(() => import("./pages/RegionMapPage"));
+const SubRegionMapPage = lazy(() => import("./pages/SubRegionMapPage"));
+const RegionalAtlasPage = lazy(() => import("./pages/RegionalAtlasPage"));
+const FichaPage = lazy(() => import("./pages/FichaPage"));
+const CriacaoPage = lazy(() => import("./pages/CriacaoPage"));
+const MestrePage = lazy(() => import("./pages/MestrePage"));
+const UniversePage = lazy(() => import("./pages/UniversePage"));
+const CommunityPage = lazy(() => import("./pages/CommunityPage"));
+const StorePage = lazy(() => import("./pages/StorePage"));
+const AccountPage = lazy(() => import("./pages/AccountPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+function AppRoutes() {
+  const location = useLocation();
+
+  return (
+    <AppErrorBoundary resetKey={location.pathname}>
+      <Suspense fallback={<RouteFallback />}>
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -52,6 +56,18 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
+      </Suspense>
+    </AppErrorBoundary>
+  );
+}
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AppRoutes />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

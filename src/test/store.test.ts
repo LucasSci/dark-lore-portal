@@ -4,7 +4,7 @@ import {
   formatStorePrice,
   isOwnedProduct,
   productTypeLabels,
-} from "@/lib/store";
+} from "@/lib/storefront";
 
 describe("store helpers", () => {
   it("formats BRL prices for the storefront", () => {

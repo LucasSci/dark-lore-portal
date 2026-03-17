@@ -17,7 +17,7 @@ import {
   productTypeLabels,
   type DigitalProductType,
   type StoreProduct,
-} from "@/lib/store";
+} from "@/lib/storefront";
 
 const productIcons: Record<DigitalProductType, ComponentType<{ className?: string }>> = {
   livro_pdf: BookOpen,

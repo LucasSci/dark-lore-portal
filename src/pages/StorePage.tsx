@@ -5,7 +5,6 @@ import {
   Coins,
   FlaskConical,
   Gem,
-  Package,
   ScrollText,
   Shield,
   ShoppingBag,
@@ -26,9 +25,13 @@ import {
   createInitialShopState,
   formatShopGold,
   getInventoryWeight,
+  getShopItemSprite,
+  getShopSpriteSheetUrl,
   getTradePrice,
   merchantProfile,
   sellPlayerItem,
+  SHOP_SPRITE_CELL_SIZE,
+  SHOP_SPRITE_GRID_SIZE,
   shopCategoryLabels,
   shopRarityLabels,
   type GameShopCategory,
@@ -39,6 +42,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type ShopFilter = "todas" | GameShopCategory;
+type ShopArtSize = "list" | "detail";
 
 interface SelectedEntry {
   owner: ShopInventoryOwner;
@@ -85,6 +89,66 @@ function filterItems(items: GameShopItem[], search: string, filter: ShopFilter) 
   });
 }
 
+function ShopItemArt({
+  item,
+  size,
+  className,
+}: {
+  item: GameShopItem;
+  size: ShopArtSize;
+  className?: string;
+}) {
+  const sprite = getShopItemSprite(item);
+  const Icon = categoryIcons[item.category];
+  const tileSize = size === "detail" ? SHOP_SPRITE_CELL_SIZE * 2 : SHOP_SPRITE_CELL_SIZE;
+
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-[calc(var(--radius)-4px)] border border-primary/20 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.22),transparent_52%),linear-gradient(180deg,hsl(var(--background)/0.84),hsl(var(--background)/0.98))] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.05),0_20px_40px_hsl(var(--background)/0.26)]",
+        size === "detail" ? "h-28 w-28 md:h-32 md:w-32" : "h-14 w-14",
+        className,
+      )}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,hsl(var(--primary)/0.14),transparent_45%)]" />
+      {sprite ? (
+        <div
+          className="absolute left-1/2 top-1/2 rounded-lg bg-no-repeat drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
+          style={{
+            width: `${tileSize}px`,
+            height: `${tileSize}px`,
+            backgroundImage: `url(${getShopSpriteSheetUrl(sprite.sheet)})`,
+            backgroundSize: `${tileSize * SHOP_SPRITE_GRID_SIZE}px ${tileSize * SHOP_SPRITE_GRID_SIZE}px`,
+            backgroundPosition: `-${(sprite.col - 1) * tileSize}px -${(sprite.row - 1) * tileSize}px`,
+            transform: "translate(-50%, -50%)",
+            imageRendering: "auto",
+          }}
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Icon className={cn("text-primary", size === "detail" ? "h-12 w-12" : "h-6 w-6")} />
+        </div>
+      )}
+      <div className="pointer-events-none absolute inset-x-5 bottom-1 h-4 rounded-full bg-primary/10 blur-xl" />
+    </div>
+  );
+}
+
+function DetailMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-[calc(var(--radius)-4px)] border border-border/70 bg-background/45 px-4 py-3">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <p className="mt-2 font-heading text-lg text-foreground">{value}</p>
+    </div>
+  );
+}
+
 function InventoryGrid({
   title,
   description,
@@ -109,11 +173,10 @@ function InventoryGrid({
       <CardContent className="flex min-h-0 flex-1 flex-col">
         {items.length ? (
           <ScrollArea className="min-h-0 flex-1 pr-3">
-            <div className="grid grid-cols-4 gap-2 pb-1 sm:grid-cols-5 xl:grid-cols-4">
+            <div className="space-y-3 pb-1">
               {items.map((item) => {
-                const Icon = categoryIcons[item.category];
-                const active =
-                  selected?.owner === owner && selected.itemId === item.id;
+                const active = selected?.owner === owner && selected.itemId === item.id;
+                const tradePrice = getTradePrice(item, owner);
 
                 return (
                   <button
@@ -121,30 +184,47 @@ function InventoryGrid({
                     type="button"
                     onClick={() => onSelect({ owner, itemId: item.id })}
                     className={cn(
-                      "group relative aspect-square rounded-[calc(var(--radius)-4px)] border bg-background/55 p-2 text-left transition-all",
+                      "group relative flex flex-col gap-4 rounded-[calc(var(--radius)-4px)] border p-4 text-left transition-all sm:flex-row sm:items-center",
                       active
-                        ? "border-primary/55 bg-primary/10 shadow-brand"
-                        : "border-border/70 hover:border-primary/28 hover:bg-background/72",
+                        ? "border-primary/60 bg-primary/10 shadow-brand"
+                        : "border-border/70 bg-background/55 hover:border-primary/28 hover:bg-background/78",
                     )}
                   >
-                    <div className="flex h-full flex-col justify-between">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="rounded-lg border border-primary/18 bg-background/66 p-2">
-                          <Icon className="h-4 w-4 text-primary" />
+                    <div className="flex items-center gap-4">
+                      <ShopItemArt item={item} size="list" className="shrink-0" />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-heading text-base leading-6 text-foreground">
+                            {item.name}
+                          </p>
+                          <Badge variant={rarityVariants[item.rarity]} className="shrink-0">
+                            {shopRarityLabels[item.rarity]}
+                          </Badge>
                         </div>
-                        <span className="rounded-full bg-background/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                          x{item.quantity}
-                        </span>
+                        <p className="line-clamp-2 text-sm leading-6 text-foreground/78">
+                          {item.description}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em]">
+                          <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-primary/85">
+                            {shopCategoryLabels[item.category]}
+                          </span>
+                          <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-muted-foreground">
+                            x{item.quantity}
+                          </span>
+                          <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-muted-foreground">
+                            {item.weight} kg
+                          </span>
+                        </div>
                       </div>
+                    </div>
 
-                      <div>
-                        <p className="line-clamp-2 font-heading text-xs leading-5 text-foreground">
-                          {item.name}
-                        </p>
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-primary/80">
-                          {shopCategoryLabels[item.category]}
-                        </p>
-                      </div>
+                    <div className="flex shrink-0 flex-row items-center justify-between gap-4 border-t border-border/60 pt-3 sm:min-w-[130px] sm:flex-col sm:items-end sm:justify-center sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                        {owner === "merchant" ? "Compra" : "Venda"}
+                      </p>
+                      <p className="font-heading text-lg text-primary">
+                        {formatShopGold(tradePrice)}
+                      </p>
                     </div>
                   </button>
                 );
@@ -165,10 +245,7 @@ export default function StorePage() {
   const [shopState, setShopState] = useState(() => createInitialShopState());
   const [activeFilter, setActiveFilter] = useState<ShopFilter>("todas");
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<SelectedEntry | null>(() => ({
-    owner: "merchant",
-    itemId: createInitialShopState().merchantItems[0]?.id ?? "",
-  }));
+  const [selected, setSelected] = useState<SelectedEntry | null>(null);
 
   const filteredMerchantItems = filterItems(shopState.merchantItems, search, activeFilter);
   const filteredPlayerItems = filterItems(shopState.playerItems, search, activeFilter);
@@ -237,7 +314,7 @@ export default function StorePage() {
                   <Badge variant="outline" className="border-primary/30 text-primary">
                     Ambiente in-game
                   </Badge>
-                  <Badge variant="secondary">Compra e venda de campanha</Badge>
+                  <Badge variant="secondary">Banca inspirada em inventarios de RPG</Badge>
                 </div>
 
                 <div className="space-y-3">
@@ -255,8 +332,9 @@ export default function StorePage() {
                     </div>
                   </div>
                   <p className="max-w-3xl text-base leading-8 text-foreground/90">
-                    {merchantProfile.summary} A tela de loja agora funciona como um mercador de RPG:
-                    sua companhia compra recursos, vende trofeus e administra ouro sem sair da fantasia.
+                    {merchantProfile.summary} Entre laminas, reagentes e trofeus, a banca foi
+                    organizada para leitura rapida durante a sessao e negociacao direta na
+                    estrada.
                   </p>
                 </div>
 
@@ -302,7 +380,7 @@ export default function StorePage() {
                 <div>
                   <h2 className="font-heading text-lg text-foreground">Resumo da troca</h2>
                   <p className="text-sm text-muted-foreground">
-                    O mercador vende pelo valor cheio e compra por uma fração do valor base.
+                    Marwen vende pelo valor cheio e compra por uma fracao do valor base.
                   </p>
                 </div>
               </div>
@@ -359,7 +437,7 @@ export default function StorePage() {
           </CardContent>
         </Card>
 
-        <div className="grid items-start gap-6 xl:h-[calc(100vh-10rem)] xl:grid-cols-[minmax(0,1fr)_380px_minmax(0,1fr)]">
+        <div className="grid items-start gap-6 xl:h-[calc(100vh-10rem)] xl:grid-cols-[minmax(0,1fr)_420px_minmax(0,1fr)]">
           <InventoryGrid
             title="Mochila da companhia"
             description="Recursos, trofeus e equipamentos que o grupo pode vender ou reaproveitar."
@@ -390,67 +468,83 @@ export default function StorePage() {
                 <>
                   <ScrollArea className="min-h-0 flex-1 pr-3">
                     <div className="space-y-5 pb-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="rounded-xl border border-primary/20 bg-background/55 p-3">
-                            {(() => {
-                              const Icon = categoryIcons[selectedItem.category];
-                              return <Icon className="h-5 w-5 text-primary" />;
-                            })()}
-                          </div>
-                          <div>
+                      <div className="grid gap-5 md:grid-cols-[132px_minmax(0,1fr)]">
+                        <div className="space-y-3">
+                          <ShopItemArt
+                            item={selectedItem}
+                            size="detail"
+                            className="mx-auto md:mx-0"
+                          />
+                          <div className="rounded-[calc(var(--radius)-4px)] border border-border/70 bg-background/45 px-4 py-3">
                             <p className="text-[11px] uppercase tracking-[0.18em] text-primary/80">
-                              {shopCategoryLabels[selectedItem.category]}
+                              Procedencia
                             </p>
-                            <p className="font-heading text-base text-foreground">
-                              {selectedOwner === "merchant" ? "Oferta do mercador" : "Item da companhia"}
+                            <p className="mt-2 text-sm leading-6 text-foreground/88">
+                              {selectedOwner === "merchant"
+                                ? "Separado nas prateleiras de Marwen para venda imediata."
+                                : "Guardado na mochila da companhia e pronto para revenda."}
                             </p>
                           </div>
                         </div>
-                        <Badge variant={rarityVariants[selectedItem.rarity]}>
-                          {shopRarityLabels[selectedItem.rarity]}
-                        </Badge>
+
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <p className="text-[11px] uppercase tracking-[0.18em] text-primary/80">
+                                {shopCategoryLabels[selectedItem.category]}
+                              </p>
+                              <p className="font-heading text-base text-foreground">
+                              {selectedOwner === "merchant"
+                                  ? "Oferta do mercador"
+                                  : "Item da companhia"}
+                              </p>
+                            </div>
+                            <Badge variant={rarityVariants[selectedItem.rarity]}>
+                              {shopRarityLabels[selectedItem.rarity]}
+                            </Badge>
+                          </div>
+
+                          <p className="text-sm leading-7 text-foreground/88">
+                            Mercadoria preparada para leitura rapida: valor, peso e quantidade
+                            ficam visiveis sem esconder a descricao e a utilidade do item.
+                          </p>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <DetailMetric
+                              label="Valor de troca"
+                              value={formatShopGold(detailPrice)}
+                            />
+                            <DetailMetric label="Quantidade" value={`x${selectedItem.quantity}`} />
+                            <DetailMetric
+                              label="Peso unitario"
+                              value={`${selectedItem.weight} kg`}
+                            />
+                            <DetailMetric
+                              label="Valor base"
+                              value={formatShopGold(selectedItem.baseValue)}
+                            />
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <DataSection
-                          label="Valor de troca"
-                          value={formatShopGold(detailPrice)}
-                          variant="quiet"
-                        />
-                        <DataSection
-                          label="Quantidade"
-                          value={`x${selectedItem.quantity}`}
-                          variant="quiet"
-                        />
-                        <DataSection
-                          label="Peso unitario"
-                          value={`${selectedItem.weight} kg`}
-                          variant="quiet"
-                        />
-                        <DataSection
-                          label="Valor base"
-                          value={formatShopGold(selectedItem.baseValue)}
-                          variant="quiet"
-                        />
-                      </div>
+                      <div className="grid gap-3">
+                        <div className="rounded-[var(--radius)] border border-border/70 bg-background/45 p-4">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                            Descricao
+                          </p>
+                          <p className="mt-3 text-sm leading-7 text-foreground/90">
+                            {selectedItem.description}
+                          </p>
+                        </div>
 
-                      <div className="rounded-[var(--radius)] border border-border/70 bg-background/45 p-4">
-                        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          Descricao
-                        </p>
-                        <p className="mt-3 text-sm leading-7 text-foreground/90">
-                          {selectedItem.description}
-                        </p>
-                      </div>
-
-                      <div className="rounded-[var(--radius)] border border-border/70 bg-background/45 p-4">
-                        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                          Efeito
-                        </p>
-                        <p className="mt-3 text-sm leading-7 text-foreground/90">
-                          {selectedItem.effect}
-                        </p>
+                        <div className="rounded-[var(--radius)] border border-border/70 bg-background/45 p-4">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                            Aplicacao
+                          </p>
+                          <p className="mt-3 text-sm leading-7 text-foreground/90">
+                            {selectedItem.effect}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </ScrollArea>
@@ -507,9 +601,9 @@ export default function StorePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm leading-7 text-foreground/88">
-              <p>O mercador vende pelo valor cheio de tabela e compra por cerca de 45% do valor base.</p>
-              <p>Itens vendidos voltam para o estoque de Marwen, e itens comprados entram na mochila da companhia.</p>
-              <p>Ouro e quantidades sao atualizados na hora, mantendo a loja como um ambiente totalmente in-game.</p>
+              <p>Marwen vende pelo valor cheio de tabela e compra por cerca de 45% do valor base.</p>
+              <p>Itens vendidos voltam para o estoque da banca e itens comprados entram na mochila da companhia.</p>
+              <p>Ouro, peso e quantidades sao atualizados na hora, mantendo a loja como um ambiente totalmente in-game.</p>
             </CardContent>
           </Card>
         </div>

@@ -5,6 +5,7 @@ import { Compass, MapPinned, Route, Search, Sparkles, Trees } from "lucide-react
 import { toast } from "sonner";
 
 import "leaflet/dist/leaflet.css";
+import "./leaflet-atlas-overrides.css";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import AtlasSkeleton from "@/components/world/AtlasSkeleton";
 import { cn } from "@/lib/utils";
 import {
   getMapGenieWitcherMap,
@@ -29,6 +31,7 @@ import {
   buildAtlasBattlemapTransition,
   buildAtlasRoute,
   clusterAtlasLocations,
+  findLocationPath,
   getAllAtlasLocations,
   getAtlasBattlemapById,
   getAtlasDefaultLayers,
@@ -69,6 +72,22 @@ const locationTypeOptions: AtlasLocationType[] = [
   "dungeon",
   "wilderness",
 ];
+
+const atlasStageOrder: AtlasZoomStage[] = [
+  "world",
+  "region",
+  "subregion",
+  "location",
+  "battlemap",
+];
+
+const atlasStageLabels: Record<AtlasZoomStage, string> = {
+  world: "Mundo",
+  region: "Regiao",
+  subregion: "Sub-regiao",
+  location: "Local",
+  battlemap: "Battlemap",
+};
 
 interface AtlasFocusProps {
   regionSlug?: string;
@@ -171,6 +190,26 @@ function getAtlasImageMaxZoom(nativeZoom: number | undefined, configuredMaxZoom:
   return Math.min(configuredMaxZoom, nativeZoom + overscale);
 }
 
+function getAtlasMinZoomForViewport(
+  map: L.Map,
+  bounds: L.LatLngBounds,
+  backgroundKind: "tiles" | "image",
+  usesRegionalMap: boolean,
+  fallbackMinZoom: number,
+) {
+  const fitZoom = map.getBoundsZoom(bounds, false, L.point(20, 20));
+
+  if (!Number.isFinite(fitZoom)) {
+    return fallbackMinZoom;
+  }
+
+  if (backgroundKind === "image") {
+    return Math.min(fallbackMinZoom, fitZoom - (usesRegionalMap ? 0.15 : 0.45));
+  }
+
+  return Math.min(fallbackMinZoom, fitZoom);
+}
+
 export default function MapGenieWitcherAtlas({
   focus,
   compact = false,
@@ -189,6 +228,7 @@ export default function MapGenieWitcherAtlas({
   const [rightMode, setRightMode] = useState<"details" | "gm">("details");
   const [battlemapPlacementMode, setBattlemapPlacementMode] = useState(false);
   const [battlemapFile, setBattlemapFile] = useState<File | null>(null);
+  const [isMapReady, setIsMapReady] = useState(false);
 
   const [regionDraft, setRegionDraft] = useState({ name: "", description: "", biomeType: "", climate: "", dangerLevel: 3 });
   const [subRegionDraft, setSubRegionDraft] = useState({ name: "", description: "", terrainType: "", biomeType: "", climate: "", dangerLevel: 3 });
@@ -264,7 +304,7 @@ export default function MapGenieWitcherAtlas({
         imageUrl: world.imageUrl,
         mapId: null,
         maxZoom: getAtlasImageMaxZoom(mundiMap.imageNativeZoom, mundiMap.maxZoom, 0.2),
-        minZoom: 0.1,
+        minZoom: -4,
         usesRegionalMap: false,
       };
     }, [mundiMap.imageNativeZoom, mundiMap.maxZoom, regionalMap?.imagePath, regionalMap?.imageSize, selectedRegion, world.bounds, world.imageUrl]);
@@ -306,6 +346,63 @@ export default function MapGenieWitcherAtlas({
     [selectedRouteEnd, selectedRouteStart, world],
   );
   const searchResults = useMemo(() => searchAtlasWorld(world, deferredQuery), [deferredQuery, world]);
+  const atlasStageTargets = useMemo(() => {
+    const firstRegion = world.regions[0] ?? null;
+    const firstSubRegion =
+      selectedRegion?.subRegions[0] ??
+      firstRegion?.subRegions[0] ??
+      null;
+    const firstLocation =
+      selectedSubRegion?.locations[0] ??
+      selectedRegion?.subRegions.flatMap((entry) => entry.locations)[0] ??
+      firstSubRegion?.locations[0] ??
+      null;
+    const battlemapLocation =
+      (selectedLocation?.battlemapId ? selectedLocation : null) ??
+      selectedSubRegion?.locations.find((entry) => entry.battlemapId) ??
+      selectedRegion?.subRegions.flatMap((entry) => entry.locations).find((entry) => entry.battlemapId) ??
+      firstSubRegion?.locations.find((entry) => entry.battlemapId) ??
+      null;
+
+    return {
+      world: {} as AtlasFocusProps,
+      region: selectedRegion
+        ? { regionSlug: selectedRegion.slug }
+        : firstRegion
+          ? { regionSlug: firstRegion.slug }
+          : null,
+      subregion: selectedSubRegion
+        ? { regionSlug: selectedRegion?.slug, subRegionSlug: selectedSubRegion.slug }
+        : selectedRegion && firstSubRegion
+          ? { regionSlug: selectedRegion.slug, subRegionSlug: firstSubRegion.slug }
+          : firstRegion && firstSubRegion
+            ? { regionSlug: firstRegion.slug, subRegionSlug: firstSubRegion.slug }
+            : null,
+      location: selectedLocation
+        ? {
+            regionSlug: selectedRegion?.slug,
+            subRegionSlug: selectedSubRegion?.slug,
+            locationSlug: selectedLocation.slug,
+          }
+        : selectedRegion && selectedSubRegion && firstLocation
+          ? {
+              regionSlug: selectedRegion.slug,
+              subRegionSlug: selectedSubRegion.slug,
+              locationSlug: firstLocation.slug,
+            }
+          : null,
+      battlemap: battlemapLocation
+        ? findLocationPath(world, battlemapLocation.id)
+        : null,
+    };
+  }, [selectedLocation, selectedRegion, selectedSubRegion, world]);
+  const focusTrail = useMemo(
+    () =>
+      [selectedRegion?.name, selectedSubRegion?.name, selectedLocation?.name].filter(
+        (value): value is string => Boolean(value),
+      ),
+    [selectedLocation?.name, selectedRegion?.name, selectedSubRegion?.name],
+  );
 
   useEffect(() => {
     if (selectedRegion) {
@@ -632,6 +729,14 @@ export default function MapGenieWitcherAtlas({
     zoomStage,
   ]);
 
+  const currentTitle =
+    selectedLocation?.name ?? selectedSubRegion?.name ?? selectedRegion?.name ?? world.name;
+  const currentDescription =
+    selectedLocation?.description ??
+    selectedSubRegion?.description ??
+    selectedRegion?.description ??
+    world.description;
+
   const handleLayerToggle = (layer: AtlasLayerId) => {
     setLayers((current) =>
       current.includes(layer)
@@ -646,6 +751,17 @@ export default function MapGenieWitcherAtlas({
         ? current.filter((entry) => entry !== type)
         : [...current, type],
     );
+  };
+
+  const handleZoomStageJump = (stage: AtlasZoomStage) => {
+    const nextFocus = atlasStageTargets[stage];
+
+    if (!nextFocus) {
+      toast("Este nivel ainda nao tem um foco pronto neste recorte.");
+      return;
+    }
+
+    navigate(buildPath(nextFocus));
   };
 
   const handleSaveRegion = () => {
@@ -877,6 +993,7 @@ export default function MapGenieWitcherAtlas({
       return;
     }
 
+    setIsMapReady(false);
     host.innerHTML = "";
 
     const map = L.map(host, {
@@ -932,9 +1049,21 @@ export default function MapGenieWitcherAtlas({
     } else {
       L.imageOverlay(projection.imageUrl, bounds, { opacity: 0.98 }).addTo(map);
     }
+    const resolvedMinZoom = getAtlasMinZoomForViewport(
+      map,
+      bounds,
+      projection.backgroundKind,
+      projection.usesRegionalMap,
+      projection.minZoom,
+    );
+    map.setMinZoom(resolvedMinZoom);
     map.fitBounds(bounds, { animate: false, padding: [20, 20], maxZoom: projection.maxZoom });
     map.setMaxBounds(bounds.pad(projection.backgroundKind === "tiles" ? 0.04 : 0.16));
     setZoomStage(inferAtlasZoomStage(map.getZoom()));
+    map.whenReady(() => {
+      map.invalidateSize();
+      window.requestAnimationFrame(() => setIsMapReady(true));
+    });
 
     groupsRef.current = {
       regions: L.layerGroup().addTo(map),
@@ -989,18 +1118,37 @@ export default function MapGenieWitcherAtlas({
   ]);
 
   return (
-    <div className={cn("grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_360px]", className)}>
-      <Card variant="panel" className="overflow-hidden">
+    <div
+      className={cn(
+        "grid gap-6",
+        immersive
+          ? "xl:grid-cols-[280px_minmax(0,1fr)_320px] 2xl:grid-cols-[300px_minmax(0,1fr)_340px]"
+          : "xl:grid-cols-[320px_minmax(0,1fr)_360px]",
+        className,
+      )}
+    >
+      <Card
+        variant="panel"
+        className={cn(
+          "overflow-hidden backdrop-blur-xl",
+          immersive && "xl:sticky xl:top-24 xl:max-h-[calc(100vh-8rem)]",
+        )}
+      >
         <CardContent className="flex h-full flex-col gap-4 p-4 md:p-5">
           <div className="space-y-3">
             <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">Atlas hierarquico</p>
-            <h2 className="font-heading text-xl text-foreground">Mundo, regioes e rotas</h2>
+            <h2 className="font-heading text-xl text-foreground">Exploracao, camadas e rotas</h2>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cidade, regiao ou battlemap..." className="pl-10" />
             </div>
           </div>
-          <ScrollArea className={cn("min-h-0 flex-1 pr-3", immersive ? "h-[calc(100vh-16rem)]" : "h-[560px]")}>
+          <ScrollArea
+            className={cn(
+              "min-h-0 flex-1 pr-3",
+              immersive ? "h-[calc(100vh-14rem)]" : "h-[560px]",
+            )}
+          >
             <div className="space-y-4">
               <section className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -1008,7 +1156,7 @@ export default function MapGenieWitcherAtlas({
                   <p className="text-[11px] uppercase tracking-[0.18em] text-primary/80">Busca global</p>
                 </div>
                 {searchResults.length ? searchResults.map((result) => (
-                  <button key={result.id} type="button" onClick={() => navigate(buildPath(result.path))} className="w-full rounded-xl border border-border/60 bg-background/40 px-3 py-3 text-left transition-colors hover:border-primary/30 hover:bg-primary/5">
+                  <button key={result.id} type="button" onClick={() => navigate(buildPath(result.path))} className="w-full rounded-xl border border-border/60 bg-background/72 px-3 py-3 text-left backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-primary/10">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-medium text-foreground">{result.label}</p>
                       <span className="text-[10px] uppercase tracking-[0.18em] text-primary/80">{result.kind}</span>
@@ -1016,7 +1164,7 @@ export default function MapGenieWitcherAtlas({
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">{result.description}</p>
                   </button>
                 )) : (
-                  <div className="rounded-xl border border-dashed border-border/70 bg-background/35 p-4 text-sm leading-6 text-muted-foreground">
+                  <div className="rounded-xl border border-dashed border-border/70 bg-background/72 p-4 text-sm leading-6 text-muted-foreground backdrop-blur-md">
                     Busque por regiao, sub-regiao, local, POI ou battlemap.
                   </div>
                 )}
@@ -1097,44 +1245,95 @@ export default function MapGenieWitcherAtlas({
         </CardContent>
       </Card>
 
-      <Card variant="elevated" className="overflow-hidden">
+      <Card variant="elevated" className="overflow-hidden border-primary/15 shadow-[0_24px_80px_hsl(var(--background)/0.45)]">
         <CardContent className="space-y-5 p-4 md:p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <MapPinned className="h-4 w-4 text-primary" />
-                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">Nivel atual</p>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
+                  Navegacao progressiva
+                </p>
               </div>
-              <h2 className="font-display text-3xl text-gold-gradient">
-                {selectedLocation?.name ?? selectedSubRegion?.name ?? selectedRegion?.name ?? world.name}
-              </h2>
-              <p className="max-w-3xl text-sm leading-7 text-muted-foreground">
-                {selectedLocation?.description ?? selectedSubRegion?.description ?? selectedRegion?.description ?? world.description}
-              </p>
+              <h2 className="font-display text-3xl text-gold-gradient">{currentTitle}</h2>
+              <p className="max-w-3xl text-sm leading-7 text-muted-foreground">{currentDescription}</p>
+              {focusTrail.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {focusTrail.map((segment) => (
+                    <Badge
+                      key={segment}
+                      variant="outline"
+                      className="border-border/60 bg-background/55 text-foreground/90"
+                    >
+                      {segment}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex max-w-xl flex-wrap items-center justify-end gap-2">
               <Badge variant="outline" className="border-primary/25 text-primary">
                 <Compass className="mr-2 h-3.5 w-3.5" />
-                {zoomStage}
+                {atlasStageLabels[zoomStage]}
               </Badge>
               <Badge variant="outline" className="border-primary/25 text-primary">
                 {world.regions.length} regioes
               </Badge>
+              {atlasStageOrder.map((stage) => {
+                const nextFocus = atlasStageTargets[stage];
+                const isActive = zoomStage === stage;
+
+                return (
+                  <Button
+                    key={stage}
+                    type="button"
+                    size="sm"
+                    variant={isActive ? "primary" : nextFocus ? "outline" : "ghost"}
+                    className="text-[10px] uppercase tracking-[0.18em]"
+                    onClick={() => handleZoomStageJump(stage)}
+                    disabled={!nextFocus}
+                  >
+                    {atlasStageLabels[stage]}
+                  </Button>
+                );
+              })}
             </div>
           </div>
-          <div className="overflow-hidden rounded-[var(--radius)] border border-border/70 bg-[#090806]">
+          <div className="relative overflow-hidden rounded-[var(--radius)] border border-border/70 bg-[#090806]">
+            {!isMapReady ? <AtlasSkeleton compact={compact} immersive={immersive} /> : null}
             <div
-              ref={mapHostRef}
               className={cn(
-                "w-full",
-                immersive ? "h-[calc(100vh-14rem)] min-h-[640px]" : compact ? "h-[420px]" : "h-[70vh] min-h-[560px]",
+                "w-full transition-opacity duration-300",
+                isMapReady ? "opacity-100" : "opacity-0",
+                immersive
+                  ? "h-[calc(100vh-18rem)] min-h-[720px]"
+                  : compact
+                    ? "h-[420px]"
+                    : "h-[70vh] min-h-[560px]",
               )}
-            />
+            >
+              <div ref={mapHostRef} className="h-full w-full" />
+            </div>
+            <div className="pointer-events-none absolute inset-x-0 top-0 p-4">
+              <div className="mx-auto flex max-w-4xl justify-center">
+                <div className="pointer-events-auto rounded-full border border-border/60 bg-background/68 px-4 py-2 backdrop-blur-xl">
+                  <p className="text-center text-xs uppercase tracking-[0.18em] text-primary/80">
+                    Visao por camadas: abra o mundo, mergulhe na regiao, entre no local, desca ao battlemap
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card variant="panel" className="overflow-hidden">
+      <Card
+        variant="panel"
+        className={cn(
+          "overflow-hidden backdrop-blur-xl",
+          immersive && "xl:sticky xl:top-24 xl:max-h-[calc(100vh-8rem)]",
+        )}
+      >
         <CardContent className="flex h-full flex-col gap-4 p-4 md:p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -1146,13 +1345,18 @@ export default function MapGenieWitcherAtlas({
               <Button size="sm" variant={rightMode === "gm" ? "primary" : "outline"} onClick={() => setRightMode("gm")}>Mestre</Button>
             </div>
           </div>
-          <ScrollArea className={cn("min-h-0 flex-1 pr-3", immersive ? "h-[calc(100vh-16rem)]" : "h-[560px]")}>
+          <ScrollArea
+            className={cn(
+              "min-h-0 flex-1 pr-3",
+              immersive ? "h-[calc(100vh-14rem)]" : "h-[560px]",
+            )}
+          >
             {rightMode === "details" ? (
               <div className="space-y-4">
                 <section className="rounded-xl border border-border/60 bg-background/30 p-4">
-                  <p className="font-heading text-lg text-foreground">{selectedLocation?.name ?? selectedSubRegion?.name ?? selectedRegion?.name ?? world.name}</p>
+                  <p className="font-heading text-lg text-foreground">{currentTitle}</p>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {selectedLocation?.description ?? selectedSubRegion?.description ?? selectedRegion?.description ?? world.description}
+                    {currentDescription}
                   </p>
                   {selectedLocation ? (
                     <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
