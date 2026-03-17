@@ -20,6 +20,8 @@ import {
   type MapGenieWitcherMapId,
 } from "@/lib/mapgenie-witcher";
 
+const LEAFLET_TILE_SIZE_PX = 256;
+
 const witcherRasterCRS = L.extend({}, L.CRS.Simple, {
   transformation: new L.Transformation(1, 0, 1, 0),
 });
@@ -112,7 +114,7 @@ export default function RegionalTileAtlas({
       const tileLayerOptions: L.TileLayerOptions = {
         bounds,
         noWrap: true,
-        tileSize: 256,
+        tileSize: LEAFLET_TILE_SIZE_PX,
         // witcher3map tiles are standard XYZ (not TMS). We handle Y inversion ourselves for the Simple CRS packs.
         tms: false,
         keepBuffer: 8,
@@ -128,6 +130,18 @@ export default function RegionalTileAtlas({
       }
 
       const tileLayer = L.tileLayer(getLocalWitcherTileUrl(activeMap.id), tileLayerOptions);
+      // Some hosted previews inject aggressive global styles like `img { width: 100% !important; height: auto !important; }`.
+      // Enforce Leaflet's expected tile box sizing on each tile element to prevent "striped" rendering.
+      (tileLayer as any).createTile = function createTileWithFixedSize(coords: any, done: any) {
+        const tile = (L.TileLayer.prototype as any).createTile.call(this, coords, done) as HTMLImageElement;
+        if (tile?.style) {
+          tile.style.setProperty("width", `${LEAFLET_TILE_SIZE_PX}px`, "important");
+          tile.style.setProperty("height", `${LEAFLET_TILE_SIZE_PX}px`, "important");
+          tile.style.setProperty("max-width", "none", "important");
+          tile.style.setProperty("max-height", "none", "important");
+        }
+        return tile;
+      };
       tileLayer.setOpacity(0);
 
       if (activeMap.crs === "simple") {

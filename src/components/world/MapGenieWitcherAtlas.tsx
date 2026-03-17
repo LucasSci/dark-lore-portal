@@ -62,6 +62,8 @@ const atlasCrs = L.extend({}, L.CRS.Simple, {
   transformation: new L.Transformation(1, 0, 1, 0),
 });
 
+const LEAFLET_TILE_SIZE_PX = 256;
+
 const locationTypeOptions: AtlasLocationType[] = [
   "city",
   "village",
@@ -1022,7 +1024,7 @@ export default function MapGenieWitcherAtlas({
       const tileLayerOptions: L.TileLayerOptions = {
         bounds,
         noWrap: true,
-        tileSize: 256,
+        tileSize: LEAFLET_TILE_SIZE_PX,
         // witcher3map tiles are standard XYZ (not TMS). We handle Y inversion ourselves for the Simple CRS packs.
         tms: false,
         keepBuffer: 6,
@@ -1043,6 +1045,17 @@ export default function MapGenieWitcherAtlas({
       }
 
       const tileLayer = L.tileLayer(getLocalWitcherTileUrl(projection.mapId), tileLayerOptions);
+      // Enforce fixed tile element size to prevent hosted preview CSS from breaking Leaflet layout.
+      (tileLayer as any).createTile = function createTileWithFixedSize(coords: any, done: any) {
+        const tile = (L.TileLayer.prototype as any).createTile.call(this, coords, done) as HTMLImageElement;
+        if (tile?.style) {
+          tile.style.setProperty("width", `${LEAFLET_TILE_SIZE_PX}px`, "important");
+          tile.style.setProperty("height", `${LEAFLET_TILE_SIZE_PX}px`, "important");
+          tile.style.setProperty("max-width", "none", "important");
+          tile.style.setProperty("max-height", "none", "important");
+        }
+        return tile;
+      };
       tileLayer.setOpacity(0);
 
       if (regionalMap?.crs === "simple") {
