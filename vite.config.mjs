@@ -9,7 +9,11 @@ import { componentTagger } from "lovable-tagger";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const LOCAL_WITCHER_TILE_PREFIX = "/local-witcher3map";
-const LOCAL_WITCHER_TILE_SOURCE = path.resolve(__dirname, ".codex_tmp/witcher3map-maps-master");
+const LOCAL_WITCHER_TILE_SOURCE = (() => {
+  const vendored = path.resolve(__dirname, "assets/witcher3map-maps-master");
+  if (fs.existsSync(vendored)) return vendored;
+  return path.resolve(__dirname, ".codex_tmp/witcher3map-maps-master");
+})();
 const LOCAL_WITCHER_TILE_FOLDERS = [
   "velen",
   "hos_velen",
