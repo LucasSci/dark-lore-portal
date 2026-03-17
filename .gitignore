@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 .codex_tmp/
+tmp_*.png
 
 # Python vendor bundles (do not commit)
 .vendor/
