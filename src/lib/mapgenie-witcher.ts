@@ -159,10 +159,11 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     tileFolder: "skellige",
     initialZoom: 3,
     maxZoom: 6,
-    crs: "geo",
-    center: [-35, -10],
-    southWest: [-85.05, -180],
-    northEast: [79.3, 135],
+    // witcher3map tiles are a bounded raster atlas (not true WebMercator). Keep it in a Simple CRS so tiles align.
+    crs: "simple",
+    center: [114, 114],
+    southWest: [0, 0],
+    northEast: [228, 228],
     aliases: ["skellige", "ard skellig", "an skellig", "kaer trolde"],
     regions: ["skellige"],
     imagePath: withBaseUrl(`maps/regions/skellige.jpg?v=${WITCHER_MAP_ASSET_VERSION}`),
@@ -170,6 +171,13 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     imageSize: {
       width: 3840,
       height: 3840,
+    },
+    tileRowsByZoom: {
+      2: 4,
+      3: 8,
+      4: 15,
+      5: 29,
+      6: 57,
     },
   },
   {
