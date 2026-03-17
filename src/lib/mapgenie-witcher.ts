@@ -1,6 +1,13 @@
 export const LOCAL_WITCHER_TILE_PREFIX = "/local-witcher3map";
 export const WITCHER_MAP_ASSET_VERSION = "20260317-maxnative";
 
+function withBaseUrl(relativePath: string) {
+  const base = (import.meta as any).env?.BASE_URL ?? "/";
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
 export type MapGenieWitcherMapId =
   | "mundi"
   | "skellige"
@@ -57,7 +64,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
       "Painel geral do continente para leitura macro. Use este recorte para se orientar e depois aprofunde a navegacao nas regioes individuais.",
     kind: "image",
     tileFolder: "",
-    imagePath: `/maps/witcher-mundi.png?v=${WITCHER_MAP_ASSET_VERSION}`,
+    imagePath: withBaseUrl(`maps/witcher-mundi.png?v=${WITCHER_MAP_ASSET_VERSION}`),
     imageNativeZoom: 3,
     imageSize: {
       width: 4278,
@@ -127,7 +134,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
       "pontar",
     ],
     regions: ["velen", "novigrad", "redania", "temeria", "northern-kingdoms"],
-    imagePath: `/maps/regions/velen-novigrad.jpg?v=${WITCHER_MAP_ASSET_VERSION}`,
+    imagePath: withBaseUrl(`maps/regions/velen-novigrad.jpg?v=${WITCHER_MAP_ASSET_VERSION}`),
     imageNativeZoom: 4,
     imageSize: {
       width: 4096,
@@ -158,7 +165,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     northEast: [79.3, 135],
     aliases: ["skellige", "ard skellig", "an skellig", "kaer trolde"],
     regions: ["skellige"],
-    imagePath: `/maps/regions/skellige.jpg?v=${WITCHER_MAP_ASSET_VERSION}`,
+    imagePath: withBaseUrl(`maps/regions/skellige.jpg?v=${WITCHER_MAP_ASSET_VERSION}`),
     imageNativeZoom: 4,
     imageSize: {
       width: 3840,
@@ -181,7 +188,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     northEast: [160, 128],
     aliases: ["kaer morhen", "blue mountains", "montanhas azuis"],
     regions: ["kaer-morhen", "blue-mountains"],
-    imagePath: `/maps/regions/kaer-morhen.png?v=${WITCHER_MAP_ASSET_VERSION}`,
+    imagePath: withBaseUrl(`maps/regions/kaer-morhen.png?v=${WITCHER_MAP_ASSET_VERSION}`),
     imageNativeZoom: 5,
     imageSize: {
       width: 4096,
@@ -211,7 +218,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     northEast: [144, 144],
     aliases: ["toussaint", "beauclair", "ducado", "ducado de toussaint"],
     regions: ["toussaint", "beauclair"],
-    imagePath: `/maps/regions/toussaint.png?v=${WITCHER_MAP_ASSET_VERSION}`,
+    imagePath: withBaseUrl(`maps/regions/toussaint.png?v=${WITCHER_MAP_ASSET_VERSION}`),
     imageNativeZoom: 5,
     imageSize: {
       width: 4608,
@@ -241,7 +248,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     northEast: [128, 192],
     aliases: ["white orchard", "pomar branco", "pomar", "orchard"],
     regions: ["white-orchard", "pomar-branco"],
-    imagePath: `/maps/regions/white-orchard.png?v=${WITCHER_MAP_ASSET_VERSION}`,
+    imagePath: withBaseUrl(`maps/regions/white-orchard.png?v=${WITCHER_MAP_ASSET_VERSION}`),
     imageNativeZoom: 5,
     imageSize: {
       width: 5120,
@@ -270,6 +277,28 @@ export const witcherAtlasSources: WitcherAtlasSource[] = [
   },
 ];
 
+export function getLocalWitcherTileUrl(mapId: MapGenieWitcherMapId) {
+  if (mapId === "mundi") {
+    throw new Error("Local witcher tiles are not available for the mundi image.");
+  }
+
+  const entry = getMapGenieWitcherMap(mapId);
+  const folder = entry.tileFolder;
+  return withBaseUrl(`${LOCAL_WITCHER_TILE_PREFIX.replace(/^\//, "")}/${folder}/{z}/{x}/{y}.png`);
+}
+
+export function getLocalWitcherTileProbeUrl(mapId: Exclude<MapGenieWitcherMapId, "mundi">) {
+  const entry = getMapGenieWitcherMap(mapId);
+  const z = Math.max(2, Math.min(entry.maxZoom, 3));
+  const x = 0;
+  const yRaw = 0;
+  const y = entry.crs === "simple" ? resolveLocalWitcherTileY(mapId, z, yRaw) : yRaw;
+  return getLocalWitcherTileUrl(mapId)
+    .replace("{z}", String(z))
+    .replace("{x}", String(x))
+    .replace("{y}", String(y));
+}
+
 export const witcherAtlasAttributionNote =
   "Base local integrada para consulta geografica dentro deste projeto de mesa, com creditos visiveis as fontes e uso contextualizado para referencia nao comercial.";
 
@@ -285,11 +314,6 @@ function normalize(value?: string | null) {
 
 export function getMapGenieWitcherMap(mapId: MapGenieWitcherMapId) {
   return mapGenieWitcherMaps.find((entry) => entry.id === mapId) ?? mapGenieWitcherMaps[0];
-}
-
-export function getLocalWitcherTileUrl(mapId: MapGenieWitcherMapId) {
-  const map = getMapGenieWitcherMap(mapId);
-  return `${LOCAL_WITCHER_TILE_PREFIX}/${map.tileFolder}/{z}/{x}/{y}.png`;
 }
 
 export function resolveLocalWitcherTileY(

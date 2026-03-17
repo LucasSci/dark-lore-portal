@@ -58,10 +58,8 @@ export default function RegionalTileAtlas({
   }, [maps, query]);
 
   const activeMap = getMapGenieWitcherMap(activeMapId);
-  const usesImageOverlay = tileFallbackActive || activeMap.kind === "image" || !activeMap.tileFolder;
-  const overlayMaxZoom = usesImageOverlay
-    ? Math.min(activeMap.maxZoom, activeMap.imageNativeZoom ?? activeMap.maxZoom)
-    : activeMap.maxZoom;
+  const hasTiles = activeMap.kind === "tiles" && Boolean(activeMap.tileFolder);
+  const overlayMaxZoom = Math.min(activeMap.maxZoom, activeMap.imageNativeZoom ?? activeMap.maxZoom);
 
   useEffect(() => {
     setActiveMapId(initialMapId);
@@ -83,12 +81,12 @@ export default function RegionalTileAtlas({
       attributionControl: false,
       center: activeMap.center,
       crs: activeMap.crs === "simple" ? witcherRasterCRS : L.CRS.EPSG3857,
-      maxZoom: overlayMaxZoom,
-      minZoom: usesImageOverlay ? 1 : 2,
+      maxZoom: hasTiles ? activeMap.maxZoom : overlayMaxZoom,
+      minZoom: hasTiles ? 2 : 1,
       zoom: activeMap.initialZoom,
       zoomControl: false,
-      zoomDelta: usesImageOverlay ? 0.125 : 0.25,
-      zoomSnap: usesImageOverlay ? 0.125 : 0.25,
+      zoomDelta: hasTiles ? 0.25 : 0.125,
+      zoomSnap: hasTiles ? 0.25 : 0.125,
       zoomAnimation: true,
       fadeAnimation: true,
       markerZoomAnimation: true,
@@ -96,16 +94,21 @@ export default function RegionalTileAtlas({
       inertiaDeceleration: 2200,
       easeLinearity: 0.18,
       wheelDebounceTime: 18,
-      wheelPxPerZoomLevel: usesImageOverlay ? 180 : 140,
+      wheelPxPerZoomLevel: hasTiles ? 140 : 180,
       maxBoundsViscosity: 0.88,
     });
 
-    if (usesImageOverlay && activeMap.imagePath) {
+    // Always add the bundled regional image underlay when available.
+    // It prevents "blank map" in deploys that don't ship the local tile pack,
+    // and tiles (when available) will fade in on top.
+    if (activeMap.imagePath) {
       L.imageOverlay(activeMap.imagePath, bounds, {
         opacity: 1,
         className: "atlas-hires-image",
       }).addTo(map);
-    } else {
+    }
+
+    if (hasTiles) {
       const tileLayerOptions: L.TileLayerOptions = {
         bounds,
         noWrap: true,
@@ -122,6 +125,7 @@ export default function RegionalTileAtlas({
       }
 
       const tileLayer = L.tileLayer(getLocalWitcherTileUrl(activeMap.id), tileLayerOptions);
+      tileLayer.setOpacity(0);
 
       if (activeMap.crs === "simple") {
         tileLayer.getTileUrl = (coords) => {
@@ -134,17 +138,20 @@ export default function RegionalTileAtlas({
         };
       }
 
+      tileLayer.on("load", () => {
+        // Fade in once at least one wave of tiles has loaded.
+        tileLayer.setOpacity(1);
+      });
+
       let tileErrors = 0;
       tileLayer.on("tileerror", () => {
         tileErrors += 1;
-        if (tileErrors < 8) {
+        if (tileErrors < 3) {
           return;
         }
 
-        // If tiles are missing on this machine/deploy, fall back to the bundled JPEG (when present).
-        if (activeMap.imagePath) {
-          setTileFallbackActive(true);
-        }
+        // If tiles are missing on this machine/deploy, keep showing the underlay.
+        setTileFallbackActive(Boolean(activeMap.imagePath));
       });
 
       tileLayer.addTo(map);
@@ -167,7 +174,7 @@ export default function RegionalTileAtlas({
       map.remove();
       mapRef.current = null;
     };
-  }, [activeMap, usesImageOverlay]);
+  }, [activeMapId]);
 
   return (
     <div className={cn("grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]", className)}>

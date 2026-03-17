@@ -205,7 +205,14 @@ export interface AtlasBattlemapTransition {
 }
 
 export const ATLAS_STORAGE_KEY = "dark-lore.atlas.world.v1";
-export const ATLAS_WORLD_IMAGE_URL = "/maps/witcher-mundi.png?v=20260317-maxnative";
+function withBaseUrl(relativePath: string) {
+  const base = (import.meta as any).env?.BASE_URL ?? "/";
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const normalizedPath = relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+export const ATLAS_WORLD_IMAGE_URL = withBaseUrl("maps/witcher-mundi.png?v=20260317-maxnative");
 
 export const LAYERS_BY_STAGE: Record<AtlasZoomStage, AtlasLayerId[]> = {
   world: ["biomes", "rivers", "forests", "settlements"],
@@ -301,46 +308,46 @@ const baseWorld: AtlasWorld = {
     },
   ],
   battlemaps: [
-    {
-      id: "battlemap-arena-das-areias",
-      name: "Arena das Areias",
-      imageUrl: "/maps/battlemaps/arena-das-areias.svg",
-      gridSize: 72,
-      scale: 1.5,
-      bounds: { southWest: point(824, 478), northEast: point(864, 438) },
-      linkedLocationId: "location-arena-areias",
-      description: "Anfiteatro circular com arquibancadas rachadas, corredores de servico e poco central.",
-    },
-    {
-      id: "battlemap-cripta-velkyn",
-      name: "Cripta de Velkyn",
-      imageUrl: "/maps/battlemaps/cripta-de-velkyn.svg",
-      gridSize: 72,
-      scale: 1.5,
-      bounds: { southWest: point(748, 586), northEast: point(782, 552) },
-      linkedLocationId: "location-velkyn-crypt",
-      description: "Cripta subterranea com santuario central, corredores estreitos e camaras secundarias.",
-    },
-    {
-      id: "battlemap-kaer-trolde-harbor",
-      name: "Porto de Kaer Trolde",
-      imageUrl: "/maps/battlemaps/kaer-trolde-harbor.svg",
-      gridSize: 72,
-      scale: 1.5,
-      bounds: { southWest: point(126, 134), northEast: point(148, 112) },
-      linkedLocationId: "location-kaer-trolde",
-      description: "Cais, pontes de madeira e passarelas elevadas junto ao salao do cla.",
-    },
-    {
-      id: "battlemap-whispering-crypt",
-      name: "Whispering Crypt",
-      imageUrl: "/maps/battlemaps/whispering-crypt.svg",
-      gridSize: 72,
-      scale: 1.5,
-      bounds: { southWest: point(544, 484), northEast: point(576, 452) },
-      linkedLocationId: "location-whispering-crypt",
-      description: "Nivel subterraneo inundado por nevoa com altar quebrado e tuneis estreitos.",
-    },
+      {
+        id: "battlemap-arena-das-areias",
+        name: "Arena das Areias",
+        imageUrl: withBaseUrl("maps/battlemaps/arena-das-areias.svg"),
+        gridSize: 72,
+        scale: 1.5,
+        bounds: { southWest: point(824, 478), northEast: point(864, 438) },
+        linkedLocationId: "location-arena-areias",
+        description: "Anfiteatro circular com arquibancadas rachadas, corredores de servico e poco central.",
+      },
+      {
+        id: "battlemap-cripta-velkyn",
+        name: "Cripta de Velkyn",
+        imageUrl: withBaseUrl("maps/battlemaps/cripta-de-velkyn.svg"),
+        gridSize: 72,
+        scale: 1.5,
+        bounds: { southWest: point(748, 586), northEast: point(782, 552) },
+        linkedLocationId: "location-velkyn-crypt",
+        description: "Cripta subterranea com santuario central, corredores estreitos e camaras secundarias.",
+      },
+      {
+        id: "battlemap-kaer-trolde-harbor",
+        name: "Porto de Kaer Trolde",
+        imageUrl: withBaseUrl("maps/battlemaps/kaer-trolde-harbor.svg"),
+        gridSize: 72,
+        scale: 1.5,
+        bounds: { southWest: point(126, 134), northEast: point(148, 112) },
+        linkedLocationId: "location-kaer-trolde",
+        description: "Cais, pontes de madeira e passarelas elevadas junto ao salao do cla.",
+      },
+      {
+        id: "battlemap-whispering-crypt",
+        name: "Whispering Crypt",
+        imageUrl: withBaseUrl("maps/battlemaps/whispering-crypt.svg"),
+        gridSize: 72,
+        scale: 1.5,
+        bounds: { southWest: point(544, 484), northEast: point(576, 452) },
+        linkedLocationId: "location-whispering-crypt",
+        description: "Nivel subterraneo inundado por nevoa com altar quebrado e tuneis estreitos.",
+      },
   ],
 };
 

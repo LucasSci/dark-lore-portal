@@ -1032,7 +1032,14 @@ export default function MapGenieWitcherAtlas({
         tileLayerOptions.continuousWorld = true;
       }
 
+      // Always paint an image underlay when available so deploys without the local tile pack
+      // never show a blank viewport. Tiles (when present) fade in above this layer.
+      if (projection.imageUrl) {
+        L.imageOverlay(projection.imageUrl, bounds, { opacity: 0.98 }).addTo(map);
+      }
+
       const tileLayer = L.tileLayer(getLocalWitcherTileUrl(projection.mapId), tileLayerOptions);
+      tileLayer.setOpacity(0);
 
       if (regionalMap?.crs === "simple") {
         tileLayer.getTileUrl = (coords) => {
@@ -1045,6 +1052,7 @@ export default function MapGenieWitcherAtlas({
         };
       }
 
+      tileLayer.on("load", () => tileLayer.setOpacity(1));
       tileLayer.addTo(map);
     } else {
       L.imageOverlay(projection.imageUrl, bounds, { opacity: 0.98 }).addTo(map);
