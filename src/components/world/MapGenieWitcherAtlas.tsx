@@ -1022,7 +1022,8 @@ export default function MapGenieWitcherAtlas({
       const tileLayerOptions: L.TileLayerOptions = {
         bounds,
         noWrap: true,
-        tms: regionalMap?.crs !== "simple",
+        // witcher3map tiles are standard XYZ (not TMS). We handle Y inversion ourselves for the Simple CRS packs.
+        tms: false,
         keepBuffer: 6,
         updateWhenIdle: true,
         updateWhenZooming: true,
