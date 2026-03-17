@@ -14,6 +14,13 @@
   max-height: none !important;
 }
 
+.leaflet-container img.leaflet-tile {
+  /* Some hosts inject aggressive global `img { width:100% !important }` rules.
+     Force Leaflet tiles back to the expected 256x256 box so the grid doesn't "stripe". */
+  width: 256px !important;
+  height: 256px !important;
+}
+
 .leaflet-container .leaflet-image-layer {
   image-rendering: auto;
 }
