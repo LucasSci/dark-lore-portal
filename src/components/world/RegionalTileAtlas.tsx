@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import L from "leaflet";
 import { Compass, ExternalLink, ImageIcon, Search } from "lucide-react";
 
 import "leaflet/dist/leaflet.css";
 import "./leaflet-atlas-overrides.css";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,10 +38,12 @@ export default function RegionalTileAtlas({
   immersive = false,
   className,
 }: RegionalTileAtlasProps) {
+  const location = useLocation();
   const [activeMapId, setActiveMapId] = useState<MapGenieWitcherMapId>(initialMapId);
   const [query, setQuery] = useState("");
   const [isMapReady, setIsMapReady] = useState(false);
   const [tileFallbackActive, setTileFallbackActive] = useState(false);
+  const [debugTilesEvents, setDebugTilesEvents] = useState<string[]>([]);
   const hostRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -62,6 +65,10 @@ export default function RegionalTileAtlas({
   const activeMap = getMapGenieWitcherMap(activeMapId);
   const hasTiles = activeMap.kind === "tiles" && Boolean(activeMap.tileFolder);
   const overlayMaxZoom = Math.min(activeMap.maxZoom, activeMap.imageNativeZoom ?? activeMap.maxZoom);
+  const debugTiles = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get("debugTiles") === "1";
+  }, [location.search]);
 
   useEffect(() => {
     setActiveMapId(initialMapId);
@@ -76,6 +83,7 @@ export default function RegionalTileAtlas({
 
     setIsMapReady(false);
     setTileFallbackActive(false);
+    setDebugTilesEvents([]);
     host.innerHTML = "";
 
     const bounds = L.latLngBounds(activeMap.southWest, activeMap.northEast);
@@ -87,8 +95,10 @@ export default function RegionalTileAtlas({
       minZoom: hasTiles ? 2 : 1,
       zoom: activeMap.initialZoom,
       zoomControl: false,
-      zoomDelta: hasTiles ? 0.25 : 0.125,
-      zoomSnap: hasTiles ? 0.25 : 0.125,
+      // Fractional zoom looks smoother but it scales raster tiles, which makes the atlas blurry and can
+      // amplify host CSS issues (leading to "striped" artifacts). Keep tile maps on integer zooms.
+      zoomDelta: hasTiles ? 1 : 0.125,
+      zoomSnap: hasTiles ? 1 : 0.125,
       zoomAnimation: true,
       fadeAnimation: true,
       markerZoomAnimation: true,
@@ -100,10 +110,10 @@ export default function RegionalTileAtlas({
       maxBoundsViscosity: 0.88,
     });
 
-    // Always add the bundled regional image underlay when available.
-    // It prevents "blank map" in deploys that don't ship the local tile pack,
-    // and tiles (when available) will fade in on top.
-    if (activeMap.imagePath) {
+    // Keep static image overlays only for image-based maps.
+    // Tile maps should render from the real tile pyramid alone; otherwise transparent tile areas
+    // can reveal a misaligned fallback image beneath and create horizontal "banding".
+    if (!hasTiles && activeMap.imagePath) {
       L.imageOverlay(activeMap.imagePath, bounds, {
         opacity: 1,
         className: "atlas-hires-image",
@@ -115,8 +125,8 @@ export default function RegionalTileAtlas({
         bounds,
         noWrap: true,
         tileSize: LEAFLET_TILE_SIZE_PX,
-        // witcher3map tiles are standard XYZ (not TMS). We handle Y inversion ourselves for the Simple CRS packs.
-        tms: false,
+        className: debugTiles ? "atlas-debug-tiles" : undefined,
+        tms: activeMap.usesTms ?? true,
         keepBuffer: 8,
         maxNativeZoom: activeMap.maxZoom,
         // Our tile packs are already "baked" at 256px; Leaflet's retina mode can shift zoom math and cause artifacts.
@@ -125,7 +135,7 @@ export default function RegionalTileAtlas({
         updateWhenZooming: true,
       };
 
-      if (activeMap.crs === "simple") {
+      if (activeMap.continuousWorld) {
         tileLayerOptions.continuousWorld = true;
       }
 
@@ -144,15 +154,58 @@ export default function RegionalTileAtlas({
       };
       tileLayer.setOpacity(0);
 
-      if (activeMap.crs === "simple") {
-        tileLayer.getTileUrl = (coords) => {
-          const resolvedY = resolveLocalWitcherTileY(activeMap.id, coords.z, coords.y);
-
-          return getLocalWitcherTileUrl(activeMap.id)
+      if (activeMap.crs === "simple" && activeMap.tileRowsByZoom) {
+        tileLayer.getTileUrl = (coords) =>
+          getLocalWitcherTileUrl(activeMap.id)
             .replace("{z}", String(coords.z))
             .replace("{x}", String(coords.x))
-            .replace("{y}", String(resolvedY));
+            .replace("{y}", String(resolveLocalWitcherTileY(activeMap.id, coords.z, coords.y)));
+      }
+
+      if (debugTiles) {
+        const pushEvent = (label: string) => {
+          setDebugTilesEvents((current) => {
+            const next = [label, ...current];
+            return next.length > 14 ? next.slice(0, 14) : next;
+          });
         };
+
+        tileLayer.on("tileloadstart", (event: any) => {
+          const { z, x, y } = event?.coords ?? {};
+          pushEvent(`loadstart z${z} x${x} y${y}`);
+        });
+
+        tileLayer.on("tileload", (event: any) => {
+          const { z, x, y } = event?.coords ?? {};
+          const tile = event?.tile as HTMLElement | undefined;
+          const rect = tile?.getBoundingClientRect();
+
+          if (
+            rect &&
+            (Math.round(rect.width) !== LEAFLET_TILE_SIZE_PX ||
+              Math.round(rect.height) !== LEAFLET_TILE_SIZE_PX)
+          ) {
+            pushEvent(
+              `SIZE MISMATCH ${Math.round(rect.width)}x${Math.round(rect.height)} z${z} x${x} y${y}`,
+            );
+            // eslint-disable-next-line no-console
+            console.warn("[atlas tiles] tile size mismatch", {
+              mapId: activeMap.id,
+              z,
+              x,
+              y,
+              rect,
+              style: (tile as any)?.style?.cssText,
+            });
+          } else {
+            pushEvent(`load z${z} x${x} y${y}`);
+          }
+        });
+
+        tileLayer.on("tileerror", (event: any) => {
+          const { z, x, y } = event?.coords ?? {};
+          pushEvent(`ERROR z${z} x${x} y${y}`);
+        });
       }
 
       tileLayer.on("load", () => {
@@ -167,7 +220,14 @@ export default function RegionalTileAtlas({
           return;
         }
 
-        // If tiles are missing on this machine/deploy, keep showing the underlay.
+        if (activeMap.imagePath) {
+          L.imageOverlay(activeMap.imagePath, bounds, {
+            opacity: 1,
+            className: "atlas-hires-image",
+          }).addTo(map);
+        }
+
+        // If tiles are missing on this machine/deploy, switch to the static fallback.
         setTileFallbackActive(Boolean(activeMap.imagePath));
       });
 
@@ -191,7 +251,7 @@ export default function RegionalTileAtlas({
       map.remove();
       mapRef.current = null;
     };
-  }, [activeMapId]);
+  }, [activeMapId, debugTiles]);
 
   return (
     <div className={cn("grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]", className)}>
@@ -271,6 +331,20 @@ export default function RegionalTileAtlas({
               <p className="max-w-3xl text-sm leading-7 text-muted-foreground">
                 {activeMap.description}
               </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Badge variant="outline" className="border-primary/30 text-primary">
+                  {activeMap.crs === "geo" ? "CRS geográfico" : "CRS raster"}
+                </Badge>
+                <Badge variant="outline" className="border-primary/25 text-primary/90">
+                  {activeMap.usesTms ?? true ? "Tiles TMS" : "Tiles XYZ"}
+                </Badge>
+                <Badge variant="outline" className="border-primary/20 text-primary/80">
+                  Zoom inteiro
+                </Badge>
+                <Badge variant="outline" className="border-border/70 text-muted-foreground">
+                  Max zoom {activeMap.maxZoom}
+                </Badge>
+              </div>
             </div>
             <Button asChild variant="outline">
               <Link to="/mapa">
@@ -289,6 +363,23 @@ export default function RegionalTileAtlas({
                 immersive ? "h-[calc(100vh-16rem)] min-h-[620px]" : "h-[70vh] min-h-[560px]",
               )}
             >
+              {debugTiles ? (
+                <div className="absolute right-4 top-14 z-30 w-[360px] rounded-xl border border-border/60 bg-background/85 p-3 text-xs text-foreground shadow-brand backdrop-blur-md">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-primary/80">
+                    Debug Tiles (local)
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    {activeMap.id} | crs={activeMap.crs} | maxZoom={activeMap.maxZoom} | tileSize={LEAFLET_TILE_SIZE_PX}
+                  </p>
+                  <div className="mt-2 space-y-1 font-mono text-[11px]">
+                    {debugTilesEvents.length ? (
+                      debugTilesEvents.map((line) => <div key={line}>{line}</div>)
+                    ) : (
+                      <div className="text-muted-foreground">Aguardando eventos...</div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
               {tileFallbackActive ? (
                 <div className="absolute left-4 top-4 z-20 max-w-[360px] rounded-xl border border-warning/30 bg-background/80 px-4 py-3 text-sm text-foreground shadow-brand backdrop-blur-md">
                   Tiles nao encontrados. Usando carta regional compacta como fallback.

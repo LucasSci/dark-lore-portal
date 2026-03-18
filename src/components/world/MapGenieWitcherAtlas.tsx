@@ -1025,8 +1025,7 @@ export default function MapGenieWitcherAtlas({
         bounds,
         noWrap: true,
         tileSize: LEAFLET_TILE_SIZE_PX,
-        // witcher3map tiles are standard XYZ (not TMS). We handle Y inversion ourselves for the Simple CRS packs.
-        tms: false,
+        tms: regionalMap?.usesTms ?? true,
         keepBuffer: 6,
         maxNativeZoom: regionalMap?.maxZoom,
         detectRetina: false,
@@ -1034,14 +1033,8 @@ export default function MapGenieWitcherAtlas({
         updateWhenZooming: true,
       };
 
-      if (regionalMap?.crs === "simple") {
+      if (regionalMap?.continuousWorld) {
         tileLayerOptions.continuousWorld = true;
-      }
-
-      // Always paint an image underlay when available so deploys without the local tile pack
-      // never show a blank viewport. Tiles (when present) fade in above this layer.
-      if (projection.imageUrl) {
-        L.imageOverlay(projection.imageUrl, bounds, { opacity: 0.98 }).addTo(map);
       }
 
       const tileLayer = L.tileLayer(getLocalWitcherTileUrl(projection.mapId), tileLayerOptions);
@@ -1058,18 +1051,20 @@ export default function MapGenieWitcherAtlas({
       };
       tileLayer.setOpacity(0);
 
-      if (regionalMap?.crs === "simple") {
-        tileLayer.getTileUrl = (coords) => {
-          const resolvedY = resolveLocalWitcherTileY(projection.mapId!, coords.z, coords.y);
-
-          return getLocalWitcherTileUrl(projection.mapId!)
+      if (regionalMap?.crs === "simple" && regionalMap.tileRowsByZoom) {
+        tileLayer.getTileUrl = (coords) =>
+          getLocalWitcherTileUrl(projection.mapId!)
             .replace("{z}", String(coords.z))
             .replace("{x}", String(coords.x))
-            .replace("{y}", String(resolvedY));
-        };
+            .replace("{y}", String(resolveLocalWitcherTileY(projection.mapId!, coords.z, coords.y)));
       }
 
       tileLayer.on("load", () => tileLayer.setOpacity(1));
+      tileLayer.on("tileerror", () => {
+        if (projection.imageUrl) {
+          L.imageOverlay(projection.imageUrl, bounds, { opacity: 0.98 }).addTo(map);
+        }
+      });
       tileLayer.addTo(map);
     } else {
       L.imageOverlay(projection.imageUrl, bounds, { opacity: 0.98 }).addTo(map);

@@ -21,6 +21,11 @@
   height: 256px !important;
 }
 
+.leaflet-container .atlas-debug-tiles {
+  outline: 1px solid rgba(255, 70, 70, 0.65);
+  outline-offset: -1px;
+}
+
 .leaflet-container .leaflet-image-layer {
   image-rendering: auto;
 }

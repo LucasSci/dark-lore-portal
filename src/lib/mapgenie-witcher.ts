@@ -47,6 +47,8 @@ export interface MapGenieWitcherMap {
     height: number;
   };
   hotspots?: WitcherAtlasHotspot[];
+  usesTms?: boolean;
+  continuousWorld?: boolean;
 }
 
 export interface WitcherAtlasSource {
@@ -148,6 +150,8 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
       5: 36,
       6: 72,
     },
+    usesTms: false,
+    continuousWorld: true,
   },
   {
     id: "skellige",
@@ -159,7 +163,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     tileFolder: "skellige",
     initialZoom: 3,
     maxZoom: 6,
-    // Clean/original Skellige tiles are meant to be used with a geo CRS (WebMercator).
+    // Matches the original witcher3map runtime: Skellige uses geo-like bounds with TMS tiles.
     crs: "geo",
     center: [-35, -10],
     southWest: [-85.05, -180],
@@ -172,6 +176,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
       width: 3840,
       height: 3840,
     },
+    usesTms: true,
   },
   {
     id: "kaer-morhen",
@@ -202,6 +207,8 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
       5: 20,
       6: 40,
     },
+    usesTms: false,
+    continuousWorld: true,
   },
   {
     id: "toussaint",
@@ -232,6 +239,8 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
       5: 18,
       6: 36,
     },
+    usesTms: false,
+    continuousWorld: true,
   },
   {
     id: "white-orchard",
@@ -242,11 +251,11 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     kind: "tiles",
     tileFolder: "white_orchard",
     initialZoom: 3,
-    maxZoom: 6,
-    crs: "simple",
-    center: [64, 96],
-    southWest: [0, 0],
-    northEast: [128, 192],
+    maxZoom: 5,
+    crs: "geo",
+    center: [-65, -65],
+    southWest: [-85, -180],
+    northEast: [0, 45],
     aliases: ["white orchard", "pomar branco", "pomar", "orchard"],
     regions: ["white-orchard", "pomar-branco"],
     imagePath: withBaseUrl(`maps/regions/white-orchard.png?v=${WITCHER_MAP_ASSET_VERSION}`),
@@ -255,13 +264,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
       width: 5120,
       height: 4096,
     },
-    tileRowsByZoom: {
-      2: 2,
-      3: 4,
-      4: 8,
-      5: 16,
-      6: 32,
-    },
+    usesTms: true,
   },
 ];
 
@@ -292,8 +295,7 @@ export function getLocalWitcherTileProbeUrl(mapId: Exclude<MapGenieWitcherMapId,
   const entry = getMapGenieWitcherMap(mapId);
   const z = Math.max(2, Math.min(entry.maxZoom, 3));
   const x = 0;
-  const yRaw = 0;
-  const y = entry.crs === "simple" ? resolveLocalWitcherTileY(mapId, z, yRaw) : yRaw;
+  const y = 0;
   return getLocalWitcherTileUrl(mapId)
     .replace("{z}", String(z))
     .replace("{x}", String(x))
