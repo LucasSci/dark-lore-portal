@@ -6,6 +6,7 @@ import { Link, useLocation } from "react-router-dom";
 import logoEmblem from "@/assets/logo-emblem.png";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { usePortalState } from "@/lib/portal-state";
 
 const navItems = [
   { label: "Inicio", path: "/" },
@@ -22,6 +23,9 @@ const navItems = [
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { atlasFocus, navigationMode } = usePortalState();
+  const isAtlasRoute = location.pathname.startsWith("/mapa");
+  const atlasMode = navigationMode === "atlas" || isAtlasRoute;
 
   useEffect(() => {
     setMobileOpen(false);
@@ -34,13 +38,17 @@ export default function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-3 safe-top sm:px-4 lg:px-6">
-      <div className="mx-auto max-w-[1520px] pt-3 md:pt-4">
-        <div className="ornate-frame border border-[hsl(var(--outline-variant)/0.22)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.9),hsl(var(--surface-base)/0.96))] shadow-elevated backdrop-blur-xl">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--brand)/0.08),transparent_34%),linear-gradient(90deg,transparent,hsl(var(--foreground)/0.05),transparent)]" />
+      <div className={`mx-auto pt-3 md:pt-4 ${atlasMode ? "max-w-[1780px]" : "max-w-[1520px]"}`}>
+        <div
+          className={`artifact-nav-shell border-transparent backdrop-blur-xl ${
+            atlasMode ? "shadow-panel" : "shadow-elevated"
+          }`}
+        >
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--background)/0.14),transparent_14%,transparent_86%,hsl(var(--background)/0.16))]" />
 
-          <div className="relative flex items-center gap-4 px-4 py-3 lg:px-6">
-            <Link to="/" className="flex min-w-0 items-center gap-3 lg:flex-[0_0_auto]">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-[hsl(var(--brand)/0.22)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.9),hsl(var(--surface-base)/0.98))] shadow-panel">
+          <div className={`relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 lg:px-6 xl:grid-cols-[auto_minmax(0,1fr)_auto] ${atlasMode ? "xl:py-2.5" : ""}`}>
+            <Link to="/" className="flex min-w-0 items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-[hsl(var(--brand)/0.3)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.9),hsl(var(--surface-base)/0.98))] shadow-[0_18px_34px_hsl(var(--background)/0.34)]">
                 <img src={logoEmblem} alt="Emblema de Areias de Zerrikania" className="h-7 w-7 object-contain" />
               </div>
 
@@ -48,14 +56,14 @@ export default function Header() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary/82">
                   Digital Reliquary
                 </p>
-                <p className="font-display text-lg tracking-[0.08em] text-brand-gradient sm:text-xl">
+                <p className="font-display text-lg tracking-[0.05em] text-brand-gradient drop-shadow-[0_0_18px_hsl(var(--brand)/0.12)] sm:text-xl">
                   Areias de Zerrikania
                 </p>
               </div>
             </Link>
 
-            <nav className="hidden min-w-0 flex-1 items-center justify-center xl:flex">
-              <div className="flex min-w-0 items-center gap-1 border border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.7),hsl(var(--surface-base)/0.88))] px-2 py-1 shadow-panel">
+            <nav className="hidden min-w-0 items-center justify-center xl:flex">
+              <div className="artifact-nav-track w-full max-w-[780px]">
                 {navItems.map((item) => {
                   const active = isActivePath(item.path);
 
@@ -63,35 +71,34 @@ export default function Header() {
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`relative px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors ${
-                        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                      }`}
+                      data-active={active ? "true" : "false"}
+                      className={`artifact-nav-link ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
                     >
                       {item.label}
-                      <span
-                        className={`absolute inset-x-3 bottom-1 h-px origin-left bg-[linear-gradient(90deg,hsl(var(--brand)),transparent)] transition-transform duration-200 ${
-                          active ? "scale-x-100" : "scale-x-0"
-                        }`}
-                      />
                     </Link>
                   );
                 })}
               </div>
             </nav>
 
-            <div className="hidden items-center gap-3 lg:flex">
-              <Badge variant="outline" className="border-[hsl(var(--info)/0.24)] text-info">
+            <div className="hidden items-center justify-end gap-3 xl:flex">
+              <div className="header-status-pill">
                 <Flame className="mr-2 h-3.5 w-3.5" />
-                Arquivo em campanha
-              </Badge>
-              <Button asChild size="sm">
-                <Link to="/conta">Conta</Link>
-              </Button>
+                {atlasMode ? atlasFocus?.title ?? "Atlas em foco" : "Arquivo em campanha"}
+              </div>
+              {atlasMode && atlasFocus?.stage ? (
+                <Badge variant="outline" className="border-primary/25 text-primary">
+                  {atlasFocus.stage}
+                </Badge>
+              ) : null}
+              <Link to="/conta" className="header-account-button">
+                Conta
+              </Link>
             </div>
 
             <button
               type="button"
-              className="ml-auto inline-flex h-11 w-11 items-center justify-center border border-[hsl(var(--outline-variant)/0.22)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.82),hsl(var(--surface-base)/0.92))] text-foreground transition-colors hover:border-[hsl(var(--brand)/0.24)] hover:text-primary xl:hidden"
+              className="ml-auto inline-flex h-11 w-11 items-center justify-center border border-[hsl(var(--brand)/0.2)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.82),hsl(var(--surface-base)/0.92))] text-foreground transition-colors hover:border-[hsl(var(--brand)/0.34)] hover:text-primary justify-self-end xl:hidden"
               onClick={() => setMobileOpen((previous) => !previous)}
               aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
             >
@@ -105,11 +112,13 @@ export default function Header() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="relative overflow-hidden border-t border-[hsl(var(--outline-variant)/0.16)] xl:hidden"
+                className="relative overflow-hidden border-t border-[hsl(var(--brand)/0.14)] xl:hidden"
               >
                 <div className="space-y-4 px-4 py-4 sm:px-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Badge variant="outline">Arquivo vivo do continente</Badge>
+                    <Badge variant="outline">
+                      {atlasMode ? atlasFocus?.title ?? "Atlas do continente" : "Arquivo vivo do continente"}
+                    </Badge>
                     <Button asChild size="sm" variant="outline">
                       <Link to="/conta">Conta</Link>
                     </Button>
@@ -125,8 +134,8 @@ export default function Header() {
                           to={item.path}
                           className={`border px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors ${
                             active
-                              ? "border-[hsl(var(--brand)/0.24)] bg-[linear-gradient(135deg,hsl(var(--brand)/0.22),transparent)] text-primary"
-                              : "border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.56),hsl(var(--background)/0.36))] text-muted-foreground hover:border-[hsl(var(--brand)/0.18)] hover:text-foreground"
+                              ? "border-[hsl(var(--brand)/0.28)] bg-[linear-gradient(135deg,hsl(var(--brand)/0.24),transparent)] text-primary"
+                              : "border-[hsl(var(--brand)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.56),hsl(var(--background)/0.36))] text-muted-foreground hover:border-[hsl(var(--brand)/0.2)] hover:text-foreground"
                           }`}
                         >
                           {item.label}

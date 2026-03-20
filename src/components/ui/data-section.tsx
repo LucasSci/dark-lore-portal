@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const dataSectionVariants = cva(
-  "rounded-none border px-4 py-4 text-left transition-[background-color,border-color,box-shadow] duration-200",
+  "reliquary-grain rounded-none border px-4 py-4 text-left transition-[background-color,border-color,box-shadow] duration-200",
   {
     variants: {
       variant: {

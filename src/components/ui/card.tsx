@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "ornate-frame relative overflow-hidden rounded-none border text-card-foreground transition-[border-color,background-color,box-shadow] duration-200",
+  "ornate-frame reliquary-grain relative overflow-hidden rounded-none border text-card-foreground transition-[border-color,background-color,box-shadow] duration-200",
   {
   variants: {
     variant: {

@@ -2,11 +2,14 @@ import { motion } from "framer-motion";
 import { ArrowRight, BookOpenText, ScrollText, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import PortalContextPanel from "@/components/portal/PortalContextPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
+import { getAtlasContextForCampaignPublication } from "@/lib/atlas-context";
 import { CURRENT_PROTAGONISTS } from "@/lib/immersive-lore";
+import { usePortalShellMode } from "@/lib/portal-state";
 import {
   type CampaignPublication,
   useCampaignPublications,
@@ -30,8 +33,12 @@ const publicationLabel: Record<CampaignPublication["kind"], string> = {
 };
 
 export default function CampaignPage() {
+  usePortalShellMode("editorial", "ambient");
   const { publishedPublications } = useCampaignPublications();
   const leadPublication = publishedPublications[0];
+  const leadAtlasContext = leadPublication
+    ? getAtlasContextForCampaignPublication(leadPublication)
+    : null;
   const latestUpdate = leadPublication
     ? new Date(leadPublication.updatedAt).toLocaleDateString("pt-BR")
     : "Sem registro";
@@ -90,6 +97,11 @@ export default function CampaignPage() {
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
+                  {leadAtlasContext ? (
+                    <Button asChild variant="secondary">
+                      <Link to={leadAtlasContext.href}>Ver foco no mapa</Link>
+                    </Button>
+                  ) : null}
                   <Button asChild variant="outline">
                     <Link to="/comunidade">Ver ecos no mural</Link>
                   </Button>
@@ -249,6 +261,19 @@ export default function CampaignPage() {
             </div>
 
             <div className="space-y-4 xl:sticky xl:top-28 xl:self-start">
+              {leadAtlasContext ? (
+                <PortalContextPanel
+                  eyebrow="Rota sugerida"
+                  title={leadAtlasContext.title}
+                  description="A campanha agora aponta de volta para o atlas como continuidade natural entre leitura, deslocamento e sessao."
+                  image={leadAtlasContext.image}
+                  metrics={leadAtlasContext.metrics.slice(0, 3)}
+                  actions={leadAtlasContext.actions}
+                  related={leadAtlasContext.related}
+                  relatedLabel="Verbetes recomendados para esta frente"
+                />
+              ) : null}
+
               <Card variant="panel">
                 <CardContent className="space-y-5 p-6">
                   <div>

@@ -168,16 +168,37 @@ function buildRectAround(center: AtlasCoordinate, width: number, height: number)
 
 function buildIcon(label: string, tone: "region" | "location" | "poi" | "cluster") {
   const colors = {
-    region: "rgba(109, 40, 217, 0.92)",
-    location: "rgba(22, 163, 74, 0.92)",
-    poi: "rgba(220, 38, 38, 0.92)",
-    cluster: "rgba(245, 158, 11, 0.92)",
+    region: {
+      background: "linear-gradient(180deg, rgba(205,168,92,0.96), rgba(112,79,36,0.98))",
+      border: "rgba(245, 227, 185, 0.9)",
+      color: "#1e140d",
+      glow: "rgba(201, 161, 91, 0.32)",
+    },
+    location: {
+      background: "linear-gradient(180deg, rgba(115,147,143,0.96), rgba(36,63,61,0.98))",
+      border: "rgba(212, 229, 225, 0.82)",
+      color: "#f2ede3",
+      glow: "rgba(115, 147, 143, 0.28)",
+    },
+    poi: {
+      background: "linear-gradient(180deg, rgba(154,54,40,0.96), rgba(63,16,13,0.98))",
+      border: "rgba(242, 189, 178, 0.82)",
+      color: "#f7e5de",
+      glow: "rgba(154, 54, 40, 0.3)",
+    },
+    cluster: {
+      background: "linear-gradient(180deg, rgba(184,126,62,0.96), rgba(77,50,23,0.98))",
+      border: "rgba(245, 221, 171, 0.86)",
+      color: "#f8f0df",
+      glow: "rgba(184, 126, 62, 0.28)",
+    },
   };
+  const toneSpec = colors[tone];
 
   return L.divIcon({
     className: "",
-    html: `<span style="display:grid;place-items:center;min-width:34px;height:34px;padding:0 10px;border-radius:999px;background:${colors[tone]};border:1px solid rgba(241,206,132,.95);box-shadow:0 10px 30px rgba(0,0,0,.35);color:#f8f1de;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase">${label}</span>`,
-    iconAnchor: [17, 17],
+    html: `<span style="position:relative;display:grid;place-items:center;min-width:44px;height:44px;padding:0 12px;background:${toneSpec.background};border:1px solid ${toneSpec.border};box-shadow:0 12px 26px rgba(6,5,4,.34),0 0 24px ${toneSpec.glow},inset 0 1px 0 rgba(255,243,212,.16);clip-path:polygon(12% 0,88% 0,100% 22%,100% 78%,88% 100%,12% 100%,0 78%,0 22%);color:${toneSpec.color};font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;text-shadow:0 1px 1px rgba(0,0,0,.22)"><span style="position:absolute;inset:1px;border:1px solid rgba(255,243,212,.12);clip-path:polygon(12% 0,88% 0,100% 22%,100% 78%,88% 100%,12% 100%,0 78%,0 22%)"></span><span style="position:relative;z-index:1">${label}</span></span>`,
+    iconAnchor: [22, 22],
   });
 }
 

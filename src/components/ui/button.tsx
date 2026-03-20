@@ -5,14 +5,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap overflow-hidden rounded-none border border-transparent px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground ring-offset-background transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 ease-out hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "artifact-button-base inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap overflow-hidden rounded-none border border-transparent px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground ring-offset-background transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 ease-out hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "border-[hsl(var(--brand)/0.34)] bg-[linear-gradient(135deg,hsl(47_100%_82%),hsl(var(--primary))_40%,hsl(var(--warning))_100%)] text-primary-foreground shadow-brand hover:border-[hsl(var(--brand)/0.54)] hover:brightness-105",
+          "ornate-button-frame text-primary-foreground",
         primary:
-          "border-[hsl(var(--brand)/0.34)] bg-[linear-gradient(135deg,hsl(47_100%_82%),hsl(var(--primary))_40%,hsl(var(--warning))_100%)] text-primary-foreground shadow-brand hover:border-[hsl(var(--brand)/0.54)] hover:brightness-105",
+          "ornate-button-frame text-primary-foreground",
         destructive:
           "border-[hsl(var(--destructive-foreground)/0.2)] bg-[linear-gradient(135deg,hsl(var(--destructive-foreground)/0.96),hsl(var(--destructive))_42%,hsl(2_73%_18%)_100%)] text-destructive-foreground shadow-[0_24px_54px_hsl(var(--destructive)/0.22)] hover:border-[hsl(var(--destructive-foreground)/0.34)] hover:brightness-105",
         danger:
@@ -23,9 +23,9 @@ const buttonVariants = cva(
           "border-[hsl(var(--warning)/0.34)] bg-[linear-gradient(135deg,hsl(var(--destructive-foreground)),hsl(var(--warning))_48%,hsl(42_58%_42%)_100%)] text-warning-foreground shadow-[0_24px_54px_hsl(var(--warning)/0.2)] hover:border-[hsl(var(--warning)/0.5)] hover:brightness-105",
         info: "border-[hsl(var(--info)/0.3)] bg-[linear-gradient(135deg,hsl(var(--info)/0.94),hsl(209_48%_54%)_100%)] text-info-foreground shadow-[0_24px_54px_hsl(var(--info)/0.18)] hover:border-[hsl(var(--info)/0.42)] hover:brightness-105",
         outline:
-          "border-[hsl(var(--outline-variant)/0.24)] bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.9),hsl(var(--surface-base)/0.96))] text-foreground shadow-panel hover:border-[hsl(var(--brand)/0.28)] hover:text-primary",
+          "ornate-button-frame ornate-button-muted shadow-panel",
         secondary:
-          "border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.88),hsl(var(--surface-raised)/0.94))] text-secondary-foreground shadow-panel hover:border-[hsl(var(--brand)/0.24)] hover:text-foreground",
+          "ornate-button-frame ornate-button-muted text-secondary-foreground shadow-panel",
         ghost:
           "border-transparent bg-transparent text-muted-foreground shadow-none hover:border-[hsl(var(--outline-variant)/0.14)] hover:bg-[hsl(var(--surface-raised)/0.28)] hover:text-foreground",
         link: "min-h-0 border-transparent px-0 py-0 text-primary shadow-none hover:text-primary/82 hover:underline",

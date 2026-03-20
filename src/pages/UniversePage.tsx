@@ -21,6 +21,7 @@ import {
   Users,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import PortalContextPanel from "@/components/portal/PortalContextPanel";
 import ContinentMap from "@/components/world/ContinentMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,11 +57,13 @@ import {
   type EncyclopediaEntry,
   type EncyclopediaTimelineEvent,
 } from "@/lib/encyclopedia";
+import { getAtlasContextForEntry } from "@/lib/atlas-context";
 import {
   getWitcherBestiaryMetadata,
   witcherBestiaryRegions,
   witcherBestiaryTypes,
 } from "@/lib/witcher-bestiary";
+import { usePortalShellMode } from "@/lib/portal-state";
 import { cn } from "@/lib/utils";
 
 type CategoryFilter = "todas" | EncyclopediaCategory;
@@ -979,6 +982,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
     .map(sanitizeImmersiveEntry);
   const Icon = categoryIcons[entry.category];
   const bestiaryMeta = getWitcherBestiaryMetadata(entry.slug);
+  const atlasContext = getAtlasContextForEntry(entry);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [heroImage, setHeroImage] = useState(entry.image);
 
@@ -1261,6 +1265,19 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
           </div>
 
           <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
+            {atlasContext ? (
+              <PortalContextPanel
+                eyebrow="Ver no atlas"
+                title={atlasContext.title}
+                description="Este verbete agora aponta para uma leitura geografica concreta, aproximando lore, deslocamento e preparacao de sessao."
+                image={atlasContext.image}
+                metrics={atlasContext.metrics.slice(0, 3)}
+                actions={atlasContext.actions}
+                related={atlasContext.related}
+                relatedLabel="Entradas vizinhas desta rota"
+              />
+            ) : null}
+
             <TimelineRail title="Linha do tempo desta pagina" events={entry.timeline} />
 
             <Card variant="panel">
@@ -1301,6 +1318,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
 }
 
 export default function UniversePage() {
+  usePortalShellMode("editorial", "ambient");
   const { entrySlug } = useParams();
 
   if (!entrySlug) {

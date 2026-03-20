@@ -6,15 +6,16 @@ import { Button } from "@/components/ui/button";
 
 const footerLinks = [
   {
-    title: "Explorar",
+    title: "Descobrir",
     links: [
+      { label: "Atlas", path: "/mapa" },
       { label: "Campanha", path: "/campanha" },
       { label: "Universo", path: "/universo" },
-      { label: "Loja", path: "/loja" },
+      { label: "Comunidade", path: "/comunidade" },
     ],
   },
   {
-    title: "Jogar",
+    title: "Mesa",
     links: [
       { label: "Criar ficha", path: "/criacao" },
       { label: "Mesa virtual", path: "/mesa" },
@@ -22,22 +23,22 @@ const footerLinks = [
     ],
   },
   {
-    title: "Conta",
+    title: "Arquivo",
     links: [
       { label: "Arquivo pessoal", path: "/conta" },
-      { label: "Biblioteca", path: "/conta" },
-      { label: "Mercado", path: "/loja" },
+      { label: "Jogar", path: "/jogar" },
+      { label: "Loja", path: "/loja" },
     ],
   },
 ];
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.68),hsl(var(--background-strong)))] safe-bottom">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--brand)/0.08),transparent_26%),radial-gradient(circle_at_84%_22%,hsl(var(--info)/0.08),transparent_20%)]" />
+    <footer className="artifact-footer-shell safe-bottom">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--brand)/0.08),transparent_26%),radial-gradient(circle_at_84%_22%,hsl(var(--info)/0.08),transparent_20%)] opacity-70" />
 
-      <div className="container relative py-16 md:py-20">
-        <div className="ornate-frame mb-10 border border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.72),hsl(var(--surface-base)/0.9))] p-6 shadow-elevated md:p-8">
+      <div className="container relative z-10 pt-16 pb-28 md:pt-20 md:pb-36">
+        <div className="reliquary-grain ornate-frame mb-10 border border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.72),hsl(var(--surface-base)/0.9))] p-6 shadow-elevated md:p-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_auto] lg:items-center">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
