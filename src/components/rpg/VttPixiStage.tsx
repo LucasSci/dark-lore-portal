@@ -241,6 +241,7 @@ export default function VttPixiStage({
   const dropEntryRef = useRef(onDropEntry);
   const moveTokenRef = useRef(onMoveToken);
   const selectTokenRef = useRef(onSelectToken);
+  const cellClickRef = useRef(onCellClick);
   const panStateRef = useRef({
     active: false,
     originX: 0,
@@ -315,6 +316,7 @@ export default function VttPixiStage({
     onAddLightRef.current = onAddLight;
     moveTokenRef.current = onMoveToken;
     selectTokenRef.current = onSelectToken;
+    cellClickRef.current = onCellClick;
   }, [
     onAddLight,
     onAddWall,
@@ -322,6 +324,7 @@ export default function VttPixiStage({
     onDropEntry,
     onMoveToken,
     onSelectToken,
+    onCellClick,
     page,
     boardMode,
   ]);
@@ -1093,7 +1096,7 @@ export default function VttPixiStage({
       cellGraphic.fill({ color: 0x000000, alpha: 0.001 });
       cellGraphic.eventMode = "static";
       cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
-      cellGraphic.on("pointertap", () => onCellClick(cell));
+      cellGraphic.on("pointertap", () => cellClickRef.current(cell));
       interactionLayer.addChild(cellGraphic);
 
       if (showGrid && (cell.x === 0 || cell.y === 0)) {
@@ -1518,9 +1521,6 @@ export default function VttPixiStage({
     mapTexture,
     measureState,
     wallPreview,
-    onCellClick,
-    onMoveToken,
-    onSelectToken,
     page,
     selectedTokenId,
     showGrid,

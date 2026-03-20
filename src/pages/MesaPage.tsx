@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -303,7 +303,7 @@ export default function MesaPage() {
 
   const activePage = getActivePage(scene);
   const battlemapUrl = activePage?.backgroundAssetUrl ?? null;
-  const tokens = getSceneTokens(scene);
+  const tokens = useMemo(() => getSceneTokens(scene), [scene]);
   const selectedToken = getSelectedToken(scene);
   const activeTurn = scene.initiative.entries.find((e) => e.tokenId === scene.initiative.activeTurnId);
   const rightTabs: Array<{ id: RightTab; icon: ReactNode; label: string }> = [
