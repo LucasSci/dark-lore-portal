@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
+
 import logoEmblem from "@/assets/logo-emblem.png";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const footerLinks = [
   {
@@ -31,37 +33,65 @@ const footerLinks = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border/70 bg-surface-strong/80 safe-bottom">
-      <div className="container py-10 sm:py-16">
-        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))]">
-          <div className="space-y-4 sm:col-span-2 md:col-span-1">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full border border-primary/20 bg-background/60 p-2">
-                <img src={logoEmblem} alt="Emblema da campanha" className="h-7 w-7 sm:h-8 sm:w-8" />
+    <footer className="relative overflow-hidden bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.68),hsl(var(--background-strong)))] safe-bottom">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--brand)/0.08),transparent_26%),radial-gradient(circle_at_84%_22%,hsl(var(--info)/0.08),transparent_20%)]" />
+
+      <div className="container relative py-16 md:py-20">
+        <div className="ornate-frame mb-10 border border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.72),hsl(var(--surface-base)/0.9))] p-6 shadow-elevated md:p-8">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_auto] lg:items-center">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center border border-[hsl(var(--brand)/0.2)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.94),hsl(var(--surface-base)/0.98))] shadow-panel">
+                  <img src={logoEmblem} alt="Emblema da campanha" className="h-9 w-9 object-contain" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary/78">
+                    Forge the journey
+                  </p>
+                  <p className="font-display text-3xl text-brand-gradient">
+                    O atlas, a mesa e o arquivo agora falam a mesma lingua.
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-display text-base tracking-[0.18em] text-brand-gradient sm:text-lg sm:tracking-[0.22em]">
-                  AREIAS DE ZERRIKANIA
-                </p>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:text-[11px] sm:tracking-[0.22em]">
-                  Arquivo vivo do continente
-                </p>
+
+              <p className="max-w-3xl text-sm leading-7 text-muted-foreground md:text-base">
+                Um portal dark fantasy pensado como reliquario digital: cronicas, contratos,
+                mapas e fichas organizados como partes do mesmo artefato.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <Badge variant="outline">Assets originais ou licenciados</Badge>
+                <Badge variant="secondary">Atlas navegavel + VTT + biblioteca</Badge>
               </div>
             </div>
-            <p className="max-w-sm text-sm leading-6 text-muted-foreground sm:leading-7">
-              Um ecossistema de campanha focado em estrada, rumor, combate e cronicas do mestre.
+
+            <div className="flex flex-wrap gap-3">
+              <Button asChild>
+                <Link to="/universo">Abrir o arquivo</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/criacao">Forjar personagem</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-10 md:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))]">
+          <div className="space-y-4">
+            <p className="section-kicker">Arquivo do continente</p>
+            <h3 className="font-display text-2xl text-foreground">
+              Estrada, rumor, combate e memoria viva.
+            </h3>
+            <p className="max-w-md text-sm leading-7 text-muted-foreground">
+              O site foi redesenhado para soar menos como dashboard generico e mais como peca de
+              mundo: denso, legivel e pronto para sustentar campanha longa.
             </p>
-            <Badge variant="outline" className="border-primary/25 text-primary">
-              Assets originais ou licenciados
-            </Badge>
           </div>
 
           {footerLinks.map((column) => (
             <div key={column.title}>
-              <h4 className="font-heading text-xs uppercase tracking-[0.2em] text-primary">
-                {column.title}
-              </h4>
-              <ul className="mt-3 space-y-2.5 sm:mt-4 sm:space-y-3">
+              <p className="section-kicker">{column.title}</p>
+              <ul className="mt-4 space-y-3">
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <Link
@@ -77,9 +107,9 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-8 flex flex-col gap-2 border-t border-border/70 pt-5 text-xs text-muted-foreground sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:pt-6 sm:text-sm">
+        <div className="mt-12 grid gap-3 border-t border-[hsl(var(--outline-variant)/0.14)] pt-5 text-xs text-muted-foreground md:grid-cols-[1fr_auto] md:items-center">
           <p>(c) 2026 Areias de Zerrikania. Todos os direitos reservados.</p>
-          <p>Ambientacao autoral inspirada no tom dark fantasy.</p>
+          <p>Ambientacao autoral com direcao visual dark fantasy editorial.</p>
         </div>
       </div>
     </footer>

@@ -625,6 +625,14 @@ function UniverseIndex() {
   const showMonsterFilters = activeCategory === "monstros";
   const hasMonsterFilters =
     monsterType !== "all" || monsterRegion !== "all" || monsterDanger !== "all";
+  const categories = Object.keys(encyclopediaCategories) as EncyclopediaCategory[];
+  const activeCategoryLabel =
+    activeCategory === "todas"
+      ? "Todas as categorias"
+      : encyclopediaCategories[activeCategory].label;
+  const activeFilterCount = [monsterType, monsterRegion, monsterDanger].filter(
+    (value) => value !== "all",
+  ).length;
 
   const filteredEntries = useMemo(
     () =>
@@ -673,83 +681,106 @@ function UniverseIndex() {
   );
 
   return (
-    <div className="container py-24">
+    <div className="container py-12 md:py-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-10"
+        className="space-y-12"
       >
-        <div className="text-center">
-          <BookMarked className="mx-auto mb-4 h-10 w-10 text-primary" />
-          <h1 className="mb-4 font-display text-3xl text-gold-gradient md:text-5xl">
-            Enciclopedia do Universo
-          </h1>
-          <p className="mx-auto max-w-2xl text-muted-foreground">
-            Explore personagens, monstros, locais, faccoes e historia sem comentario de bastidor:
-            o foco agora recai sobre as trilhas de {CURRENT_PROTAGONISTS.join(", ")} e as regioes que os cercam.
-          </p>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <Card variant="elevated">
-            <CardContent className="space-y-4 p-6">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
+          <Card variant="elevated" className="overflow-hidden">
+            <CardContent className="space-y-6 p-6 md:p-8">
               <div className="flex flex-wrap items-center gap-3">
-                <div className="relative min-w-[260px] flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar por nome, tema ou resumo..."
-                    className="bg-background/60 pl-10"
-                  />
-                </div>
-                <Badge variant="outline" className="border-primary/30 text-primary">
-                  {filteredEntries.length} verbetes
+                <Badge variant="outline">
+                  <BookMarked className="mr-2 h-3.5 w-3.5" />
+                  Enciclopedia do universo
                 </Badge>
+                <Badge variant="info">{filteredEntries.length} verbetes visiveis</Badge>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant={activeCategory === "todas" ? "default" : "outline"}
-                  onClick={() => {
-                    setActiveCategory("todas");
-                    setMonsterType("all");
-                    setMonsterRegion("all");
-                    setMonsterDanger("all");
-                  }}
-                >
-                  Todas
-                </Button>
-                {(Object.keys(encyclopediaCategories) as EncyclopediaCategory[]).map(
-                  (category) => (
+              <div className="max-w-4xl space-y-4">
+                <p className="section-kicker">Immersive archive</p>
+                <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
+                  Personagens, monstros, faccoes e lugares tratados como dossie de campanha.
+                </h1>
+                <p className="text-base leading-8 text-foreground/88">
+                  A enciclopedia agora funciona como arquivo nobre do portal: busca, filtros,
+                  atlas e verbetes foram organizados para leitura imersiva, sem perder a utilidade
+                  em mesa.
+                </p>
+              </div>
+
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_240px]">
+                <div className="space-y-5">
+                  <div className="relative border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.72))] px-4 py-3">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Buscar por nome, tema ou resumo..."
+                      className="pl-8"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
                     <Button
-                      key={category}
                       size="sm"
-                      variant={activeCategory === category ? "default" : "outline"}
+                      variant={activeCategory === "todas" ? "default" : "outline"}
                       onClick={() => {
-                        setActiveCategory(category);
-                        if (category !== "monstros") {
-                          setMonsterType("all");
-                          setMonsterRegion("all");
-                          setMonsterDanger("all");
-                        }
+                        setActiveCategory("todas");
+                        setMonsterType("all");
+                        setMonsterRegion("all");
+                        setMonsterDanger("all");
                       }}
                     >
-                      {encyclopediaCategories[category].label}
+                      Todas
                     </Button>
-                  ),
-                )}
+                    {categories.map((category) => (
+                      <Button
+                        key={category}
+                        size="sm"
+                        variant={activeCategory === category ? "default" : "outline"}
+                        onClick={() => {
+                          setActiveCategory(category);
+                          if (category !== "monstros") {
+                            setMonsterType("all");
+                            setMonsterRegion("all");
+                            setMonsterDanger("all");
+                          }
+                        }}
+                      >
+                        {encyclopediaCategories[category].label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid gap-3">
+                  <DataSection
+                    label="Categoria ativa"
+                    value={activeCategoryLabel}
+                    variant="quiet"
+                  />
+                  <DataSection
+                    label="Trilha central"
+                    value={CURRENT_PROTAGONISTS.join(" / ")}
+                    variant="quiet"
+                    tone="info"
+                  />
+                  <DataSection
+                    label="Filtros bestiario"
+                    value={showMonsterFilters ? `${activeFilterCount} ativos` : "Indisponiveis"}
+                    variant="quiet"
+                  />
+                </div>
               </div>
 
               {showMonsterFilters ? (
-                <div className="grid gap-3 rounded-xl border border-border/70 bg-background/40 p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_auto]">
+                <div className="grid gap-3 border border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.76))] p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_auto]">
                   <div className="space-y-2">
-                    <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
-                      Tipo
-                    </p>
+                    <p className="section-kicker">Tipo</p>
                     <Select value={monsterType} onValueChange={setMonsterType}>
-                      <SelectTrigger className="bg-background/70">
+                      <SelectTrigger>
                         <SelectValue placeholder="Todos os tipos" />
                       </SelectTrigger>
                       <SelectContent>
@@ -764,11 +795,9 @@ function UniverseIndex() {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
-                      Regiao
-                    </p>
+                    <p className="section-kicker">Regiao</p>
                     <Select value={monsterRegion} onValueChange={setMonsterRegion}>
-                      <SelectTrigger className="bg-background/70">
+                      <SelectTrigger>
                         <SelectValue placeholder="Todas as regioes" />
                       </SelectTrigger>
                       <SelectContent>
@@ -783,11 +812,9 @@ function UniverseIndex() {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
-                      Perigo
-                    </p>
+                    <p className="section-kicker">Perigo</p>
                     <Select value={monsterDanger} onValueChange={setMonsterDanger}>
-                      <SelectTrigger className="bg-background/70">
+                      <SelectTrigger>
                         <SelectValue placeholder="Todos" />
                       </SelectTrigger>
                       <SelectContent>
@@ -816,54 +843,96 @@ function UniverseIndex() {
                   </div>
                 </div>
               ) : null}
-
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {(Object.keys(encyclopediaCategories) as EncyclopediaCategory[]).map(
-                  (category) => {
-                    const Icon = categoryIcons[category];
-
-                    return (
-                      <button
-                        key={category}
-                        type="button"
-                        onClick={() => {
-                          setActiveCategory(category);
-                          if (category !== "monstros") {
-                            setMonsterType("all");
-                            setMonsterRegion("all");
-                            setMonsterDanger("all");
-                          }
-                        }}
-                        className="rounded-xl border border-border/70 bg-background/50 p-4 text-left transition-colors hover:border-primary/30"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="rounded-full border border-primary/20 bg-background/50 p-3">
-                            <Icon className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-heading text-base text-foreground">
-                              {encyclopediaCategories[category].label}
-                            </h3>
-                            <p className="text-xs text-muted-foreground">
-                              {getEntriesByCategory(category).length} verbetes
-                            </p>
-                          </div>
-                        </div>
-                        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                          {encyclopediaCategories[category].description}
-                        </p>
-                      </button>
-                    );
-                  },
-                )}
-              </div>
             </CardContent>
           </Card>
 
-          <TimelineRail title="Linha do tempo geral" events={immersiveTimeline} />
+          <div className="grid gap-4">
+            <Card variant="panel">
+              <CardContent className="space-y-4 p-6">
+                <div>
+                  <p className="section-kicker">Scope</p>
+                  <h2 className="mt-2 font-heading text-2xl text-foreground">
+                    Leitura do arquivo
+                  </h2>
+                </div>
+
+                <DataSection
+                  label="Entradas totais"
+                  value={immersiveEntries.length}
+                  variant="quiet"
+                />
+                <DataSection
+                  label="Categorias"
+                  value={categories.length}
+                  variant="quiet"
+                />
+                <DataSection
+                  label="Tom"
+                  value="Bestiario, politica, lugares e memoria"
+                  variant="quiet"
+                  tone="info"
+                />
+              </CardContent>
+            </Card>
+
+            <DataSection
+              label="Pista"
+              value="Use a busca para localizar criatura, local ou faccao antes de abrir o verbete."
+              icon={<Sparkles className="h-4 w-4" />}
+              tone="info"
+            />
+          </div>
+        </section>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {categories.map((category) => {
+            const Icon = categoryIcons[category];
+            const active = activeCategory === category;
+
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => {
+                  setActiveCategory(category);
+                  if (category !== "monstros") {
+                    setMonsterType("all");
+                    setMonsterRegion("all");
+                    setMonsterDanger("all");
+                  }
+                }}
+                className={cn(
+                  "border p-5 text-left transition-[border-color,background-color,transform] duration-200 hover:-translate-y-px",
+                  active
+                    ? "border-[hsl(var(--brand)/0.22)] bg-[linear-gradient(180deg,hsl(var(--brand)/0.12),hsl(var(--surface-base)/0.94))]"
+                    : "border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.72))] hover:border-[hsl(var(--brand)/0.16)]",
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center border border-[hsl(var(--brand)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.84),hsl(var(--surface-base)/0.96))] text-primary">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-heading text-lg text-foreground">
+                      {encyclopediaCategories[category].label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {getEntriesByCategory(category).length} verbetes
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                  {encyclopediaCategories[category].description}
+                </p>
+              </button>
+            );
+          })}
         </div>
 
-        <ContinentMap />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <ContinentMap />
+          <TimelineRail title="Linha do tempo geral" events={immersiveTimeline} />
+        </div>
 
         {filteredEntries.length > 0 ? (
           <div className="grid gap-6 xl:grid-cols-3">
@@ -918,21 +987,29 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
   }, [entry.image]);
 
   return (
-    <div className="container py-16 md:py-20">
+    <div className="container py-12 md:py-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-12"
+        className="space-y-10 md:space-y-12"
       >
-        <Button asChild variant="ghost" className="pl-0 text-primary">
-          <Link to="/universo">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para a enciclopedia
-          </Link>
-        </Button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button asChild variant="ghost" className="pl-0 text-primary">
+            <Link to="/universo">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para a enciclopedia
+            </Link>
+          </Button>
+
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline">{encyclopediaCategories[entry.category].label}</Badge>
+            {entry.vtt ? <Badge variant="secondary">Pronto para VTT</Badge> : null}
+            {bestiaryMeta ? <Badge variant="info">Perigo {bestiaryMeta.dangerLevel}/5</Badge> : null}
+          </div>
+        </div>
 
         <section
-          className="relative min-h-[72vh] overflow-hidden rounded-[var(--radius)] border border-border/70"
+          className="ornate-frame relative min-h-[72vh] overflow-hidden border border-[hsl(var(--outline-variant)/0.18)]"
           onMouseMove={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
             const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
@@ -960,31 +1037,25 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
               }
             }}
           />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--background)/0.16),hsl(var(--background)/0.42)_34%,hsl(var(--background-strong)/0.92)_74%,hsl(var(--background-strong))_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.16),transparent_30%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.16),transparent_26%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--background)/0.14),hsl(var(--background)/0.38)_28%,hsl(var(--background-strong)/0.9)_72%,hsl(var(--background-strong))_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.18),transparent_26%),radial-gradient(circle_at_84%_24%,hsl(var(--info)/0.16),transparent_18%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.16),transparent_26%)]" />
 
-          <div className="relative grid min-h-[72vh] items-end gap-6 p-6 md:p-8 xl:grid-cols-[minmax(0,1.2fr)_360px] xl:p-12">
+          <div className="relative grid min-h-[72vh] items-end gap-6 p-6 md:p-8 xl:grid-cols-[minmax(0,1.15fr)_380px] xl:p-12">
             <div className="max-w-3xl space-y-6">
               <div className="flex flex-wrap items-center gap-3">
-                <Badge variant="outline" className="border-primary/30 text-primary">
+                <Badge variant="outline">
                   {encyclopediaCategories[entry.category].label}
                 </Badge>
                 <Icon className="h-5 w-5 text-primary/70" />
-                {entry.vtt ? (
-                  <Badge variant="secondary" className="bg-secondary/80 text-foreground">
-                    Pronto para VTT
-                  </Badge>
-                ) : null}
+                <Badge variant="secondary">Verbete imersivo</Badge>
               </div>
 
               <div>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-                  Verbete imersivo
-                </p>
-                <h1 className="mt-3 font-display text-4xl text-gold-gradient md:text-6xl">
+                <p className="section-kicker">Immersive dossier</p>
+                <h1 className="mt-3 font-display text-5xl leading-[0.95] text-gold-gradient md:text-6xl">
                   {entry.title}
                 </h1>
-                <p className="mt-3 text-base leading-7 text-muted-foreground">
+                <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
                   {entry.subtitle}
                 </p>
               </div>
@@ -992,14 +1063,26 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
               <p className="max-w-2xl text-base leading-8 text-foreground/92">
                 {entry.summary}
               </p>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {entry.stats.slice(0, 3).map((stat) => (
+                  <div
+                    key={`${entry.slug}-${stat.label}-hero`}
+                    className="border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.74))] p-4 backdrop-blur-sm"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                      {stat.label}
+                    </p>
+                    <p className="mt-3 font-heading text-xl text-foreground">{stat.value}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="rounded-[var(--radius)] border border-border/70 bg-background/70 p-5 shadow-panel backdrop-blur-sm">
+            <div className="space-y-4 border border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.74),hsl(var(--background-strong)/0.88))] p-5 shadow-elevated backdrop-blur-sm">
               <div className="space-y-4">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-                    Resumo tatico
-                  </p>
+                  <p className="section-kicker">Quick read</p>
                   <h2 className="mt-2 font-heading text-2xl text-foreground">
                     Leitura rapida
                   </h2>
@@ -1046,63 +1129,94 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
           </div>
         </section>
 
-        <Card variant="panel" className="overflow-hidden">
-          <CardContent className="grid gap-6 p-6 md:p-8 lg:grid-cols-[minmax(0,1.15fr)_320px]">
-            <EntryArtworkPreview
-              entry={entry}
-              frameClassName="min-h-[320px] md:min-h-[420px]"
-              imageClassName="object-contain p-5 md:p-8"
-              buttonLabel="Ver em tela cheia"
-            />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
+          <Card variant="panel" className="overflow-hidden">
+            <CardContent className="grid gap-6 p-6 md:p-8 lg:grid-cols-[minmax(0,1.15fr)_320px]">
+              <EntryArtworkPreview
+                entry={entry}
+                frameClassName="min-h-[320px] md:min-h-[420px]"
+                imageClassName="object-contain p-5 md:p-8"
+                buttonLabel="Ver em tela cheia"
+              />
 
-            <div className="space-y-4 rounded-[var(--radius)] border border-border/70 bg-background/40 p-5">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-                  Visual do verbete
+              <div className="space-y-4 border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-5">
+                <div>
+                  <p className="section-kicker">Art board</p>
+                  <h2 className="mt-2 font-heading text-2xl text-foreground">
+                    Leitura clara da arte
+                  </h2>
+                </div>
+
+                <p className="text-sm leading-7 text-muted-foreground">
+                  A ilustracao fica em quadro proprio, sem cortes agressivos, para facilitar a
+                  leitura da criatura, do personagem ou do local antes de abrir em tela cheia.
                 </p>
+
+                <div className="grid gap-3">
+                  <DataSection
+                    label="Categoria"
+                    value={encyclopediaCategories[entry.category].label}
+                    variant="quiet"
+                  />
+                  <DataSection
+                    label="Imagem"
+                    value={entry.imageAlt}
+                    variant="quiet"
+                  />
+                  <DataSection
+                    label="Modo"
+                    value={
+                      entry.category === "monstros" ? "Enquadramento completo" : "Painel ampliado"
+                    }
+                    variant="quiet"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card variant="panel">
+            <CardContent className="space-y-4 p-6">
+              <div>
+                <p className="section-kicker">Field notes</p>
                 <h2 className="mt-2 font-heading text-2xl text-foreground">
-                  Leitura clara da arte
+                  Notas de leitura
                 </h2>
               </div>
 
-              <p className="text-sm leading-7 text-muted-foreground">
-                A ilustracao agora fica em quadro proprio, sem cortes agressivos, para facilitar a
-                leitura da criatura, do personagem ou do local antes de abrir em tela cheia.
-              </p>
-
-              <div className="grid gap-3">
-                <DataSection
-                  label="Categoria"
-                  value={encyclopediaCategories[entry.category].label}
-                  variant="quiet"
-                />
-                <DataSection
-                  label="Imagem"
-                  value={entry.imageAlt}
-                  variant="quiet"
-                />
-                <DataSection
-                  label="Modo"
-                  value={entry.category === "monstros" ? "Enquadramento completo" : "Painel ampliado"}
-                  variant="quiet"
-                />
-              </div>
-
+              <DataSection
+                label="Conexoes"
+                value={`${linkedEntries.length} elos diretos`}
+                variant="quiet"
+              />
+              <DataSection
+                label="Categoria"
+                value={encyclopediaCategories[entry.category].label}
+                variant="quiet"
+              />
               {bestiaryMeta ? (
-                <div className="rounded-xl border border-border/60 bg-background/50 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
-                    Caca em campo
+                <DataSection
+                  label="Caca em campo"
+                  value={`Perigo ${bestiaryMeta.dangerLevel}/5`}
+                  variant="quiet"
+                  tone="warn"
+                >
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Tipo {bestiaryMeta.type.toLowerCase()}. Use a arte em tela cheia para ler
+                    silhueta, volume e postura antes da cena.
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Perigo {bestiaryMeta.dangerLevel}/5, tipo {bestiaryMeta.type.toLowerCase()}.
-                    Use a arte em tela cheia para identificar silhueta, volume e postura antes da
-                    cena.
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
+                </DataSection>
+              ) : (
+                <DataSection
+                  label="Uso"
+                  value="Leitura de lore e referencia narrativa"
+                  variant="quiet"
+                  tone="info"
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         <EntryShowcase entry={entry} />
 
@@ -1110,20 +1224,34 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
           <div className="space-y-6">
             <Card variant="panel">
               <CardContent className="space-y-6 p-6 md:p-8">
-                {entry.narrative.map((block) => (
+                <div>
+                  <p className="section-kicker">Narrative reading</p>
+                  <h2 className="mt-2 font-display text-4xl text-brand-gradient">
+                    Corpo principal do verbete
+                  </h2>
+                </div>
+
+                {entry.narrative.map((block, index) => (
                   <section
                     key={block.heading}
-                    className="rounded-[var(--radius)] border border-border/60 bg-background/35 p-6"
+                    className="grid gap-4 border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-6 md:grid-cols-[92px_minmax(0,1fr)]"
                   >
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-                      Capitulo
-                    </p>
-                    <h2 className="mt-3 font-heading text-2xl text-foreground">
-                      {block.heading}
-                    </h2>
-                    <p className="mt-4 text-base leading-8 text-foreground/90">
-                      {block.body}
-                    </p>
+                    <div className="paper-strip h-fit p-4 text-center">
+                      <p className="text-[10px] uppercase tracking-[0.22em]">Capitulo</p>
+                      <p className="mt-2 font-display text-3xl">
+                        {String(index + 1).padStart(2, "0")}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="section-kicker">Arquivo</p>
+                      <h2 className="mt-2 font-heading text-2xl text-foreground">
+                        {block.heading}
+                      </h2>
+                      <p className="mt-4 text-base leading-8 text-foreground/90">
+                        {block.body}
+                      </p>
+                    </div>
                   </section>
                 ))}
               </CardContent>
@@ -1132,12 +1260,13 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
             <RelationshipMap entry={entry} linkedEntries={linkedEntries} />
           </div>
 
-          <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
+          <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
             <TimelineRail title="Linha do tempo desta pagina" events={entry.timeline} />
 
             <Card variant="panel">
               <CardContent className="space-y-4 p-6">
                 <div>
+                  <p className="section-kicker">Related entries</p>
                   <h3 className="font-heading text-lg text-foreground">
                     Mais em {encyclopediaCategories[entry.category].label}
                   </h3>
@@ -1151,7 +1280,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
                     <Link
                       key={relatedEntry.slug}
                       to={`/universo/${relatedEntry.slug}`}
-                      className="block rounded-xl border border-border/70 bg-background/50 p-4 transition-colors hover:border-primary/30"
+                      className="block border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-4 transition-colors hover:border-[hsl(var(--brand)/0.18)]"
                     >
                       <p className="font-heading text-sm text-foreground">
                         {relatedEntry.title}
@@ -1187,7 +1316,7 @@ export default function UniversePage() {
           <CardContent className="space-y-5 p-8 text-center">
             <BookMarked className="mx-auto h-10 w-10 text-primary" />
             <h1 className="font-display text-3xl text-gold-gradient">
-              Verbeta nao encontrado
+              Verbete nao encontrado
             </h1>
             <p className="text-muted-foreground">
               Este registro nao existe ou ainda nao foi catalogado pela enciclopedia.

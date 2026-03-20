@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Flame, Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
+import logoEmblem from "@/assets/logo-emblem.png";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -21,103 +22,124 @@ const navItems = [
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   const isActivePath = (path: string) =>
     path === "/"
       ? location.pathname === "/"
       : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/82 backdrop-blur-xl safe-top">
-      <div className="container flex h-14 items-center justify-between gap-3 sm:h-16">
-        <Link to="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 shadow-panel sm:h-10 sm:w-10">
-            <Flame className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-display text-sm tracking-[0.14em] text-brand-gradient sm:text-lg sm:tracking-[0.18em]">
-              AREIAS DE ZERRIKANIA
-            </p>
-            <p className="hidden text-[10px] uppercase tracking-[0.22em] text-muted-foreground sm:block">
-              Alaric, Sorrow e Hauz em rota para Elarion
-            </p>
-          </div>
-        </Link>
+    <header className="fixed inset-x-0 top-0 z-50 px-3 safe-top sm:px-4 lg:px-6">
+      <div className="mx-auto max-w-[1520px] pt-3 md:pt-4">
+        <div className="ornate-frame border border-[hsl(var(--outline-variant)/0.22)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.9),hsl(var(--surface-base)/0.96))] shadow-elevated backdrop-blur-xl">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--brand)/0.08),transparent_34%),linear-gradient(90deg,transparent,hsl(var(--foreground)/0.05),transparent)]" />
 
-        <nav className="hidden items-center gap-1.5 lg:flex">
-          {navItems.map((item) => {
-            const active = isActivePath(item.path);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`rounded-[calc(var(--radius)-4px)] px-3 py-2 font-heading text-[11px] uppercase tracking-[0.16em] transition-colors ${
-                  active
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+          <div className="relative flex items-center gap-4 px-4 py-3 lg:px-6">
+            <Link to="/" className="flex min-w-0 items-center gap-3 lg:flex-[0_0_auto]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-[hsl(var(--brand)/0.22)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.9),hsl(var(--surface-base)/0.98))] shadow-panel">
+                <img src={logoEmblem} alt="Emblema de Areias de Zerrikania" className="h-7 w-7 object-contain" />
+              </div>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <Badge variant="outline" className="border-primary/25 text-primary">
-            <Flame className="mr-2 h-3.5 w-3.5" />
-            Continente em campanha
-          </Badge>
-          <Button asChild variant="outline" size="sm">
-            <Link to="/conta">Conta</Link>
-          </Button>
-        </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary/82">
+                  Digital Reliquary
+                </p>
+                <p className="font-display text-lg tracking-[0.08em] text-brand-gradient sm:text-xl">
+                  Areias de Zerrikania
+                </p>
+              </div>
+            </Link>
 
-        <button
-          type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-[calc(var(--radius)-2px)] border border-border/70 bg-secondary/60 text-foreground transition-colors hover:border-primary/30 hover:bg-secondary lg:hidden"
-          onClick={() => setMobileOpen((previous) => !previous)}
-          aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
-        >
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
-
-      <AnimatePresence>
-        {mobileOpen ? (
-          <motion.nav
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t border-border/70 bg-background/96 lg:hidden"
-          >
-            <div className="container space-y-3 py-3">
-              <Badge variant="outline" className="border-primary/25 text-primary">
-                Areias de Zerrikania
-              </Badge>
-
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {[...navItems, { label: "Conta", path: "/conta" }].map((item) => {
+            <nav className="hidden min-w-0 flex-1 items-center justify-center xl:flex">
+              <div className="flex min-w-0 items-center gap-1 border border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.7),hsl(var(--surface-base)/0.88))] px-2 py-1 shadow-panel">
+                {navItems.map((item) => {
                   const active = isActivePath(item.path);
+
                   return (
                     <Link
                       key={item.path}
                       to={item.path}
-                      onClick={() => setMobileOpen(false)}
-                      className={`rounded-[calc(var(--radius)-4px)] border px-3 py-2.5 text-center font-heading text-[11px] uppercase tracking-[0.16em] transition-colors ${
-                        active
-                          ? "border-primary/30 bg-secondary text-foreground"
-                          : "border-border/70 bg-background/40 text-muted-foreground hover:border-primary/20 hover:text-foreground"
+                      className={`relative px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors ${
+                        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {item.label}
+                      <span
+                        className={`absolute inset-x-3 bottom-1 h-px origin-left bg-[linear-gradient(90deg,hsl(var(--brand)),transparent)] transition-transform duration-200 ${
+                          active ? "scale-x-100" : "scale-x-0"
+                        }`}
+                      />
                     </Link>
                   );
                 })}
               </div>
+            </nav>
+
+            <div className="hidden items-center gap-3 lg:flex">
+              <Badge variant="outline" className="border-[hsl(var(--info)/0.24)] text-info">
+                <Flame className="mr-2 h-3.5 w-3.5" />
+                Arquivo em campanha
+              </Badge>
+              <Button asChild size="sm">
+                <Link to="/conta">Conta</Link>
+              </Button>
             </div>
-          </motion.nav>
-        ) : null}
-      </AnimatePresence>
+
+            <button
+              type="button"
+              className="ml-auto inline-flex h-11 w-11 items-center justify-center border border-[hsl(var(--outline-variant)/0.22)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.82),hsl(var(--surface-base)/0.92))] text-foreground transition-colors hover:border-[hsl(var(--brand)/0.24)] hover:text-primary xl:hidden"
+              onClick={() => setMobileOpen((previous) => !previous)}
+              aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+
+          <AnimatePresence>
+            {mobileOpen ? (
+              <motion.nav
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="relative overflow-hidden border-t border-[hsl(var(--outline-variant)/0.16)] xl:hidden"
+              >
+                <div className="space-y-4 px-4 py-4 sm:px-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Badge variant="outline">Arquivo vivo do continente</Badge>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/conta">Conta</Link>
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {navItems.map((item) => {
+                      const active = isActivePath(item.path);
+
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={`border px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors ${
+                            active
+                              ? "border-[hsl(var(--brand)/0.24)] bg-[linear-gradient(135deg,hsl(var(--brand)/0.22),transparent)] text-primary"
+                              : "border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.56),hsl(var(--background)/0.36))] text-muted-foreground hover:border-[hsl(var(--brand)/0.18)] hover:text-foreground"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.nav>
+            ) : null}
+          </AnimatePresence>
+        </div>
+      </div>
     </header>
   );
 }

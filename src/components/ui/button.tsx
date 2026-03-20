@@ -5,32 +5,35 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[calc(var(--radius)-2px)] border border-transparent px-4 py-2 text-sm font-medium text-foreground ring-offset-background transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap overflow-hidden rounded-none border border-transparent px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground ring-offset-background transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 ease-out hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "border-primary/35 bg-primary text-primary-foreground shadow-brand hover:border-primary/50 hover:brightness-110",
+          "border-[hsl(var(--brand)/0.34)] bg-[linear-gradient(135deg,hsl(47_100%_82%),hsl(var(--primary))_40%,hsl(var(--warning))_100%)] text-primary-foreground shadow-brand hover:border-[hsl(var(--brand)/0.54)] hover:brightness-105",
         primary:
-          "border-primary/35 bg-primary text-primary-foreground shadow-brand hover:border-primary/50 hover:brightness-110",
+          "border-[hsl(var(--brand)/0.34)] bg-[linear-gradient(135deg,hsl(47_100%_82%),hsl(var(--primary))_40%,hsl(var(--warning))_100%)] text-primary-foreground shadow-brand hover:border-[hsl(var(--brand)/0.54)] hover:brightness-105",
         destructive:
-          "border-destructive/35 bg-destructive text-destructive-foreground shadow-[0_18px_48px_hsl(var(--destructive)/0.18)] hover:border-destructive/50 hover:brightness-105",
+          "border-[hsl(var(--destructive-foreground)/0.2)] bg-[linear-gradient(135deg,hsl(var(--destructive-foreground)/0.96),hsl(var(--destructive))_42%,hsl(2_73%_18%)_100%)] text-destructive-foreground shadow-[0_24px_54px_hsl(var(--destructive)/0.22)] hover:border-[hsl(var(--destructive-foreground)/0.34)] hover:brightness-105",
         danger:
-          "border-destructive/35 bg-destructive text-destructive-foreground shadow-[0_18px_48px_hsl(var(--destructive)/0.18)] hover:border-destructive/50 hover:brightness-105",
+          "border-[hsl(var(--destructive-foreground)/0.2)] bg-[linear-gradient(135deg,hsl(var(--destructive-foreground)/0.96),hsl(var(--destructive))_42%,hsl(2_73%_18%)_100%)] text-destructive-foreground shadow-[0_24px_54px_hsl(var(--destructive)/0.22)] hover:border-[hsl(var(--destructive-foreground)/0.34)] hover:brightness-105",
         success:
-          "border-success/35 bg-success text-success-foreground shadow-[0_18px_48px_hsl(var(--success)/0.18)] hover:border-success/50 hover:brightness-105",
+          "border-[hsl(var(--success)/0.28)] bg-[linear-gradient(135deg,hsl(var(--success)/0.92),hsl(148_28%_28%)_100%)] text-success-foreground shadow-[0_24px_54px_hsl(var(--success)/0.18)] hover:border-[hsl(var(--success)/0.42)] hover:brightness-105",
         warning:
-          "border-warning/35 bg-warning text-warning-foreground shadow-[0_18px_48px_hsl(var(--warning)/0.18)] hover:border-warning/50 hover:brightness-105",
-        info: "border-info/35 bg-info text-info-foreground shadow-[0_18px_48px_hsl(var(--info)/0.18)] hover:border-info/50 hover:brightness-105",
-        outline: "border-input bg-surface-raised/55 text-foreground hover:border-primary/40 hover:bg-secondary/85",
-        secondary: "border-border/80 bg-secondary text-secondary-foreground hover:border-primary/30 hover:bg-secondary/85",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "border-transparent px-0 text-primary underline-offset-4 hover:text-primary/85 hover:underline",
+          "border-[hsl(var(--warning)/0.34)] bg-[linear-gradient(135deg,hsl(var(--destructive-foreground)),hsl(var(--warning))_48%,hsl(42_58%_42%)_100%)] text-warning-foreground shadow-[0_24px_54px_hsl(var(--warning)/0.2)] hover:border-[hsl(var(--warning)/0.5)] hover:brightness-105",
+        info: "border-[hsl(var(--info)/0.3)] bg-[linear-gradient(135deg,hsl(var(--info)/0.94),hsl(209_48%_54%)_100%)] text-info-foreground shadow-[0_24px_54px_hsl(var(--info)/0.18)] hover:border-[hsl(var(--info)/0.42)] hover:brightness-105",
+        outline:
+          "border-[hsl(var(--outline-variant)/0.24)] bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.9),hsl(var(--surface-base)/0.96))] text-foreground shadow-panel hover:border-[hsl(var(--brand)/0.28)] hover:text-primary",
+        secondary:
+          "border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.88),hsl(var(--surface-raised)/0.94))] text-secondary-foreground shadow-panel hover:border-[hsl(var(--brand)/0.24)] hover:text-foreground",
+        ghost:
+          "border-transparent bg-transparent text-muted-foreground shadow-none hover:border-[hsl(var(--outline-variant)/0.14)] hover:bg-[hsl(var(--surface-raised)/0.28)] hover:text-foreground",
+        link: "min-h-0 border-transparent px-0 py-0 text-primary shadow-none hover:text-primary/82 hover:underline",
       },
       size: {
         default: "h-11 min-w-11",
-        sm: "h-9 min-w-9 px-3 text-xs",
-        lg: "h-12 min-w-12 px-6 text-base",
+        sm: "h-9 min-w-9 px-3 text-[10px]",
+        lg: "h-12 min-w-12 px-6 text-xs",
         icon: "h-11 w-11 px-0",
       },
     },

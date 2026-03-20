@@ -4,19 +4,21 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const dataSectionVariants = cva(
-  "rounded-[var(--radius)] border border-border/70 px-4 py-3 text-left transition-colors",
+  "rounded-none border px-4 py-4 text-left transition-[background-color,border-color,box-shadow] duration-200",
   {
     variants: {
       variant: {
-        panel: "bg-surface-raised/75 shadow-panel",
-        quiet: "bg-background/40",
+        panel:
+          "border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.84),hsl(var(--surface-base)/0.9))] shadow-panel",
+        quiet:
+          "border-[hsl(var(--outline-variant)/0.12)] bg-[linear-gradient(180deg,hsl(var(--background)/0.26),hsl(var(--surface-base)/0.42))]",
       },
       tone: {
-        neutral: "border-border/70",
-        good: "border-status-good/25 bg-status-good/10",
-        warn: "border-status-warn/30 bg-status-warn/10",
-        bad: "border-status-bad/30 bg-status-bad/10",
-        info: "border-info/30 bg-info/10",
+        neutral: "",
+        good: "border-[hsl(var(--success)/0.24)] bg-[linear-gradient(180deg,hsl(var(--success)/0.14),hsl(var(--surface-base)/0.92))]",
+        warn: "border-[hsl(var(--warning)/0.24)] bg-[linear-gradient(180deg,hsl(var(--warning)/0.14),hsl(var(--surface-base)/0.92))]",
+        bad: "border-[hsl(var(--destructive-foreground)/0.22)] bg-[linear-gradient(180deg,hsl(var(--destructive-foreground)/0.1),hsl(var(--surface-base)/0.92))]",
+        info: "border-[hsl(var(--info)/0.24)] bg-[linear-gradient(180deg,hsl(var(--info)/0.12),hsl(var(--surface-base)/0.92))]",
       },
     },
     defaultVariants: {
@@ -41,13 +43,13 @@ const DataSection = React.forwardRef<HTMLDivElement, DataSectionProps>(
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           {icon ? (
-            <div className="mt-0.5 rounded-full border border-border/60 bg-background/60 p-2 text-primary">
+            <div className="mt-0.5 border border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.7),hsl(var(--surface-base)/0.82))] p-2 text-primary">
               {icon}
             </div>
           ) : null}
 
           <div className="min-w-0">
-            <p className="font-heading text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               {label}
             </p>
             {value ? <div className="mt-2 font-heading text-lg text-foreground">{value}</div> : null}
@@ -57,7 +59,7 @@ const DataSection = React.forwardRef<HTMLDivElement, DataSectionProps>(
         {aside ? <div className="shrink-0">{aside}</div> : null}
       </div>
 
-      {children ? <div className="mt-3 border-t border-border/60 pt-3">{children}</div> : null}
+      {children ? <div className="mt-4 bg-[hsl(var(--background)/0.18)] px-4 py-3">{children}</div> : null}
     </div>
   ),
 );
