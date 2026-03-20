@@ -1138,6 +1138,8 @@ export default function MesaPage() {
             <button
               onClick={() => void mutateScene((c) => setSceneCameraScale(c, "in"), { broadcast: false, persist: false })}
               className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              title="Aumentar zoom"
+              aria-label="Aumentar zoom"
             >
               <Plus className="h-4 w-4" />
             </button>
@@ -1147,6 +1149,8 @@ export default function MesaPage() {
             <button
               onClick={() => void mutateScene((c) => setSceneCameraScale(c, "out"), { broadcast: false, persist: false })}
               className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              title="Diminuir zoom"
+              aria-label="Diminuir zoom"
             >
               <Minus className="h-4 w-4" />
             </button>
@@ -1154,6 +1158,8 @@ export default function MesaPage() {
             <button
               onClick={() => void mutateScene((c) => setSceneCameraScale(c, "reset"), { broadcast: false, persist: false })}
               className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              title="Restaurar zoom"
+              aria-label="Restaurar zoom"
             >
               <RefreshCcw className="h-3.5 w-3.5" />
             </button>
@@ -1183,10 +1189,10 @@ export default function MesaPage() {
               <span className="text-[10px] text-muted-foreground sm:text-xs">CA</span>
               <span className="font-heading text-xs text-foreground sm:text-sm">{selectedToken.payload.ac}</span>
               <div className="ml-1 flex items-center gap-0.5 sm:ml-2 sm:gap-1">
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => void adjustHp(selectedToken.id, -5)}>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => void adjustHp(selectedToken.id, -5)} title="Remover 5 HP" aria-label="Remover 5 HP">
                   <Minus className="h-3 w-3" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => void adjustHp(selectedToken.id, +5)}>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => void adjustHp(selectedToken.id, +5)} title="Adicionar 5 HP" aria-label="Adicionar 5 HP">
                   <Plus className="h-3 w-3" />
                 </Button>
               </div>
