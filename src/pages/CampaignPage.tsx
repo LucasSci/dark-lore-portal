@@ -53,7 +53,7 @@ export default function CampaignPage() {
                 </div>
 
                 <div className="max-w-3xl space-y-4">
-                  <p className="section-kicker">Chronicles and contracts</p>
+                <p className="section-kicker">Cronicas e contratos</p>
                   <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
                     O arquivo agora parece um tomo de guerra, nao uma lista de posts.
                   </h1>
@@ -252,7 +252,7 @@ export default function CampaignPage() {
               <Card variant="panel">
                 <CardContent className="space-y-5 p-6">
                   <div>
-                    <p className="section-kicker">How to read</p>
+                  <p className="section-kicker">Como ler</p>
                     <h2 className="mt-2 font-heading text-2xl text-foreground">
                       Ordem de leitura recomendada
                     </h2>

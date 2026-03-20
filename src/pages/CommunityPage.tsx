@@ -71,7 +71,7 @@ export default function CommunityPage() {
                 </div>
 
                 <div className="max-w-3xl space-y-4">
-                  <p className="section-kicker">Community inside the fiction</p>
+                <p className="section-kicker">Comunidade dentro da ficcao</p>
                   <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
                     Comunidade tratada como quadro de rumores, nao feed generico.
                   </h1>
@@ -186,7 +186,7 @@ export default function CommunityPage() {
               <CardContent className="space-y-6 p-6 md:p-8">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="section-kicker">Lead signal</p>
+                  <p className="section-kicker">Sinal principal</p>
                     <h2 className="mt-2 font-display text-4xl text-foreground">
                       {leadPost?.title ?? "Sem destaque"}
                     </h2>

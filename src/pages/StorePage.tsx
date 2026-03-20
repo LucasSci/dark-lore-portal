@@ -14,24 +14,25 @@ import {
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
+import { TgaIcon } from "@/components/store/TgaIcon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   buyMerchantItem,
   createInitialShopState,
   formatShopGold,
   getInventoryWeight,
-  getShopItemSprite,
-  getShopSpriteSheetUrl,
+  getShopCatalogEntries,
+  getShopIconCatalog,
+  getShopItemIconUrl,
   getTradePrice,
   merchantProfile,
   sellPlayerItem,
-  SHOP_SPRITE_CELL_SIZE,
-  SHOP_SPRITE_GRID_SIZE,
   shopCategoryLabels,
   shopRarityLabels,
   type GameShopCategory,
@@ -98,38 +99,40 @@ function ShopItemArt({
   size: ShopArtSize;
   className?: string;
 }) {
-  const sprite = getShopItemSprite(item);
   const Icon = categoryIcons[item.category];
-  const tileSize = size === "detail" ? SHOP_SPRITE_CELL_SIZE * 2 : SHOP_SPRITE_CELL_SIZE;
+  const [iconFailed, setIconFailed] = useState(false);
+  const iconUrl = getShopItemIconUrl(item);
+
+  useEffect(() => {
+    setIconFailed(false);
+  }, [iconUrl]);
 
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[calc(var(--radius)-4px)] border border-primary/20 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.22),transparent_52%),linear-gradient(180deg,hsl(var(--background)/0.84),hsl(var(--background)/0.98))] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.05),0_20px_40px_hsl(var(--background)/0.26)]",
-        size === "detail" ? "h-28 w-28 md:h-32 md:w-32" : "h-14 w-14",
+        "tool-stage-frame relative overflow-hidden bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.22),transparent_52%),linear-gradient(180deg,hsl(var(--background)/0.84),hsl(var(--background)/0.98))] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.05),0_20px_40px_hsl(var(--background)/0.26)]",
+        size === "detail" ? "h-24 w-24 md:h-28 md:w-28" : "h-12 w-12 md:h-14 md:w-14",
         className,
       )}
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,hsl(var(--primary)/0.14),transparent_45%)]" />
-      {sprite ? (
-        <div
-          className="absolute left-1/2 top-1/2 rounded-lg bg-no-repeat drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
-          style={{
-            width: `${tileSize}px`,
-            height: `${tileSize}px`,
-            backgroundImage: `url(${getShopSpriteSheetUrl(sprite.sheet)})`,
-            backgroundSize: `${tileSize * SHOP_SPRITE_GRID_SIZE}px ${tileSize * SHOP_SPRITE_GRID_SIZE}px`,
-            backgroundPosition: `-${(sprite.col - 1) * tileSize}px -${(sprite.row - 1) * tileSize}px`,
-            transform: "translate(-50%, -50%)",
-            imageRendering: "auto",
-          }}
+      {!iconFailed ? (
+        <TgaIcon
+          src={iconUrl}
+          alt={item.name}
+          renderSize={size === "detail" ? 88 : 44}
+          onError={() => setIconFailed(true)}
+          className={cn(
+            "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]",
+            size === "detail" ? "h-[5.5rem] w-[5.5rem]" : "h-11 w-11",
+          )}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
           <Icon className={cn("text-primary", size === "detail" ? "h-12 w-12" : "h-6 w-6")} />
         </div>
       )}
-      <div className="pointer-events-none absolute inset-x-5 bottom-1 h-4 rounded-full bg-primary/10 blur-xl" />
+      <div className="pointer-events-none absolute inset-x-5 bottom-1 h-4 bg-primary/10 blur-xl" />
     </div>
   );
 }
@@ -142,10 +145,111 @@ function DetailMetric({
   value: string;
 }) {
   return (
-    <div className="rounded-[calc(var(--radius)-4px)] border border-border/70 bg-background/45 px-4 py-3">
+    <div className="metric-panel px-4 py-3">
       <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
       <p className="mt-2 font-heading text-lg text-foreground">{value}</p>
     </div>
+  );
+}
+
+function StoreAuditPanel() {
+  const catalogEntries = getShopCatalogEntries();
+  const iconCatalog = getShopIconCatalog();
+
+  return (
+    <Card variant="panel">
+      <CardHeader className="pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-xl">Auditoria de itens e icones</CardTitle>
+            <CardDescription>
+              Painel para revisar rapidamente o que ja esta configurado na loja e como cada
+              asset esta sendo usado.
+            </CardDescription>
+          </div>
+          <Badge variant="outline" className="border-primary/30 text-primary">
+            {catalogEntries.length} itens catalogados
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <Tabs defaultValue="itens">
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="itens">Itens da loja</TabsTrigger>
+            <TabsTrigger value="icones">Galeria de icones</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="itens" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {catalogEntries.map((entry) => (
+                <div
+                  key={`${entry.owner}-${entry.id}`}
+                  className="info-panel p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <ShopItemArt item={entry} size="list" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-heading text-base text-foreground">{entry.name}</p>
+                        <Badge variant={entry.owner === "merchant" ? "secondary" : "outline"}>
+                          {entry.owner === "merchant" ? "Estoque" : "Companhia"}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.16em]">
+                        <span className="metric-panel px-2.5 py-1 text-primary/85">
+                          {shopCategoryLabels[entry.category]}
+                        </span>
+                        <span className="metric-panel px-2.5 py-1 text-muted-foreground">
+                          {entry.iconAsset}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-6 text-foreground/78">{entry.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="icones" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {iconCatalog.map(({ iconAsset, entries }) => (
+                <div
+                  key={iconAsset}
+                  className="info-panel p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="tool-stage-frame relative h-16 w-16 shrink-0 overflow-hidden bg-background/70">
+                      <TgaIcon
+                        src={getShopItemIconUrl({ iconAsset })}
+                        alt={iconAsset}
+                        renderSize={64}
+                        className="h-16 w-16 object-contain"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <p className="text-xs uppercase tracking-[0.18em] text-primary/80">
+                        {iconAsset}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {entries.map((entry) => (
+                          <Badge
+                            key={`${iconAsset}-${entry.id}`}
+                            variant={entry.owner === "merchant" ? "secondary" : "outline"}
+                          >
+                            {entry.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -184,10 +288,10 @@ function InventoryGrid({
                     type="button"
                     onClick={() => onSelect({ owner, itemId: item.id })}
                     className={cn(
-                      "group relative flex flex-col gap-4 rounded-[calc(var(--radius)-4px)] border p-4 text-left transition-all sm:flex-row sm:items-center",
+                      "group relative flex flex-col gap-4 border p-4 text-left transition-all sm:flex-row sm:items-center",
                       active
                         ? "border-primary/60 bg-primary/10 shadow-brand"
-                        : "border-border/70 bg-background/55 hover:border-primary/28 hover:bg-background/78",
+                        : "info-panel hover:border-primary/28 hover:bg-background/78",
                     )}
                   >
                     <div className="flex items-center gap-4">
@@ -205,13 +309,13 @@ function InventoryGrid({
                           {item.description}
                         </p>
                         <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.16em]">
-                          <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-primary/85">
+                          <span className="metric-panel px-2.5 py-1 text-primary/85">
                             {shopCategoryLabels[item.category]}
                           </span>
-                          <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-muted-foreground">
+                          <span className="metric-panel px-2.5 py-1 text-muted-foreground">
                             x{item.quantity}
                           </span>
-                          <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-1 text-muted-foreground">
+                          <span className="metric-panel px-2.5 py-1 text-muted-foreground">
                             {item.weight} kg
                           </span>
                         </div>
@@ -232,7 +336,7 @@ function InventoryGrid({
             </div>
           </ScrollArea>
         ) : (
-          <div className="rounded-[var(--radius)] border border-dashed border-border/70 bg-background/40 p-5 text-center text-sm text-muted-foreground">
+          <div className="tool-empty-state p-5 text-center text-sm text-muted-foreground">
             Nenhum item encontrado nesta secao.
           </div>
         )}
@@ -319,7 +423,7 @@ export default function StorePage() {
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-full border border-primary/20 bg-background/55 p-3">
+                    <div className="icon-slot h-12 w-12">
                       <ShoppingBag className="h-6 w-6 text-primary" />
                     </div>
                     <div>
@@ -339,7 +443,7 @@ export default function StorePage() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                  <div className="rounded-[var(--radius)] border border-border/70 bg-background/50 p-4">
+                  <div className="info-panel p-4">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                       Mercador
                     </p>
@@ -350,7 +454,7 @@ export default function StorePage() {
                       {merchantProfile.location}
                     </p>
                   </div>
-                  <div className="rounded-[var(--radius)] border border-border/70 bg-background/50 p-4">
+                  <div className="info-panel p-4">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                       Caixa do mercador
                     </p>
@@ -358,7 +462,7 @@ export default function StorePage() {
                       {formatShopGold(shopState.merchantGold)}
                     </p>
                   </div>
-                  <div className="rounded-[var(--radius)] border border-border/70 bg-background/50 p-4">
+                  <div className="info-panel p-4">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                       Ouro da companhia
                     </p>
@@ -374,7 +478,7 @@ export default function StorePage() {
           <Card variant="panel">
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center gap-3">
-                <div className="rounded-full border border-primary/20 bg-background/55 p-3">
+                <div className="icon-slot h-11 w-11">
                   <Coins className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -475,7 +579,7 @@ export default function StorePage() {
                             size="detail"
                             className="mx-auto md:mx-0"
                           />
-                          <div className="rounded-[calc(var(--radius)-4px)] border border-border/70 bg-background/45 px-4 py-3">
+                          <div className="field-note px-4 py-3">
                             <p className="text-[11px] uppercase tracking-[0.18em] text-primary/80">
                               Procedencia
                             </p>
@@ -505,8 +609,8 @@ export default function StorePage() {
                           </div>
 
                           <p className="text-sm leading-7 text-foreground/88">
-                            Mercadoria preparada para leitura rapida: valor, peso e quantidade
-                            ficam visiveis sem esconder a descricao e a utilidade do item.
+                            Os icones foram preservados a partir do pacote original do inventario,
+                            mantendo leitura limpa sem ampliar arte comprimida demais.
                           </p>
 
                           <div className="grid gap-3 sm:grid-cols-2">
@@ -528,7 +632,7 @@ export default function StorePage() {
                       </div>
 
                       <div className="grid gap-3">
-                        <div className="rounded-[var(--radius)] border border-border/70 bg-background/45 p-4">
+                        <div className="info-panel p-4">
                           <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                             Descricao
                           </p>
@@ -537,7 +641,7 @@ export default function StorePage() {
                           </p>
                         </div>
 
-                        <div className="rounded-[var(--radius)] border border-border/70 bg-background/45 p-4">
+                        <div className="info-panel p-4">
                           <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                             Aplicacao
                           </p>
@@ -556,7 +660,7 @@ export default function StorePage() {
                   </Button>
                 </>
               ) : (
-                <div className="rounded-[var(--radius)] border border-dashed border-border/70 bg-background/40 p-6 text-center text-sm text-muted-foreground">
+                <div className="tool-empty-state p-6 text-center text-sm text-muted-foreground">
                   Nenhum item selecionado.
                 </div>
               )}
@@ -585,7 +689,7 @@ export default function StorePage() {
               {shopState.tradeLog.map((entry) => (
                 <div
                   key={entry}
-                  className="rounded-[calc(var(--radius)-4px)] border border-border/70 bg-background/45 px-4 py-3 text-sm leading-6 text-foreground/90"
+                  className="field-note px-4 py-3 text-sm leading-6 text-foreground/90"
                 >
                   {entry}
                 </div>
@@ -607,6 +711,8 @@ export default function StorePage() {
             </CardContent>
           </Card>
         </div>
+
+        <StoreAuditPanel />
       </motion.div>
     </div>
   );

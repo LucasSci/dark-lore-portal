@@ -18,6 +18,7 @@ import {
 import VttPixiStage from "@/components/rpg/VttPixiStage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -26,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import {
   type EncyclopediaEntry,
@@ -156,13 +158,13 @@ export const VttCommandPanel = memo(function VttCommandPanel({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+            <div className="metric-panel p-3 backdrop-blur-md">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                 Revisao
               </p>
               <p className="mt-1 font-heading text-lg text-foreground">{sceneRevision}</p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+            <div className="metric-panel p-3 backdrop-blur-md">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                 Conectados
               </p>
@@ -185,26 +187,20 @@ export const VttCommandPanel = memo(function VttCommandPanel({
             ) : null}
           </div>
 
-          <div className="flex items-center justify-between gap-2 rounded-xl border border-border/70 bg-background/72 px-3 py-3 backdrop-blur-md">
+          <div className="field-note flex items-center justify-between gap-3 px-3 py-3 backdrop-blur-md">
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={showGrid}
-                onChange={(event) => onToggleGrid(event.target.checked)}
-                className="accent-primary"
-              />
+              <Checkbox checked={showGrid} onCheckedChange={(value) => onToggleGrid(Boolean(value))} />
               Grid visivel
             </label>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-muted-foreground">Opacidade</span>
-              <input
-                type="range"
+              <Slider
                 min={0.05}
                 max={0.8}
                 step={0.05}
-                value={gridOpacity}
-                onChange={(event) => onGridOpacityChange(Number(event.target.value))}
-                className="w-20 accent-primary"
+                value={[gridOpacity]}
+                onValueChange={(value) => onGridOpacityChange(value[0] ?? gridOpacity)}
+                className="w-24"
               />
             </div>
           </div>
@@ -228,7 +224,7 @@ export const VttCommandPanel = memo(function VttCommandPanel({
         <CardContent className="space-y-3">
           {selectedToken ? (
             <>
-              <div className="rounded-xl border border-border/70 bg-background/72 p-4 backdrop-blur-md">
+              <div className="info-panel p-4 backdrop-blur-md">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-heading text-base text-foreground">
@@ -261,13 +257,13 @@ export const VttCommandPanel = memo(function VttCommandPanel({
               </div>
 
               <div className="grid gap-2 sm:grid-cols-2">
-                <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+                <div className="metric-panel p-3 backdrop-blur-md">
                   <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">HP</p>
                   <p className="mt-1 font-heading text-lg text-foreground">
                     {selectedToken.payload.hp}/{selectedToken.payload.hpMax}
                   </p>
                 </div>
-                <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+                <div className="metric-panel p-3 backdrop-blur-md">
                   <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">CA</p>
                   <p className="mt-1 font-heading text-lg text-foreground">{selectedToken.payload.ac}</p>
                 </div>
@@ -302,7 +298,7 @@ export const VttCommandPanel = memo(function VttCommandPanel({
             </Button>
           </div>
 
-          <div className="rounded-xl border border-border/70 bg-background/72 p-4 backdrop-blur-md">
+          <div className="info-panel p-4 backdrop-blur-md">
             <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               Presenca
             </p>
@@ -340,7 +336,7 @@ export const VttCommandPanel = memo(function VttCommandPanel({
                 event.dataTransfer.setData("application/x-dark-lore-entry", entry.slug);
                 event.dataTransfer.effectAllowed = "copy";
               }}
-              className="rounded-xl border border-border/70 bg-background/72 p-4 backdrop-blur-md transition-colors hover:border-primary/30"
+              className="tool-list-item p-4 backdrop-blur-md"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -495,19 +491,19 @@ export const VttMapPanel = memo(function VttMapPanel({
           ) : null}
 
           <div className="grid gap-3 sm:grid-cols-4">
-            <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+            <div className="metric-panel p-3 backdrop-blur-md">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Page</p>
               <p className="mt-1 font-heading text-base text-foreground">{activePage?.name ?? "-"}</p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+            <div className="metric-panel p-3 backdrop-blur-md">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Revelado</p>
               <p className="mt-1 font-heading text-base text-foreground">{revealedCells}</p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+            <div className="metric-panel p-3 backdrop-blur-md">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Aliados</p>
               <p className="mt-1 font-heading text-base text-foreground">{partyCount}</p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+            <div className="metric-panel p-3 backdrop-blur-md">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">NPCs</p>
               <p className="mt-1 font-heading text-base text-foreground">{npcCount}</p>
             </div>
@@ -562,12 +558,12 @@ export const VttSessionPanel = memo(function VttSessionPanel({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="max-h-[26rem] space-y-3 overflow-y-auto rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md scrollbar-dark">
+          <div className="info-panel max-h-[26rem] space-y-3 overflow-y-auto p-3 backdrop-blur-md scrollbar-dark">
             {chatMessages.map((message) => (
               <div
                 key={message.id}
                 className={cn(
-                  "rounded-xl border px-3 py-2 backdrop-blur-sm",
+                  "tool-list-item px-3 py-2 backdrop-blur-sm",
                   message.tone === "system" && "border-primary/20 bg-primary/8",
                   message.tone === "party" && "border-emerald-500/20 bg-emerald-500/8",
                   message.tone === "npc" && "border-amber-400/20 bg-amber-400/8",
@@ -641,7 +637,7 @@ export const VttSessionPanel = memo(function VttSessionPanel({
             </motion.div>
           </div>
 
-          <div className="space-y-2 rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+          <div className="info-panel space-y-2 p-3 backdrop-blur-md">
             <div className="flex items-center justify-between">
               <span className="font-heading text-sm text-foreground">Ultimos resultados</span>
               <Badge variant="secondary">{diceHistory.length}</Badge>
@@ -655,7 +651,7 @@ export const VttSessionPanel = memo(function VttSessionPanel({
               diceHistory.map((entry) => (
                 <div
                   key={entry.id}
-                  className="flex items-center justify-between rounded-lg border border-border/70 bg-background/75 px-3 py-2 backdrop-blur-sm"
+                  className="metric-panel flex items-center justify-between px-3 py-2 backdrop-blur-sm"
                 >
                   <div>
                     <p className="font-heading text-sm text-foreground">
@@ -687,17 +683,17 @@ export const VttSessionPanel = memo(function VttSessionPanel({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+            <div className="metric-panel p-3 backdrop-blur-md">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Rodada</p>
               <p className="mt-1 font-heading text-base text-foreground">{initiativeRound || "-"}</p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-background/72 p-3 backdrop-blur-md">
+            <div className="metric-panel p-3 backdrop-blur-md">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Turno ativo</p>
               <p className="mt-1 font-heading text-base text-foreground">{activeTurnName ?? "Sem iniciativa"}</p>
             </div>
           </div>
 
-          <div className="rounded-xl border border-border/70 bg-background/72 p-4 backdrop-blur-md">
+          <div className="info-panel p-4 backdrop-blur-md">
             <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               Direcao dramatica
             </p>

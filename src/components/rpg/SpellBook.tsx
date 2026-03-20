@@ -82,7 +82,7 @@ export default function SpellBook({ onImportSpell }: Props) {
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <div className="rounded-full border border-primary/20 bg-background/60 p-3 text-primary">
+                <div className="icon-slot h-12 w-12 text-primary">
                   <BookOpenText className="h-5 w-5" />
                 </div>
                 <div>

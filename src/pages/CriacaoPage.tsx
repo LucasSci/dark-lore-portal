@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { BookMarked, WandSparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { DataSection } from "@/components/ui/data-section";
 import CharacterCreator, { type CharacterData } from "@/components/rpg/CharacterCreator";
 import { createCharacterBundle } from "@/lib/sheets/persistence";
 import type { CharacterRow } from "@/lib/rpg-ui";
@@ -26,17 +29,71 @@ export default function CriacaoPage() {
   };
 
   return (
-    <div className="container py-12 sm:py-20">
-      <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 sm:space-y-8">
-        <div className="mx-auto max-w-4xl text-center">
-          <Badge variant="outline">Criacao Persistida</Badge>
-          <h1 className="mt-3 font-display text-3xl text-gold-gradient sm:mt-4 sm:text-4xl md:text-5xl">
-            Criar Personagem
-          </h1>
-          <p className="mx-auto mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:mt-4 sm:text-base sm:leading-7">
-            Monte seu personagem escolhendo raca, classe, atributos e historia.
-          </p>
-        </div>
+    <div className="container py-12 md:py-16">
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-12"
+      >
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
+          <Card variant="elevated" className="overflow-hidden">
+            <CardContent className="grid gap-8 p-6 md:p-8 xl:grid-cols-[minmax(0,1fr)_280px]">
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge variant="outline">Criacao persistida</Badge>
+                  <Badge variant="info">Wizard guiado + salvamento</Badge>
+                </div>
+
+                <div className="max-w-3xl space-y-4">
+                <p className="section-kicker">Forja do personagem</p>
+                  <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
+                    O processo de criacao agora parece ritual de forja, nao formulario solto.
+                  </h1>
+                  <p className="text-base leading-8 text-foreground/88">
+                    Nome, origem, classe, atributos e historico foram organizados como sequencia de
+                    passos com leitura clara de progresso, recursos derivados e persistencia.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <DataSection label="Etapas" value="05" variant="quiet" />
+                  <DataSection label="Saida" value="Ficha pronta para jogar" variant="quiet" tone="info" />
+                  <DataSection label="Persistencia" value="Conta ou fallback local" variant="quiet" />
+                </div>
+              </div>
+
+              <Card variant="panel">
+                <CardContent className="space-y-4 p-5">
+                  <div>
+                    <p className="section-kicker">Fluxo</p>
+                    <h2 className="mt-2 font-heading text-2xl text-foreground">
+                      Ordem recomendada
+                    </h2>
+                  </div>
+
+                  <DataSection label="Passo 01" value="Identidade e aparencia" variant="quiet" />
+                  <DataSection label="Passo 02" value="Raca, classe e atributos" variant="quiet" />
+                  <DataSection label="Passo 03" value="Historico e resumo derivado" variant="quiet" tone="info" />
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4">
+            <DataSection
+              label="Destino"
+              value="Ao concluir, a ficha abre automaticamente."
+              icon={<BookMarked className="h-4 w-4" />}
+            />
+            <DataSection
+              label="Tom"
+              value="Criacao em estilo grimorio e dossier"
+              icon={<WandSparkles className="h-4 w-4" />}
+              tone="info"
+            />
+          </div>
+        </section>
+
         <CharacterCreator onSave={(data) => void handleCreateCharacter(data)} />
       </motion.div>
     </div>

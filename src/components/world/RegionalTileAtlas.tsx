@@ -291,10 +291,10 @@ export default function RegionalTileAtlas({
                     type="button"
                     onClick={() => setActiveMapId(entry.id)}
                     className={cn(
-                      "w-full rounded-xl border p-4 text-left transition-colors",
+                      "w-full border p-4 text-left transition-colors",
                       isActive
                         ? "border-primary/35 bg-primary/10"
-                        : "border-border/70 bg-background/70 backdrop-blur-md hover:border-primary/25",
+                        : "info-panel backdrop-blur-md hover:border-primary/25",
                     )}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -354,7 +354,7 @@ export default function RegionalTileAtlas({
             </Button>
           </div>
 
-          <div className="relative overflow-hidden rounded-[var(--radius)] border border-border/70 bg-[#090806]">
+          <div className="tool-stage-frame relative overflow-hidden bg-[#090806]">
             {!isMapReady ? <AtlasSkeleton immersive={immersive} /> : null}
             <div
               className={cn(
@@ -364,7 +364,7 @@ export default function RegionalTileAtlas({
               )}
             >
               {debugTiles ? (
-                <div className="absolute right-4 top-14 z-30 w-[360px] rounded-xl border border-border/60 bg-background/85 p-3 text-xs text-foreground shadow-brand backdrop-blur-md">
+                <div className="field-note absolute right-4 top-14 z-30 w-[360px] p-3 text-xs text-foreground shadow-brand backdrop-blur-md">
                   <p className="text-[10px] uppercase tracking-[0.18em] text-primary/80">
                     Debug Tiles (local)
                   </p>
@@ -381,7 +381,7 @@ export default function RegionalTileAtlas({
                 </div>
               ) : null}
               {tileFallbackActive ? (
-                <div className="absolute left-4 top-4 z-20 max-w-[360px] rounded-xl border border-warning/30 bg-background/80 px-4 py-3 text-sm text-foreground shadow-brand backdrop-blur-md">
+                <div className="field-note absolute left-4 top-4 z-20 max-w-[360px] border-warning/30 px-4 py-3 text-sm text-foreground shadow-brand backdrop-blur-md">
                   Tiles nao encontrados. Usando carta regional compacta como fallback.
                 </div>
               ) : null}

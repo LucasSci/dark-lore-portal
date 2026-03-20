@@ -12,6 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import AtlasSkeleton from "@/components/world/AtlasSkeleton";
 import { cn } from "@/lib/utils";
@@ -238,6 +245,7 @@ export default function MapGenieWitcherAtlas({
   const [poiDraft, setPoiDraft] = useState({ name: "", description: "", type: "tavern" as AtlasPoiType });
   const [battlemapDraft, setBattlemapDraft] = useState({ name: "", description: "", gridSize: 72, scale: 1.5, width: 44, height: 36, rotation: 0 });
   const mundiMap = useMemo(() => getMapGenieWitcherMap("mundi"), []);
+  const isCompactPreview = compact && !immersive;
 
   const mapHostRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -1141,9 +1149,11 @@ export default function MapGenieWitcherAtlas({
     <div
       className={cn(
         "grid gap-6",
-        immersive
-          ? "xl:grid-cols-[280px_minmax(0,1fr)_320px] 2xl:grid-cols-[300px_minmax(0,1fr)_340px]"
-          : "xl:grid-cols-[320px_minmax(0,1fr)_360px]",
+        isCompactPreview
+          ? "lg:grid-cols-2"
+          : immersive
+            ? "xl:grid-cols-[280px_minmax(0,1fr)_320px] 2xl:grid-cols-[300px_minmax(0,1fr)_340px]"
+            : "xl:grid-cols-[320px_minmax(0,1fr)_360px]",
         className,
       )}
     >
@@ -1151,6 +1161,7 @@ export default function MapGenieWitcherAtlas({
         variant="panel"
         className={cn(
           "overflow-hidden backdrop-blur-xl",
+          isCompactPreview && "order-2",
           immersive && "xl:sticky xl:top-24 xl:max-h-[calc(100vh-8rem)]",
         )}
       >
@@ -1166,7 +1177,11 @@ export default function MapGenieWitcherAtlas({
           <ScrollArea
             className={cn(
               "min-h-0 flex-1 pr-3",
-              immersive ? "h-[calc(100vh-14rem)]" : "h-[560px]",
+              isCompactPreview
+                ? "h-[320px] md:h-[360px]"
+                : immersive
+                  ? "h-[calc(100vh-14rem)]"
+                  : "h-[560px]",
             )}
           >
             <div className="space-y-4">
@@ -1176,7 +1191,7 @@ export default function MapGenieWitcherAtlas({
                   <p className="text-[11px] uppercase tracking-[0.18em] text-primary/80">Busca global</p>
                 </div>
                 {searchResults.length ? searchResults.map((result) => (
-                  <button key={result.id} type="button" onClick={() => navigate(buildPath(result.path))} className="w-full rounded-xl border border-border/60 bg-background/72 px-3 py-3 text-left backdrop-blur-md transition-colors hover:border-primary/30 hover:bg-primary/10">
+                  <button key={result.id} type="button" onClick={() => navigate(buildPath(result.path))} className="tool-list-item w-full px-3 py-3 text-left backdrop-blur-md hover:bg-primary/10">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-medium text-foreground">{result.label}</p>
                       <span className="text-[10px] uppercase tracking-[0.18em] text-primary/80">{result.kind}</span>
@@ -1184,7 +1199,7 @@ export default function MapGenieWitcherAtlas({
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">{result.description}</p>
                   </button>
                 )) : (
-                  <div className="rounded-xl border border-dashed border-border/70 bg-background/72 p-4 text-sm leading-6 text-muted-foreground backdrop-blur-md">
+                  <div className="tool-empty-state p-4 text-sm leading-6 text-muted-foreground backdrop-blur-md">
                     Busque por regiao, sub-regiao, local, POI ou battlemap.
                   </div>
                 )}
@@ -1211,23 +1226,31 @@ export default function MapGenieWitcherAtlas({
                 </div>
               </section>
 
-              <section className="space-y-3 rounded-xl border border-border/60 bg-background/30 p-4">
+              <section className="info-panel space-y-3 p-4">
                 <div className="flex items-center gap-2">
                   <Route className="h-4 w-4 text-primary" />
                   <p className="text-[11px] uppercase tracking-[0.18em] text-primary/80">Rotas</p>
                 </div>
-                <select value={selectedRouteStart} onChange={(event) => setSelectedRouteStart(event.target.value)} className="flex h-10 w-full rounded-[calc(var(--radius)-4px)] border border-input bg-surface-raised/55 px-3 text-sm text-foreground">
-                  <option value="">Origem</option>
-                  {allLocations.map((location) => (
-                    <option key={location.id} value={location.id}>{location.name}</option>
-                  ))}
-                </select>
-                <select value={selectedRouteEnd} onChange={(event) => setSelectedRouteEnd(event.target.value)} className="flex h-10 w-full rounded-[calc(var(--radius)-4px)] border border-input bg-surface-raised/55 px-3 text-sm text-foreground">
-                  <option value="">Destino</option>
-                  {allLocations.map((location) => (
-                    <option key={location.id} value={location.id}>{location.name}</option>
-                  ))}
-                </select>
+                <Select value={selectedRouteStart} onValueChange={setSelectedRouteStart}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Origem" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allLocations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>{location.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedRouteEnd} onValueChange={setSelectedRouteEnd}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Destino" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allLocations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>{location.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {routePlan ? (
                   <div className="space-y-2 text-sm leading-6 text-muted-foreground">
                     <p>Distancia: <span className="text-foreground">{routePlan.distanceKm} km</span></p>
@@ -1242,7 +1265,7 @@ export default function MapGenieWitcherAtlas({
                 )}
               </section>
 
-              <section className="space-y-3 rounded-xl border border-border/60 bg-background/30 p-4">
+              <section className="info-panel space-y-3 p-4">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" />
                   <p className="text-[11px] uppercase tracking-[0.18em] text-primary/80">Nitidez</p>
@@ -1265,7 +1288,13 @@ export default function MapGenieWitcherAtlas({
         </CardContent>
       </Card>
 
-      <Card variant="elevated" className="overflow-hidden border-primary/15 shadow-[0_24px_80px_hsl(var(--background)/0.45)]">
+      <Card
+        variant="elevated"
+        className={cn(
+          "overflow-hidden border-primary/15 shadow-[0_24px_80px_hsl(var(--background)/0.45)]",
+          isCompactPreview && "order-1 lg:col-span-2",
+        )}
+      >
         <CardContent className="space-y-5 p-4 md:p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
@@ -1291,7 +1320,12 @@ export default function MapGenieWitcherAtlas({
                 </div>
               ) : null}
             </div>
-            <div className="flex max-w-xl flex-wrap items-center justify-end gap-2">
+            <div
+              className={cn(
+                "flex flex-wrap items-center gap-2",
+                isCompactPreview ? "w-full justify-start" : "max-w-xl justify-end",
+              )}
+            >
               <Badge variant="outline" className="border-primary/25 text-primary">
                 <Compass className="mr-2 h-3.5 w-3.5" />
                 {atlasStageLabels[zoomStage]}
@@ -1319,7 +1353,7 @@ export default function MapGenieWitcherAtlas({
               })}
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-[var(--radius)] border border-border/70 bg-[#090806]">
+          <div className="tool-stage-frame relative overflow-hidden bg-[#090806]">
             {!isMapReady ? <AtlasSkeleton compact={compact} immersive={immersive} /> : null}
             <div
               className={cn(
@@ -1327,6 +1361,8 @@ export default function MapGenieWitcherAtlas({
                 isMapReady ? "opacity-100" : "opacity-0",
                 immersive
                   ? "h-[calc(100vh-18rem)] min-h-[720px]"
+                  : isCompactPreview
+                    ? "h-[340px] md:h-[420px] xl:h-[480px]"
                   : compact
                     ? "h-[420px]"
                     : "h-[70vh] min-h-[560px]",
@@ -1334,15 +1370,27 @@ export default function MapGenieWitcherAtlas({
             >
               <div ref={mapHostRef} className="h-full w-full" />
             </div>
-            <div className="pointer-events-none absolute inset-x-0 top-0 p-4">
-              <div className="mx-auto flex max-w-4xl justify-center">
-                <div className="pointer-events-auto rounded-full border border-border/60 bg-background/68 px-4 py-2 backdrop-blur-xl">
-                  <p className="text-center text-xs uppercase tracking-[0.18em] text-primary/80">
-                    Visao por camadas: abra o mundo, mergulhe na regiao, entre no local, desca ao battlemap
-                  </p>
+            {!isCompactPreview ? (
+              <div className="pointer-events-none absolute inset-x-0 top-0 p-4">
+                <div className="mx-auto flex max-w-4xl justify-center">
+                  <div className="pointer-events-auto field-note px-4 py-2 backdrop-blur-xl">
+                    <p className="text-center text-xs uppercase tracking-[0.18em] text-primary/80">
+                      Visao por camadas: abra o mundo, mergulhe na regiao, entre no local, desca ao battlemap
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 md:p-4">
+                <div className="flex justify-start">
+                  <div className="pointer-events-auto field-note max-w-md px-4 py-2 backdrop-blur-xl">
+                    <p className="text-xs uppercase tracking-[0.18em] text-primary/80">
+                      Preview do atlas: abra o modo completo para mergulho por camadas.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -1351,6 +1399,7 @@ export default function MapGenieWitcherAtlas({
         variant="panel"
         className={cn(
           "overflow-hidden backdrop-blur-xl",
+          isCompactPreview && "order-3",
           immersive && "xl:sticky xl:top-24 xl:max-h-[calc(100vh-8rem)]",
         )}
       >
@@ -1368,31 +1417,35 @@ export default function MapGenieWitcherAtlas({
           <ScrollArea
             className={cn(
               "min-h-0 flex-1 pr-3",
-              immersive ? "h-[calc(100vh-14rem)]" : "h-[560px]",
+              isCompactPreview
+                ? "h-[320px] md:h-[360px]"
+                : immersive
+                  ? "h-[calc(100vh-14rem)]"
+                  : "h-[560px]",
             )}
           >
             {rightMode === "details" ? (
               <div className="space-y-4">
-                <section className="rounded-xl border border-border/60 bg-background/30 p-4">
+                <section className="info-panel p-4">
                   <p className="font-heading text-lg text-foreground">{currentTitle}</p>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     {currentDescription}
                   </p>
                   {selectedLocation ? (
                     <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                      <div className="rounded-lg border border-border/40 bg-background/50 px-3 py-2">
+                      <div className="metric-panel px-3 py-2">
                         <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Tipo</p>
                         <p className="mt-1 text-foreground">{getAtlasLocationTypeLabel(selectedLocation.type)}</p>
                       </div>
-                      <div className="rounded-lg border border-border/40 bg-background/50 px-3 py-2">
+                      <div className="metric-panel px-3 py-2">
                         <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">POIs</p>
                         <p className="mt-1 text-foreground">{selectedLocation.pois.length}</p>
                       </div>
-                      <div className="rounded-lg border border-border/40 bg-background/50 px-3 py-2">
+                      <div className="metric-panel px-3 py-2">
                         <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Populacao</p>
                         <p className="mt-1 text-foreground">{selectedLocation.population}</p>
                       </div>
-                      <div className="rounded-lg border border-border/40 bg-background/50 px-3 py-2">
+                      <div className="metric-panel px-3 py-2">
                         <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Facao</p>
                         <p className="mt-1 text-foreground">{selectedLocation.faction}</p>
                       </div>
@@ -1401,7 +1454,7 @@ export default function MapGenieWitcherAtlas({
                 </section>
 
                 {selectedSubRegion ? (
-                  <section className="rounded-xl border border-border/60 bg-background/30 p-4 text-sm leading-6 text-muted-foreground">
+                  <section className="info-panel p-4 text-sm leading-6 text-muted-foreground">
                     <p className="text-[11px] uppercase tracking-[0.16em] text-primary/80">Sub-regiao</p>
                     <p className="mt-2">Terreno: {selectedSubRegion.terrainType}</p>
                     <p>Clima: {selectedSubRegion.climate}</p>
@@ -1414,7 +1467,7 @@ export default function MapGenieWitcherAtlas({
 
                 {selectedLocation ? (
                   <>
-                    <section className="rounded-xl border border-border/60 bg-background/30 p-4">
+                    <section className="info-panel p-4">
                       <div className="flex items-center gap-2">
                         <Sparkles className="h-4 w-4 text-primary" />
                         <p className="text-[11px] uppercase tracking-[0.16em] text-primary/80">Distritos e POIs</p>
@@ -1426,7 +1479,7 @@ export default function MapGenieWitcherAtlas({
                       </div>
                       <div className="mt-4 space-y-2">
                         {selectedLocation.pois.map((poi) => (
-                          <div key={poi.id} className="rounded-lg border border-border/40 bg-background/50 px-3 py-3">
+                          <div key={poi.id} className="metric-panel px-3 py-3">
                             <p className="font-medium text-foreground">{poi.name}</p>
                             <p className="text-sm leading-6 text-muted-foreground">{poi.description}</p>
                           </div>
@@ -1434,18 +1487,18 @@ export default function MapGenieWitcherAtlas({
                       </div>
                     </section>
 
-                    <section className="rounded-xl border border-border/60 bg-background/30 p-4">
+                    <section className="info-panel p-4">
                       <p className="text-[11px] uppercase tracking-[0.16em] text-primary/80">NPCs e comercio</p>
                       <div className="mt-3 space-y-3">
                         {selectedLocation.npcs.map((npc) => (
-                          <div key={npc.id} className="rounded-lg border border-border/40 bg-background/50 px-3 py-3">
+                          <div key={npc.id} className="metric-panel px-3 py-3">
                             <p className="font-medium text-foreground">{npc.name}</p>
                             <p className="text-xs uppercase tracking-[0.16em] text-primary/80">{npc.role}</p>
                             <p className="mt-1 text-sm leading-6 text-muted-foreground">{npc.description}</p>
                           </div>
                         ))}
                         {selectedLocation.shops.map((shop) => (
-                          <div key={shop.id} className="rounded-lg border border-border/40 bg-background/50 px-3 py-3">
+                          <div key={shop.id} className="metric-panel px-3 py-3">
                             <p className="font-medium text-foreground">{shop.name}</p>
                             <p className="text-xs uppercase tracking-[0.16em] text-primary/80">{shop.specialty}</p>
                             <p className="mt-1 text-sm leading-6 text-muted-foreground">{shop.description}</p>
@@ -1454,17 +1507,17 @@ export default function MapGenieWitcherAtlas({
                       </div>
                     </section>
 
-                    <section className="rounded-xl border border-border/60 bg-background/30 p-4">
+                    <section className="info-panel p-4">
                       <p className="text-[11px] uppercase tracking-[0.16em] text-primary/80">Battlemap vinculado</p>
                       {selectedBattlemap ? (
                         <div className="mt-3 space-y-3">
-                          <div className="overflow-hidden rounded-lg border border-border/40 bg-background/50">
+                          <div className="tool-stage-frame overflow-hidden">
                             <img src={selectedBattlemap.imageUrl} alt={selectedBattlemap.name} className="h-40 w-full object-cover" />
                           </div>
                           <p className="text-sm leading-6 text-muted-foreground">{selectedBattlemap.description}</p>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div className="rounded-lg border border-border/40 bg-background/50 px-3 py-2">Grid: {selectedBattlemap.gridSize}px</div>
-                            <div className="rounded-lg border border-border/40 bg-background/50 px-3 py-2">Escala: {selectedBattlemap.scale}m</div>
+                            <div className="metric-panel px-3 py-2">Grid: {selectedBattlemap.gridSize}px</div>
+                            <div className="metric-panel px-3 py-2">Escala: {selectedBattlemap.scale}m</div>
                           </div>
                           <Button className="w-full" onClick={() => navigate(`/mesa?atlasBattlemap=${selectedBattlemap.id}`)}>
                             Abrir battlemap na mesa
@@ -1479,7 +1532,7 @@ export default function MapGenieWitcherAtlas({
               </div>
             ) : (
               <div className="space-y-4">
-                <section className="rounded-xl border border-border/60 bg-background/30 p-4 space-y-3">
+                <section className="info-panel space-y-3 p-4">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-primary/80">Editar regiao</p>
                   <Input value={regionDraft.name} onChange={(event) => setRegionDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Nome da regiao" />
                   <Textarea value={regionDraft.description} onChange={(event) => setRegionDraft((current) => ({ ...current, description: event.target.value }))} placeholder="Descricao da regiao" />
@@ -1491,7 +1544,7 @@ export default function MapGenieWitcherAtlas({
                   </div>
                 </section>
 
-                <section className="rounded-xl border border-border/60 bg-background/30 p-4 space-y-3">
+                <section className="info-panel space-y-3 p-4">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-primary/80">Editar sub-regiao</p>
                   <Input value={subRegionDraft.name} onChange={(event) => setSubRegionDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Nome da sub-regiao" />
                   <Textarea value={subRegionDraft.description} onChange={(event) => setSubRegionDraft((current) => ({ ...current, description: event.target.value }))} placeholder="Descricao da sub-regiao" />
@@ -1502,15 +1555,23 @@ export default function MapGenieWitcherAtlas({
                   </div>
                 </section>
 
-                <section className="rounded-xl border border-border/60 bg-background/30 p-4 space-y-3">
+                <section className="info-panel space-y-3 p-4">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-primary/80">Editar local</p>
                   <Input value={locationDraft.name} onChange={(event) => setLocationDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Nome do local" />
                   <Textarea value={locationDraft.description} onChange={(event) => setLocationDraft((current) => ({ ...current, description: event.target.value }))} placeholder="Descricao do local" />
-                  <select value={locationDraft.type} onChange={(event) => setLocationDraft((current) => ({ ...current, type: event.target.value as AtlasLocationType }))} className="flex h-10 w-full rounded-[calc(var(--radius)-4px)] border border-input bg-surface-raised/55 px-3 text-sm text-foreground">
-                    {locationTypeOptions.map((type) => (
-                      <option key={type} value={type}>{getAtlasLocationTypeLabel(type)}</option>
-                    ))}
-                  </select>
+                  <Select
+                    value={locationDraft.type}
+                    onValueChange={(value) => setLocationDraft((current) => ({ ...current, type: value as AtlasLocationType }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tipo de local" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locationTypeOptions.map((type) => (
+                        <SelectItem key={type} value={type}>{getAtlasLocationTypeLabel(type)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Input value={locationDraft.population} onChange={(event) => setLocationDraft((current) => ({ ...current, population: event.target.value }))} placeholder="Populacao" />
                   <Input value={locationDraft.faction} onChange={(event) => setLocationDraft((current) => ({ ...current, faction: event.target.value }))} placeholder="Facao" />
                   <div className="flex gap-2">
@@ -1519,24 +1580,32 @@ export default function MapGenieWitcherAtlas({
                   </div>
                 </section>
 
-                <section className="rounded-xl border border-border/60 bg-background/30 p-4 space-y-3">
+                <section className="info-panel space-y-3 p-4">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-primary/80">Novo POI</p>
                   <Input value={poiDraft.name} onChange={(event) => setPoiDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Nome do POI" />
                   <Textarea value={poiDraft.description} onChange={(event) => setPoiDraft((current) => ({ ...current, description: event.target.value }))} placeholder="Descricao do POI" />
-                  <select value={poiDraft.type} onChange={(event) => setPoiDraft((current) => ({ ...current, type: event.target.value as AtlasPoiType }))} className="flex h-10 w-full rounded-[calc(var(--radius)-4px)] border border-input bg-surface-raised/55 px-3 text-sm text-foreground">
-                    <option value="tavern">Taverna</option>
-                    <option value="blacksmith">Ferreiro</option>
-                    <option value="temple">Templo</option>
-                    <option value="market">Mercado</option>
-                    <option value="alchemist">Alquimista</option>
-                    <option value="notice-board">Quadro</option>
-                    <option value="harbor">Porto</option>
-                    <option value="hideout">Refugio</option>
-                  </select>
+                  <Select
+                    value={poiDraft.type}
+                    onValueChange={(value) => setPoiDraft((current) => ({ ...current, type: value as AtlasPoiType }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tipo de POI" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tavern">Taverna</SelectItem>
+                      <SelectItem value="blacksmith">Ferreiro</SelectItem>
+                      <SelectItem value="temple">Templo</SelectItem>
+                      <SelectItem value="market">Mercado</SelectItem>
+                      <SelectItem value="alchemist">Alquimista</SelectItem>
+                      <SelectItem value="notice-board">Quadro</SelectItem>
+                      <SelectItem value="harbor">Porto</SelectItem>
+                      <SelectItem value="hideout">Refugio</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button className="w-full" onClick={handleAddPoi}>Adicionar no centro da viewport</Button>
                 </section>
 
-                <section className="rounded-xl border border-border/60 bg-background/30 p-4 space-y-3">
+                <section className="info-panel space-y-3 p-4">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-primary/80">Battlemap</p>
                   <Input value={battlemapDraft.name} onChange={(event) => setBattlemapDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Nome do battlemap" />
                   <Textarea value={battlemapDraft.description} onChange={(event) => setBattlemapDraft((current) => ({ ...current, description: event.target.value }))} placeholder="Descricao do battlemap" />
@@ -1547,7 +1616,7 @@ export default function MapGenieWitcherAtlas({
                     <Input type="number" min={10} value={battlemapDraft.height} onChange={(event) => setBattlemapDraft((current) => ({ ...current, height: Number(event.target.value) || 36 }))} placeholder="Altura" />
                   </div>
                   <Input type="number" min={0} max={360} value={battlemapDraft.rotation} onChange={(event) => setBattlemapDraft((current) => ({ ...current, rotation: Number(event.target.value) || 0 }))} placeholder="Rotacao" />
-                  <input type="file" accept="image/*" onChange={(event) => setBattlemapFile(event.target.files?.[0] ?? null)} />
+                  <input type="file" accept="image/*" className="native-file-input" onChange={(event) => setBattlemapFile(event.target.files?.[0] ?? null)} />
                   <div className="grid gap-2 md:grid-cols-2">
                     <Button className="w-full" onClick={() => void handleCreateBattlemap()}>Criar ou atualizar</Button>
                     <Button variant="outline" className="w-full" onClick={() => setBattlemapPlacementMode((current) => !current)} disabled={!selectedBattlemap && !selectedLocation}>

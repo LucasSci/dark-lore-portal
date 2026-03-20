@@ -37,6 +37,14 @@ import VttPixiStage from "@/components/rpg/VttPixiStage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -123,13 +131,27 @@ function SidePanelCard({
   className?: string;
 }) {
   return (
-    <section className={cn("rounded-xl border border-border/50 bg-background/35 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]", className)}>
+    <section className={cn("info-panel p-4", className)}>
       <div className="mb-3 space-y-1">
         <h3 className="font-heading text-base text-foreground">{title}</h3>
         {description && <p className="text-sm leading-6 text-muted-foreground">{description}</p>}
       </div>
       {children}
     </section>
+  );
+}
+
+function ToolRailButton({
+  active = false,
+  className,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+  return (
+    <button
+      data-active={active}
+      className={cn("tool-rail-button h-9 w-9", className)}
+      {...props}
+    />
   );
 }
 
@@ -959,7 +981,7 @@ export default function MesaPage() {
       <div className="hidden w-12 flex-col items-center border-r border-border/70 bg-surface-raised py-2 sm:flex">
         <Link
           to="/jogar"
-          className="mb-4 flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="tool-rail-button mb-4 h-9 w-9"
           title="Voltar ao Hub"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -968,46 +990,36 @@ export default function MesaPage() {
         <div className="w-8 border-t border-border/50 mb-3" />
 
         {toolButtons.map((tool) => (
-          <button
+          <ToolRailButton
             key={tool.id}
             onClick={() => setActiveTool(tool.id)}
             title={tool.label}
-            className={cn(
-              "mb-1 flex h-9 w-9 items-center justify-center rounded-md transition-colors",
-              currentTool === tool.id
-                ? "bg-primary/20 text-primary"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-            )}
+            active={currentTool === tool.id}
+            className="mb-1"
           >
             {tool.icon}
-          </button>
+          </ToolRailButton>
         ))}
 
         <div className="w-8 border-t border-border/50 my-3" />
 
-        <button
+        <ToolRailButton
           onClick={() => setShowGrid((v) => !v)}
           title={showGrid ? "Ocultar grid" : "Mostrar grid"}
-          className={cn(
-            "mb-1 flex h-9 w-9 items-center justify-center rounded-md transition-colors",
-            showGrid ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-          )}
+          active={showGrid}
+          className="mb-1"
         >
           <Grid3X3 className="h-4 w-4" />
-        </button>
+        </ToolRailButton>
 
-        <button
+        <ToolRailButton
           onClick={() => fileInputRef.current?.click()}
           title="Importar battlemap"
-          className={cn(
-            "mb-1 flex h-9 w-9 items-center justify-center rounded-md transition-colors",
-            battlemapUrl
-              ? "bg-primary/20 text-primary"
-              : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-          )}
+          active={Boolean(battlemapUrl)}
+          className="mb-1"
         >
           <ImagePlus className="h-4 w-4" />
-        </button>
+        </ToolRailButton>
         <input
           ref={fileInputRef}
           type="file"
@@ -1020,43 +1032,39 @@ export default function MesaPage() {
 
         <div className="w-8 border-t border-border/50 mb-3" />
 
-        <button
+        <ToolRailButton
           onClick={() => void mutateScene((c) => toggleDynamicLighting(c))}
           title={activePage?.dynamicLighting ? "Desativar iluminação dinâmica" : "Ativar iluminação dinâmica"}
-          className={cn(
-            "mb-1 flex h-9 w-9 items-center justify-center rounded-md transition-colors",
-            activePage?.dynamicLighting
-              ? "bg-amber-500/20 text-amber-400"
-              : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-          )}
+          active={Boolean(activePage?.dynamicLighting)}
+          className={cn("mb-1", activePage?.dynamicLighting && "border-amber-400/30 bg-amber-500/12 text-amber-300")}
         >
           <Flame className="h-4 w-4" />
-        </button>
+        </ToolRailButton>
 
-        <button
+        <ToolRailButton
           onClick={() => void mutateScene((c) => clearSceneWalls(c))}
           title="Limpar paredes"
-          className="mb-1 flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="mb-1"
         >
           <Trash2 className="h-3.5 w-3.5" />
-        </button>
+        </ToolRailButton>
 
         <div className="w-8 border-t border-border/50 mb-3" />
 
-        <button
+        <ToolRailButton
           onClick={() => void mutateScene((c) => revealEntireSceneFog(c))}
           title="Revelar todo o mapa"
-          className="mb-1 flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="mb-1"
         >
           <Eye className="h-4 w-4" />
-        </button>
-        <button
+        </ToolRailButton>
+        <ToolRailButton
           onClick={() => void mutateScene((c) => restoreSceneFog(c))}
           title="Restaurar neblina"
-          className="mb-1 flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="mb-1"
         >
           <Layers className="h-4 w-4" />
-        </button>
+        </ToolRailButton>
       </div>
 
       {/* Center: canvas area */}
@@ -1067,7 +1075,7 @@ export default function MesaPage() {
             {/* Mobile back button */}
             <Link
               to="/jogar"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground sm:hidden"
+              className="tool-rail-button h-8 w-8 shrink-0 sm:hidden"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -1100,7 +1108,7 @@ export default function MesaPage() {
             {/* Mobile panel toggle */}
             <button
               onClick={() => setMobilePanel((v) => !v)}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground sm:hidden"
+              className="tool-rail-button h-8 w-8 sm:hidden"
             >
               <MessageSquare className="h-4 w-4" />
             </button>
@@ -1134,35 +1142,35 @@ export default function MesaPage() {
           )}
 
           {/* Zoom controls - floating right */}
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 rounded-lg border border-border/40 bg-surface-raised/90 p-1 backdrop-blur-sm">
-            <button
+          <div className="field-note absolute right-3 top-1/2 flex -translate-y-1/2 flex-col items-center gap-1 p-1 backdrop-blur-sm">
+            <ToolRailButton
               onClick={() => void mutateScene((c) => setSceneCameraScale(c, "in"), { broadcast: false, persist: false })}
-              className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="h-8 w-8"
               title="Aumentar zoom"
               aria-label="Aumentar zoom"
             >
               <Plus className="h-4 w-4" />
-            </button>
+            </ToolRailButton>
             <div className="text-[10px] text-muted-foreground">
               {activePage ? Math.round(activePage.camera.scale * 100) : 100}
             </div>
-            <button
+            <ToolRailButton
               onClick={() => void mutateScene((c) => setSceneCameraScale(c, "out"), { broadcast: false, persist: false })}
-              className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="h-8 w-8"
               title="Diminuir zoom"
               aria-label="Diminuir zoom"
             >
               <Minus className="h-4 w-4" />
-            </button>
+            </ToolRailButton>
             <div className="w-6 border-t border-border/40 my-1" />
-            <button
+            <ToolRailButton
               onClick={() => void mutateScene((c) => setSceneCameraScale(c, "reset"), { broadcast: false, persist: false })}
-              className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="h-8 w-8"
               title="Restaurar zoom"
               aria-label="Restaurar zoom"
             >
               <RefreshCcw className="h-3.5 w-3.5" />
-            </button>
+            </ToolRailButton>
           </div>
         </div>
 
@@ -1170,8 +1178,8 @@ export default function MesaPage() {
         {selectedToken && (
           <div className="flex items-center gap-2 border-t border-border/40 bg-surface-raised/90 px-2 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
             <div className={cn(
-              "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold sm:h-8 sm:w-8 sm:text-xs",
-              selectedToken.payload.team === "party" ? "bg-info/20 text-info" : "bg-destructive/20 text-destructive",
+              "flex h-7 w-7 shrink-0 items-center justify-center border text-[10px] font-bold sm:h-8 sm:w-8 sm:text-xs",
+              selectedToken.payload.team === "party" ? "border-info/30 bg-info/12 text-info" : "border-destructive/30 bg-destructive/12 text-destructive",
             )}>
               {selectedToken.payload.shortName}
             </div>
@@ -1203,34 +1211,26 @@ export default function MesaPage() {
         {/* Mobile bottom toolbar */}
         <div className="flex items-center justify-around border-t border-border/40 bg-surface-raised/95 px-1 py-1 sm:hidden">
           {toolButtons.slice(0, 4).map((tool) => (
-            <button
+            <ToolRailButton
               key={tool.id}
               onClick={() => setActiveTool(tool.id)}
-              className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
-                currentTool === tool.id
-                  ? "bg-primary/20 text-primary"
-                  : "text-muted-foreground",
-              )}
+              active={currentTool === tool.id}
             >
               {tool.icon}
-            </button>
+            </ToolRailButton>
           ))}
-          <button
+          <ToolRailButton
             onClick={() => setShowGrid((v) => !v)}
-            className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
-              showGrid ? "bg-primary/20 text-primary" : "text-muted-foreground",
-            )}
+            active={showGrid}
           >
             <Grid3X3 className="h-4 w-4" />
-          </button>
-          <button
+          </ToolRailButton>
+          <ToolRailButton
             onClick={() => fileInputRef.current?.click()}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors"
+            active={Boolean(battlemapUrl)}
           >
             <ImagePlus className="h-4 w-4" />
-          </button>
+          </ToolRailButton>
           <input
             ref={fileInputRef}
             type="file"
@@ -1254,7 +1254,7 @@ export default function MesaPage() {
         <div className="absolute inset-0 z-[70] flex flex-col bg-surface-raised/98 backdrop-blur sm:hidden">
           <div className="flex items-center justify-between border-b border-border/40 px-3 py-2">
             <span className="font-heading text-xs uppercase tracking-[0.16em] text-primary/80">Painel</span>
-            <button onClick={() => setMobilePanel(false)} className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground">
+            <button onClick={() => setMobilePanel(false)} className="tool-rail-button h-8 w-8">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -1266,7 +1266,7 @@ export default function MesaPage() {
                     key={tab.id}
                     value={tab.id}
                     title={tab.label}
-                    className="flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent bg-transparent px-1 py-1.5 text-[10px] font-medium tracking-[0.12em] text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-background/70 data-[state=active]:text-foreground"
+                    className="flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-none border border-transparent bg-transparent px-1 py-1.5 text-[10px] font-medium tracking-[0.12em] text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-background/70 data-[state=active]:text-foreground"
                   >
                     {tab.icon}
                     <span className="uppercase">{tab.label}</span>
@@ -1290,7 +1290,7 @@ export default function MesaPage() {
                   key={tab.id}
                   value={tab.id}
                   title={tab.label}
-                  className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border border-transparent bg-transparent px-2 py-2 text-[11px] font-medium tracking-[0.14em] text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-background/70 data-[state=active]:text-foreground"
+                  className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-none border border-transparent bg-transparent px-2 py-2 text-[11px] font-medium tracking-[0.14em] text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-background/70 data-[state=active]:text-foreground"
                 >
                   {tab.icon}
                   <span className="uppercase">{tab.label}</span>
@@ -1311,7 +1311,7 @@ export default function MesaPage() {
                         <div
                           key={msg.id}
                           className={cn(
-                            "rounded-xl border px-3 py-3",
+                            "tool-list-item px-3 py-3",
                             msg.tone === "system" && "border-primary/20 bg-primary/5",
                             msg.tone === "party" && "border-emerald-500/20 bg-emerald-500/5",
                             msg.tone === "npc" && "border-amber-400/20 bg-amber-400/5",
@@ -1338,7 +1338,7 @@ export default function MesaPage() {
                     <button
                       key={n}
                       onClick={() => void rollNotation(n, selectedToken?.payload.name ?? "Mesa")}
-                      className="rounded-lg bg-secondary/60 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      className="tool-list-item py-1.5 text-[11px] font-medium text-muted-foreground"
                     >
                       {n}
                     </button>
@@ -1381,7 +1381,7 @@ export default function MesaPage() {
               <ScrollArea className="h-full">
                 <div className="space-y-4 px-4 py-4 pr-5">
                   {tokens.length === 0 ? (
-                    <p className="rounded-xl border border-border/40 bg-background/30 px-4 py-4 text-center text-sm text-muted-foreground">
+                    <p className="tool-empty-state px-4 py-4 text-center text-sm text-muted-foreground">
                       Nenhum token na cena.
                     </p>
                   ) : (
@@ -1390,15 +1390,15 @@ export default function MesaPage() {
                         key={token.id}
                         onClick={() => void mutateScene((c) => setSceneSelection(c, token.id), { broadcast: false, persist: false })}
                         className={cn(
-                          "flex w-full items-center gap-3 rounded-xl border bg-background/35 px-3 py-3 text-left transition-colors",
+                          "tool-list-item flex w-full items-center gap-3 px-3 py-3 text-left",
                           token.id === scene.selectedObjectId
                             ? "border-primary/40 bg-primary/5"
-                            : "border-border/40 hover:border-border/70",
+                            : "border-border/40",
                         )}
                       >
                         <div className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold",
-                          token.payload.team === "party" ? "bg-info/20 text-info" : "bg-destructive/20 text-destructive",
+                          "flex h-8 w-8 items-center justify-center border text-[10px] font-bold",
+                          token.payload.team === "party" ? "border-info/30 bg-info/12 text-info" : "border-destructive/30 bg-destructive/12 text-destructive",
                         )}>
                           {token.payload.shortName}
                         </div>
@@ -1433,7 +1433,7 @@ export default function MesaPage() {
                 <ScrollArea className="flex-1">
                   <div className="space-y-2 px-4 py-4 pr-5">
                     {scene.initiative.entries.length === 0 ? (
-                      <p className="rounded-xl border border-border/40 bg-background/30 px-4 py-4 text-center text-sm text-muted-foreground">
+                      <p className="tool-empty-state px-4 py-4 text-center text-sm text-muted-foreground">
                         Nenhuma iniciativa rolada.
                       </p>
                     ) : (
@@ -1441,7 +1441,7 @@ export default function MesaPage() {
                         <div
                           key={entry.tokenId}
                           className={cn(
-                            "flex items-center gap-3 rounded-xl border bg-background/35 px-3 py-3",
+                            "tool-list-item flex items-center gap-3 px-3 py-3",
                             entry.tokenId === scene.initiative.activeTurnId
                               ? "border-primary/40 bg-primary/10"
                               : "border-border/40",
@@ -1479,7 +1479,7 @@ export default function MesaPage() {
                         e.dataTransfer.setData("application/x-dark-lore-entry", entry.slug);
                         e.dataTransfer.effectAllowed = "copy";
                       }}
-                      className="cursor-grab rounded-xl border border-border/40 bg-background/35 p-3 transition-colors hover:border-primary/30"
+                      className="tool-list-item cursor-grab p-3"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-sm font-medium text-foreground">{entry.title}</p>
@@ -1566,23 +1566,23 @@ export default function MesaPage() {
                     description="Tudo o que voce precisa para preparar o battlemap, ampliar o grid e costurar areas extensas fica concentrado nesta aba."
                   >
                     <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="rounded-lg border border-border/40 bg-background/55 px-3 py-2">
+                      <div className="metric-panel px-3 py-2">
                         <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Area</p>
                         <p className="mt-1 text-sm text-foreground">{activePage?.name ?? "Sem pagina"}</p>
                       </div>
-                      <div className="rounded-lg border border-border/40 bg-background/55 px-3 py-2">
+                      <div className="metric-panel px-3 py-2">
                         <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Grade</p>
                         <p className="mt-1 text-sm text-foreground">
                           {activePage ? `${activePage.width}x${activePage.height}` : "--"}
                         </p>
                       </div>
-                      <div className="rounded-lg border border-border/40 bg-background/55 px-3 py-2">
+                      <div className="metric-panel px-3 py-2">
                         <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Grid</p>
                         <p className="mt-1 text-sm text-foreground">{activePage?.gridSize ?? 72}px</p>
                       </div>
                     </div>
                   </SidePanelCard>
-                  <div className="rounded-xl border border-border/50 bg-background/35 p-4">
+                  <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Battlemap da pagina</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Importe uma imagem e ajuste a grade por cima dela. Os tokens vao se mover sobre esse mapa.
@@ -1597,7 +1597,7 @@ export default function MesaPage() {
                       {battlemapUploading ? "Importando..." : battlemapUrl ? "Trocar battlemap" : "Importar battlemap"}
                     </Button>
                     {battlemapUrl && (
-                      <div className="mt-3 overflow-hidden rounded-lg border border-border/40 bg-background/60">
+                      <div className="tool-stage-frame mt-3 overflow-hidden bg-background/60">
                         <img
                           src={battlemapUrl}
                           alt="Preview do battlemap"
@@ -1607,7 +1607,7 @@ export default function MesaPage() {
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-border/50 bg-background/35 p-4">
+                  <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Grade da mesa</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Ajuste a quantidade de colunas, linhas e o tamanho visual de cada quadrado.
@@ -1651,14 +1651,13 @@ export default function MesaPage() {
                         <label className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Opacidade do grid</label>
                         <span className="text-sm text-foreground">{Math.round(gridOpacity * 100)}%</span>
                       </div>
-                      <input
-                        type="range"
+                      <Slider
                         min={5}
                         max={80}
                         step={5}
-                        value={Math.round(gridOpacity * 100)}
-                        onChange={(event) => setGridOpacity(Number(event.target.value) / 100)}
-                        className="w-full accent-primary"
+                        value={[Math.round(gridOpacity * 100)]}
+                        onValueChange={(value) => setGridOpacity((value[0] ?? 30) / 100)}
+                        className="w-full"
                       />
                       <div className="flex items-center justify-between gap-2">
                         <Button
@@ -1682,7 +1681,7 @@ export default function MesaPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-border/50 bg-background/35 p-4">
+                  <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Expansao do grid</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Use os botoes + nas bordas do mapa para abrir novas colunas e linhas sem deformar o battlemap atual.
@@ -1703,7 +1702,7 @@ export default function MesaPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-border/50 bg-background/35 p-4">
+                  <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Areas conectadas</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Crie novas areas e costure as bordas para viagens longas e transicao fluida entre mapas.
@@ -1733,42 +1732,43 @@ export default function MesaPage() {
                       </Button>
                     </div>
 
-                    <div className="mt-4 rounded-xl border border-border/40 bg-background/40 p-3">
+                    <div className="field-note mt-4 p-3">
                       <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                         Ligacao da area atual
                       </p>
                       <div className="mt-3 space-y-2">
                         <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                           <span>Destino</span>
-                          <select
-                            value={connectionTargetId}
-                            onChange={(event) => setConnectionTargetId(event.target.value)}
-                            className="flex h-10 w-full rounded-[calc(var(--radius)-4px)] border border-input bg-surface-raised/55 px-3 text-sm text-foreground"
-                          >
-                            <option value="">Selecione uma area</option>
-                            {scene.pages
-                              .filter((page) => page.id !== activePage?.id)
-                              .map((page) => (
-                                <option key={page.id} value={page.id}>
-                                  {page.name}
-                                </option>
-                              ))}
-                          </select>
+                          <Select value={connectionTargetId} onValueChange={setConnectionTargetId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione uma area" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {scene.pages
+                                .filter((page) => page.id !== activePage?.id)
+                                .map((page) => (
+                                  <SelectItem key={page.id} value={page.id}>
+                                    {page.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
                         </label>
 
                         <div className="grid grid-cols-2 gap-2">
                           <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                             <span>Borda</span>
-                            <select
-                              value={connectionEdge}
-                              onChange={(event) => setConnectionEdge(event.target.value as PageConnectionEdge)}
-                              className="flex h-10 w-full rounded-[calc(var(--radius)-4px)] border border-input bg-surface-raised/55 px-3 text-sm text-foreground"
-                            >
-                              <option value="north">Norte</option>
-                              <option value="east">Leste</option>
-                              <option value="south">Sul</option>
-                              <option value="west">Oeste</option>
-                            </select>
+                            <Select value={connectionEdge} onValueChange={(value) => setConnectionEdge(value as PageConnectionEdge)}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="north">Norte</SelectItem>
+                                <SelectItem value="east">Leste</SelectItem>
+                                <SelectItem value="south">Sul</SelectItem>
+                                <SelectItem value="west">Oeste</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </label>
                           <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                             <span>Nome da passagem</span>
@@ -1820,7 +1820,7 @@ export default function MesaPage() {
                           <div
                             key={page.id}
                             className={cn(
-                              "rounded-xl border px-3 py-3",
+                              "tool-list-item px-3 py-3",
                               page.id === activePage?.id ? "border-primary/30 bg-primary/5" : "border-border/40 bg-background/35",
                             )}
                           >
@@ -1856,7 +1856,7 @@ export default function MesaPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-border/50 bg-background/35 p-4">
+                  <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Conexoes da area ativa</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       Arraste um token para fora de uma borda conectada ou use a travessia manual abaixo.
@@ -1871,7 +1871,7 @@ export default function MesaPage() {
                           return (
                             <div
                               key={connection.id}
-                              className="rounded-xl border border-border/40 bg-background/40 p-3"
+                              className="tool-list-item p-3"
                             >
                               <div className="flex items-center justify-between gap-3">
                                 <div>
@@ -1911,7 +1911,7 @@ export default function MesaPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-border/50 bg-background/35 p-4">
+                  <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Fluxo da mesa</p>
                     <div className="mt-2 space-y-2 text-sm leading-6 text-muted-foreground">
                       <p>1. Importe a imagem do battlemap.</p>

@@ -31,10 +31,8 @@ export interface GameShopState {
   tradeLog: string[];
 }
 
-export interface ShopSpriteReference {
-  sheet: "tw3_icon_1" | "tw3_icon_2" | "tw3_icon_3";
-  row: number;
-  col: number;
+export interface ShopCatalogEntry extends GameShopItem {
+  owner: ShopInventoryOwner;
 }
 
 export const shopCategoryLabels: Record<GameShopCategory, string> = {
@@ -62,41 +60,6 @@ export const merchantProfile = {
     "Marwen negocia como quem ja viu reis tombarem por uma pocao ruim. Sua banca atende cacadores, patrulheiros, alquimistas e companhias que precisam sair vivas da proxima estrada.",
 };
 
-export const SHOP_SPRITE_GRID_SIZE = 20;
-export const SHOP_SPRITE_CELL_SIZE = 40;
-
-const shopItemSprites: Record<string, ShopSpriteReference> = {
-  icon_tw3_arma_020: { sheet: "tw3_icon_1", row: 5, col: 3 },
-  icon_tw3_arma_048: { sheet: "tw3_icon_1", row: 9, col: 20 },
-  icon_tw3_virote_006: { sheet: "tw3_icon_3", row: 17, col: 18 },
-  icon_tw3_coraza_014: { sheet: "tw3_icon_1", row: 19, col: 8 },
-  icon_tw3_botas_011: { sheet: "tw3_icon_1", row: 13, col: 2 },
-  icon_tw3_guantes_006: { sheet: "tw3_icon_1", row: 20, col: 14 },
-  icon_tw3_bomba_003: { sheet: "tw3_icon_3", row: 8, col: 2 },
-  icon_tw3_pocion_004: { sheet: "tw3_icon_3", row: 8, col: 3 },
-  icon_tw3_aceite_005: { sheet: "tw3_icon_3", row: 14, col: 18 },
-  icon_tw3_alcohol_004: { sheet: "tw3_icon_1", row: 1, col: 11 },
-  icon_tw3_runa_005: { sheet: "tw3_icon_3", row: 15, col: 5 },
-  icon_tw3_runa_012: { sheet: "tw3_icon_3", row: 15, col: 12 },
-  icon_tw3_hierba_010: { sheet: "tw3_icon_2", row: 4, col: 11 },
-  icon_tw3_monstruoso_018: { sheet: "tw3_icon_3", row: 11, col: 2 },
-  icon_tw3_comida_028: { sheet: "tw3_icon_1", row: 17, col: 19 },
-  icon_tw3_comida_021: { sheet: "tw3_icon_1", row: 17, col: 15 },
-  icon_tw3_libro_008: { sheet: "tw3_icon_2", row: 9, col: 13 },
-  icon_tw3_joya_004: { sheet: "tw3_icon_2", row: 7, col: 5 },
-  icon_tw3_hierba_016: { sheet: "tw3_icon_2", row: 5, col: 18 },
-  icon_tw3_hierba_026: { sheet: "tw3_icon_2", row: 5, col: 7 },
-  icon_tw3_monstruoso_011: { sheet: "tw3_icon_3", row: 9, col: 3 },
-  icon_tw3_monstruoso_026: { sheet: "tw3_icon_3", row: 10, col: 6 },
-  icon_tw3_monstruoso_045: { sheet: "tw3_icon_3", row: 10, col: 11 },
-  icon_tw3_metal_009: { sheet: "tw3_icon_2", row: 12, col: 1 },
-  icon_tw3_alquimia_006: { sheet: "tw3_icon_2", row: 13, col: 7 },
-  icon_tw3_carta_005: { sheet: "tw3_icon_2", row: 8, col: 9 },
-  icon_tw3_joya_012: { sheet: "tw3_icon_2", row: 7, col: 15 },
-  icon_tw3_comida_009: { sheet: "tw3_icon_1", row: 16, col: 7 },
-  icon_tw3_comida_019: { sheet: "tw3_icon_1", row: 15, col: 4 },
-};
-
 const merchantSeed: GameShopItem[] = [
   {
     id: "merchant-steel-sword",
@@ -108,7 +71,7 @@ const merchantSeed: GameShopItem[] = [
     weight: 3.2,
     baseValue: 168,
     quantity: 1,
-    iconAsset: "icon_tw3_arma_020",
+    iconAsset: "icon_tw3_arma_018",
   },
   {
     id: "merchant-cavalry-sabre",
@@ -120,7 +83,7 @@ const merchantSeed: GameShopItem[] = [
     weight: 2.8,
     baseValue: 214,
     quantity: 1,
-    iconAsset: "icon_tw3_arma_048",
+    iconAsset: "icon_tw3_arma_012",
   },
   {
     id: "merchant-tracker-bolts",
@@ -132,7 +95,7 @@ const merchantSeed: GameShopItem[] = [
     weight: 0.4,
     baseValue: 18,
     quantity: 14,
-    iconAsset: "icon_tw3_virote_006",
+    iconAsset: "icon_tw3_virote_009",
   },
   {
     id: "merchant-scale-cuirass",
@@ -144,7 +107,7 @@ const merchantSeed: GameShopItem[] = [
     weight: 5.2,
     baseValue: 126,
     quantity: 1,
-    iconAsset: "icon_tw3_coraza_014",
+    iconAsset: "icon_tw3_coraza_019",
   },
   {
     id: "merchant-ranger-boots",
@@ -180,7 +143,7 @@ const merchantSeed: GameShopItem[] = [
     weight: 0.4,
     baseValue: 92,
     quantity: 3,
-    iconAsset: "icon_tw3_bomba_003",
+    iconAsset: "icon_tw3_bomba_007",
   },
   {
     id: "merchant-swallow",
@@ -192,7 +155,7 @@ const merchantSeed: GameShopItem[] = [
     weight: 0.2,
     baseValue: 74,
     quantity: 2,
-    iconAsset: "icon_tw3_pocion_004",
+    iconAsset: "icon_tw3_pocion_002",
   },
   {
     id: "merchant-necrophage-oil",
@@ -216,7 +179,7 @@ const merchantSeed: GameShopItem[] = [
     weight: 0.8,
     baseValue: 33,
     quantity: 4,
-    iconAsset: "icon_tw3_alcohol_004",
+    iconAsset: "icon_tw3_alcohol_012",
   },
   {
     id: "merchant-svarog-rune",
@@ -252,13 +215,13 @@ const merchantSeed: GameShopItem[] = [
     weight: 0.1,
     baseValue: 18,
     quantity: 5,
-    iconAsset: "icon_tw3_hierba_010",
+    iconAsset: "icon_tw3_hierba_011",
   },
   {
     id: "merchant-monster-eye",
-    name: "Olho de besta preservado",
-    description: "Trofeu guardado em sal para estudo, ritual ou revenda.",
-    effect: "Reagente raro para sinais, po e alquimia monstruosa.",
+    name: "Extrato monstruoso preservado",
+    description: "Amostra rara selada em vidro para estudo, ritual ou revenda.",
+    effect: "Reagente raro para alquimia monstruosa e trabalhos de laboratorio.",
     category: "ingredientes",
     rarity: "raro",
     weight: 0.2,
@@ -276,19 +239,19 @@ const merchantSeed: GameShopItem[] = [
     weight: 0.5,
     baseValue: 11,
     quantity: 6,
-    iconAsset: "icon_tw3_comida_028",
+    iconAsset: "icon_tw3_comida_044",
   },
   {
     id: "merchant-campaign-rations",
     name: "Pacote de provisoes secas",
-    description: "Queijo duro, carne salgada e pao escuro embrulhados para patrulha.",
+    description: "Racao de campanha prensada para patrulha, viagem e vigilia curta.",
     effect: "Sustenta uma companhia em travessias curtas.",
     category: "provisoes",
     rarity: "comum",
     weight: 0.7,
     baseValue: 14,
     quantity: 8,
-    iconAsset: "icon_tw3_comida_021",
+    iconAsset: "icon_tw3_comida_038",
   },
   {
     id: "merchant-contract-ledger",
@@ -300,7 +263,7 @@ const merchantSeed: GameShopItem[] = [
     weight: 0.9,
     baseValue: 72,
     quantity: 1,
-    iconAsset: "icon_tw3_libro_008",
+    iconAsset: "icon_tw3_libro_006",
   },
   {
     id: "merchant-obsidian-ring",
@@ -312,7 +275,7 @@ const merchantSeed: GameShopItem[] = [
     weight: 0.1,
     baseValue: 135,
     quantity: 1,
-    iconAsset: "icon_tw3_joya_004",
+    iconAsset: "icon_tw3_joya_014",
   },
 ];
 
@@ -327,7 +290,7 @@ const playerSeed: GameShopItem[] = [
     weight: 0.1,
     baseValue: 16,
     quantity: 6,
-    iconAsset: "icon_tw3_hierba_010",
+    iconAsset: "icon_tw3_hierba_011",
   },
   {
     id: "player-verbena",
@@ -339,7 +302,7 @@ const playerSeed: GameShopItem[] = [
     weight: 0.1,
     baseValue: 22,
     quantity: 4,
-    iconAsset: "icon_tw3_hierba_016",
+    iconAsset: "icon_tw3_hierba_002",
   },
   {
     id: "player-mandrake-root",
@@ -351,7 +314,7 @@ const playerSeed: GameShopItem[] = [
     weight: 0.2,
     baseValue: 58,
     quantity: 1,
-    iconAsset: "icon_tw3_hierba_026",
+    iconAsset: "icon_tw3_hierba_017",
   },
   {
     id: "player-ghoul-claw",
@@ -363,7 +326,7 @@ const playerSeed: GameShopItem[] = [
     weight: 0.3,
     baseValue: 24,
     quantity: 2,
-    iconAsset: "icon_tw3_monstruoso_011",
+    iconAsset: "icon_tw3_monstruoso_038",
   },
   {
     id: "player-drowner-brain",
@@ -387,13 +350,13 @@ const playerSeed: GameShopItem[] = [
     weight: 0.2,
     baseValue: 37,
     quantity: 1,
-    iconAsset: "icon_tw3_monstruoso_045",
+    iconAsset: "icon_tw3_monstruoso_048",
   },
   {
     id: "player-dimeritium-dust",
-    name: "Po de dimeritio",
-    description: "Residuos metalicos de uma liga cara, triturados com extremo cuidado.",
-    effect: "Usado em runas, travas arcanas e artefatos anti-magia.",
+    name: "Placa de dimeritio",
+    description: "Fragmento refinado de uma liga cara, guardado para oficio especializado.",
+    effect: "Usado em travas arcanas, ferragens raras e artefatos anti-magia.",
     category: "ingredientes",
     rarity: "raro",
     weight: 0.2,
@@ -411,7 +374,7 @@ const playerSeed: GameShopItem[] = [
     weight: 0.2,
     baseValue: 9,
     quantity: 5,
-    iconAsset: "icon_tw3_alquimia_006",
+    iconAsset: "icon_tw3_pocion_016",
   },
   {
     id: "player-map-fragment",
@@ -423,7 +386,7 @@ const playerSeed: GameShopItem[] = [
     weight: 0.1,
     baseValue: 58,
     quantity: 1,
-    iconAsset: "icon_tw3_carta_005",
+    iconAsset: "icon_tw3_libro_001",
   },
   {
     id: "player-broken-locket",
@@ -435,7 +398,7 @@ const playerSeed: GameShopItem[] = [
     weight: 0.1,
     baseValue: 41,
     quantity: 1,
-    iconAsset: "icon_tw3_joya_012",
+    iconAsset: "icon_tw3_joya_015",
   },
   {
     id: "player-rye-bread",
@@ -447,7 +410,7 @@ const playerSeed: GameShopItem[] = [
     weight: 0.4,
     baseValue: 8,
     quantity: 3,
-    iconAsset: "icon_tw3_comida_009",
+    iconAsset: "icon_tw3_comida_015",
   },
   {
     id: "player-dry-meat",
@@ -459,7 +422,7 @@ const playerSeed: GameShopItem[] = [
     weight: 0.6,
     baseValue: 12,
     quantity: 2,
-    iconAsset: "icon_tw3_comida_019",
+    iconAsset: "icon_tw3_comida_013",
   },
 ];
 
@@ -504,17 +467,34 @@ export function getTradePrice(item: GameShopItem, owner: ShopInventoryOwner) {
     : Math.max(1, Math.floor(item.baseValue * 0.45));
 }
 
+export function getShopCatalogEntries(): ShopCatalogEntry[] {
+  return [
+    ...merchantSeed.map((item) => ({ ...item, owner: "merchant" as const })),
+    ...playerSeed.map((item) => ({ ...item, owner: "player" as const })),
+  ];
+}
+
+export function getShopIconCatalog() {
+  const icons = new Map<string, ShopCatalogEntry[]>();
+
+  for (const entry of getShopCatalogEntries()) {
+    const group = icons.get(entry.iconAsset) ?? [];
+    group.push(entry);
+    icons.set(entry.iconAsset, group);
+  }
+
+  return [...icons.entries()]
+    .map(([iconAsset, entries]) => ({ iconAsset, entries }))
+    .sort((left, right) => left.iconAsset.localeCompare(right.iconAsset));
+}
+
 export function getInventoryWeight(items: GameShopItem[]) {
   const weight = items.reduce((sum, item) => sum + item.weight * item.quantity, 0);
   return Number(weight.toFixed(1));
 }
 
-export function getShopItemSprite(item: Pick<GameShopItem, "iconAsset">) {
-  return shopItemSprites[item.iconAsset] ?? null;
-}
-
-export function getShopSpriteSheetUrl(sheet: ShopSpriteReference["sheet"]) {
-  return `/shop-icons/tw3/sheets/${sheet}.png?v=1`;
+export function getShopItemIconUrl(item: Pick<GameShopItem, "iconAsset">) {
+  return `/shop-icons/tw3/items/${item.iconAsset}.tga?v=2`;
 }
 
 export function createInitialShopState(): GameShopState {

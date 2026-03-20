@@ -145,7 +145,7 @@ export default function HomePage() {
               </Badge>
 
               <div className="max-w-4xl space-y-4">
-                <p className="section-kicker">Dark fantasy editorial UI</p>
+              <p className="section-kicker">Editorial de fantasia sombria</p>
                 <h1 className="engraved-title font-display text-5xl leading-[0.92] text-brand-gradient sm:text-6xl xl:text-7xl">
                   Um portal que parece artefato. Nao uma dashboard qualquer.
                 </h1>
@@ -329,7 +329,7 @@ export default function HomePage() {
           <Card variant="panel">
             <CardContent className="space-y-6 p-6 md:p-8">
               <div>
-                <p className="section-kicker">Explore the realm</p>
+                <p className="section-kicker">Explore o reino</p>
                 <h2 className="mt-2 font-display text-4xl text-brand-gradient">
                   Atlas forjado como mesa de estrategia.
                 </h2>

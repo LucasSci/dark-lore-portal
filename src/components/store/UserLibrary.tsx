@@ -32,7 +32,7 @@ export default function UserLibrary({
     return (
       <Card className="border-gold/15 bg-card-gradient shadow-card">
         <CardContent className="space-y-4 p-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary/20 bg-background/50">
+          <div className="icon-slot mx-auto h-16 w-16">
             <Lock className="h-7 w-7 text-primary" />
           </div>
           <div className="space-y-2">
@@ -56,7 +56,7 @@ export default function UserLibrary({
     return (
       <Card className="border-gold/15 bg-card-gradient shadow-card">
         <CardContent className="space-y-4 p-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary/20 bg-background/50">
+          <div className="icon-slot mx-auto h-16 w-16">
             <Library className="h-7 w-7 text-primary" />
           </div>
           <div className="space-y-2">
@@ -90,7 +90,7 @@ export default function UserLibrary({
                     {item.product.title}
                   </h3>
                 </div>
-                <div className="rounded-full border border-primary/20 bg-background/50 p-3">
+                <div className="icon-slot h-12 w-12">
                   <BookMarked className="h-5 w-5 text-primary" />
                 </div>
               </div>
@@ -100,7 +100,7 @@ export default function UserLibrary({
               </p>
 
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+                <div className="metric-panel p-3">
                   <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     Compra
                   </p>
@@ -108,7 +108,7 @@ export default function UserLibrary({
                     {formatStoreDate(item.purchasedAt)}
                   </p>
                 </div>
-                <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+                <div className="metric-panel p-3">
                   <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     Downloads
                   </p>
@@ -116,7 +116,7 @@ export default function UserLibrary({
                     {item.downloadCount}
                   </p>
                 </div>
-                <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+                <div className="metric-panel p-3">
                   <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     Valor
                   </p>

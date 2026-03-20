@@ -30,12 +30,12 @@ export default function AtlasBreadcrumbs({
             {item.to && !isCurrent ? (
               <Link
                 to={item.to}
-                className="rounded-full border border-border/70 bg-background/55 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
+                className="metric-panel px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
               >
                 {item.label}
               </Link>
             ) : (
-              <span className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-primary">
+              <span className="field-note border-primary/25 bg-primary/10 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-primary">
                 {item.label}
               </span>
             )}

@@ -320,8 +320,8 @@ export default function CombatTracker() {
         <CardHeader className="gap-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full border border-primary/20 bg-background/60 p-3 text-primary">
+                <div className="flex items-center gap-3">
+                <div className="icon-slot h-12 w-12 text-primary">
                   <Swords className="h-5 w-5" />
                 </div>
                 <div>
@@ -588,7 +588,7 @@ export default function CombatTracker() {
             {battleLog.map((entry) => (
               <div
                 key={entry.id}
-                className="flex flex-col gap-2 rounded-[calc(var(--radius)-4px)] border border-border/70 bg-background/45 p-4 md:flex-row md:items-center md:justify-between"
+                className="info-panel flex flex-col gap-2 p-4 md:flex-row md:items-center md:justify-between"
               >
                 <div>
                   <p className="text-sm text-foreground">{entry.description}</p>

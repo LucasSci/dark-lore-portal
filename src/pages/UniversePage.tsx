@@ -129,7 +129,7 @@ function EntryArtworkPreview({
     <Dialog>
       <div
         className={cn(
-          "group relative overflow-hidden rounded-[var(--radius)] border border-border/70 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.14),transparent_42%),linear-gradient(180deg,hsl(var(--background-strong)),hsl(var(--card)))]",
+          "ornate-frame group relative overflow-hidden rounded-none border border-border/70 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.14),transparent_42%),linear-gradient(180deg,hsl(var(--background-strong)),hsl(var(--card)))]",
           frameClassName,
         )}
       >
@@ -157,14 +157,14 @@ function EntryArtworkPreview({
         </DialogHeader>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="overflow-hidden rounded-[var(--radius)] border border-border/70 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.12),transparent_44%),linear-gradient(180deg,hsl(var(--background-strong)),hsl(var(--card)))]">
+          <div className="ornate-frame overflow-hidden rounded-none border border-border/70 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.12),transparent_44%),linear-gradient(180deg,hsl(var(--background-strong)),hsl(var(--card)))]">
             <EncyclopediaImage
               entry={entry}
               className="max-h-[78vh] w-full object-contain p-4 md:p-6"
             />
           </div>
 
-          <div className="space-y-4 rounded-[var(--radius)] border border-border/70 bg-background/40 p-4">
+          <div className="info-panel space-y-4 p-4">
             <p className="text-sm leading-7 text-foreground/90">{entry.summary}</p>
 
             <div className="grid gap-3">
@@ -179,7 +179,7 @@ function EntryArtworkPreview({
             </div>
 
             {bestiaryMeta ? (
-              <div className="space-y-2 rounded-xl border border-border/60 bg-background/50 p-4">
+              <div className="field-note space-y-2 p-4">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
                   Dossie de caca
                 </p>
@@ -214,7 +214,7 @@ function TimelineRail({
     <Card variant="panel">
       <CardContent className="space-y-4 p-6">
         <div className="flex items-center gap-3">
-          <div className="rounded-full border border-primary/20 bg-background/50 p-3">
+          <div className="icon-slot h-11 w-11">
             <Clock3 className="h-5 w-5 text-primary" />
           </div>
           <div>
@@ -229,7 +229,7 @@ function TimelineRail({
           {events.map((event, index) => (
             <div key={`${event.period}-${event.title}`} className="flex gap-4">
               <div className="flex flex-col items-center">
-                <div className="h-3.5 w-3.5 rounded-full bg-primary" />
+                <div className="h-3.5 w-3.5 border border-primary/40 bg-primary/90" />
                 {index < events.length - 1 && (
                   <div className="mt-2 h-full w-px bg-primary/30" />
                 )}
@@ -421,18 +421,18 @@ function EntryShowcase({ entry }: { entry: EncyclopediaEntry }) {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="relative min-h-[280px] overflow-hidden rounded-[var(--radius)] border border-primary/18 bg-background/70"
+                  className="tool-stage-frame relative min-h-[280px] border-primary/18 bg-background/70"
                 >
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${panel.tone}`}
                   />
                   <motion.div
-                    className="absolute -left-12 top-10 h-40 w-40 rounded-full bg-primary/16 blur-3xl"
+                    className="absolute -left-12 top-10 h-40 w-40 rotate-12 bg-primary/16 blur-3xl"
                     animate={{ x: [0, 24, -12, 0], y: [0, -18, 12, 0] }}
                     transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
                   />
                   <motion.div
-                    className="absolute bottom-0 right-0 h-44 w-44 rounded-full bg-destructive/14 blur-3xl"
+                    className="absolute bottom-0 right-0 h-44 w-44 -rotate-6 bg-destructive/14 blur-3xl"
                     animate={{ x: [0, -18, 14, 0], y: [0, 16, -14, 0] }}
                     transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                   />
@@ -455,7 +455,7 @@ function EntryShowcase({ entry }: { entry: EncyclopediaEntry }) {
                       {entry.stats.slice(0, 4).map((stat) => (
                         <div
                           key={`${panel.id}-${stat.label}`}
-                          className="rounded-xl border border-border/60 bg-background/46 px-3 py-2"
+                          className="metric-panel px-3 py-2"
                         >
                           <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                             {stat.label}
@@ -467,7 +467,7 @@ function EntryShowcase({ entry }: { entry: EncyclopediaEntry }) {
                   </div>
                 </motion.div>
 
-                <div className="space-y-4 rounded-[var(--radius)] border border-border/70 bg-background/40 p-6">
+                <div className="info-panel space-y-4 p-6">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
                       Leitura narrativa
@@ -520,7 +520,7 @@ function RelationshipMap({
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-              Lore ties
+              Conexoes de lore
             </p>
             <h2 className="mt-2 font-heading text-2xl text-foreground">
               Mapa de relacionamentos
@@ -529,7 +529,7 @@ function RelationshipMap({
           <Network className="h-5 w-5 text-primary" />
         </div>
 
-        <div className="relative min-h-[420px] overflow-hidden rounded-[var(--radius)] border border-border/70 bg-background/55">
+        <div className="tool-stage-frame relative min-h-[420px] bg-background/55">
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full"
             viewBox="0 0 100 100"
@@ -560,7 +560,7 @@ function RelationshipMap({
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <div className="rounded-[var(--radius)] border border-primary/25 bg-background/88 p-5 text-center shadow-panel">
+              <div className="info-panel border-primary/25 bg-background/88 p-5 text-center">
                 <Badge variant="outline" className="border-primary/30 text-primary">
                   Centro narrativo
                 </Badge>
@@ -589,7 +589,7 @@ function RelationshipMap({
                 >
                   <Link
                     to={`/universo/${linkedEntry.slug}`}
-                    className="block rounded-[var(--radius)] border border-border/70 bg-background/84 p-4 transition-colors hover:border-primary/30"
+                    className="tool-list-item block bg-background/84 p-4 transition-colors hover:border-primary/30"
                   >
                     <p className="font-heading text-base text-foreground">
                       {linkedEntry.title}
@@ -699,7 +699,7 @@ function UniverseIndex() {
               </div>
 
               <div className="max-w-4xl space-y-4">
-                <p className="section-kicker">Immersive archive</p>
+                <p className="section-kicker">Arquivo imersivo</p>
                 <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
                   Personagens, monstros, faccoes e lugares tratados como dossie de campanha.
                 </h1>
@@ -850,7 +850,7 @@ function UniverseIndex() {
             <Card variant="panel">
               <CardContent className="space-y-4 p-6">
                 <div>
-                  <p className="section-kicker">Scope</p>
+                  <p className="section-kicker">Escopo</p>
                   <h2 className="mt-2 font-heading text-2xl text-foreground">
                     Leitura do arquivo
                   </h2>
@@ -1051,7 +1051,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
               </div>
 
               <div>
-                <p className="section-kicker">Immersive dossier</p>
+                <p className="section-kicker">Dossie imersivo</p>
                 <h1 className="mt-3 font-display text-5xl leading-[0.95] text-gold-gradient md:text-6xl">
                   {entry.title}
                 </h1>
@@ -1082,7 +1082,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
             <div className="space-y-4 border border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.74),hsl(var(--background-strong)/0.88))] p-5 shadow-elevated backdrop-blur-sm">
               <div className="space-y-4">
                 <div>
-                  <p className="section-kicker">Quick read</p>
+                  <p className="section-kicker">Leitura rapida</p>
                   <h2 className="mt-2 font-heading text-2xl text-foreground">
                     Leitura rapida
                   </h2>
@@ -1141,7 +1141,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
 
               <div className="space-y-4 border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-5">
                 <div>
-                  <p className="section-kicker">Art board</p>
+                  <p className="section-kicker">Quadro da arte</p>
                   <h2 className="mt-2 font-heading text-2xl text-foreground">
                     Leitura clara da arte
                   </h2>
@@ -1178,7 +1178,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
           <Card variant="panel">
             <CardContent className="space-y-4 p-6">
               <div>
-                <p className="section-kicker">Field notes</p>
+                  <p className="section-kicker">Notas de campo</p>
                 <h2 className="mt-2 font-heading text-2xl text-foreground">
                   Notas de leitura
                 </h2>
@@ -1225,7 +1225,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
             <Card variant="panel">
               <CardContent className="space-y-6 p-6 md:p-8">
                 <div>
-                  <p className="section-kicker">Narrative reading</p>
+                  <p className="section-kicker">Leitura narrativa</p>
                   <h2 className="mt-2 font-display text-4xl text-brand-gradient">
                     Corpo principal do verbete
                   </h2>
@@ -1266,7 +1266,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
             <Card variant="panel">
               <CardContent className="space-y-4 p-6">
                 <div>
-                  <p className="section-kicker">Related entries</p>
+                  <p className="section-kicker">Verbetes relacionados</p>
                   <h3 className="font-heading text-lg text-foreground">
                     Mais em {encyclopediaCategories[entry.category].label}
                   </h3>

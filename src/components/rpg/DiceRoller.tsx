@@ -63,7 +63,7 @@ export default function DiceRoller() {
             whileTap={{ scale: 0.97 }}
             onClick={() => handleRoll(dice.sides, dice.label)}
             disabled={isRolling}
-            className="flex flex-col items-center gap-2 rounded-[var(--radius)] border border-border bg-card-gradient p-4 text-center transition-colors hover:border-primary/30 disabled:opacity-50"
+            className="info-panel flex flex-col items-center gap-2 p-4 text-center transition-colors hover:border-primary/30 disabled:opacity-50"
           >
             <span className="font-display text-2xl text-gold-gradient">{dice.label}</span>
             <span className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -77,7 +77,7 @@ export default function DiceRoller() {
         <CardContent className="flex flex-wrap items-center justify-center gap-4 p-5">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Qtd</span>
-            <div className="flex items-center rounded-[calc(var(--radius)-6px)] border border-border/80 bg-background/40">
+            <div className="metric-panel flex items-center">
               <Button variant="ghost" size="sm" onClick={() => setNumDice(Math.max(1, numDice - 1))} className="h-8 w-8 p-0">
                 -
               </Button>
@@ -90,7 +90,7 @@ export default function DiceRoller() {
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Mod</span>
-            <div className="flex items-center rounded-[calc(var(--radius)-6px)] border border-border/80 bg-background/40">
+            <div className="metric-panel flex items-center">
               <Button variant="ghost" size="sm" onClick={() => setModifier((previous) => previous - 1)} className="h-8 w-8 p-0">
                 -
               </Button>

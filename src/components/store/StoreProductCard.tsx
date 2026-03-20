@@ -62,7 +62,7 @@ export default function StoreProductCard({
                 </Badge>
               )}
             </div>
-            <div className="rounded-full border border-primary/20 bg-background/50 p-3">
+            <div className="icon-slot h-11 w-11">
               <Icon className="h-5 w-5 text-primary" />
             </div>
           </div>
@@ -75,7 +75,7 @@ export default function StoreProductCard({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+            <div className="metric-panel p-3">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                 Formato
               </p>
@@ -83,7 +83,7 @@ export default function StoreProductCard({
                 {product.format_details}
               </p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-background/50 p-3">
+            <div className="metric-panel p-3">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                 Entrega
               </p>
@@ -97,7 +97,7 @@ export default function StoreProductCard({
             {product.preview_points.slice(0, 3).map((point) => (
               <div
                 key={point}
-                className="rounded-lg border border-border/60 bg-background/40 px-3 py-2 text-sm text-foreground/90"
+                className="field-note px-3 py-2 text-sm text-foreground/90"
               >
                 {point}
               </div>

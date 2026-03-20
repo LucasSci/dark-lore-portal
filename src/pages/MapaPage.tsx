@@ -13,7 +13,7 @@ export default function MapaPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,hsl(var(--brand)/0.12),transparent_34%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--background)))]">
       <div className="container flex min-h-screen max-w-[1780px] flex-col gap-5 py-5">
-        <div className="flex flex-wrap items-end justify-between gap-4 rounded-3xl border border-border/60 bg-background/35 px-5 py-4 backdrop-blur-xl">
+        <div className="info-panel flex flex-wrap items-end justify-between gap-4 px-5 py-4 backdrop-blur-xl">
           <div className="space-y-3">
             <AtlasBreadcrumbs items={[{ label: "Atlas do Continente" }]} />
             <div className="space-y-2">

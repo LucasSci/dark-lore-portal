@@ -155,7 +155,7 @@ export default function AccountPage() {
                 </div>
 
                 <div className="max-w-3xl space-y-4">
-                  <p className="section-kicker">Personal archive</p>
+                  <p className="section-kicker">Arquivo pessoal</p>
                   <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
                     Biblioteca digital tratada como cofre de campanha, nao pagina utilitaria.
                   </h1>
@@ -302,7 +302,7 @@ export default function AccountPage() {
 
             <section className="space-y-4">
               <div className="max-w-2xl">
-                <p className="section-kicker">Digital vault</p>
+                  <p className="section-kicker">Cofre digital</p>
                 <h2 className="mt-2 font-display text-4xl text-brand-gradient">
                   Biblioteca do usuario
                 </h2>
@@ -326,7 +326,7 @@ export default function AccountPage() {
             <Card variant="panel">
               <CardContent className="space-y-5 p-6 md:p-8">
                 <div>
-                  <p className="section-kicker">How it works</p>
+                  <p className="section-kicker">Como funciona</p>
                   <h2 className="mt-2 font-heading text-3xl text-foreground">
                     Entre no seu cofre narrativo
                   </h2>
@@ -354,7 +354,7 @@ export default function AccountPage() {
               <CardContent className="grid gap-8 p-6 md:p-8 xl:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="space-y-6">
                   <div>
-                    <p className="section-kicker">Secure access</p>
+                  <p className="section-kicker">Acesso seguro</p>
                     <h2 className="mt-2 font-display text-4xl text-brand-gradient">
                       Autenticacao e cadastro no mesmo idioma visual do portal.
                     </h2>

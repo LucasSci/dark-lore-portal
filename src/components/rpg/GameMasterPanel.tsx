@@ -20,6 +20,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -169,7 +176,7 @@ export default function GameMasterPanel() {
       <Card variant="elevated">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="rounded-full border border-primary/20 bg-background/60 p-3 text-primary">
+            <div className="icon-slot h-12 w-12 text-primary">
               <Crown className="h-5 w-5" />
             </div>
             <div>
@@ -373,41 +380,49 @@ export default function GameMasterPanel() {
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="space-y-2 text-sm text-muted-foreground">
                   <span>Tipo</span>
-                  <select
+                  <Select
                     value={publicationDraft.kind}
-                    onChange={(event) =>
+                    onValueChange={(value) =>
                       setPublicationDraft((previous) => ({
                         ...previous,
-                        kind: event.target.value as PublicationKind,
+                        kind: value as PublicationKind,
                       }))
                     }
-                    className="flex h-11 w-full rounded-[calc(var(--radius)-2px)] border border-input bg-surface-raised/55 px-4 py-2 text-sm text-foreground"
                   >
-                    {Object.entries(publicationKindLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha um tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(publicationKindLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </label>
                 <label className="space-y-2 text-sm text-muted-foreground">
                   <span>Status</span>
-                  <select
+                  <Select
                     value={publicationDraft.status}
-                    onChange={(event) =>
+                    onValueChange={(value) =>
                       setPublicationDraft((previous) => ({
                         ...previous,
-                        status: event.target.value as PublicationStatus,
+                        status: value as PublicationStatus,
                       }))
                     }
-                    className="flex h-11 w-full rounded-[calc(var(--radius)-2px)] border border-input bg-surface-raised/55 px-4 py-2 text-sm text-foreground"
                   >
-                    {Object.entries(publicationStatusLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha um status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(publicationStatusLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </label>
               </div>
 

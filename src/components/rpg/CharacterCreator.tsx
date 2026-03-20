@@ -122,11 +122,11 @@ export default function CharacterCreator({ onSave }: Props) {
               key={wizardStep.id}
               type="button"
               onClick={() => void moveToStep(index)}
-              className={`rounded-[calc(var(--radius)-6px)] border px-3 py-2 text-center font-heading text-[11px] uppercase tracking-[0.18em] transition-colors ${
+              className={`border px-3 py-2 text-center font-heading text-[11px] uppercase tracking-[0.18em] transition-colors ${
                 active
                   ? "border-primary/35 bg-primary/10 text-primary shadow-brand"
                   : completed
-                    ? "border-border/70 bg-background/40 text-foreground"
+                    ? "border-border/70 bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.84),hsl(var(--surface-base)/0.9))] text-foreground"
                     : "border-border/60 bg-transparent text-muted-foreground"
               }`}
             >
@@ -136,7 +136,7 @@ export default function CharacterCreator({ onSave }: Props) {
         })}
       </div>
 
-      <div className="flex items-center justify-between gap-3 rounded-[var(--radius)] border border-border/70 bg-background/35 px-4 py-3">
+      <div className="info-panel flex items-center justify-between gap-3 px-4 py-3">
         <div>
           <p className="font-heading text-xs uppercase tracking-[0.18em] text-muted-foreground">
             Engine da ficha
@@ -183,7 +183,7 @@ export default function CharacterCreator({ onSave }: Props) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => void updateAttribute("race", race.value)}
-                className={`rounded-[var(--radius)] border p-4 text-left transition-colors ${
+                className={`border p-4 text-left transition-colors ${
                   draft.race === race.value
                     ? "border-primary/35 bg-primary/10 shadow-brand"
                     : "border-border bg-card-gradient hover:border-primary/25"
@@ -205,7 +205,7 @@ export default function CharacterCreator({ onSave }: Props) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => void updateAttribute("class", characterClass.value)}
-                className={`rounded-[var(--radius)] border p-4 text-left transition-colors ${
+                className={`border p-4 text-left transition-colors ${
                   draft.class === characterClass.value
                     ? "border-primary/35 bg-primary/10 shadow-brand"
                     : "border-border bg-card-gradient hover:border-primary/25"
@@ -252,7 +252,7 @@ export default function CharacterCreator({ onSave }: Props) {
                   return (
                     <div
                       key={attribute.key}
-                      className="rounded-[var(--radius)] border border-border bg-card-gradient p-4 text-center shadow-panel"
+                      className="info-panel p-4 text-center"
                     >
                       <p className="font-heading text-[11px] uppercase tracking-[0.18em] text-primary/80">
                         {attribute.abbr}
@@ -353,7 +353,7 @@ export default function CharacterCreator({ onSave }: Props) {
       </motion.div>
 
       {currentValidation && !currentValidation.valid ? (
-        <div className="rounded-[var(--radius)] border border-status-bad/30 bg-status-bad/10 px-4 py-3 text-sm text-foreground">
+        <div className="border border-status-bad/30 bg-status-bad/10 px-4 py-3 text-sm text-foreground">
           {Object.values(currentValidation.errors)[0]}
         </div>
       ) : null}

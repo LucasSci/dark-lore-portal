@@ -76,7 +76,7 @@ export default function InventoryPanel({ onImportItem }: Props) {
         <button
           type="button"
           onClick={() => setFilterType(null)}
-          className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] transition-colors ${
+          className={`border px-3 py-1 text-[11px] uppercase tracking-[0.18em] transition-colors ${
             !filterType ? "border-primary/35 bg-primary/10 text-primary" : "border-border/70 text-muted-foreground"
           }`}
         >
@@ -88,7 +88,7 @@ export default function InventoryPanel({ onImportItem }: Props) {
             key={key}
             type="button"
             onClick={() => setFilterType(key)}
-            className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] transition-colors ${
+            className={`border px-3 py-1 text-[11px] uppercase tracking-[0.18em] transition-colors ${
               filterType === key ? "border-primary/35 bg-primary/10 text-primary" : "border-border/70 text-muted-foreground"
             }`}
           >
@@ -112,7 +112,7 @@ export default function InventoryPanel({ onImportItem }: Props) {
               <CardContent className="space-y-4 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-full border border-border/60 bg-background/50 p-2 text-primary">
+                    <div className="icon-slot h-9 w-9 text-primary">
                       {typeIcons[item.item_type] ?? <Package className="h-4 w-4" />}
                     </div>
                     <div>

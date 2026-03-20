@@ -1587,7 +1587,7 @@ export default function VttPixiStage({
                 type="button"
                 title={control.label}
                 onClick={() => onExpandMap(control.edge)}
-                className="pointer-events-auto absolute flex h-9 w-9 items-center justify-center rounded-full border border-primary/40 bg-background/90 text-primary shadow-[0_10px_24px_rgba(0,0,0,0.35)] backdrop-blur transition-all hover:scale-105 hover:border-primary hover:bg-background"
+                className="pointer-events-auto absolute flex h-10 w-10 items-center justify-center border border-primary/40 bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.96),hsl(var(--surface-base)/0.98))] text-primary shadow-[0_10px_24px_rgba(0,0,0,0.35)] backdrop-blur transition-all hover:scale-105 hover:border-primary hover:bg-background"
                 style={control.style}
               >
                 <span className="text-lg leading-none">+</span>
