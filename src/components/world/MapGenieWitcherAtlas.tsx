@@ -197,7 +197,7 @@ function buildIcon(label: string, tone: "region" | "location" | "poi" | "cluster
 
   return L.divIcon({
     className: "",
-    html: `<span style="position:relative;display:grid;place-items:center;min-width:44px;height:44px;padding:0 12px;background:${toneSpec.background};border:1px solid ${toneSpec.border};box-shadow:0 12px 26px rgba(6,5,4,.34),0 0 24px ${toneSpec.glow},inset 0 1px 0 rgba(255,243,212,.16);clip-path:polygon(12% 0,88% 0,100% 22%,100% 78%,88% 100%,12% 100%,0 78%,0 22%);color:${toneSpec.color};font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;text-shadow:0 1px 1px rgba(0,0,0,.22)"><span style="position:absolute;inset:1px;border:1px solid rgba(255,243,212,.12);clip-path:polygon(12% 0,88% 0,100% 22%,100% 78%,88% 100%,12% 100%,0 78%,0 22%)"></span><span style="position:relative;z-index:1">${label}</span></span>`,
+    html: `<span style="position:relative;display:grid;place-items:center;min-width:44px;height:44px;padding:0 12px;background:${toneSpec.background};border:1px solid ${toneSpec.border};box-shadow:0 12px 26px rgba(6,5,4,.34),0 0 24px ${toneSpec.glow},inset 0 1px 0 rgba(255,243,212,.16);clip-path:polygon(12% 0,88% 0,100% 22%,100% 78%,88% 100%,12% 100%,0 78%,0 22%);color:${toneSpec.color};font-family:'Gill Sans Nova',sans-serif;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;text-shadow:0 1px 1px rgba(0,0,0,.22)"><span style="position:absolute;inset:1px;border:1px solid rgba(255,243,212,.12);clip-path:polygon(12% 0,88% 0,100% 22%,100% 78%,88% 100%,12% 100%,0 78%,0 22%)"></span><span style="position:relative;z-index:1">${label}</span></span>`,
     iconAnchor: [22, 22],
   });
 }

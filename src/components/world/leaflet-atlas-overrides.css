@@ -2,13 +2,16 @@
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at top, rgba(225, 183, 91, 0.12), transparent 30%),
-    linear-gradient(180deg, rgba(18, 12, 9, 0.72), rgba(6, 5, 4, 0.94)),
+    radial-gradient(circle at 50% 0%, rgba(225, 183, 91, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255, 247, 228, 0.03), transparent 18%, transparent 84%, rgba(0, 0, 0, 0.18)),
+    linear-gradient(180deg, rgba(17, 15, 13, 0.72), rgba(5, 7, 11, 0.94)),
     #090806;
-  border: 1px solid rgba(160, 122, 61, 0.24);
+  border: 1px solid rgba(182, 146, 82, 0.24);
   box-shadow:
-    0 28px 64px rgba(8, 5, 3, 0.48),
-    inset 0 1px 0 rgba(255, 243, 212, 0.04);
+    0 32px 84px rgba(6, 5, 4, 0.58),
+    inset 0 1px 0 rgba(255, 243, 212, 0.05),
+    inset 0 0 0 1px rgba(255, 243, 212, 0.02);
+  backdrop-filter: blur(6px) saturate(108%);
 }
 
 .leaflet-container::before {
@@ -17,11 +20,11 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% 18%, rgba(129, 167, 176, 0.12), transparent 16%),
-    radial-gradient(circle at 82% 20%, rgba(225, 183, 91, 0.12), transparent 18%),
-    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.18));
-  mix-blend-mode: screen;
-  opacity: 0.68;
+    radial-gradient(circle at 18% 18%, rgba(89, 112, 127, 0.14), transparent 16%),
+    radial-gradient(circle at 82% 20%, rgba(225, 183, 91, 0.1), transparent 18%),
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.2));
+  mix-blend-mode: soft-light;
+  opacity: 0.74;
   z-index: 300;
 }
 
@@ -31,8 +34,9 @@
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(6, 5, 4, 0.58), transparent 14%, transparent 86%, rgba(6, 5, 4, 0.58)),
-    linear-gradient(180deg, rgba(6, 5, 4, 0.44), transparent 14%, transparent 86%, rgba(6, 5, 4, 0.6));
+    linear-gradient(90deg, rgba(6, 5, 4, 0.68), transparent 12%, transparent 88%, rgba(6, 5, 4, 0.68)),
+    linear-gradient(180deg, rgba(6, 5, 4, 0.46), transparent 14%, transparent 86%, rgba(6, 5, 4, 0.66)),
+    radial-gradient(circle at center, transparent 0%, transparent 48%, rgba(6, 5, 4, 0.26) 100%);
   z-index: 301;
 }
 
@@ -64,11 +68,19 @@
   image-rendering: auto;
 }
 
+.leaflet-container .leaflet-image-layer,
+.leaflet-container .leaflet-tile-pane img {
+  filter: saturate(0.78) brightness(0.78) contrast(1.06) sepia(0.12);
+}
+
 .leaflet-container .leaflet-control-zoom {
-  border: 1px solid rgba(176, 136, 72, 0.28);
+  overflow: hidden;
+  border: 1px solid rgba(182, 146, 82, 0.32);
   box-shadow:
-    0 18px 32px rgba(6, 5, 4, 0.34),
+    0 22px 48px rgba(6, 5, 4, 0.42),
     inset 0 1px 0 rgba(255, 243, 212, 0.05);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  backdrop-filter: blur(10px);
 }
 
 .leaflet-container .leaflet-bar {
@@ -77,21 +89,22 @@
 }
 
 .leaflet-container .leaflet-control-zoom a {
-  width: 2.6rem;
-  height: 2.6rem;
-  line-height: 2.45rem;
+  width: 2.85rem;
+  height: 2.85rem;
+  line-height: 2.7rem;
   border: 0;
-  border-bottom: 1px solid rgba(176, 136, 72, 0.18);
+  border-bottom: 1px solid rgba(182, 146, 82, 0.18);
   background:
-    linear-gradient(180deg, rgba(255, 247, 228, 0.04), transparent 24%, transparent 82%, rgba(0, 0, 0, 0.14)),
-    linear-gradient(180deg, rgba(58, 43, 31, 0.94), rgba(18, 13, 10, 0.96));
+    linear-gradient(180deg, rgba(255, 247, 228, 0.06), transparent 20%, transparent 80%, rgba(0, 0, 0, 0.16)),
+    linear-gradient(180deg, rgba(52, 39, 29, 0.88), rgba(13, 15, 21, 0.96));
   color: rgba(236, 221, 191, 0.92);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   transition:
     color 160ms ease,
     background-color 160ms ease,
-    box-shadow 160ms ease;
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .leaflet-container .leaflet-control-zoom a:last-child {
@@ -100,10 +113,13 @@
 
 .leaflet-container .leaflet-control-zoom a:hover {
   background:
-    linear-gradient(180deg, rgba(255, 247, 228, 0.06), transparent 24%, transparent 82%, rgba(0, 0, 0, 0.12)),
-    linear-gradient(180deg, rgba(86, 62, 37, 0.96), rgba(26, 18, 12, 0.98));
+    linear-gradient(180deg, rgba(255, 247, 228, 0.08), transparent 20%, transparent 80%, rgba(0, 0, 0, 0.12)),
+    linear-gradient(180deg, rgba(82, 60, 36, 0.92), rgba(18, 16, 21, 0.98));
   color: rgba(245, 221, 159, 0.98);
-  box-shadow: inset 0 0 0 1px rgba(201, 161, 91, 0.24);
+  box-shadow:
+    inset 0 0 0 1px rgba(201, 161, 91, 0.24),
+    0 0 22px rgba(201, 161, 91, 0.16);
+  transform: translateY(-1px);
 }
 
 .leaflet-container .leaflet-control-zoom a:focus {
@@ -114,6 +130,7 @@
   margin: 0.75rem;
   border: 1px solid rgba(176, 136, 72, 0.18);
   background:
+    url("/reference/witcher/images/gold-texture-bright.jpg") center / 420px repeat,
     linear-gradient(180deg, rgba(255, 247, 228, 0.04), transparent 28%, transparent 82%, rgba(0, 0, 0, 0.14)),
     linear-gradient(180deg, rgba(31, 22, 17, 0.92), rgba(11, 9, 7, 0.94));
   color: rgba(218, 208, 184, 0.76);
@@ -131,6 +148,7 @@
   border: 1px solid rgba(176, 136, 72, 0.24);
   border-radius: 0;
   background:
+    url("/reference/witcher/images/gold-texture-bright.jpg") center / 420px repeat,
     linear-gradient(180deg, rgba(255, 247, 228, 0.05), transparent 22%, transparent 82%, rgba(0, 0, 0, 0.14)),
     linear-gradient(180deg, rgba(43, 30, 21, 0.96), rgba(14, 11, 9, 0.98));
   color: rgba(238, 223, 195, 0.94);
@@ -144,6 +162,7 @@
   border-radius: 0;
   border: 1px solid rgba(176, 136, 72, 0.22);
   background:
+    url("/reference/witcher/images/gold-texture-bright.jpg") center / 460px repeat,
     linear-gradient(180deg, rgba(255, 247, 228, 0.04), transparent 24%, transparent 84%, rgba(0, 0, 0, 0.16)),
     linear-gradient(180deg, rgba(45, 31, 23, 0.96), rgba(12, 10, 8, 0.98));
   color: rgba(238, 223, 195, 0.94);

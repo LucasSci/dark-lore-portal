@@ -1,0 +1,63 @@
+@font-face {
+  font-family: "Gill Sans Nova";
+  src: url("/reference/witcher/fonts/gill-sans-nova-light.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gill Sans Nova";
+  src: url("/reference/witcher/fonts/gill-sans-nova-regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gill Sans Nova";
+  src: url("/reference/witcher/fonts/gill-sans-nova-bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Serif";
+  src: url("/reference/witcher/fonts/noto-serif-regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Serif";
+  src: url("/reference/witcher/fonts/noto-serif-bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Beaufort Pro";
+  src: url("/reference/witcher/fonts/beaufort-pro-light.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Beaufort Pro";
+  src: url("/reference/witcher/fonts/beaufort-pro-regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Beaufort Pro";
+  src: url("/reference/witcher/fonts/beaufort-pro-bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}

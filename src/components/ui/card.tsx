@@ -4,16 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "ornate-frame reliquary-grain relative overflow-hidden rounded-none border text-card-foreground transition-[border-color,background-color,box-shadow] duration-200",
+  "ornate-frame relative overflow-hidden rounded-none border text-card-foreground transition-[border-color,background-color,box-shadow] duration-200",
   {
   variants: {
     variant: {
       panel:
-        "border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.96),hsl(var(--surface-base)/0.98)_48%,hsl(var(--background-strong)/0.98))] shadow-panel backdrop-blur-sm",
+        "border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.54),hsl(var(--surface-base)/0.64)_48%,hsl(var(--background-strong)/0.74))] shadow-panel backdrop-blur-xl",
       elevated:
-        "border-[hsl(var(--brand)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.92),hsl(var(--surface-raised)/0.94)_38%,hsl(var(--background-strong)/0.98))] shadow-elevated backdrop-blur-sm",
+        "border-[hsl(var(--brand)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.52),hsl(var(--surface-raised)/0.6)_38%,hsl(var(--background-strong)/0.76))] shadow-elevated backdrop-blur-xl",
       outline:
-        "border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.52),hsl(var(--background)/0.3))] shadow-none",
+        "border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.34),hsl(var(--background)/0.2))] backdrop-blur-lg shadow-none",
     },
   },
   defaultVariants: {

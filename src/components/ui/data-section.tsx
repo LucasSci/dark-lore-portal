@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const dataSectionVariants = cva(
-  "reliquary-grain rounded-none border px-4 py-4 text-left transition-[background-color,border-color,box-shadow] duration-200",
+  "rounded-none border px-4 py-4 text-left transition-[background-color,border-color,box-shadow] duration-200 backdrop-blur-lg",
   {
     variants: {
       variant: {
@@ -59,7 +59,11 @@ const DataSection = React.forwardRef<HTMLDivElement, DataSectionProps>(
         {aside ? <div className="shrink-0">{aside}</div> : null}
       </div>
 
-      {children ? <div className="mt-4 bg-[hsl(var(--background)/0.18)] px-4 py-3">{children}</div> : null}
+      {children ? (
+        <div className="mt-4 border border-[hsl(var(--foreground)/0.04)] bg-[linear-gradient(180deg,hsl(var(--background)/0.16),hsl(var(--background)/0.08))] px-4 py-3 backdrop-blur-md">
+          {children}
+        </div>
+      ) : null}
     </div>
   ),
 );

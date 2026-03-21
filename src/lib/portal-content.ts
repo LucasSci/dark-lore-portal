@@ -11,8 +11,6 @@ import {
   Users,
 } from "lucide-react";
 
-import heroFrameBg from "@/assets/hero-bg.jpg";
-import heroBg from "@/assets/hero-zerrikania.jpg";
 import type { CampaignPublication } from "@/lib/publications";
 
 export type PortalFeatureSpec = {
@@ -68,6 +66,88 @@ export type PortalPromoBannerSpec = {
   cta: string;
   destination: "mesa" | "criacao";
 };
+
+export type PortalHeroScene = {
+  id: string;
+  eyebrow: string;
+  sceneLabel: string;
+  title: string;
+  description: string;
+  primaryCta: string;
+  primaryPath: string;
+  secondaryCta: string;
+  secondaryPath: string;
+  poster: string;
+  video?: string;
+  thumbnail: string;
+  thumbnailTitle: string;
+  thumbnailBody: string;
+};
+
+export const portalReferenceArt = {
+  hero: "/reference/witcher/images/key-visual.jpg",
+  mask: "/reference/witcher/images/mask.png",
+  gold: "/reference/witcher/images/gold-texture.jpg",
+  goldBright: "/reference/witcher/images/gold-texture-bright.jpg",
+  bannerConcert: "/reference/witcher/images/banner-concert.jpg",
+  bannerRedkit: "/reference/witcher/images/banner-redkit.jpg",
+  heroVideo: "/reference/witcher/media/hero-video.mp4",
+} as const;
+
+export const portalHeroScenes: PortalHeroScene[] = [
+  {
+    id: "hero-saga",
+    eyebrow: "UMA NOVA SAGA SE INICIA",
+    sceneLabel: "Cena I · O chamado do continente",
+    title: "Areias de Zerrikania",
+    description:
+      "Um hero cinematografico, escuro e ritualistico para apresentar o portal como um universo vivo: atlas, cronicas e campanha respirando como uma experiencia de fantasia sombria AAA.",
+    primaryCta: "Assistir ao preludio",
+    primaryPath: "/campanha",
+    secondaryCta: "Explorar o atlas",
+    secondaryPath: "/mapa",
+    poster: portalReferenceArt.hero,
+    video: portalReferenceArt.heroVideo,
+    thumbnail: portalReferenceArt.hero,
+    thumbnailTitle: "O chamado da mata antiga",
+    thumbnailBody:
+      "Video em loop, nevoa sutil e camera viva para abrir a jornada com o peso de uma capa principal.",
+  },
+  {
+    id: "hero-chronicles",
+    eyebrow: "CRONICAS, DOSSIES E ECOS RECENTES",
+    sceneLabel: "Cena II · O arquivo fala primeiro",
+    title: "A campanha assume o centro da leitura",
+    description:
+      "A homepage passa a apresentar modulos, sessao e lore com cadencia editorial. Tudo o que importa aparece em sequencia, com moldura dourada e contraste cinematografico.",
+    primaryCta: "Abrir as cronicas",
+    primaryPath: "/campanha",
+    secondaryCta: "Ver o universo",
+    secondaryPath: "/universo",
+    poster: portalReferenceArt.bannerConcert,
+    thumbnail: portalReferenceArt.bannerConcert,
+    thumbnailTitle: "Fluxo editorial do reliquiario",
+    thumbnailBody:
+      "Uma segunda cena para vender dossies, leitura contextual e continuidade de sessao sem quebrar a imersao.",
+  },
+  {
+    id: "hero-systems",
+    eyebrow: "ATLAS, MESTRE E RITUAIS DE CRIACAO",
+    sceneLabel: "Cena III · Ferramentas do continente",
+    title: "Cada modulo entra como parte oficial do mundo",
+    description:
+      "Mapa, mesa, criacao e condução deixam de parecer paginas isoladas e passam a funcionar como trilhas de entrada para o mesmo reliquiario.",
+    primaryCta: "Entrar na mesa",
+    primaryPath: "/mesa",
+    secondaryCta: "Painel do mestre",
+    secondaryPath: "/mestre",
+    poster: portalReferenceArt.bannerRedkit,
+    thumbnail: portalReferenceArt.bannerRedkit,
+    thumbnailTitle: "Ferramentas com peso de saga",
+    thumbnailBody:
+      "O slider fecha o hero oferecendo a proxima etapa do continente com a mesma linguagem visual do topo.",
+  },
+] as const;
 
 export const campaignPublicationLabel: Record<CampaignPublication["kind"], string> = {
   cronica: "Cronica",
@@ -206,7 +286,7 @@ export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
         description:
           "O atlas deixa de ser apenas uma funcionalidade e assume o papel de grande convite para a jornada.",
         path: "/mapa",
-        image: heroBg,
+        image: portalReferenceArt.hero,
         imagePosition: "center center",
         icon: Map,
         destination: "atlas",
@@ -217,8 +297,8 @@ export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
         description:
           "Toda a camada de lore fica mais acessivel e parece parte da mesma obra editorial da home.",
         path: "/universo",
-        image: heroFrameBg,
-        imagePosition: "center top",
+        image: portalReferenceArt.bannerConcert,
+        imagePosition: "center center",
         icon: Compass,
         destination: "universo",
       },
@@ -228,7 +308,7 @@ export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
         description:
           "A comunidade aparece como prolongamento do mundo, nao como area separada do resto do portal.",
         path: "/comunidade",
-        image: heroBg,
+        image: portalReferenceArt.bannerRedkit,
         imagePosition: "right center",
         icon: Users,
         destination: "comunidade",
@@ -249,7 +329,7 @@ export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
         description:
           "Publicacoes recentes, leituras abertas e contratos pendentes formam a espinha editorial da experiencia.",
         path: "/campanha",
-        image: heroFrameBg,
+        image: portalReferenceArt.bannerConcert,
         imagePosition: "center center",
         icon: ScrollText,
         destination: "campanha",
@@ -260,7 +340,7 @@ export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
         description:
           "Partidas, fichas e conducao de cena ficam muito mais faceis de encontrar e fazer sentido.",
         path: "/mesa",
-        image: heroBg,
+        image: portalReferenceArt.hero,
         imagePosition: "left center",
         icon: Sword,
         destination: "mesa",
@@ -271,8 +351,8 @@ export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
         description:
           "A referencia ajudou a transformar o mestre em um protagonista do portal, e nao em pagina secundaria.",
         path: "/mestre",
-        image: heroFrameBg,
-        imagePosition: "center bottom",
+        image: portalReferenceArt.bannerRedkit,
+        imagePosition: "center center",
         icon: Shield,
         destination: "mestre",
       },
@@ -305,7 +385,7 @@ export const promoBanners: PortalPromoBannerSpec[] = [
     body:
       "A mesa deixa de parecer modulo isolado e passa a agir como parte organica da campanha viva.",
     path: "/mesa",
-    image: heroBg,
+    image: portalReferenceArt.bannerConcert,
     imagePosition: "center center",
     icon: Sword,
     cta: "Abrir a mesa",
@@ -317,8 +397,8 @@ export const promoBanners: PortalPromoBannerSpec[] = [
     body:
       "Criacao de personagem e painel do mestre entram na home como convites claros para a proxima etapa da jornada.",
     path: "/criacao",
-    image: heroFrameBg,
-    imagePosition: "center top",
+    image: portalReferenceArt.bannerRedkit,
+    imagePosition: "center center",
     icon: Shield,
     cta: "Iniciar ritual",
     destination: "criacao",

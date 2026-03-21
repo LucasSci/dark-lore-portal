@@ -1,22 +1,19 @@
-import { type PointerEvent, type ReactNode, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
   BookOpenText,
   Compass,
-  Flame,
   type LucideIcon,
   Map,
   ScrollText,
   Shield,
-  Sparkles,
   Sword,
   Users,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import heroFrameBg from "@/assets/hero-bg.jpg";
-import heroBg from "@/assets/hero-zerrikania.jpg";
+import CinematicHero from "@/components/portal/CinematicHero";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import ContinentMap from "@/components/world/ContinentMap";
@@ -29,7 +26,7 @@ import {
   manifestoPanels,
   manifestoQuotes,
   moduleViews,
-  portalEmberSpecs,
+  portalReferenceArt,
   promoBanners,
   type PortalEditorialEntry,
   type PortalModuleCardSpec,
@@ -108,14 +105,14 @@ function EditorialCard({
       whileHover={{ y: -4 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
       className={cn(
-        "group relative isolate overflow-hidden border border-[hsl(var(--brand)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.92),hsl(var(--surface-base)/0.98))] shadow-elevated",
+        "reference-frame reference-surface-card group relative isolate overflow-hidden",
         featured ? "min-h-[360px] md:col-span-2 xl:min-h-[420px]" : "min-h-[250px]",
         className,
       )}
     >
       <div className="absolute inset-0">
         <img
-          src={featured ? heroBg : heroFrameBg}
+          src={featured ? portalReferenceArt.hero : portalReferenceArt.bannerRedkit}
           alt=""
           aria-hidden="true"
           className="h-full w-full object-cover opacity-20 transition duration-700 group-hover:scale-105"
@@ -190,7 +187,7 @@ function ModuleCard({
       whileHover={{ y: -4 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
       className={cn(
-        "group relative isolate overflow-hidden border border-[hsl(var(--brand)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.92),hsl(var(--surface-base)/0.98))] shadow-elevated",
+        "reference-frame reference-surface-card group relative isolate overflow-hidden",
         featured ? "min-h-[360px] lg:col-span-2" : "min-h-[280px]",
         className,
       )}
@@ -253,11 +250,16 @@ function PromoBanner({
   icon: LucideIcon;
   cta: string;
 }) {
+  const lightCard = image === portalReferenceArt.bannerConcert;
+
   return (
     <motion.article whileHover={{ y: -4 }} transition={{ duration: 0.22, ease: "easeOut" }}>
       <Link
         to={path}
-        className="group relative isolate block min-h-[320px] overflow-hidden border border-[hsl(var(--brand)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.92),hsl(var(--surface-base)/0.98))] shadow-elevated"
+        className={cn(
+          "reference-frame group relative isolate block min-h-[320px] overflow-hidden shadow-elevated",
+          lightCard ? "reference-promo-card-light" : "reference-promo-card-dark",
+        )}
       >
         <img
           src={image}
@@ -266,21 +268,32 @@ function PromoBanner({
           className="absolute inset-0 h-full w-full object-cover opacity-24 transition duration-700 group-hover:scale-105"
           style={{ objectPosition: imagePosition ?? "center" }}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--background)/0.1),hsl(var(--background)/0.42)_26%,hsl(var(--background-strong)/0.92)_100%),radial-gradient(circle_at_top,hsl(var(--brand)/0.16),transparent_36%)]" />
+        <div
+          className={cn(
+            "absolute inset-0",
+            lightCard
+              ? "bg-[linear-gradient(90deg,hsl(41_37%_90%/0.95),hsl(41_37%_90%/0.76)_42%,transparent_82%)]"
+              : "bg-[linear-gradient(180deg,hsl(var(--background)/0.1),hsl(var(--background)/0.42)_26%,hsl(var(--background-strong)/0.92)_100%),radial-gradient(circle_at_top,hsl(var(--brand)/0.16),transparent_36%)]",
+          )}
+        />
 
         <div className="relative flex h-full flex-col justify-between p-6 md:p-8">
           <div className="flex items-center justify-between gap-4">
-            <Badge variant="secondary">{eyebrow}</Badge>
+            <Badge variant={lightCard ? "warning" : "secondary"}>{eyebrow}</Badge>
             <div className="icon-slot h-11 w-11 shrink-0">
               <Icon className="h-4 w-4" />
             </div>
           </div>
 
           <div className="max-w-xl">
-            <h3 className="font-display text-5xl leading-[0.95] text-foreground">{title}</h3>
-            <p className="mt-4 text-sm leading-7 text-foreground/78 md:text-base">{body}</p>
+            <h3 className={cn("font-display text-5xl leading-[0.95]", lightCard ? "text-[hsl(30_24%_14%)]" : "text-foreground")}>
+              {title}
+            </h3>
+            <p className={cn("mt-4 text-sm leading-7 md:text-base", lightCard ? "text-[hsl(28_16%_24%/0.9)]" : "text-foreground/78")}>
+              {body}
+            </p>
             <div className="mt-6">
-              <span className="artifact-chip">{cta}</span>
+              <span className={cn("reference-inline-cta", lightCard && "reference-inline-cta-light")}>{cta}</span>
             </div>
           </div>
         </div>
@@ -292,7 +305,6 @@ function PromoBanner({
 export default function HomePage() {
   usePortalShellMode("editorial", "interactive");
   const { publishedPublications } = useCampaignPublications();
-  const [heroDrift, setHeroDrift] = useState({ x: 0, y: 0 });
   const [moduleView, setModuleView] = useState<PortalModuleViewKey>("exploracao");
 
   const editorialEntries: PortalEditorialEntry[] = [
@@ -312,171 +324,26 @@ export default function HomePage() {
   const supportingEditorial = editorialEntries.slice(1);
   const activeModule = moduleViews[moduleView];
 
-  const handleHeroPointerMove = (event: PointerEvent<HTMLElement>) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const offsetX = (event.clientX - bounds.left) / bounds.width - 0.5;
-    const offsetY = (event.clientY - bounds.top) / bounds.height - 0.5;
-    setHeroDrift({ x: offsetX * 22, y: offsetY * 18 });
-  };
-
   return (
     <div className="space-y-16 pb-12 md:space-y-24">
-      <section
-        className="relative overflow-hidden border-y border-[hsl(var(--brand)/0.22)]"
-        onPointerMove={handleHeroPointerMove}
-        onPointerLeave={() => setHeroDrift({ x: 0, y: 0 })}
-      >
-        <div className="absolute inset-0">
-          <motion.img
-            src={heroBg}
-            alt="Paisagem dourada de Zerrikania"
-            className="h-full w-full object-cover object-center opacity-90"
-            animate={{ x: heroDrift.x, y: heroDrift.y, scale: 1.08 }}
-            transition={{ type: "spring", stiffness: 40, damping: 18, mass: 1.2 }}
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,hsl(var(--brand)/0.38),transparent_28%),radial-gradient(circle_at_78%_18%,hsl(var(--warning)/0.18),transparent_26%),linear-gradient(180deg,hsl(var(--background)/0.16),hsl(var(--background)/0.6)_26%,hsl(var(--background-strong)/0.94)_100%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--background)/0.82),transparent_26%,transparent_72%,hsl(var(--background)/0.8)),linear-gradient(180deg,hsl(var(--background)/0.62),transparent_18%,transparent_68%,hsl(var(--background-strong)/0.9))]" />
-          <div className="reliquary-grain absolute inset-0 opacity-40" />
+      <CinematicHero />
 
-          {portalEmberSpecs.map((ember) => (
-            <motion.span
-              key={`${ember.left}-${ember.top}`}
-              className="absolute rounded-full"
-              style={{
-                left: ember.left,
-                top: ember.top,
-                width: ember.size,
-                height: ember.size,
-                background:
-                  "radial-gradient(circle, rgba(255,224,159,0.95) 0%, rgba(255,188,86,0.62) 42%, rgba(255,188,86,0) 78%)",
-                boxShadow: "0 0 24px rgba(255,193,103,0.45)",
-              }}
-              animate={{ y: [0, -24, 0], opacity: [0.25, 0.9, 0.3], scale: [0.85, 1.1, 0.92] }}
-              transition={{
-                duration: ember.duration,
-                delay: ember.delay,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
-        </div>
+      <section className="container grid gap-4 md:grid-cols-3">
+        {heroSignals.map((signal) => {
+          const Icon = signal.icon;
 
-        <div className="container relative py-14 md:py-18 xl:py-22">
-          <div className="grid gap-8 xl:grid-cols-[minmax(0,1.02fr)_420px] xl:items-end">
-            <div className="space-y-8">
-              <div className="max-w-4xl space-y-6">
-                <div className="artifact-chip w-fit">
-                  <Flame className="h-3.5 w-3.5" />
-                  Arquivo do reliquiario
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <h1 className="max-w-4xl font-display text-5xl leading-[0.9] text-brand-gradient drop-shadow-[0_18px_36px_rgba(12,8,3,0.5)] md:text-6xl xl:text-7xl">
-                    Um portal de campanha com estrutura de saga.
-                  </h1>
-                  <p className="mt-6 max-w-3xl text-base leading-8 text-foreground/84 md:text-lg">
-                    A referencia oficial virou espinha para a sua home: hero mais claro, cronicas
-                    em grade editorial, manifesto de mundo, vitrine de modulos e chamadas fortes
-                    para mapa, mesa e arquivo pessoal.
-                  </p>
-                </motion.div>
-
-                <div className="flex flex-wrap gap-3">
-                  <Badge variant="outline">Atlas navegavel</Badge>
-                  <Badge variant="outline">Cronicas e contratos</Badge>
-                  <Badge variant="outline">Mesa, mestre e criacao</Badge>
-                </div>
+          return (
+            <div key={signal.title} className="reference-frame reference-surface-card p-5">
+              <div className="icon-slot h-10 w-10">
+                <Icon className="h-4 w-4" />
               </div>
-
-              <div className="flex flex-wrap gap-4">
-                <ArtifactLink to="/mapa">
-                  Explorar o atlas
-                  <ArrowRight className="h-4 w-4" />
-                </ArtifactLink>
-                <ArtifactLink to="/campanha" secondary>
-                  Abrir cronicas
-                </ArtifactLink>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                {heroSignals.map((signal) => {
-                  const Icon = signal.icon;
-
-                  return (
-                    <div key={signal.title} className="info-panel p-5">
-                      <div className="icon-slot h-10 w-10">
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <p className="mt-4 font-display text-3xl leading-none text-foreground">
-                        {signal.title}
-                      </p>
-                      <p className="mt-3 text-sm leading-6 text-foreground/72">{signal.body}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <motion.aside
-              initial={{ opacity: 0, x: 28 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.55, delay: 0.15 }}
-              className="campaign-board p-6 md:p-7 xl:mb-2"
-            >
-              <div className="artifact-chip w-fit">
-                <ScrollText className="h-3.5 w-3.5" />
-                Dossie da campanha
-              </div>
-              <h2 className="mt-5 font-display text-5xl leading-[0.94] text-foreground">
-                Companhia em foco
-              </h2>
-              <p className="mt-4 text-sm leading-7 text-foreground/72">
-                A home agora apresenta a campanha como produto central do portal, com personagens
-                ativos e leitura em destaque logo na abertura.
+              <p className="mt-4 font-display text-3xl leading-none text-foreground">
+                {signal.title}
               </p>
-
-              <div className="mt-6 space-y-3">
-                {CURRENT_PROTAGONISTS.map((name, index) => (
-                  <CampaignSlot
-                    key={name}
-                    index={index}
-                    name={name}
-                    status={
-                      index === 0
-                        ? "Linha de frente"
-                        : index === 1
-                          ? "Investigacao tensa"
-                          : "Sobrevivente da estrada"
-                    }
-                  />
-                ))}
-              </div>
-
-              {featuredEditorial ? (
-                <div className="mt-6 border-t border-[hsl(var(--brand)/0.18)] pt-6">
-                  <p className="section-kicker">Entrada em foco</p>
-                  <div className="relic-parchment mt-4 p-5">
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="warning">{featuredEditorial.label}</Badge>
-                      <Badge variant="secondary">{featuredEditorial.location}</Badge>
-                    </div>
-                    <h3 className="mt-4 font-display text-4xl leading-[0.98] text-foreground">
-                      {featuredEditorial.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-6 text-foreground/78">
-                      {featuredEditorial.excerpt}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-            </motion.aside>
-          </div>
-        </div>
+              <p className="mt-3 text-sm leading-6 text-foreground/72">{signal.body}</p>
+            </div>
+          );
+        })}
       </section>
 
       <section className="container space-y-6">
@@ -631,7 +498,7 @@ export default function HomePage() {
           {moduleView === "exploracao" ? (
             <ContinentMap compact />
           ) : (
-            <Card variant="panel" className="reliquary-grain">
+            <Card variant="panel">
               <CardContent className="grid gap-6 p-6 md:p-8 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
                 <div className="space-y-5">
                   <div className="space-y-4">
@@ -698,7 +565,7 @@ export default function HomePage() {
         <Card variant="elevated" className="reliquary-grain relative overflow-hidden">
           <div className="absolute inset-0">
             <img
-              src={heroFrameBg}
+              src={portalReferenceArt.bannerRedkit}
               alt=""
               aria-hidden="true"
               className="h-full w-full object-cover opacity-14"
