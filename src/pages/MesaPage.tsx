@@ -134,10 +134,64 @@ function SidePanelCard({
     <section className={cn("info-panel p-4", className)}>
       <div className="mb-3 space-y-1">
         <h3 className="font-heading text-base text-foreground">{title}</h3>
-        {description && <p className="text-sm leading-6 text-muted-foreground">{description}</p>}
+        {description && <p className="text-sm leading-6 text-foreground/80">{description}</p>}
       </div>
       {children}
     </section>
+  );
+}
+
+/**
+ * ⚡ Bolt Optimization:
+ * Isolating the chat input state into its own component prevents the massive
+ * MesaPage component (and its entire tree of tokens, chat messages, and VTT)
+ * from re-rendering on every single keystroke.
+ */
+function ChatInput({ onSend }: { onSend: (text: string) => Promise<void> }) {
+  const [draft, setDraft] = useState("");
+
+  const handleSend = async () => {
+    if (!draft.trim()) return;
+    await onSend(draft.trim());
+    setDraft("");
+  };
+
+  return (
+    <div className="flex gap-2">
+      <Input
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder="Enviar mensagem..."
+        className="h-10 bg-background/60 text-sm"
+        onKeyDown={(e) => e.key === "Enter" && void handleSend()}
+      />
+      <Button size="sm" className="h-10 px-4" onClick={() => void handleSend()}>
+        <Send className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * ⚡ Bolt Optimization:
+ * Isolating the dice input state prevents full-page re-renders on keystrokes.
+ */
+function DiceInput({ onRoll }: { onRoll: (notation: string) => Promise<void> }) {
+  const [draft, setDraft] = useState("1d20");
+
+  return (
+    <div className="mb-1 flex gap-2">
+      <Input
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder="2d6+3"
+        className="h-10 bg-background/60 text-sm"
+        onKeyDown={(e) => e.key === "Enter" && void onRoll(draft)}
+      />
+      <Button size="sm" className="h-10 px-4" onClick={() => void onRoll(draft)}>
+        <Dice6 className="h-3.5 w-3.5" />
+      </Button>
+    </div>
   );
 }
 
@@ -159,8 +213,6 @@ export default function MesaPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [scene, setScene] = useState<SceneModel>(() => createSceneModel());
   const [sessionReady, setSessionReady] = useState(false);
-  const [chatDraft, setChatDraft] = useState("");
-  const [diceDraft, setDiceDraft] = useState("1d20");
   const [showGrid, setShowGrid] = useState(true);
   const [gridOpacity, setGridOpacity] = useState(0.3);
   const [mapColumns, setMapColumns] = useState(12);
@@ -337,7 +389,7 @@ export default function MesaPage() {
     { id: "map", icon: <ImagePlus className="h-4 w-4" />, label: "Mapa" },
   ];
 
-  const appendChatMessage = async (author: string, text: string, tone: ChatTone) => {
+  const appendChatMessage = useCallback(async (author: string, text: string, tone: ChatTone) => {
     await mutateScene(
       (current) => appendSceneChat(current, author, text, tone),
       {
@@ -364,7 +416,7 @@ export default function MesaPage() {
         },
       },
     );
-  };
+  }, [mutateScene]);
 
   const handleCellClick = async (cell: { id: string; x: number; y: number }) => {
     if (scene.boardMode === "fog") {
@@ -778,12 +830,6 @@ export default function MesaPage() {
     })();
   }, [commitScene, searchParams, sessionReady, setSearchParams]);
 
-  const sendChat = async () => {
-    if (!chatDraft.trim()) return;
-    await appendChatMessage("Narrador", chatDraft.trim(), "party");
-    setChatDraft("");
-  };
-
   const rollNotation = async (notation: string, actor: string) => {
     const parsed = parseDiceNotation(notation.trim().toLowerCase());
     const { results, total } = rollDice(parsed.sides, parsed.count);
@@ -814,7 +860,6 @@ export default function MesaPage() {
         },
       },
     );
-    setDiceDraft(norm);
   };
 
   const adjustHp = async (tokenId: string, delta: number) => {
@@ -1344,35 +1389,19 @@ export default function MesaPage() {
                     </button>
                   ))}
                 </div>
-                <div className="mb-1 flex gap-2">
-                  <Input
-                    value={diceDraft}
-                    onChange={(e) => setDiceDraft(e.target.value)}
-                    placeholder="2d6+3"
-                    className="h-10 bg-background/60 text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && void rollNotation(diceDraft, selectedToken?.payload.name ?? "Mesa")}
-                  />
-                  <Button size="sm" className="h-10 px-4" onClick={() => void rollNotation(diceDraft, selectedToken?.payload.name ?? "Mesa")}>
-                    <Dice6 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <DiceInput
+                  onRoll={async (notation) =>
+                    await rollNotation(notation, selectedToken?.payload.name ?? "Mesa")
+                  }
+                />
               </div>
 
               {/* Chat input */}
               <div className="border-t border-border/40 p-4">
                 <div className="mb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Nova mensagem</div>
-                <div className="flex gap-2">
-                  <Input
-                    value={chatDraft}
-                    onChange={(e) => setChatDraft(e.target.value)}
-                    placeholder="Enviar mensagem..."
-                    className="h-10 bg-background/60 text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && void sendChat()}
-                  />
-                  <Button size="sm" className="h-10 px-4" onClick={() => void sendChat()}>
-                    <Send className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <ChatInput
+                  onSend={async (text) => await appendChatMessage("Narrador", text, "party")}
+                />
               </div>
             </TabsContent>
 
