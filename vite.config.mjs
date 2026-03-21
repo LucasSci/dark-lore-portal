@@ -8,6 +8,8 @@ import { componentTagger } from "lovable-tagger";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const PREVIEW_PORT = Number(process.env.PORT ?? 8080);
+const PREVIEW_HOST = process.env.HOST ?? "0.0.0.0";
 const LOCAL_WITCHER_TILE_PREFIX = "/local-witcher3map";
 const LOCAL_WITCHER_TILE_SOURCE = (() => {
   const vendored = path.resolve(__dirname, "assets/witcher3map-maps-master");
@@ -93,11 +95,17 @@ function witcherLocalTilesPlugin() {
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
-    port: 8080,
+    host: PREVIEW_HOST,
+    port: PREVIEW_PORT,
+    strictPort: true,
     hmr: {
       overlay: false,
     },
+  },
+  preview: {
+    host: PREVIEW_HOST,
+    port: PREVIEW_PORT,
+    strictPort: true,
   },
   plugins: [react(), witcherLocalTilesPlugin(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
