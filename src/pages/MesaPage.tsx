@@ -1109,6 +1109,8 @@ export default function MesaPage() {
             <button
               onClick={() => setMobilePanel((v) => !v)}
               className="tool-rail-button h-8 w-8 sm:hidden"
+              aria-label="Alternar painel lateral"
+              title="Alternar painel lateral"
             >
               <MessageSquare className="h-4 w-4" />
             </button>
@@ -1245,6 +1247,8 @@ export default function MesaPage() {
       <button
         onClick={() => setRightOpen((v) => !v)}
         className="hidden w-5 items-center justify-center border-l border-border/40 bg-surface-raised text-muted-foreground transition-colors hover:text-foreground sm:flex"
+        aria-label={rightOpen ? "Recolher painel" : "Expandir painel"}
+        title={rightOpen ? "Recolher painel" : "Expandir painel"}
       >
         {rightOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
       </button>
@@ -1254,7 +1258,12 @@ export default function MesaPage() {
         <div className="absolute inset-0 z-[70] flex flex-col bg-surface-raised/98 backdrop-blur sm:hidden">
           <div className="flex items-center justify-between border-b border-border/40 px-3 py-2">
             <span className="font-heading text-xs uppercase tracking-[0.16em] text-primary/80">Painel</span>
-            <button onClick={() => setMobilePanel(false)} className="tool-rail-button h-8 w-8">
+            <button
+              onClick={() => setMobilePanel(false)}
+              className="tool-rail-button h-8 w-8"
+              aria-label="Fechar painel"
+              title="Fechar painel"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
