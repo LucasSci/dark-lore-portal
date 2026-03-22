@@ -146,13 +146,13 @@ export const VttCommandPanel = memo(function VttCommandPanel({
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" onClick={() => onAdjustCameraScale("out")}>
+            <Button variant="outline" onClick={() => onAdjustCameraScale("out")} aria-label="Diminuir zoom" title="Diminuir zoom">
               <Minus className="h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => onAdjustCameraScale("reset")}>
+            <Button variant="outline" onClick={() => onAdjustCameraScale("reset")} aria-label="Restaurar zoom" title="Restaurar zoom">
               <RefreshCcw className="h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => onAdjustCameraScale("in")}>
+            <Button variant="outline" onClick={() => onAdjustCameraScale("in")} aria-label="Aumentar zoom" title="Aumentar zoom">
               <Plus className="h-4 w-4" />
             </Button>
           </div>

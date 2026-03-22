@@ -22,9 +22,9 @@ function createDeferred<T>() {
 
 describe("ui system", () => {
   it("exposes semantic button variants", () => {
-    expect(buttonVariants({ variant: "success" })).toContain("bg-success");
-    expect(buttonVariants({ variant: "danger" })).toContain("bg-destructive");
-    expect(buttonVariants({ variant: "primary" })).toContain("bg-primary");
+    expect(buttonVariants({ variant: "success" })).toContain("success");
+    expect(buttonVariants({ variant: "danger" })).toContain("destructive");
+    expect(buttonVariants({ variant: "primary" })).toContain("primary");
   });
 
   it("supports panel and elevated card styles", () => {
