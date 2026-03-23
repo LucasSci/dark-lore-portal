@@ -23,6 +23,9 @@ type UntypedSupabaseClient = typeof supabase & {
 const db = supabase as UntypedSupabaseClient;
 
 function makePresenceKey() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `presence-${crypto.randomUUID()}`;
+  }
   return `presence-${Math.random().toString(36).slice(2, 10)}`;
 }
 
@@ -296,7 +299,7 @@ export async function loadSceneSnapshot(sessionId: string) {
           : defaultLayerOrder(),
         connections: Array.isArray(row.connections)
           ? row.connections.map((connection: Record<string, any>) => ({
-              id: String(connection.id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 8)),
+              id: String(connection.id ?? (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Math.random().toString(36).slice(2, 8))),
               edge:
                 connection.edge === "north" ||
                 connection.edge === "east" ||

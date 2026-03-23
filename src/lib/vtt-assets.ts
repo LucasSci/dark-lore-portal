@@ -21,7 +21,12 @@ export function createAssetManifestDraft(file: {
   name: string;
   type: string;
 }): AssetManifest {
-  const assetId = `asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  let assetId: string;
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    assetId = `asset-${crypto.randomUUID()}`;
+  } else {
+    assetId = `asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
   const safeName = sanitizeFileName(file.name);
 
   return {
