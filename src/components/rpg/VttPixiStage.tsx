@@ -307,6 +307,26 @@ export default function VttPixiStage({
   });
   const [viewportSize, setViewportSize] = useState({ width: 960, height: 560 });
 
+  /**
+   * ⚡ Bolt Optimization: Cache visibility polygons for dynamic lighting.
+   * This prevents re-computing the expensive `computeVisibilityPolygon` on every
+   * render for tokens and lights that haven't moved.
+   * We use stable identifiers (token ID, light ID) as keys rather than
+   * coordinate strings to avoid garbage collection overhead.
+   */
+  const visibilityCacheRef = useRef<
+    Map<
+      string,
+      {
+        x: number;
+        y: number;
+        radius: number;
+        polygon: Array<{ x: number; y: number }>;
+      }
+    >
+  >(new Map());
+  const wallsSignatureRef = useRef<string>("");
+
   useEffect(() => {
     pageRef.current = page;
     cameraChangeRef.current = onCameraChange;
@@ -1411,6 +1431,13 @@ export default function VttPixiStage({
     lightingLayer.zIndex = 8; // Between map and fog
 
     if (page.dynamicLighting && (page.lightSources.length > 0 || tokens.some(t => t.payload.team === "party"))) {
+      const currentWallsSignature = page.wallSegments.map((w) => `${w.id}:${w.x1},${w.y1},${w.x2},${w.y2}`).join("|");
+
+      if (wallsSignatureRef.current !== currentWallsSignature) {
+        visibilityCacheRef.current.clear();
+        wallsSignatureRef.current = currentWallsSignature;
+      }
+
       const wallSegs: Segment[] = page.wallSegments.map((w) => ({
         a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
         b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
@@ -1420,6 +1447,7 @@ export default function VttPixiStage({
 
       // Collect all vision sources: party tokens + light sources
       const visionPolygons: Array<{ x: number; y: number }[]> = [];
+      const cache = visibilityCacheRef.current;
 
       for (const token of tokens) {
         if (token.payload.team === "party" && token.payload.hp > 0) {
@@ -1427,8 +1455,17 @@ export default function VttPixiStage({
             x: token.position.x * gs + gs / 2,
             y: token.position.y * gs + gs / 2,
           };
-          const poly = computeVisibilityPolygon(origin, wallSegs, bounds, page.tokenVisionRadius * gs);
-          visionPolygons.push(poly);
+          const radius = page.tokenVisionRadius * gs;
+          const cacheKey = `token-${token.id}`;
+          const cached = cache.get(cacheKey);
+
+          if (cached && cached.x === origin.x && cached.y === origin.y && cached.radius === radius) {
+            visionPolygons.push(cached.polygon);
+          } else {
+            const poly = computeVisibilityPolygon(origin, wallSegs, bounds, radius);
+            cache.set(cacheKey, { x: origin.x, y: origin.y, radius, polygon: poly });
+            visionPolygons.push(poly);
+          }
         }
       }
 
@@ -1437,8 +1474,17 @@ export default function VttPixiStage({
           x: light.cellX * gs + gs / 2,
           y: light.cellY * gs + gs / 2,
         };
-        const poly = computeVisibilityPolygon(origin, wallSegs, bounds, light.radius * gs);
-        visionPolygons.push(poly);
+        const radius = light.radius * gs;
+        const cacheKey = `light-${light.id}`;
+        const cached = cache.get(cacheKey);
+
+        if (cached && cached.x === origin.x && cached.y === origin.y && cached.radius === radius) {
+          visionPolygons.push(cached.polygon);
+        } else {
+          const poly = computeVisibilityPolygon(origin, wallSegs, bounds, radius);
+          cache.set(cacheKey, { x: origin.x, y: origin.y, radius, polygon: poly });
+          visionPolygons.push(poly);
+        }
       }
 
       // Draw darkness overlay with cutouts for visible areas
