@@ -15,6 +15,7 @@ import {
   ImagePlus,
   Layers,
   Lightbulb,
+  Loader2,
   MessageSquare,
   Minus,
   MousePointer,
@@ -165,7 +166,7 @@ function ChatInput({ onSend }: { onSend: (text: string) => Promise<void> }) {
         className="h-10 bg-background/60 text-sm"
         onKeyDown={(e) => e.key === "Enter" && void handleSend()}
       />
-      <Button size="sm" className="h-10 px-4" onClick={() => void handleSend()}>
+      <Button size="sm" className="h-10 px-4" onClick={() => void handleSend()} aria-label="Enviar mensagem" title="Enviar mensagem">
         <Send className="h-3.5 w-3.5" />
       </Button>
     </div>
@@ -188,7 +189,7 @@ function DiceInput({ onRoll }: { onRoll: (notation: string) => Promise<void> }) 
         className="h-10 bg-background/60 text-sm"
         onKeyDown={(e) => e.key === "Enter" && void onRoll(draft)}
       />
-      <Button size="sm" className="h-10 px-4" onClick={() => void onRoll(draft)}>
+      <Button size="sm" className="h-10 px-4" onClick={() => void onRoll(draft)} aria-label="Rolar dados" title="Rolar dados">
         <Dice6 className="h-3.5 w-3.5" />
       </Button>
     </div>
@@ -198,12 +199,16 @@ function DiceInput({ onRoll }: { onRoll: (notation: string) => Promise<void> }) 
 function ToolRailButton({
   active = false,
   className,
+  title,
+  "aria-label": ariaLabel,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
   return (
     <button
       data-active={active}
       className={cn("tool-rail-button h-9 w-9", className)}
+      title={title}
+      aria-label={ariaLabel || title}
       {...props}
     />
   );
@@ -1028,6 +1033,7 @@ export default function MesaPage() {
           to="/jogar"
           className="tool-rail-button mb-4 h-9 w-9"
           title="Voltar ao Hub"
+          aria-label="Voltar ao Hub"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
@@ -1063,7 +1069,7 @@ export default function MesaPage() {
           active={Boolean(battlemapUrl)}
           className="mb-1"
         >
-          <ImagePlus className="h-4 w-4" />
+          {battlemapUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
         </ToolRailButton>
         <input
           ref={fileInputRef}
@@ -1121,6 +1127,8 @@ export default function MesaPage() {
             <Link
               to="/jogar"
               className="tool-rail-button h-8 w-8 shrink-0 sm:hidden"
+              title="Voltar ao Hub"
+              aria-label="Voltar ao Hub"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -1274,9 +1282,10 @@ export default function MesaPage() {
           </ToolRailButton>
           <ToolRailButton
             onClick={() => fileInputRef.current?.click()}
+            title="Importar battlemap"
             active={Boolean(battlemapUrl)}
           >
-            <ImagePlus className="h-4 w-4" />
+            {battlemapUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
           </ToolRailButton>
           <input
             ref={fileInputRef}
@@ -1631,7 +1640,11 @@ export default function MesaPage() {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={battlemapUploading || !activePage}
                     >
-                      <ImagePlus className="h-3.5 w-3.5" />
+                      {battlemapUploading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <ImagePlus className="h-3.5 w-3.5" />
+                      )}
                       {battlemapUploading ? "Importando..." : battlemapUrl ? "Trocar battlemap" : "Importar battlemap"}
                     </Button>
                     {battlemapUrl && (
