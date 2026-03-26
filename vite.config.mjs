@@ -113,4 +113,60 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          const normalizedId = id.split(path.sep).join("/");
+
+          if (!normalizedId.includes("/node_modules/")) {
+            return undefined;
+          }
+
+          if (
+            normalizedId.includes("/node_modules/react/") ||
+            normalizedId.includes("/node_modules/react-dom/") ||
+            normalizedId.includes("/node_modules/react-router/") ||
+            normalizedId.includes("/node_modules/react-router-dom/") ||
+            normalizedId.includes("/node_modules/@tanstack/")
+          ) {
+            return "react-vendor";
+          }
+
+          if (
+            normalizedId.includes("/node_modules/@radix-ui/") ||
+            normalizedId.includes("/node_modules/cmdk/") ||
+            normalizedId.includes("/node_modules/vaul/") ||
+            normalizedId.includes("/node_modules/input-otp/")
+          ) {
+            return "ui-vendor";
+          }
+
+          if (
+            normalizedId.includes("/node_modules/leaflet/") ||
+            normalizedId.includes("/node_modules/react-resizable-panels/")
+          ) {
+            return "maps-vendor";
+          }
+
+          if (
+            normalizedId.includes("/node_modules/framer-motion/") ||
+            normalizedId.includes("/node_modules/gsap/")
+          ) {
+            return "motion-vendor";
+          }
+
+          if (normalizedId.includes("/node_modules/@supabase/")) {
+            return "supabase-vendor";
+          }
+
+          if (normalizedId.includes("/node_modules/recharts/")) {
+            return "charts-vendor";
+          }
+
+          return undefined;
+        },
+      },
+    },
+  },
 }));

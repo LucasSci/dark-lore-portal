@@ -62,12 +62,11 @@ export default function CampaignPage() {
                 <div className="max-w-3xl space-y-4">
                 <p className="section-kicker">Cronicas e contratos</p>
                   <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    O arquivo agora parece um tomo de guerra, nao uma lista de posts.
+                    Cronicas, rumores, informes e contratos reunidos no mesmo tomo de campanha.
                   </h1>
                   <p className="text-base leading-8 text-foreground/88">
-                    Cronicas, rumores, informes e contratos foram reencenados como partes de um
-                    dossie de campanha. A leitura ficou mais editorial, mais diegetica e mais
-                    alinhada ao peso do continente.
+                    Cada registro preserva o pulso da estrada, das ordens do mestre e dos riscos
+                    que continuam crescendo entre uma sessao e a seguinte.
                   </p>
                 </div>
 
@@ -121,7 +120,7 @@ export default function CampaignPage() {
                 <Card variant="panel">
                   <CardContent className="space-y-4 p-5">
                     <div>
-                      <p className="section-kicker">Leitura rapida</p>
+                      <p className="section-kicker">Quadro de campo</p>
                       <h2 className="mt-2 font-heading text-2xl text-foreground">
                         Mesa em movimento
                       </h2>
@@ -265,7 +264,7 @@ export default function CampaignPage() {
                 <PortalContextPanel
                   eyebrow="Rota sugerida"
                   title={leadAtlasContext.title}
-                  description="A campanha agora aponta de volta para o atlas como continuidade natural entre leitura, deslocamento e sessao."
+                  description="Da cronica principal, a trilha segue direto para o atlas e para os verbetes ligados a esta frente."
                   image={leadAtlasContext.image}
                   metrics={leadAtlasContext.metrics.slice(0, 3)}
                   actions={leadAtlasContext.actions}

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { BookOpenText, Compass, Instagram, Shield, Users, Youtube } from "lucide-react";
 
-import logoEmblem from "@/assets/logo-emblem.png";
+import logoEmblem from "@/assets/logo-emblem-256.webp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -42,7 +42,15 @@ export default function Footer() {
         <div className="mx-auto max-w-6xl space-y-10">
           <div className="flex flex-col items-center gap-5 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[hsl(var(--brand)/0.22)] bg-[linear-gradient(180deg,hsl(var(--background)/0.82),hsl(var(--surface-base)/0.96))] shadow-panel">
-              <img src={logoEmblem} alt="Emblema da campanha" className="h-10 w-10 object-contain" />
+              <img
+                src={logoEmblem}
+                alt="Emblema da campanha"
+                width={256}
+                height={256}
+                decoding="async"
+                loading="lazy"
+                className="h-10 w-10 object-contain"
+              />
             </div>
             <div className="space-y-3">
               <p className="section-kicker">Portal do continente</p>
@@ -50,8 +58,8 @@ export default function Footer() {
                 Estrada, rumor, mapa e sessao na mesma moldura.
               </h3>
               <p className="mx-auto max-w-3xl text-sm leading-7 text-muted-foreground md:text-base">
-                O rodape agora fecha a pagina como nas referencias: mais escuro, mais cerimonial e
-                com menos ruido, para a experiencia terminar com peso de universo e nao de app.
+                Quando a leitura termina, o arquivo ainda deixa atalhos para o atlas, para a
+                campanha e para a proxima noite de mesa.
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-3">
@@ -93,7 +101,7 @@ export default function Footer() {
 
           <div className="text-center text-xs text-muted-foreground">
             <p>(c) 2026 Areias de Zerrikania. Todos os direitos reservados.</p>
-            <p className="mt-2">Ambientacao autoral com direcao visual dark fantasy editorial.</p>
+            <p className="mt-2">Arquivo do Continente, cronicas e rotas do mundo de Areias de Zerrikania.</p>
           </div>
         </div>
       </div>

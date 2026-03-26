@@ -11,6 +11,12 @@ import {
   Users,
 } from "lucide-react";
 
+import heroBackground from "@/assets/hero-bg.jpg";
+import heroZerrikania from "@/assets/hero-zerrikania.jpg";
+import characterIllustration from "@/assets/encyclopedia/character-illustration.svg";
+import factionIllustration from "@/assets/encyclopedia/faction-illustration.svg";
+import historyIllustration from "@/assets/encyclopedia/history-illustration.svg";
+import locationIllustration from "@/assets/encyclopedia/location-illustration.svg";
 import type { CampaignPublication } from "@/lib/publications";
 
 export type PortalFeatureSpec = {
@@ -85,13 +91,13 @@ export type PortalHeroScene = {
 };
 
 export const portalReferenceArt = {
-  hero: "/reference/witcher/images/key-visual.jpg",
-  mask: "/reference/witcher/images/mask.png",
-  gold: "/reference/witcher/images/gold-texture.jpg",
-  goldBright: "/reference/witcher/images/gold-texture-bright.jpg",
-  bannerConcert: "/reference/witcher/images/banner-concert.jpg",
-  bannerRedkit: "/reference/witcher/images/banner-redkit.jpg",
-  heroVideo: "/reference/witcher/media/hero-video.mp4",
+  hero: heroBackground,
+  mask: "/chrome/header-frame.png",
+  gold: "/textures/parchment-aged.png",
+  goldBright: "/chrome/button-frame.png",
+  bannerConcert: heroZerrikania,
+  bannerRedkit: locationIllustration,
+  heroVideo: undefined,
 } as const;
 
 export const portalHeroScenes: PortalHeroScene[] = [
@@ -101,51 +107,50 @@ export const portalHeroScenes: PortalHeroScene[] = [
     sceneLabel: "Cena I · O chamado do continente",
     title: "Areias de Zerrikania",
     description:
-      "Um hero cinematografico, escuro e ritualistico para apresentar o portal como um universo vivo: atlas, cronicas e campanha respirando como uma experiencia de fantasia sombria AAA.",
-    primaryCta: "Assistir ao preludio",
-    primaryPath: "/campanha",
+      "As cronicas do Veu, os mapas de travessia e a campanha viva se encontram aqui como portas do mesmo arquivo.",
+    primaryCta: "Ler o prologo",
+    primaryPath: "/universo/cronica-prologo-do-veu",
     secondaryCta: "Explorar o atlas",
     secondaryPath: "/mapa",
-    poster: portalReferenceArt.hero,
-    video: portalReferenceArt.heroVideo,
-    thumbnail: portalReferenceArt.hero,
-    thumbnailTitle: "O chamado da mata antiga",
+    poster: heroBackground,
+    thumbnail: heroBackground,
+    thumbnailTitle: "O Veu volta a respirar",
     thumbnailBody:
-      "Video em loop, nevoa sutil e camera viva para abrir a jornada com o peso de uma capa principal.",
+      "Comece pela ferida antiga que colocou o continente em vigilia.",
   },
   {
     id: "hero-chronicles",
     eyebrow: "CRONICAS, DOSSIES E ECOS RECENTES",
     sceneLabel: "Cena II · O arquivo fala primeiro",
-    title: "A campanha assume o centro da leitura",
+    title: "Os capitulos se abrem como trilhas de leitura",
     description:
-      "A homepage passa a apresentar modulos, sessao e lore com cadencia editorial. Tudo o que importa aparece em sequencia, com moldura dourada e contraste cinematografico.",
-    primaryCta: "Abrir as cronicas",
-    primaryPath: "/campanha",
-    secondaryCta: "Ver o universo",
-    secondaryPath: "/universo",
-    poster: portalReferenceArt.bannerConcert,
-    thumbnail: portalReferenceArt.bannerConcert,
-    thumbnailTitle: "Fluxo editorial do reliquiario",
+      "Cada registro do arquivo pode levar a um personagem, a um lugar esquecido ou a um conflito que ainda nao terminou.",
+    primaryCta: "Abrir o universo",
+    primaryPath: "/universo",
+    secondaryCta: "Ver a campanha",
+    secondaryPath: "/campanha",
+    poster: heroZerrikania,
+    thumbnail: heroZerrikania,
+    thumbnailTitle: "Rumores, testemunhas e ruinas",
     thumbnailBody:
-      "Uma segunda cena para vender dossies, leitura contextual e continuidade de sessao sem quebrar a imersao.",
+      "Siga as entradas que ligam o Prologo a Merlin, Nashara e aos vetores de Elarion.",
   },
   {
     id: "hero-systems",
     eyebrow: "ATLAS, MESTRE E RITUAIS DE CRIACAO",
     sceneLabel: "Cena III · Ferramentas do continente",
-    title: "Cada modulo entra como parte oficial do mundo",
+    title: "Mesa, mestre e campanha seguem o mesmo pulso",
     description:
-      "Mapa, mesa, criacao e condução deixam de parecer paginas isoladas e passam a funcionar como trilhas de entrada para o mesmo reliquiario.",
+      "Dos contratos em campo ao preparo do mestre, tudo pode ser retomado sem sair do mesmo clima de estrada, poeira e pressagio.",
     primaryCta: "Entrar na mesa",
     primaryPath: "/mesa",
     secondaryCta: "Painel do mestre",
     secondaryPath: "/mestre",
-    poster: portalReferenceArt.bannerRedkit,
-    thumbnail: portalReferenceArt.bannerRedkit,
-    thumbnailTitle: "Ferramentas com peso de saga",
+    poster: characterIllustration,
+    thumbnail: characterIllustration,
+    thumbnailTitle: "Preparar a proxima noite",
     thumbnailBody:
-      "O slider fecha o hero oferecendo a proxima etapa do continente com a mesma linguagem visual do topo.",
+      "Retome a sessao, organize a cena e volte ao arquivo quando a fogueira baixar.",
   },
 ] as const;
 
@@ -171,59 +176,59 @@ export const heroSignals: PortalFeatureSpec[] = [
   {
     icon: Map,
     title: "Atlas navegavel",
-    body: "Regioes, fronteiras e rotas importantes surgem como parte central da leitura.",
+    body: "Regioes, fronteiras e passagens ficam visiveis logo no primeiro olhar.",
   },
   {
     icon: ScrollText,
     title: "Cronicas em fluxo",
-    body: "Contratos, rumores e relatorios assumem a funcao editorial da home.",
+    body: "Prologos, capitulos e contratos mantem a campanha em movimento.",
   },
   {
     icon: Users,
     title: "Mesa conectada",
-    body: "Campanha, personagem e mestre falam a mesma lingua visual.",
+    body: "Personagens, mestre e comunidade continuam puxando a mesma historia.",
   },
 ];
 
 export const manifestoPanels: PortalFeatureSpec[] = [
   {
     icon: Sparkles,
-    title: "Direcao viva",
-    body: "A home deixa de ser uma colecao de modulos e passa a agir como capa de saga.",
+    title: "Sangue de cronica",
+    body: "Cada destaque precisa apontar para uma historia, nao para uma interface explicando a si mesma.",
   },
   {
     icon: Compass,
-    title: "Leitura guiada",
-    body: "A referencia oficial trouxe uma hierarquia clara, e agora o portal tambem conduz o olhar.",
+    title: "Rotas claras",
+    body: "Atravessar do hero para atlas, universo ou campanha deve soar natural, como seguir um rastro.",
   },
   {
     icon: Users,
-    title: "Continente compartilhado",
-    body: "Tudo o que importa para a campanha fica perto: mundo, pessoas, dossies e sessao.",
+    title: "Continente vivo",
+    body: "Personagens, lugares e relatos se cruzam como partes do mesmo mundo em disputa.",
   },
 ];
 
 export const manifestoQuotes: PortalQuoteSpec[] = [
   {
-    quote: "Um reliquiario vivo que responde ao jogador, nao uma vitrine generica.",
-    source: "Direcao de arte",
+    quote: "Toda pagina deve soar como pagina arrancada do mesmo tomo.",
+    source: "Arquivo do continente",
   },
   {
-    quote: "Mapa, cronica e mesa agora parecem capitulos do mesmo mundo.",
-    source: "Arquitetura editorial",
+    quote: "Mapa, cronica e mesa precisam continuar a mesma estrada.",
+    source: "Cronicas da campanha",
   },
   {
-    quote: "A home finalmente funciona como portal, nao so como landing bonita.",
-    source: "Leitura da campanha",
+    quote: "Quando um eco aparece, ele deve levar a algum lugar real do mundo.",
+    source: "Memoria dos vigias",
   },
 ];
 
 export const editorialFallbacks: PortalEditorialEntry[] = [
   {
     id: "fallback-atlas",
-    title: "O atlas abre novas linhas de travessia sobre o continente.",
+    title: "Novas linhas de travessia foram abertas sobre o continente.",
     excerpt:
-      "As regioes agora surgem como pontos de partida para jornada, descoberta e leitura aprofundada.",
+      "As regioes marcam onde a poeira engrossa, onde as ruinas chamam e onde a campanha pode virar de rumo.",
     location: "Atlas do continente",
     label: "Relatorio",
     updatedAt: "2026-03-18T12:00:00.000Z",
@@ -231,9 +236,9 @@ export const editorialFallbacks: PortalEditorialEntry[] = [
   },
   {
     id: "fallback-universe",
-    title: "Entradas do universo foram reordenadas como dossies vivos.",
+    title: "O arquivo reuniu os capitulos do Veu em uma nova serie de publicacoes.",
     excerpt:
-      "Faccoes, lugares e personagens ganham peso de arquivo de campanha em vez de virar lista seca.",
+      "Cada capitulo abre seus nomes citados, suas testemunhas e os rastros que levam aos perfis do universo.",
     location: "Universo",
     label: "Dossie",
     updatedAt: "2026-03-18T18:00:00.000Z",
@@ -241,9 +246,9 @@ export const editorialFallbacks: PortalEditorialEntry[] = [
   },
   {
     id: "fallback-table",
-    title: "A mesa virtual passa a soar como prolongamento natural do portal.",
+    title: "A mesa foi preparada para receber criaturas, paginas e rotas de batalha.",
     excerpt:
-      "Sessao, ficha e painel do mestre deixam de competir com a home e passam a ser chamados por ela.",
+      "Os tabuleiros e frentes de cena permanecem prontos para a proxima sessao da companhia.",
     location: "Mesa virtual",
     label: "Mesa",
     updatedAt: "2026-03-19T08:30:00.000Z",
@@ -251,9 +256,9 @@ export const editorialFallbacks: PortalEditorialEntry[] = [
   },
   {
     id: "fallback-creation",
-    title: "Criacao de personagem entra na jornada como ritual, nao formulario.",
+    title: "Novos nomes podem ser forjados para a estrada antes da proxima sessao.",
     excerpt:
-      "A entrada para novas companhias fica mais coerente com o tom do resto do continente.",
+      "Classe, origem e historico se unem para abrir uma nova ficha dentro do mesmo arquivo.",
     location: "Criacao",
     label: "Ritual",
     updatedAt: "2026-03-19T13:10:00.000Z",
@@ -261,9 +266,9 @@ export const editorialFallbacks: PortalEditorialEntry[] = [
   },
   {
     id: "fallback-mestre",
-    title: "O painel do mestre assume lugar de comando dentro do reliquiario.",
+    title: "O mestre segue com o comando das cenas, contratos e sinais em campo.",
     excerpt:
-      "Notas, organizacao de campanha e leitura de cena agora parecem parte da mesma obra.",
+      "Notas, NPCs e ganchos de sessao permanecem reunidos para a proxima noite de jogo.",
     location: "Mestre",
     label: "Comando",
     updatedAt: "2026-03-19T17:45:00.000Z",
@@ -274,41 +279,41 @@ export const editorialFallbacks: PortalEditorialEntry[] = [
 export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
   exploracao: {
     label: "Exploracao",
-    title: "O continente entra em cena como um sistema de leitura completo.",
+    title: "O continente se abre por rotas de leitura, viagem e descoberta.",
     body:
-      "A estrutura da referencia foi traduzida para o seu portal como uma vitrine de mundo: mapa, universo e comunidade apresentados como trilhas de descoberta.",
+      "Atlas, universo e comunidade funcionam como trilhas complementares para seguir rumores, capitulos e encontros.",
     accent:
-      "Quando o jogador entra por aqui, ele entende imediatamente onde explorar antes de abrir qualquer submenu.",
+      "Quem entra por esta trilha encontra rapido um mapa, um verbete ou um eco de campanha.",
     items: [
       {
         eyebrow: "Atlas do continente",
-        title: "Mappa mundi e regioes com peso de capa principal.",
+        title: "Mappa mundi, regioes e passagens de fronteira.",
         description:
-          "O atlas deixa de ser apenas uma funcionalidade e assume o papel de grande convite para a jornada.",
+          "As rotas mais perigosas do continente podem ser lidas como convite para a proxima jornada.",
         path: "/mapa",
-        image: portalReferenceArt.hero,
+        image: heroBackground,
         imagePosition: "center center",
         icon: Map,
         destination: "atlas",
       },
       {
         eyebrow: "Arquivo do universo",
-        title: "Entradas, faccoes e lugares organizados como dossies.",
+        title: "Capitulos, personagens e faccoes em dossies ligados entre si.",
         description:
-          "Toda a camada de lore fica mais acessivel e parece parte da mesma obra editorial da home.",
+          "Os capitulos do lore levam aos nomes citados, e os verbetes devolvem o leitor para a historia maior.",
         path: "/universo",
-        image: portalReferenceArt.bannerConcert,
+        image: historyIllustration,
         imagePosition: "center center",
         icon: Compass,
         destination: "universo",
       },
       {
         eyebrow: "Comunidade",
-        title: "Os ecos da campanha se espalham para fora da sessao.",
+        title: "Os ecos da campanha continuam circulando fora da mesa.",
         description:
-          "A comunidade aparece como prolongamento do mundo, nao como area separada do resto do portal.",
+          "Chamados, feitos e rodas de conversa mantem a companhia em movimento entre uma sessao e outra.",
         path: "/comunidade",
-        image: portalReferenceArt.bannerRedkit,
+        image: factionIllustration,
         imagePosition: "right center",
         icon: Users,
         destination: "comunidade",
@@ -317,41 +322,41 @@ export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
   },
   campanha: {
     label: "Campanha",
-    title: "Sessao, conducao e preparacao do mestre agora ganham palco proprio.",
+    title: "Sessao, preparacao e comando seguem reunidos na mesma frente.",
     body:
-      "A secao inspirada nos cards de jogos virou uma vitrine dos modulos de campanha, com mais clareza para leitura, mesa e comando.",
+      "Cronicas, mesa e mestre ocupam o mesmo campo de leitura para a campanha nao perder o pulso.",
     accent:
-      "Tudo que move uma campanha longa fica agrupado como produto principal do portal, nao como ferramenta perdida na navegacao.",
+      "As tres portas abaixo levam direto para o que move a historia em campo.",
     items: [
       {
         eyebrow: "Cronicas e contratos",
-        title: "O arquivo de campanha passa a liderar a narrativa do site.",
+        title: "O arquivo de campanha guarda ecos, contratos e recados de fronteira.",
         description:
-          "Publicacoes recentes, leituras abertas e contratos pendentes formam a espinha editorial da experiencia.",
+          "Cada entrada publicada ajuda a lembrar o que ocorreu, o que falta resolver e quem ainda esta em risco.",
         path: "/campanha",
-        image: portalReferenceArt.bannerConcert,
+        image: historyIllustration,
         imagePosition: "center center",
         icon: ScrollText,
         destination: "campanha",
       },
       {
         eyebrow: "Mesa virtual",
-        title: "A sessao ao vivo vira continuacao natural da home.",
+        title: "A sessao ao vivo segue pronta para o proximo encontro.",
         description:
-          "Partidas, fichas e conducao de cena ficam muito mais faceis de encontrar e fazer sentido.",
+          "Battlemap, neblina e iniciativa podem ser retomados sem romper o clima do resto do continente.",
         path: "/mesa",
-        image: portalReferenceArt.hero,
+        image: heroBackground,
         imagePosition: "left center",
         icon: Sword,
         destination: "mesa",
       },
       {
         eyebrow: "Painel do mestre",
-        title: "Comando, preparo e leitura rapida num mesmo nucleo.",
+        title: "O comando do mestre fica reservado para a proxima decisao dificil.",
         description:
-          "A referencia ajudou a transformar o mestre em um protagonista do portal, e nao em pagina secundaria.",
+          "NPCs, publicacoes e notas de sessao ficam sob guarda ate a proxima rodada de jogo.",
         path: "/mestre",
-        image: portalReferenceArt.bannerRedkit,
+        image: characterIllustration,
         imagePosition: "center center",
         icon: Shield,
         destination: "mestre",
@@ -364,28 +369,28 @@ export const bulletinPanels: PortalFeatureSpec[] = [
   {
     icon: ScrollText,
     title: "Rumores novos",
-    body: "Acompanhe o que entrou no arquivo antes da proxima sessao comecar.",
+    body: "Veja o que entrou no arquivo antes da proxima fogueira acender.",
   },
   {
     icon: BookOpenText,
-    title: "Leitura guiada",
-    body: "Cronicas, dossies e rotas chegam com muito mais contexto visual.",
+    title: "Rotas do arquivo",
+    body: "Capitulos, dossies e rotas se respondem como parte do mesmo continente.",
   },
   {
     icon: Flame,
     title: "Campanha ativa",
-    body: "Conta, comunidade e mesa agora puxam voce de volta para a fogueira certa.",
+    body: "Conta, mesa e comunidade apontam sempre para a proxima frente de historia.",
   },
 ];
 
 export const promoBanners: PortalPromoBannerSpec[] = [
   {
     eyebrow: "Mesa virtual",
-    title: "Leve a sessao para um palco que combina com o resto do reliquiario.",
+    title: "Leve a sessao para um palco de batalha digno do continente.",
     body:
-      "A mesa deixa de parecer modulo isolado e passa a agir como parte organica da campanha viva.",
+      "Abra a cena, espalhe a neblina e puxe os monstros do codex quando a trilha ficar hostil.",
     path: "/mesa",
-    image: portalReferenceArt.bannerConcert,
+    image: heroBackground,
     imagePosition: "center center",
     icon: Sword,
     cta: "Abrir a mesa",
@@ -393,14 +398,14 @@ export const promoBanners: PortalPromoBannerSpec[] = [
   },
   {
     eyebrow: "Criacao + mestre",
-    title: "Forje personagens e conduza a campanha dentro do mesmo idioma visual.",
+    title: "Forje personagens e prepare a proxima sessao sem sair do mesmo tomo.",
     body:
-      "Criacao de personagem e painel do mestre entram na home como convites claros para a proxima etapa da jornada.",
+      "Abra novas fichas, revise NPCs e mantenha o arquivo pronto para a proxima rodada de eventos.",
     path: "/criacao",
-    image: portalReferenceArt.bannerRedkit,
+    image: characterIllustration,
     imagePosition: "center center",
     icon: Shield,
-    cta: "Iniciar ritual",
+    cta: "Forjar personagem",
     destination: "criacao",
   },
 ];

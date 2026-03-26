@@ -351,12 +351,11 @@ export default function HomePage() {
           <div className="max-w-3xl space-y-4">
             <p className="section-kicker">Ultimos ecos do continente</p>
             <h2 className="font-display text-5xl leading-[0.94] text-brand-gradient">
-              Cronicas, contratos e modulos agora entram na home como materia editorial.
+              Cronicas, contratos e modulos abrem a entrada principal do arquivo.
             </h2>
             <p className="text-sm leading-7 text-foreground/76 md:text-base">
-              A referencia oficial ajudou a transformar o topo do site em fluxo de leitura. Em vez
-              de caixas soltas, a home agora organiza o que aconteceu, o que esta aberto e para
-              onde o jogador deve ir em seguida.
+              Noticias da estrada, capitulos de campanha e trilhas abertas do arquivo aparecem
+              reunidos aqui, para que cada retorno ao portal comece pelo que mudou no continente.
             </p>
           </div>
 
@@ -392,12 +391,12 @@ export default function HomePage() {
               <div className="mx-auto max-w-3xl text-center">
                 <p className="section-kicker">Boas-vindas ao novo reliquiario</p>
                 <h2 className="mt-4 font-display text-5xl leading-[0.94] text-brand-gradient md:text-6xl">
-                  O layout ficou mais proximo de um universo navegavel e menos de um app generico.
+                  Um reliquiario feito para guardar rotas, nomes e sinais do continente.
                 </h2>
                 <p className="mt-5 text-sm leading-7 text-foreground/76 md:text-base">
-                  O objetivo aqui nao foi copiar a homepage oficial, e sim trazer a mesma clareza
-                  estrutural para o seu proprio mundo. A direcao visual continua sua, mas a
-                  arquitetura agora respira melhor.
+                  Cada secao funciona como um caderno de campo: algumas abrem caminho para a
+                  proxima sessao, outras preservam memoria, rumor e perigo antes que a estrada os
+                  apague.
                 </p>
               </div>
             </div>
@@ -425,13 +424,11 @@ export default function HomePage() {
                 <div className="relic-parchment p-6">
                   <p className="section-kicker text-[hsl(24_31%_20%/0.74)]">Leitura de direcao</p>
                   <p className="mt-4 font-display text-4xl leading-[1.02] text-[hsl(24_31%_16%)]">
-                    Hero claro, grade editorial forte, manifesto curto e chamadas para os modulos
-                    certos.
+                    Um topo de vigilia, uma grade de ecos e atalhos para tudo que continua vivo.
                   </p>
                   <p className="mt-4 text-sm leading-7 text-[hsl(24_31%_22%/0.84)]">
-                    Isso aproxima a experiencia do ritmo de um portal premium de fantasia sombria,
-                    mas com o seu proprio lore, sua propria campanha e as suas proprias trilhas de
-                    navegacao.
+                    O arquivo abre pelo que importa agora: o rumor mais recente, a rota mais
+                    perigosa e o modulo que pede atencao antes do proximo descanso.
                   </p>
                 </div>
               </div>
@@ -452,7 +449,7 @@ export default function HomePage() {
             <div className="space-y-4">
               <p className="section-kicker">Vitrine de modulos</p>
               <h2 className="font-display text-5xl leading-[0.94] text-brand-gradient">
-                O portal agora vende caminhos, nao apenas paginas.
+                Cada ala do arquivo conduz a um tipo diferente de travessia.
               </h2>
               <p className="text-sm leading-7 text-foreground/76">{activeModule.body}</p>
             </div>
@@ -504,11 +501,11 @@ export default function HomePage() {
                   <div className="space-y-4">
                     <Badge variant="outline">Ritmo de sessao</Badge>
                     <h3 className="font-display text-5xl leading-[0.95] text-brand-gradient">
-                      Campanha, dossie e conducao respirando no mesmo lugar.
+                      Campanha, dossies e preparacao da mesa seguindo a mesma trilha.
                     </h3>
                     <p className="text-sm leading-7 text-foreground/76">
-                      Quando a vitrine entra em modo campanha, a home deixa claro onde a sessao
-                      continua, onde o mestre prepara cena e onde os jogadores revisitam a trilha.
+                      Quando a historia aperta, o portal aponta sem rodeio para o proximo relatorio,
+                      para a ala do mestre e para os nomes que ainda precisam de resposta.
                     </p>
                   </div>
 
@@ -533,7 +530,7 @@ export default function HomePage() {
                         Controle do mestre
                       </h4>
                       <p className="mt-3 text-sm leading-6 text-foreground/72">
-                        O mestre ganha chamada direta e mais legitimidade dentro do fluxo da home.
+                        A ala do mestre fica logo ao alcance quando a sessao pede preparo rapido.
                       </p>
                     </div>
                   </div>
@@ -581,9 +578,8 @@ export default function HomePage() {
                   Receba o proximo rumor antes da fogueira apagar.
                 </h2>
                 <p className="max-w-3xl text-sm leading-7 text-foreground/76 md:text-base">
-                  Em vez de um formulario generico, esta camada funciona como chamada clara para
-                  retomar a campanha: abrir o arquivo pessoal, seguir os ecos da comunidade e
-                  acompanhar o que entrou no portal.
+                  Abra seu dossie pessoal, siga os ecos da comunidade e acompanhe o que acabou de
+                  entrar no arquivo sem perder o fio da campanha.
                 </p>
               </div>
 

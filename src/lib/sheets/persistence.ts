@@ -216,7 +216,7 @@ export async function ensureMesaSession(): Promise<GameSessionRow | null> {
   const session: GameSessionRow = {
     id: "demo-session",
     name: "Mesa local",
-    description: "Sessao persistida localmente para o modo demo.",
+    description: "Sessao persistida localmente para manter a mesa ativa neste navegador.",
     created_at: now,
     updated_at: now,
     current_round: 1,

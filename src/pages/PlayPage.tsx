@@ -16,28 +16,28 @@ import { DataSection } from "@/components/ui/data-section";
 const sections = [
   {
     title: "Mesa Virtual",
-    description: "VTT completo com battlemap, grid, fog of war, tokens e chat em tempo real.",
+    description: "Battlemap, grade, nevoa, tokens e chat para conduzir a sessao em campo.",
     icon: Map,
     path: "/mesa",
     eyebrow: "Combate e cena",
   },
   {
     title: "Ficha de Personagem",
-    description: "Visualize a ficha narrativa com inventario, grimorio e rolagem de dados.",
+    description: "Acompanhe atributos, inventario, grimorio e rolagens da companhia.",
     icon: BookMarked,
     path: "/ficha",
     eyebrow: "Perfil e recursos",
   },
   {
     title: "Criar Personagem",
-    description: "Monte um novo personagem escolhendo raca, classe, atributos e historia.",
+    description: "Forje um novo personagem a partir de origem, classe, atributos e historico.",
     icon: WandSparkles,
     path: "/criacao",
-    eyebrow: "Forge the role",
+    eyebrow: "Forja do papel",
   },
   {
     title: "Painel do Mestre",
-    description: "Ferramentas de narrativa, gestao de sessao e controle de campanha.",
+    description: "Controle sessao, encontros, publicacoes e movimentos do grupo.",
     icon: ScrollText,
     path: "/mestre",
     eyebrow: "Command center",
@@ -57,26 +57,25 @@ export default function PlayPage() {
             <CardContent className="grid gap-8 p-6 md:p-8 xl:grid-cols-[minmax(0,1fr)_280px]">
               <div className="space-y-6">
                 <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline">Hub de jogo</Badge>
+                  <Badge variant="outline">Nucleo de jogo</Badge>
                   <Badge variant="info">Mesa, ficha, criacao e mestre</Badge>
                 </div>
 
                 <div className="max-w-3xl space-y-4">
                 <p className="section-kicker">Camada de jogo</p>
                   <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    Todas as ferramentas de jogo reunidas em um unico eixo visual.
+                    Mesa, ficha, criacao e comando reunidos no mesmo nucleo de campanha.
                   </h1>
                   <p className="text-base leading-8 text-foreground/88">
-                    O hub agora organiza as rotas principais da mesa em vez de agir como uma pagina
-                    de links. Cada modulo entra na mesma familia visual do portal e deixa claro o
-                    papel de cada ferramenta na campanha.
+                    Cada rota leva a uma parte do jogo: preparar personagens, abrir a mesa,
+                    conduzir o combate ou ordenar a campanha.
                   </p>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <DataSection label="Modulos" value="04" variant="quiet" />
                   <DataSection label="Foco" value="Mesa, ficha e comando" variant="quiet" tone="info" />
-                  <DataSection label="Fluxo" value="Do preparo ao combate" variant="quiet" />
+                  <DataSection label="Ritmo" value="Do preparo ao combate" variant="quiet" />
                 </div>
 
                 <div className="flex flex-wrap gap-3">
@@ -92,7 +91,7 @@ export default function PlayPage() {
               <Card variant="panel">
                 <CardContent className="space-y-4 p-5">
                   <div>
-                    <p className="section-kicker">Leitura rapida</p>
+                    <p className="section-kicker">Quadro de operacao</p>
                     <h2 className="mt-2 font-heading text-2xl text-foreground">
                       Eixo operacional
                     </h2>
@@ -122,7 +121,7 @@ export default function PlayPage() {
           <Card variant="panel">
             <CardContent className="space-y-5 p-6">
               <div>
-                  <p className="section-kicker">Fluxo de combate</p>
+                  <p className="section-kicker">Ritmo de combate</p>
                 <h2 className="mt-2 font-heading text-2xl text-foreground">
                   Rotas do jogo
                 </h2>

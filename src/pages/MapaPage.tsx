@@ -18,7 +18,7 @@ export default function MapaPage() {
         ...atlasContext,
         title: "Cartografia do continente",
         description:
-          "O mapa agora prioriza hierarquia visual, foco por nivel e navegacao progressiva: mundo, regiao, sub-regiao, local e battlemap.",
+          "Do mundi aos battlemaps, esta carta conduz a travessia por regioes, sub-regioes, locais e frentes de cena.",
       }}
       headerActions={
         <>

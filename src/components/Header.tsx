@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { Flame, Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
-import logoEmblem from "@/assets/logo-emblem.png";
+import logoEmblem from "@/assets/logo-emblem-256.webp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePortalState } from "@/lib/portal-state";
@@ -69,7 +68,14 @@ export default function Header() {
           <div className={`relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 lg:px-6 xl:grid-cols-[auto_minmax(0,1fr)_auto] ${atlasMode ? "xl:py-2.5" : ""}`}>
             <Link to="/" className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[hsl(var(--brand)/0.26)] bg-[linear-gradient(180deg,hsl(var(--background)/0.78),hsl(var(--surface-base)/0.94))] shadow-[0_18px_34px_hsl(var(--background)/0.34)]">
-                <img src={logoEmblem} alt="Emblema de Areias de Zerrikania" className="h-7 w-7 object-contain" />
+                <img
+                  src={logoEmblem}
+                  alt="Emblema de Areias de Zerrikania"
+                  width={256}
+                  height={256}
+                  decoding="async"
+                  className="h-7 w-7 object-contain"
+                />
               </div>
 
               <div className="min-w-0">
@@ -129,47 +135,40 @@ export default function Header() {
             </button>
           </div>
 
-          <AnimatePresence>
-            {mobileOpen ? (
-              <motion.nav
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="relative overflow-hidden border-t border-[hsl(var(--brand)/0.14)] xl:hidden"
-              >
-                <div className="space-y-4 px-4 py-4 sm:px-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Badge variant="outline">
-                      {atlasMode ? atlasFocus?.title ?? "Atlas do continente" : "Arquivo vivo do continente"}
-                    </Badge>
-                    <Button asChild size="sm" variant="outline">
-                      <Link to="/conta">Conta</Link>
-                    </Button>
-                  </div>
-
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {navItems.map((item) => {
-                      const active = isActivePath(item.path);
-
-                      return (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          className={`border px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors ${
-                            active
-                              ? "border-[hsl(var(--brand)/0.28)] bg-[linear-gradient(135deg,hsl(var(--brand)/0.24),transparent)] text-primary"
-                              : "border-[hsl(var(--brand)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.56),hsl(var(--background)/0.36))] text-muted-foreground hover:border-[hsl(var(--brand)/0.2)] hover:text-foreground"
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
+          {mobileOpen ? (
+            <nav className="relative overflow-hidden border-t border-[hsl(var(--brand)/0.14)] animate-in fade-in slide-in-from-top-2 duration-200 xl:hidden">
+              <div className="space-y-4 px-4 py-4 sm:px-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <Badge variant="outline">
+                    {atlasMode ? atlasFocus?.title ?? "Atlas do continente" : "Arquivo vivo do continente"}
+                  </Badge>
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/conta">Conta</Link>
+                  </Button>
                 </div>
-              </motion.nav>
-            ) : null}
-          </AnimatePresence>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {navItems.map((item) => {
+                    const active = isActivePath(item.path);
+
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`border px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors ${
+                          active
+                            ? "border-[hsl(var(--brand)/0.28)] bg-[linear-gradient(135deg,hsl(var(--brand)/0.24),transparent)] text-primary"
+                            : "border-[hsl(var(--brand)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.56),hsl(var(--background)/0.36))] text-muted-foreground hover:border-[hsl(var(--brand)/0.2)] hover:text-foreground"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </nav>
+          ) : null}
         </div>
       </div>
     </header>

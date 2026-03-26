@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Play, VolumeX } from "lucide-react";
 import { gsap } from "gsap";
 import { Link } from "react-router-dom";
 
-import logoEmblem from "@/assets/logo-emblem.png";
+import logoEmblem from "@/assets/logo-emblem-256.webp";
 import { portalEmberSpecs, portalHeroScenes } from "@/lib/portal-content";
 import { cn } from "@/lib/utils";
 
@@ -401,6 +401,9 @@ export default function CinematicHero() {
                 <img
                   src={logoEmblem}
                   alt="Emblema de Areias de Zerrikania"
+                  width={256}
+                  height={256}
+                  decoding="async"
                   className="h-10 w-10 object-contain opacity-90"
                 />
               </div>

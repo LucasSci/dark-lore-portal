@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -33,7 +33,6 @@ import {
   X,
 } from "lucide-react";
 
-import VttPixiStage from "@/components/rpg/VttPixiStage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,9 +47,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getVttReadyEntries } from "@/lib/encyclopedia";
+import type { EncyclopediaEntry } from "@/lib/encyclopedia";
 import { parseDiceNotation, rollDice } from "@/lib/rpg-utils";
-import { getAtlasBattlemapById, loadAtlasWorld } from "@/lib/hierarchical-atlas";
 import {
   readImageDimensions,
   recommendBattlemapGrid,
@@ -114,10 +112,18 @@ import { ensureMesaSession } from "@/lib/sheets/persistence";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-const loreThreats = getVttReadyEntries();
+const VttPixiStage = lazy(() => import("@/components/rpg/VttPixiStage"));
 
 type LeftTool = "select" | "move" | "fog" | "measure" | "wall" | "light";
 type RightTab = "chat" | "tokens" | "initiative" | "codex" | "npc" | "map";
+type VttLoreThreat = EncyclopediaEntry & {
+  vtt: NonNullable<EncyclopediaEntry["vtt"]>;
+};
+type CodexGroup = {
+  category: string;
+  label: string;
+  entries: VttLoreThreat[];
+};
 
 function SidePanelCard({
   title,
@@ -209,6 +215,38 @@ function ToolRailButton({
   );
 }
 
+function buildCodexGroups(
+  entries: VttLoreThreat[],
+  labels: Record<string, { label?: string }>,
+): CodexGroup[] {
+  const grouped = entries.reduce<Record<string, VttLoreThreat[]>>((accumulator, entry) => {
+    const key = entry.category;
+    accumulator[key] ??= [];
+    accumulator[key].push(entry);
+    return accumulator;
+  }, {});
+
+  return Object.entries(grouped).map(([category, groupEntries]) => ({
+    category,
+    label: labels[category]?.label ?? "Arquivo",
+    entries: [...groupEntries].sort((left, right) => left.title.localeCompare(right.title, "pt-BR")),
+  }));
+}
+
+function MesaStageFallback() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-background-strong">
+      <div className="info-panel max-w-sm px-6 py-5 text-center">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-primary/78">Mesa virtual</p>
+        <p className="mt-2 font-heading text-lg text-foreground">Carregando o palco tatico...</p>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          O renderer entra em seguida, junto com os controles de grid, luz e movimento.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function MesaPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [scene, setScene] = useState<SceneModel>(() => createSceneModel());
@@ -221,6 +259,9 @@ export default function MesaPage() {
   const [battlemapUploading, setBattlemapUploading] = useState(false);
   const [rightOpen, setRightOpen] = useState(true);
   const [rightTab, setRightTab] = useState<RightTab>("chat");
+  const [loreThreats, setLoreThreats] = useState<VttLoreThreat[]>([]);
+  const [codexGroups, setCodexGroups] = useState<CodexGroup[]>([]);
+  const [codexLoading, setCodexLoading] = useState(false);
   const [newPageName, setNewPageName] = useState("");
   const [newPageRegion, setNewPageRegion] = useState("");
   const [connectionTargetId, setConnectionTargetId] = useState("");
@@ -237,9 +278,11 @@ export default function MesaPage() {
   });
   const sceneRef = useRef(scene);
   const presenceRef = useRef(scene.presence);
+  const codexLoadRef = useRef<Promise<VttLoreThreat[]> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handledSpawnSlugRef = useRef<string | null>(null);
   const handledAtlasBattlemapRef = useRef<string | null>(null);
+  const activePage = useMemo(() => getActivePage(scene), [scene]);
 
   useEffect(() => {
     sceneRef.current = scene;
@@ -250,18 +293,16 @@ export default function MesaPage() {
   }, [scene.presence]);
 
   useEffect(() => {
-    const page = getActivePage(scene);
-
-    if (!page) {
+    if (!activePage) {
       return;
     }
 
-    setMapColumns(page.width);
-    setMapRows(page.height);
-    setMapGridSize(page.gridSize);
-    setConnectionSpawnX(Math.max(0, Math.floor(page.width / 2)));
-    setConnectionSpawnY(Math.max(0, Math.floor(page.height / 2)));
-  }, [scene.activePageId, scene.pages]);
+    setMapColumns(activePage.width);
+    setMapRows(activePage.height);
+    setMapGridSize(activePage.gridSize);
+    setConnectionSpawnX(Math.max(0, Math.floor(activePage.width / 2)));
+    setConnectionSpawnY(Math.max(0, Math.floor(activePage.height / 2)));
+  }, [activePage]);
 
   useEffect(() => {
     let cancelled = false;
@@ -375,7 +416,6 @@ export default function MesaPage() {
     [commitScene],
   );
 
-  const activePage = getActivePage(scene);
   const battlemapUrl = activePage?.backgroundAssetUrl ?? null;
   const tokens = useMemo(() => getSceneTokens(scene), [scene]);
   const selectedToken = getSelectedToken(scene);
@@ -388,6 +428,58 @@ export default function MesaPage() {
     { id: "npc", icon: <Shield className="h-4 w-4" />, label: "NPCs" },
     { id: "map", icon: <ImagePlus className="h-4 w-4" />, label: "Mapa" },
   ];
+
+  const loadCodexThreats = useCallback(async () => {
+    if (codexLoadRef.current) {
+      return codexLoadRef.current;
+    }
+
+    setCodexLoading(true);
+
+    const nextPromise = import("@/lib/encyclopedia")
+      .then(({ encyclopediaCategories, getVttReadyEntries }) => {
+        const entries = getVttReadyEntries() as VttLoreThreat[];
+        setLoreThreats(entries);
+        setCodexGroups(buildCodexGroups(entries, encyclopediaCategories as Record<string, { label?: string }>));
+        return entries;
+      })
+      .catch((error) => {
+        codexLoadRef.current = null;
+        throw error;
+      })
+      .finally(() => {
+        setCodexLoading(false);
+      });
+
+    codexLoadRef.current = nextPromise;
+    return nextPromise;
+  }, []);
+
+  const getLoreThreatBySlug = useCallback(
+    async (entrySlug: string) => {
+      const entries = loreThreats.length ? loreThreats : await loadCodexThreats();
+      return entries.find((candidate) => candidate.slug === entrySlug) ?? null;
+    },
+    [loadCodexThreats, loreThreats],
+  );
+
+  const handleRightTabChange = useCallback(
+    (value: string) => {
+      const nextTab = value as RightTab;
+      setRightTab(nextTab);
+
+      if (nextTab === "codex") {
+        void loadCodexThreats();
+      }
+    },
+    [loadCodexThreats],
+  );
+
+  useEffect(() => {
+    if (rightTab === "codex") {
+      void loadCodexThreats();
+    }
+  }, [loadCodexThreats, rightTab]);
 
   const appendChatMessage = useCallback(async (author: string, text: string, tone: ChatTone) => {
     await mutateScene(
@@ -657,8 +749,12 @@ export default function MesaPage() {
   };
 
   const handleDropLoreEntry = async (entrySlug: string, cell: { id: string; x: number; y: number }) => {
-    const entry = loreThreats.find((c) => c.slug === entrySlug);
-    if (!entry) return;
+    const entry = await getLoreThreatBySlug(entrySlug);
+
+    if (!entry) {
+      return;
+    }
+
     const nextScene = await mutateScene(
       (current) =>
         addSceneNpc(current, {
@@ -699,7 +795,8 @@ export default function MesaPage() {
 
   const spawnLoreEntry = useCallback(
     async (entrySlug: string) => {
-      const entry = loreThreats.find((candidate) => candidate.slug === entrySlug);
+      const entry = await getLoreThreatBySlug(entrySlug);
+
       if (!entry) {
         toast.error("Criatura nao encontrada no codex.");
         return;
@@ -758,7 +855,7 @@ export default function MesaPage() {
 
       toast.success(`${entry.title} preparado na mesa.`);
     },
-    [appendChatMessage, mutateScene],
+    [appendChatMessage, getLoreThreatBySlug, mutateScene],
   );
 
   useEffect(() => {
@@ -799,6 +896,7 @@ export default function MesaPage() {
     handledAtlasBattlemapRef.current = atlasBattlemapId;
 
     void (async () => {
+      const { getAtlasBattlemapById, loadAtlasWorld } = await import("@/lib/hierarchical-atlas");
       const atlasWorld = loadAtlasWorld();
       const battlemap = getAtlasBattlemapById(atlasWorld, atlasBattlemapId);
 
@@ -1165,31 +1263,33 @@ export default function MesaPage() {
         {/* Canvas */}
         <div className="flex-1 relative">
           {activePage && (
-            <VttPixiStage
-              page={activePage}
-              tokens={tokens}
-              selectedTokenId={scene.selectedObjectId}
-              boardMode={scene.boardMode}
-              gridOpacity={gridOpacity}
-              gridColor={0xffffff}
-              showGrid={showGrid}
-              battlemapUrl={battlemapUrl}
-              onCellClick={(cell) => void handleCellClick(cell)}
-              onSelectToken={(tokenId) =>
-                void mutateScene((c) => setSceneSelection(c, tokenId), { broadcast: false, persist: false })
-              }
-              onMoveToken={(tokenId, x, y) => void handleMoveToken(tokenId, x, y)}
-              onExpandMap={(edge) => void handleExpandMap(edge)}
-              onTravelEdge={(edge, tokenId) => handleTravelEdge(edge, tokenId)}
-              onCameraChange={(camera) => void handleCameraChange(camera)}
-              onDropEntry={(slug, cell) => void handleDropLoreEntry(slug, cell)}
-              onAddWall={(x1, y1, x2, y2) => void mutateScene((c) => addSceneWall(c, x1, y1, x2, y2))}
-              onAddLight={(cellX, cellY) => void mutateScene((c) => addSceneLight(c, cellX, cellY))}
-            />
+            <Suspense fallback={<MesaStageFallback />}>
+              <VttPixiStage
+                page={activePage}
+                tokens={tokens}
+                selectedTokenId={scene.selectedObjectId}
+                boardMode={scene.boardMode}
+                gridOpacity={gridOpacity}
+                gridColor={0xffffff}
+                showGrid={showGrid}
+                battlemapUrl={battlemapUrl}
+                onCellClick={(cell) => void handleCellClick(cell)}
+                onSelectToken={(tokenId) =>
+                  void mutateScene((c) => setSceneSelection(c, tokenId), { broadcast: false, persist: false })
+                }
+                onMoveToken={(tokenId, x, y) => void handleMoveToken(tokenId, x, y)}
+                onExpandMap={(edge) => void handleExpandMap(edge)}
+                onTravelEdge={(edge, tokenId) => handleTravelEdge(edge, tokenId)}
+                onCameraChange={(camera) => void handleCameraChange(camera)}
+                onDropEntry={(slug, cell) => void handleDropLoreEntry(slug, cell)}
+                onAddWall={(x1, y1, x2, y2) => void mutateScene((c) => addSceneWall(c, x1, y1, x2, y2))}
+                onAddLight={(cellX, cellY) => void mutateScene((c) => addSceneLight(c, cellX, cellY))}
+              />
+            </Suspense>
           )}
 
           {/* Zoom controls - floating right */}
-          <div className="field-note absolute right-3 top-1/2 flex -translate-y-1/2 flex-col items-center gap-1 p-1 backdrop-blur-sm">
+          <div className="vtt-zoom-controls field-note absolute right-3 top-3 z-20 flex flex-col items-center gap-1 p-1 backdrop-blur-sm">
             <ToolRailButton
               onClick={() => void mutateScene((c) => setSceneCameraScale(c, "in"), { broadcast: false, persist: false })}
               className="h-8 w-8"
@@ -1313,7 +1413,7 @@ export default function MesaPage() {
             </button>
           </div>
           <div className="flex flex-1 flex-col overflow-hidden">
-            <Tabs value={rightTab} onValueChange={(v) => setRightTab(v as RightTab)} className="flex flex-1 flex-col">
+            <Tabs value={rightTab} onValueChange={handleRightTabChange} className="flex flex-1 flex-col">
               <TabsList className="grid h-auto w-full grid-cols-3 gap-px rounded-none border-b border-border/40 bg-border/30 p-1">
                 {rightTabs.map((tab) => (
                   <TabsTrigger
@@ -1337,7 +1437,7 @@ export default function MesaPage() {
       {/* Right panel — desktop */}
       {rightOpen && (
         <div className="hidden w-[min(26rem,calc(100vw-5rem))] flex-col border-l border-border/70 bg-surface-raised/95 backdrop-blur sm:flex xl:w-[26rem] 2xl:w-[28rem]">
-          <Tabs value={rightTab} onValueChange={(v) => setRightTab(v as RightTab)} className="flex flex-1 flex-col">
+          <Tabs value={rightTab} onValueChange={handleRightTabChange} className="flex flex-1 flex-col">
             <TabsList className="grid h-auto w-full grid-cols-3 gap-px rounded-none border-b border-border/40 bg-border/30 p-1">
               {rightTabs.map((tab) => (
                 <TabsTrigger
@@ -1508,39 +1608,82 @@ export default function MesaPage() {
             {/* Codex tab */}
             <TabsContent value="codex" className="mt-0 flex-1 overflow-hidden">
               <ScrollArea className="h-full">
-                <div className="space-y-3 px-4 py-4 pr-5">
-                  {loreThreats.map((entry) => (
-                    <div
-                      key={entry.slug}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("application/x-dark-lore-entry", entry.slug);
-                        e.dataTransfer.effectAllowed = "copy";
-                      }}
-                      className="tool-list-item cursor-grab p-3"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm font-medium text-foreground">{entry.title}</p>
-                        <Badge variant="outline" className="border-border/40 text-[10px]">
-                          HP {entry.vtt.hp}
+                <div className="space-y-5 px-4 py-4 pr-5">
+                  {codexLoading && codexGroups.length === 0 ? (
+                    <div className="info-panel p-4">
+                      <p className="font-heading text-base text-foreground">Carregando codex...</p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                        As ameacas do arquivo entram sob demanda para aliviar o primeiro carregamento da mesa.
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {!codexLoading && codexGroups.length === 0 ? (
+                    <div className="info-panel p-4">
+                      <p className="font-heading text-base text-foreground">Codex indisponivel</p>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                        Nao foi possivel abrir o arquivo agora. Tente novamente em instantes.
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {codexGroups.map((group) => (
+                    <div key={group.category} className="space-y-3">
+                      <div className="flex items-center justify-between gap-3 border-b border-border/40 pb-2">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
+                            Categoria
+                          </p>
+                          <h3 className="font-heading text-base text-foreground">{group.label}</h3>
+                        </div>
+                        <Badge variant="outline" className="border-primary/30 text-primary">
+                          {group.entries.length}
                         </Badge>
                       </div>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground line-clamp-2">{entry.summary}</p>
-                      <Button size="sm" variant="ghost" className="mt-1.5 h-7 w-full text-[11px]" onClick={() => {
-                        void mutateScene((c) =>
-                          addSceneNpc(c, {
-                            name: entry.title,
-                            hp: entry.vtt.hp,
-                            ac: entry.vtt.ac,
-                            initiativeBonus: entry.vtt.initiativeBonus,
-                            notes: entry.vtt.note || entry.summary,
-                            role: entry.vtt.role,
-                            color: entry.vtt.color,
-                          }),
-                        );
-                      }}>
-                        Spawn rápido
-                      </Button>
+
+                      <div className="space-y-3">
+                        {group.entries.map((entry) => (
+                          <div
+                            key={entry.slug}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData("application/x-dark-lore-entry", entry.slug);
+                              e.dataTransfer.effectAllowed = "copy";
+                            }}
+                            className="tool-list-item cursor-grab p-3"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {entry.title}
+                              </p>
+                              <Badge variant="outline" className="border-border/40 text-[10px]">
+                                HP {entry.vtt.hp}
+                              </Badge>
+                            </div>
+                            <p className="mt-1 text-xs leading-5 text-muted-foreground line-clamp-2">
+                              {entry.summary}
+                            </p>
+                            <div className="mt-2 flex items-center gap-2">
+                              <Badge variant="secondary" className="text-[10px]">
+                                {entry.vtt.role}
+                              </Badge>
+                              <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                                Arraste para o palco ou traga direto para a area ativa
+                              </span>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="mt-2 h-7 w-full text-[11px]"
+                              onClick={() => {
+                                void spawnLoreEntry(entry.slug);
+                              }}
+                            >
+                              Trazer para a mesa
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1600,8 +1743,8 @@ export default function MesaPage() {
               <ScrollArea className="h-full">
                 <div className="space-y-4 px-4 py-4 pr-5">
                   <SidePanelCard
-                    title="Leitura do mapa"
-                    description="Tudo o que voce precisa para preparar o battlemap, ampliar o grid e costurar areas extensas fica concentrado nesta aba."
+                    title="Quadro da area"
+                    description="Battlemap, grade e passagens da area ativa ficam reunidos nesta aba."
                   >
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="metric-panel px-3 py-2">
@@ -1623,7 +1766,7 @@ export default function MesaPage() {
                   <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Battlemap da pagina</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Importe uma imagem e ajuste a grade por cima dela. Os tokens vao se mover sobre esse mapa.
+                      Importe a planta da area e alinhe a grade sobre o terreno antes de abrir a cena.
                     </p>
                     <Button
                       size="sm"
@@ -1648,7 +1791,7 @@ export default function MesaPage() {
                   <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Grade da mesa</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Ajuste a quantidade de colunas, linhas e o tamanho visual de cada quadrado.
+                      Ajuste colunas, linhas e o tamanho de cada casa para encaixar o terreno da area.
                     </p>
                     <div className="mt-3 grid grid-cols-3 gap-2">
                       <div className="space-y-1">
@@ -1722,7 +1865,7 @@ export default function MesaPage() {
                   <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Expansao do grid</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Use os botoes + nas bordas do mapa para abrir novas colunas e linhas sem deformar o battlemap atual.
+                      Abra espaco nas bordas quando a luta escapar do quadro inicial.
                     </p>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <Button size="sm" variant="outline" className="h-10 text-sm" onClick={() => void handleExpandMap("north")}>
@@ -1743,7 +1886,7 @@ export default function MesaPage() {
                   <div className="info-panel p-4">
                     <p className="font-heading text-base text-foreground">Areas conectadas</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Crie novas areas e costure as bordas para viagens longas e transicao fluida entre mapas.
+                      Costure novas areas a partir das bordas para manter viagens longas sob o mesmo palco.
                     </p>
 
                     <div className="mt-3 space-y-2">
@@ -1895,9 +2038,9 @@ export default function MesaPage() {
                   </div>
 
                   <div className="info-panel p-4">
-                    <p className="font-heading text-base text-foreground">Conexoes da area ativa</p>
+                    <p className="font-heading text-base text-foreground">Passagens da area ativa</p>
                     <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                      Arraste um token para fora de uma borda conectada ou use a travessia manual abaixo.
+                      Use essas passagens para levar o grupo de uma area a outra sem reconstruir a cena.
                     </p>
                     <div className="mt-3 space-y-2">
                       {!activePage?.connections.length ? (
@@ -1950,12 +2093,12 @@ export default function MesaPage() {
                   </div>
 
                   <div className="info-panel p-4">
-                    <p className="font-heading text-base text-foreground">Fluxo da mesa</p>
+                    <p className="font-heading text-base text-foreground">Ritual da cartografia</p>
                     <div className="mt-2 space-y-2 text-sm leading-6 text-muted-foreground">
-                      <p>1. Importe a imagem do battlemap.</p>
-                      <p>2. Ajuste colunas, linhas e tamanho do grid ate encaixar.</p>
-                      <p>3. Use os botoes + nas bordas para abrir espaco onde precisar.</p>
-                      <p>4. Conecte areas extensas quando quiser travessia continua entre mapas.</p>
+                      <p>1. Traga a planta da area para o palco.</p>
+                      <p>2. Ajuste a grade ate o terreno responder com precisao.</p>
+                      <p>3. Abra novas bordas quando a cena pedir mais espaco.</p>
+                      <p>4. Conecte as passagens para seguir viagem sem quebrar o ritmo.</p>
                     </div>
                   </div>
                 </div>

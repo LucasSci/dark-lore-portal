@@ -41,17 +41,17 @@ export default function CriacaoPage() {
               <div className="space-y-6">
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge variant="outline">Criacao persistida</Badge>
-                  <Badge variant="info">Wizard guiado + salvamento</Badge>
+                  <Badge variant="info">Forja guiada e salvamento</Badge>
                 </div>
 
                 <div className="max-w-3xl space-y-4">
                 <p className="section-kicker">Forja do personagem</p>
                   <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    O processo de criacao agora parece ritual de forja, nao formulario solto.
+                    Nome, origem e juramento reunidos em uma unica mesa de forja.
                   </h1>
                   <p className="text-base leading-8 text-foreground/88">
-                    Nome, origem, classe, atributos e historico foram organizados como sequencia de
-                    passos com leitura clara de progresso, recursos derivados e persistencia.
+                    A criacao conduz identidade, atributos, classe e historico em etapas claras,
+                    deixando a ficha pronta para seguir direto para a estrada.
                   </p>
                 </div>
 
@@ -65,7 +65,7 @@ export default function CriacaoPage() {
               <Card variant="panel">
                 <CardContent className="space-y-4 p-5">
                   <div>
-                    <p className="section-kicker">Fluxo</p>
+                    <p className="section-kicker">Ritual</p>
                     <h2 className="mt-2 font-heading text-2xl text-foreground">
                       Ordem recomendada
                     </h2>

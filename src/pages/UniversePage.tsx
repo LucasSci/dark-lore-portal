@@ -3,7 +3,7 @@ import factionIllustration from "@/assets/encyclopedia/faction-illustration.svg"
 import historyIllustration from "@/assets/encyclopedia/history-illustration.svg";
 import locationIllustration from "@/assets/encyclopedia/location-illustration.svg";
 import monsterIllustration from "@/assets/encyclopedia/monster-illustration.svg";
-import type { ComponentType } from "react";
+import { Fragment, type ComponentType, type ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -64,6 +64,12 @@ import {
   witcherBestiaryTypes,
 } from "@/lib/witcher-bestiary";
 import { usePortalShellMode } from "@/lib/portal-state";
+import {
+  getUniversePublication,
+  universePublications,
+  type UniversePublication,
+  type UniversePublicationMention,
+} from "@/lib/universe-publications";
 import { cn } from "@/lib/utils";
 
 type CategoryFilter = "todas" | EncyclopediaCategory;
@@ -83,6 +89,161 @@ const categoryFallbackImages: Record<EncyclopediaCategory, string> = {
   faccoes: factionIllustration,
   historia: historyIllustration,
 };
+
+type SectionNavItem = {
+  id: string;
+  label: string;
+};
+
+function useActiveUniverseSection(items: SectionNavItem[]) {
+  const [activeId, setActiveId] = useState(items[0]?.id ?? "");
+
+  useEffect(() => {
+    if (!items.some((item) => item.id === activeId)) {
+      setActiveId(items[0]?.id ?? "");
+    }
+  }, [activeId, items]);
+
+  useEffect(() => {
+    const sectionElements = items
+      .map((item) => document.getElementById(item.id))
+      .filter((element): element is HTMLElement => Boolean(element));
+
+    if (sectionElements.length === 0 || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort(
+            (left, right) =>
+              right.intersectionRatio - left.intersectionRatio ||
+              left.boundingClientRect.top - right.boundingClientRect.top,
+          );
+
+        if (visibleEntries[0]) {
+          setActiveId(visibleEntries[0].target.id);
+        }
+      },
+      {
+        rootMargin: "-24% 0px -58% 0px",
+        threshold: [0.16, 0.35, 0.56],
+      },
+    );
+
+    sectionElements.forEach((sectionElement) => observer.observe(sectionElement));
+
+    return () => observer.disconnect();
+  }, [items]);
+
+  return { activeId, setActiveId };
+}
+
+function UniverseSectionNav({
+  label,
+  items,
+}: {
+  label: string;
+  items: SectionNavItem[];
+}) {
+  const { activeId, setActiveId } = useActiveUniverseSection(items);
+
+  return (
+    <nav
+      aria-label={label}
+      className="sticky top-24 z-30 border border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.88),hsl(var(--background-strong)/0.92))] px-3 py-3 shadow-panel backdrop-blur-xl md:top-28"
+    >
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <p className="shrink-0 px-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-primary/76">
+          Explorar
+        </p>
+
+        {items.map((item) => {
+          const active = activeId === item.id;
+
+          return (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              aria-current={active ? "location" : undefined}
+              onClick={() => setActiveId(item.id)}
+              className={cn(
+                "shrink-0 border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition-colors",
+                active
+                  ? "border-[hsl(var(--brand)/0.28)] bg-[linear-gradient(135deg,hsl(var(--brand)/0.18),hsl(var(--surface-base)/0.92))] text-primary"
+                  : "border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.54),hsl(var(--background-strong)/0.76))] text-muted-foreground hover:border-[hsl(var(--brand)/0.18)] hover:text-foreground",
+              )}
+            >
+              {item.label}
+            </a>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function renderPublicationParagraph(
+  paragraph: string,
+  mentions: UniversePublicationMention[],
+) {
+  const orderedMentions = [...mentions].sort((left, right) => right.label.length - left.label.length);
+
+  if (orderedMentions.length === 0) {
+    return paragraph;
+  }
+
+  const mentionByLabel = new Map(
+    orderedMentions.map((mention) => [mention.label.toLowerCase(), mention]),
+  );
+  const pattern = new RegExp(
+    orderedMentions.map((mention) => escapeRegExp(mention.label)).join("|"),
+    "gi",
+  );
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+
+  for (const match of paragraph.matchAll(pattern)) {
+    const start = match.index ?? 0;
+    const value = match[0];
+
+    if (start > lastIndex) {
+      nodes.push(
+        <Fragment key={`text-${lastIndex}`}>{paragraph.slice(lastIndex, start)}</Fragment>,
+      );
+    }
+
+    const mention = mentionByLabel.get(value.toLowerCase());
+
+    if (mention) {
+      nodes.push(
+        <Link
+          key={`${mention.slug}-${start}`}
+          to={`/universo/${mention.slug}`}
+          className="font-medium text-primary transition-colors hover:text-primary/80"
+        >
+          {value}
+        </Link>,
+      );
+    } else {
+      nodes.push(<Fragment key={`match-${start}`}>{value}</Fragment>);
+    }
+
+    lastIndex = start + value.length;
+  }
+
+  if (lastIndex < paragraph.length) {
+    nodes.push(<Fragment key={`tail-${lastIndex}`}>{paragraph.slice(lastIndex)}</Fragment>);
+  }
+
+  return nodes;
+}
 
 function EncyclopediaImage({
   entry,
@@ -223,7 +384,7 @@ function TimelineRail({
           <div>
             <h3 className="font-heading text-lg text-foreground">{title}</h3>
             <p className="text-sm text-muted-foreground">
-              Marco historico para navegar pelo universo.
+              Marcos preservados para seguir a trilha dos acontecimentos.
             </p>
           </div>
         </div>
@@ -343,6 +504,249 @@ function EncyclopediaEntryCard({ entry }: { entry: EncyclopediaEntry }) {
   );
 }
 
+function UniversePublicationCard({
+  publication,
+}: {
+  publication: UniversePublication;
+}) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
+      <Card variant="panel" className="h-full overflow-hidden transition-colors hover:border-primary/30">
+        <CardContent className="flex h-full flex-col gap-5 p-0">
+          <div className="relative h-52 overflow-hidden">
+            <img
+              src={publication.image}
+              alt={publication.title}
+              className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.03]"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--background)/0.08),hsl(var(--background-strong)/0.88))]" />
+            <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+              <Badge variant="outline" className="border-primary/30 text-primary">
+                {publication.chapterLabel}
+              </Badge>
+              <Badge variant="secondary">{publication.location}</Badge>
+            </div>
+          </div>
+
+          <div className="flex h-full flex-col gap-4 p-6">
+            <div className="space-y-2">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
+                Cronica exclusiva
+              </p>
+              <h3 className="font-heading text-2xl text-foreground">{publication.title}</h3>
+            </div>
+
+            <p className="text-sm leading-7 text-foreground/88">{publication.excerpt}</p>
+
+            <div className="flex flex-wrap gap-2">
+              {publication.mentions.slice(0, 4).map((mention) => (
+                <Badge key={`${publication.slug}-${mention.slug}`} variant="secondary">
+                  {mention.label}
+                </Badge>
+              ))}
+            </div>
+
+            <Button asChild className="mt-auto w-full">
+              <Link to={`/universo/${publication.slug}`}>Abrir publicacao</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+function UniversePublicationPage({
+  publication,
+}: {
+  publication: UniversePublication;
+}) {
+  const linkedEntries = publication.mentions
+    .map((mention) => getEncyclopediaEntry(mention.slug))
+    .filter((entry): entry is EncyclopediaEntry => Boolean(entry))
+    .map(sanitizeImmersiveEntry);
+  const sectionNavItems = useMemo<SectionNavItem[]>(
+    () => [
+      { id: "publicacao-visao-geral", label: "Visao geral" },
+      { id: "publicacao-leitura", label: "Leitura" },
+      { id: "publicacao-ligacoes", label: "Ligacoes" },
+      { id: "publicacao-mais-capitulos", label: "Mais capitulos" },
+    ],
+    [],
+  );
+
+  return (
+    <div className="container py-12 md:py-16">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-10 md:space-y-12"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button asChild variant="ghost" className="pl-0 text-primary">
+            <Link to="/universo">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para o arquivo
+            </Link>
+          </Button>
+
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline">{publication.chapterLabel}</Badge>
+            <Badge variant="secondary">{publication.location}</Badge>
+          </div>
+        </div>
+
+        <UniverseSectionNav label="Navegacao da publicacao" items={sectionNavItems} />
+
+        <section
+          id="publicacao-visao-geral"
+          aria-labelledby="publicacao-visao-geral-title"
+          className="ornate-frame relative scroll-mt-32 overflow-hidden border border-[hsl(var(--outline-variant)/0.18)] md:scroll-mt-36"
+        >
+          <img
+            src={publication.image}
+            alt={publication.title}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--background)/0.18),hsl(var(--background-strong)/0.92)_70%,hsl(var(--background-strong))_100%)]" />
+
+          <div className="relative grid min-h-[68vh] items-end gap-6 p-6 md:p-8 xl:grid-cols-[minmax(0,1.1fr)_320px] xl:p-12">
+            <div className="max-w-4xl space-y-6">
+              <div>
+                <p className="section-kicker">Publicacao do arquivo</p>
+                <h1
+                  id="publicacao-visao-geral-title"
+                  className="mt-3 font-display text-5xl leading-[0.95] text-gold-gradient md:text-6xl"
+                >
+                  {publication.title}
+                </h1>
+                <p className="mt-4 max-w-2xl text-base leading-8 text-foreground/90">
+                  {publication.excerpt}
+                </p>
+              </div>
+            </div>
+
+            <Card variant="panel">
+              <CardContent className="space-y-4 p-6">
+                <DataSection label="Capitulo" value={publication.chapterLabel} variant="quiet" />
+                <DataSection label="Origem" value={publication.location} variant="quiet" />
+                <DataSection
+                  label="Personagens citados"
+                  value={String(linkedEntries.length)}
+                  variant="quiet"
+                />
+                <Button asChild className="w-full">
+                  <Link to="/campanha">Seguir para campanha</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <Card
+            id="publicacao-leitura"
+            aria-labelledby="publicacao-leitura-title"
+            variant="panel"
+            className="scroll-mt-32 md:scroll-mt-36"
+          >
+            <CardContent className="space-y-6 p-6 md:p-8">
+              <div>
+                <p className="section-kicker">Capitulo preservado</p>
+                <h2 id="publicacao-leitura-title" className="mt-2 font-display text-4xl text-brand-gradient">
+                  Leitura integral da cronica
+                </h2>
+              </div>
+
+              <div className="space-y-6">
+                {publication.paragraphs.map((paragraph, index) => (
+                  <p key={`${publication.slug}-${index}`} className="text-base leading-8 text-foreground/92">
+                    {renderPublicationParagraph(paragraph, publication.mentions)}
+                  </p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
+            <Card
+              id="publicacao-ligacoes"
+              aria-labelledby="publicacao-ligacoes-title"
+              variant="panel"
+              className="scroll-mt-32 md:scroll-mt-36"
+            >
+              <CardContent className="space-y-4 p-6">
+                <div>
+                  <p className="section-kicker">Ligacoes desta leitura</p>
+                  <h2 id="publicacao-ligacoes-title" className="mt-2 font-heading text-2xl text-foreground">
+                    Nomes que atravessam o capitulo
+                  </h2>
+                </div>
+
+                {linkedEntries.length > 0 ? (
+                  <div className="space-y-3">
+                    {linkedEntries.map((entry) => (
+                      <Link
+                        key={entry.slug}
+                        to={`/universo/${entry.slug}`}
+                        className="block border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-4 transition-colors hover:border-[hsl(var(--brand)/0.18)]"
+                      >
+                        <p className="font-heading text-sm text-foreground">{entry.title}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{entry.subtitle}</p>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Este capitulo ainda nao aponta para um perfil catalogado no arquivo.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card
+              id="publicacao-mais-capitulos"
+              aria-labelledby="publicacao-mais-capitulos-title"
+              variant="panel"
+              className="scroll-mt-32 md:scroll-mt-36"
+            >
+              <CardContent className="space-y-4 p-6">
+                <div>
+                  <p className="section-kicker">Mais capitulos</p>
+                  <h2
+                    id="publicacao-mais-capitulos-title"
+                    className="mt-2 font-heading text-2xl text-foreground"
+                  >
+                    Outras publicacoes do livro
+                  </h2>
+                </div>
+
+                <div className="space-y-3">
+                  {universePublications
+                    .filter((candidate) => candidate.slug !== publication.slug)
+                    .slice(0, 5)
+                    .map((candidate) => (
+                      <Link
+                        key={candidate.slug}
+                        to={`/universo/${candidate.slug}`}
+                        className="block border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-4 transition-colors hover:border-[hsl(var(--brand)/0.18)]"
+                      >
+                        <p className="font-heading text-sm text-foreground">{candidate.title}</p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.16em] text-primary/80">
+                          {candidate.chapterLabel}
+                        </p>
+                      </Link>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function getShowcaseTone(index: number) {
   const tones = [
     "from-primary/18 via-primary/8 to-transparent",
@@ -399,7 +803,7 @@ function EntryShowcase({ entry }: { entry: EncyclopediaEntry }) {
               {getShowcaseLabel(entry)}
             </p>
             <h2 className="mt-2 font-heading text-2xl text-foreground">
-              Painel interativo do verbete
+              Quadro do registro
             </h2>
           </div>
           <Sparkles className="h-5 w-5 text-primary" />
@@ -473,7 +877,7 @@ function EntryShowcase({ entry }: { entry: EncyclopediaEntry }) {
                 <div className="info-panel space-y-4 p-6">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-                      Leitura narrativa
+                      Passagem em foco
                     </p>
                     <h3 className="mt-2 font-heading text-2xl text-foreground">
                       {panel.heading}
@@ -526,7 +930,7 @@ function RelationshipMap({
               Conexoes de lore
             </p>
             <h2 className="mt-2 font-heading text-2xl text-foreground">
-              Mapa de relacionamentos
+              Rede de ligacoes
             </h2>
           </div>
           <Network className="h-5 w-5 text-primary" />
@@ -636,6 +1040,37 @@ function UniverseIndex() {
   const activeFilterCount = [monsterType, monsterRegion, monsterDanger].filter(
     (value) => value !== "all",
   ).length;
+  const filteredPublications = useMemo(() => {
+    if (activeCategory !== "todas" && activeCategory !== "historia") {
+      return [];
+    }
+
+    const term = search.trim().toLowerCase();
+
+    return universePublications.filter((publication) => {
+      if (!term) {
+        return true;
+      }
+
+      const searchable = `${publication.title} ${publication.excerpt} ${publication.location}`.toLowerCase();
+      return searchable.includes(term);
+    });
+  }, [activeCategory, search]);
+  const sectionNavItems = useMemo(() => {
+    const items: SectionNavItem[] = [
+      { id: "universo-visao-geral", label: "Visao geral" },
+      { id: "universo-categorias", label: "Categorias" },
+      { id: "universo-atlas", label: "Atlas" },
+    ];
+
+    if (filteredPublications.length > 0) {
+      items.push({ id: "universo-cronicas", label: "Cronicas" });
+    }
+
+    items.push({ id: "universo-verbetes", label: "Verbetes" });
+
+    return items;
+  }, [filteredPublications.length]);
 
   const filteredEntries = useMemo(
     () =>
@@ -690,7 +1125,13 @@ function UniverseIndex() {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-12"
       >
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
+        <UniverseSectionNav label="Navegacao do arquivo do universo" items={sectionNavItems} />
+
+        <section
+          id="universo-visao-geral"
+          aria-labelledby="universo-visao-geral-title"
+          className="scroll-mt-32 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px] md:scroll-mt-36"
+        >
           <Card variant="elevated" className="overflow-hidden">
             <CardContent className="space-y-6 p-6 md:p-8">
               <div className="flex flex-wrap items-center gap-3">
@@ -702,25 +1143,36 @@ function UniverseIndex() {
               </div>
 
               <div className="max-w-4xl space-y-4">
-                <p className="section-kicker">Arquivo imersivo</p>
-                <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                  Personagens, monstros, faccoes e lugares tratados como dossie de campanha.
+                <p className="section-kicker">Arquivo do continente</p>
+                <h1
+                  id="universo-visao-geral-title"
+                  className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl"
+                >
+                  Personagens, monstros, faccoes, lugares e cronicas do livro.
                 </h1>
                 <p className="text-base leading-8 text-foreground/88">
-                  A enciclopedia agora funciona como arquivo nobre do portal: busca, filtros,
-                  atlas e verbetes foram organizados para leitura imersiva, sem perder a utilidade
-                  em mesa.
+                  O arquivo reune perfis, dossies e capitulos preservados da campanha para manter
+                  o mundo ligado ao atlas e a mesa.
                 </p>
               </div>
 
               <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_240px]">
                 <div className="space-y-5">
                   <div className="relative border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.72))] px-4 py-3">
-                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <label htmlFor="universe-search" className="sr-only">
+                      Buscar no arquivo do universo
+                    </label>
+                    <Search
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    />
                     <Input
+                      id="universe-search"
+                      type="search"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
                       placeholder="Buscar por nome, tema ou resumo..."
+                      autoComplete="off"
                       className="pl-8"
                     />
                   </div>
@@ -735,6 +1187,7 @@ function UniverseIndex() {
                         setMonsterRegion("all");
                         setMonsterDanger("all");
                       }}
+                      aria-pressed={activeCategory === "todas"}
                     >
                       Todas
                     </Button>
@@ -751,6 +1204,7 @@ function UniverseIndex() {
                             setMonsterDanger("all");
                           }
                         }}
+                        aria-pressed={activeCategory === category}
                       >
                         {encyclopediaCategories[category].label}
                       </Button>
@@ -855,7 +1309,7 @@ function UniverseIndex() {
                 <div>
                   <p className="section-kicker">Escopo</p>
                   <h2 className="mt-2 font-heading text-2xl text-foreground">
-                    Leitura do arquivo
+                    Escopo do arquivo
                   </h2>
                 </div>
 
@@ -887,89 +1341,181 @@ function UniverseIndex() {
           </div>
         </section>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          {categories.map((category) => {
-            const Icon = categoryIcons[category];
-            const active = activeCategory === category;
-
-            return (
-              <button
-                key={category}
-                type="button"
-                onClick={() => {
-                  setActiveCategory(category);
-                  if (category !== "monstros") {
-                    setMonsterType("all");
-                    setMonsterRegion("all");
-                    setMonsterDanger("all");
-                  }
-                }}
-                className={cn(
-                  "border p-5 text-left transition-[border-color,background-color,transform] duration-200 hover:-translate-y-px",
-                  active
-                    ? "border-[hsl(var(--brand)/0.22)] bg-[linear-gradient(180deg,hsl(var(--brand)/0.12),hsl(var(--surface-base)/0.94))]"
-                    : "border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.72))] hover:border-[hsl(var(--brand)/0.16)]",
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center border border-[hsl(var(--brand)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.84),hsl(var(--surface-base)/0.96))] text-primary">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="font-heading text-lg text-foreground">
-                      {encyclopediaCategories[category].label}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {getEntriesByCategory(category).length} verbetes
-                    </p>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                  {encyclopediaCategories[category].description}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <ContinentMap />
-          <TimelineRail title="Linha do tempo geral" events={immersiveTimeline} />
-        </div>
-
-        {filteredEntries.length > 0 ? (
-          <div className="grid gap-6 xl:grid-cols-3">
-            {filteredEntries.map((entry) => (
-              <EncyclopediaEntryCard key={entry.slug} entry={entry} />
-            ))}
-          </div>
-        ) : (
-          <Card variant="panel">
-            <CardContent className="space-y-3 p-8 text-center">
-              <Skull className="mx-auto h-10 w-10 text-primary" />
-              <h2 className="font-heading text-2xl text-foreground">
-                Nenhum verbete encontrado
+        <section
+          id="universo-categorias"
+          aria-labelledby="universo-categorias-title"
+          className="scroll-mt-32 space-y-6 md:scroll-mt-36"
+        >
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="section-kicker">Rotas de consulta</p>
+              <h2 id="universo-categorias-title" className="mt-2 font-display text-4xl text-brand-gradient">
+                Categorias do arquivo
               </h2>
-              <p className="mx-auto max-w-2xl text-sm leading-6 text-muted-foreground">
-                Ajuste os filtros do bestiario ou refine a busca para encontrar outra criatura,
-                regiao ou cronica.
+              <p className="mt-3 text-sm leading-7 text-foreground/78">
+                Cada frente organiza um recorte do mundo para acelerar a leitura, a investigacao
+                e a preparacao de mesa.
               </p>
-              {showMonsterFilters ? (
-                <Button
-                  variant="outline"
+            </div>
+            <Badge variant="outline" className="w-fit border-primary/30 text-primary">
+              {categories.length} categorias
+            </Badge>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {categories.map((category) => {
+              const Icon = categoryIcons[category];
+              const active = activeCategory === category;
+
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  aria-pressed={active}
                   onClick={() => {
-                    setMonsterType("all");
-                    setMonsterRegion("all");
-                    setMonsterDanger("all");
-                    setSearch("");
+                    setActiveCategory(category);
+                    if (category !== "monstros") {
+                      setMonsterType("all");
+                      setMonsterRegion("all");
+                      setMonsterDanger("all");
+                    }
                   }}
+                  className={cn(
+                    "border p-5 text-left transition-[border-color,background-color,transform] duration-200 hover:-translate-y-px",
+                    active
+                      ? "border-[hsl(var(--brand)/0.22)] bg-[linear-gradient(180deg,hsl(var(--brand)/0.12),hsl(var(--surface-base)/0.94))]"
+                      : "border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.72))] hover:border-[hsl(var(--brand)/0.16)]",
+                  )}
                 >
-                  Limpar busca e filtros
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
-        )}
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center border border-[hsl(var(--brand)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.84),hsl(var(--surface-base)/0.96))] text-primary">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="font-heading text-lg text-foreground">
+                        {encyclopediaCategories[category].label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {getEntriesByCategory(category).length} verbetes
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                    {encyclopediaCategories[category].description}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section
+          id="universo-atlas"
+          aria-labelledby="universo-atlas-title"
+          className="scroll-mt-32 space-y-6 md:scroll-mt-36"
+        >
+          <div className="max-w-3xl">
+            <p className="section-kicker">Contexto do continente</p>
+            <h2 id="universo-atlas-title" className="mt-2 font-display text-4xl text-brand-gradient">
+              Atlas e linha do tempo geral
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-foreground/78">
+              Cruze territorio e memoria para localizar regioes, trilhas e marcos antes de abrir
+              um verbete especifico.
+            </p>
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <ContinentMap />
+            <TimelineRail title="Linha do tempo geral" events={immersiveTimeline} />
+          </div>
+        </section>
+
+        {filteredPublications.length > 0 ? (
+          <section
+            id="universo-cronicas"
+            aria-labelledby="universo-cronicas-title"
+            className="scroll-mt-32 space-y-5 md:scroll-mt-36"
+          >
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="section-kicker">Capitulos preservados</p>
+                <h2 id="universo-cronicas-title" className="mt-2 font-display text-4xl text-brand-gradient">
+                  Publicacoes exclusivas do livro de lore
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-foreground/78">
+                  Cada capitulo do manuscrito foi aberto como leitura propria dentro do arquivo,
+                  com acesso direto aos nomes que atravessam a cronica.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit border-primary/30 text-primary">
+                {filteredPublications.length} publicacoes
+              </Badge>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-3">
+              {filteredPublications.map((publication) => (
+                <UniversePublicationCard key={publication.slug} publication={publication} />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <section
+          id="universo-verbetes"
+          aria-labelledby="universo-verbetes-title"
+          className="scroll-mt-32 space-y-6 md:scroll-mt-36"
+        >
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="section-kicker">Arquivo filtrado</p>
+              <h2 id="universo-verbetes-title" className="mt-2 font-display text-4xl text-brand-gradient">
+                Verbetes catalogados
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-foreground/78">
+                Os resultados abaixo acompanham a busca, a categoria ativa e os filtros
+                especializados do bestiario.
+              </p>
+            </div>
+            <Badge variant="outline" className="w-fit border-primary/30 text-primary">
+              {filteredEntries.length} verbetes
+            </Badge>
+          </div>
+
+          {filteredEntries.length > 0 ? (
+            <div className="grid gap-6 xl:grid-cols-3">
+              {filteredEntries.map((entry) => (
+                <EncyclopediaEntryCard key={entry.slug} entry={entry} />
+              ))}
+            </div>
+          ) : (
+            <Card variant="panel">
+              <CardContent className="space-y-3 p-8 text-center">
+                <Skull className="mx-auto h-10 w-10 text-primary" />
+                <h3 className="font-heading text-2xl text-foreground">
+                  Nenhum verbete encontrado
+                </h3>
+                <p className="mx-auto max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Ajuste os filtros do bestiario ou refine a busca para encontrar outra criatura,
+                  regiao ou rastro do arquivo.
+                </p>
+                {showMonsterFilters ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setMonsterType("all");
+                      setMonsterRegion("all");
+                      setMonsterDanger("all");
+                      setSearch("");
+                    }}
+                  >
+                    Limpar busca e filtros
+                  </Button>
+                ) : null}
+              </CardContent>
+            </Card>
+          )}
+        </section>
       </motion.div>
     </div>
   );
@@ -989,6 +1535,16 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
   useEffect(() => {
     setHeroImage(entry.image);
   }, [entry.image]);
+  const sectionNavItems = useMemo<SectionNavItem[]>(
+    () => [
+      { id: "verbete-visao-geral", label: "Visao geral" },
+      { id: "verbete-retrato", label: "Retrato" },
+      { id: "verbete-quadro", label: "Quadro" },
+      { id: "verbete-corpo", label: "Verbete" },
+      { id: "verbete-ligacoes", label: "Conexoes" },
+    ],
+    [],
+  );
 
   return (
     <div className="container py-12 md:py-16">
@@ -1012,8 +1568,12 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
           </div>
         </div>
 
+        <UniverseSectionNav label="Navegacao do verbete" items={sectionNavItems} />
+
         <section
-          className="ornate-frame relative min-h-[72vh] overflow-hidden border border-[hsl(var(--outline-variant)/0.18)]"
+          id="verbete-visao-geral"
+          aria-labelledby="verbete-visao-geral-title"
+          className="ornate-frame relative min-h-[72vh] scroll-mt-32 overflow-hidden border border-[hsl(var(--outline-variant)/0.18)] md:scroll-mt-36"
           onMouseMove={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
             const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
@@ -1051,12 +1611,15 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
                   {encyclopediaCategories[entry.category].label}
                 </Badge>
                 <Icon className="h-5 w-5 text-primary/70" />
-                <Badge variant="secondary">Verbete imersivo</Badge>
+                <Badge variant="secondary">Registro do arquivo</Badge>
               </div>
 
               <div>
-                <p className="section-kicker">Dossie imersivo</p>
-                <h1 className="mt-3 font-display text-5xl leading-[0.95] text-gold-gradient md:text-6xl">
+                <p className="section-kicker">Dossie do arquivo</p>
+                <h1
+                  id="verbete-visao-geral-title"
+                  className="mt-3 font-display text-5xl leading-[0.95] text-gold-gradient md:text-6xl"
+                >
                   {entry.title}
                 </h1>
                 <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
@@ -1086,9 +1649,9 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
             <div className="space-y-4 border border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.74),hsl(var(--background-strong)/0.88))] p-5 shadow-elevated backdrop-blur-sm">
               <div className="space-y-4">
                 <div>
-                  <p className="section-kicker">Leitura rapida</p>
+                  <p className="section-kicker">Resumo de campo</p>
                   <h2 className="mt-2 font-heading text-2xl text-foreground">
-                    Leitura rapida
+                    Resumo de campo
                   </h2>
                 </div>
                 <div className="grid gap-3">
@@ -1133,7 +1696,12 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
           </div>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
+        <section
+          id="verbete-retrato"
+          aria-labelledby="verbete-retrato-title"
+          className="scroll-mt-32 md:scroll-mt-36"
+        >
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
           <Card variant="panel" className="overflow-hidden">
             <CardContent className="grid gap-6 p-6 md:p-8 lg:grid-cols-[minmax(0,1.15fr)_320px]">
               <EntryArtworkPreview
@@ -1145,15 +1713,15 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
 
               <div className="space-y-4 border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-5">
                 <div>
-                  <p className="section-kicker">Quadro da arte</p>
-                  <h2 className="mt-2 font-heading text-2xl text-foreground">
-                    Leitura clara da arte
+                  <p className="section-kicker">Lamina visual</p>
+                  <h2 id="verbete-retrato-title" className="mt-2 font-heading text-2xl text-foreground">
+                    Retrato catalogado
                   </h2>
                 </div>
 
                 <p className="text-sm leading-7 text-muted-foreground">
-                  A ilustracao fica em quadro proprio, sem cortes agressivos, para facilitar a
-                  leitura da criatura, do personagem ou do local antes de abrir em tela cheia.
+                  A imagem fica preservada em quadro proprio para destacar silhueta, postura e
+                  sinais do registro antes da ampliacao completa.
                 </p>
 
                 <div className="grid gap-3">
@@ -1184,7 +1752,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
               <div>
                   <p className="section-kicker">Notas de campo</p>
                 <h2 className="mt-2 font-heading text-2xl text-foreground">
-                  Notas de leitura
+                  Notas do registro
                 </h2>
               </div>
 
@@ -1213,24 +1781,31 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
               ) : (
                 <DataSection
                   label="Uso"
-                  value="Leitura de lore e referencia narrativa"
+                  value="Consulta narrativa e preparo de mesa"
                   variant="quiet"
                   tone="info"
                 />
               )}
             </CardContent>
           </Card>
-        </div>
+          </div>
+        </section>
 
-        <EntryShowcase entry={entry} />
+        <section id="verbete-quadro" aria-label="Quadro do registro" className="scroll-mt-32 md:scroll-mt-36">
+          <EntryShowcase entry={entry} />
+        </section>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <section
+          id="verbete-corpo"
+          aria-labelledby="verbete-corpo-title"
+          className="scroll-mt-32 md:scroll-mt-36"
+        >
           <div className="space-y-6">
             <Card variant="panel">
               <CardContent className="space-y-6 p-6 md:p-8">
                 <div>
-                  <p className="section-kicker">Leitura narrativa</p>
-                  <h2 className="mt-2 font-display text-4xl text-brand-gradient">
+                  <p className="section-kicker">Passagem preservada</p>
+                  <h2 id="verbete-corpo-title" className="mt-2 font-display text-4xl text-brand-gradient">
                     Corpo principal do verbete
                   </h2>
                 </div>
@@ -1260,58 +1835,68 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
                 ))}
               </CardContent>
             </Card>
-
-            <RelationshipMap entry={entry} linkedEntries={linkedEntries} />
           </div>
+        </section>
 
-          <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
-            {atlasContext ? (
-              <PortalContextPanel
-                eyebrow="Ver no atlas"
-                title={atlasContext.title}
-                description="Este verbete agora aponta para uma leitura geografica concreta, aproximando lore, deslocamento e preparacao de sessao."
-                image={atlasContext.image}
-                metrics={atlasContext.metrics.slice(0, 3)}
-                actions={atlasContext.actions}
-                related={atlasContext.related}
-                relatedLabel="Entradas vizinhas desta rota"
-              />
-            ) : null}
+        <section
+          id="verbete-ligacoes"
+          aria-label="Conexoes e contexto do verbete"
+          className="scroll-mt-32 md:scroll-mt-36"
+        >
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="space-y-6">
+              <RelationshipMap entry={entry} linkedEntries={linkedEntries} />
+            </div>
 
-            <TimelineRail title="Linha do tempo desta pagina" events={entry.timeline} />
+            <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
+              {atlasContext ? (
+                <PortalContextPanel
+                  eyebrow="Ver no atlas"
+                  title={atlasContext.title}
+                  description="Rotas e pontos do atlas ligados a este registro, para seguir a trilha do lugar dentro da campanha."
+                  image={atlasContext.image}
+                  metrics={atlasContext.metrics.slice(0, 3)}
+                  actions={atlasContext.actions}
+                  related={atlasContext.related}
+                  relatedLabel="Entradas vizinhas desta rota"
+                />
+              ) : null}
 
-            <Card variant="panel">
-              <CardContent className="space-y-4 p-6">
-                <div>
-                  <p className="section-kicker">Verbetes relacionados</p>
-                  <h3 className="font-heading text-lg text-foreground">
-                    Mais em {encyclopediaCategories[entry.category].label}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Outros verbetes da mesma categoria.
-                  </p>
-                </div>
+              <TimelineRail title="Linha do tempo desta pagina" events={entry.timeline} />
 
-                <div className="space-y-3">
-                  {categoryEntries.map((relatedEntry) => (
-                    <Link
-                      key={relatedEntry.slug}
-                      to={`/universo/${relatedEntry.slug}`}
-                      className="block border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-4 transition-colors hover:border-[hsl(var(--brand)/0.18)]"
-                    >
-                      <p className="font-heading text-sm text-foreground">
-                        {relatedEntry.title}
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {relatedEntry.subtitle}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              <Card variant="panel">
+                <CardContent className="space-y-4 p-6">
+                  <div>
+                    <p className="section-kicker">Verbetes relacionados</p>
+                    <h3 className="font-heading text-lg text-foreground">
+                      Mais em {encyclopediaCategories[entry.category].label}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Outros verbetes da mesma categoria.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {categoryEntries.map((relatedEntry) => (
+                      <Link
+                        key={relatedEntry.slug}
+                        to={`/universo/${relatedEntry.slug}`}
+                        className="block border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-4 transition-colors hover:border-[hsl(var(--brand)/0.18)]"
+                      >
+                        <p className="font-heading text-sm text-foreground">
+                          {relatedEntry.title}
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {relatedEntry.subtitle}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
+        </section>
       </motion.div>
     </div>
   );
@@ -1323,6 +1908,12 @@ export default function UniversePage() {
 
   if (!entrySlug) {
     return <UniverseIndex />;
+  }
+
+  const publication = getUniversePublication(entrySlug);
+
+  if (publication) {
+    return <UniversePublicationPage publication={publication} />;
   }
 
   const entry = getEncyclopediaEntry(entrySlug);

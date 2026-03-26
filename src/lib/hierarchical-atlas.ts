@@ -206,7 +206,7 @@ export interface AtlasBattlemapTransition {
 
 export const ATLAS_STORAGE_KEY = "dark-lore.atlas.world.v1";
 function withBaseUrl(relativePath: string) {
-  const base = (import.meta as any).env?.BASE_URL ?? "/";
+  const base = import.meta.env.BASE_URL ?? "/";
   const normalizedBase = base.endsWith("/") ? base : `${base}/`;
   const normalizedPath = relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
   return `${normalizedBase}${normalizedPath}`;

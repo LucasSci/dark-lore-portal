@@ -1,11 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isLooseRecord, type LooseSupabaseClient } from "@/lib/loose-supabase";
 import type { AssetManifest } from "@/lib/virtual-tabletop";
 
-type UntypedSupabaseClient = typeof supabase & {
-  from: (table: string) => any;
-};
-
-const db = supabase as UntypedSupabaseClient;
+const db = supabase as typeof supabase & LooseSupabaseClient;
 
 function sanitizeFileName(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9.-]+/g, "-");
@@ -177,8 +174,9 @@ export async function uploadBattlemapAsset(options: {
     })
     .select("*")
     .single();
+  const assetRowRecord = isLooseRecord(assetRow) ? assetRow : null;
 
-  if (assetError || !assetRow?.id) {
+  if (assetError || !assetRowRecord?.id) {
     return {
       assetId: null,
       assetUrl: resolveBattlemapPublicUrl(storagePath) ?? URL.createObjectURL(options.file),
@@ -188,7 +186,7 @@ export async function uploadBattlemapAsset(options: {
   }
 
   return {
-    assetId: String(assetRow.id),
+    assetId: String(assetRowRecord.id),
     assetUrl: resolveBattlemapPublicUrl(storagePath) ?? URL.createObjectURL(options.file),
     manifest,
     persisted: true,

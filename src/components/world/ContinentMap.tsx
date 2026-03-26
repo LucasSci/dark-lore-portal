@@ -1,9 +1,13 @@
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Compass, MapPinned, Route, ScrollText } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import MapGenieWitcherAtlas from "@/components/world/MapGenieWitcherAtlas";
+import AtlasSkeleton from "@/components/world/AtlasSkeleton";
+import { cn } from "@/lib/utils";
+
+const DeferredMapGenieWitcherAtlas = lazy(() => import("@/components/world/MapGenieWitcherAtlas"));
 
 interface ContinentMapProps {
   compact?: boolean;
@@ -28,6 +32,47 @@ const mapSignals = [
 ] as const;
 
 export default function ContinentMap({ compact = true }: ContinentMapProps) {
+  const atlasPreviewRef = useRef<HTMLDivElement | null>(null);
+  const [shouldLoadAtlas, setShouldLoadAtlas] = useState(false);
+
+  useEffect(() => {
+    if (shouldLoadAtlas) {
+      return;
+    }
+
+    const target = atlasPreviewRef.current;
+
+    if (!target) {
+      return;
+    }
+
+    if (typeof IntersectionObserver === "undefined") {
+      setShouldLoadAtlas(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldLoadAtlas(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: "320px 0px",
+      },
+    );
+
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, [shouldLoadAtlas]);
+
+  const atlasSkeletonClasses = cn(
+    "atlas-map-frame tool-stage-frame relative overflow-hidden bg-[#090806]",
+    compact ? "h-[340px] md:h-[420px] xl:h-[480px]" : "h-[70vh] min-h-[560px]",
+  );
+
   return (
     <section className="space-y-6">
       <div className="continent-map-shell space-y-6 p-6 md:p-8">
@@ -39,12 +84,11 @@ export default function ContinentMap({ compact = true }: ContinentMapProps) {
             </Badge>
             <div className="space-y-3">
               <h2 className="font-display text-4xl leading-[0.94] text-brand-gradient md:text-5xl">
-                Um artefato de navegacao para ler o mundo com calma e profundidade.
+                A carta do continente abre as rotas, fronteiras e descidas para cada camada do mundo.
               </h2>
               <p className="max-w-[66ch] text-base leading-8 text-foreground/78">
-                A carta principal agora entra como peca de palco: escura, focada e integrada ao
-                reliquiario. Primeiro voce entende a geografia geral; depois desce por regioes,
-                rotas, locais e battlemaps sem perder o fio da leitura.
+                Primeiro vem a geografia ampla; depois, as regioes, estradas, locais e battlemaps
+                se revelam sem quebrar o fio da travessia.
               </p>
             </div>
           </div>
@@ -76,7 +120,23 @@ export default function ContinentMap({ compact = true }: ContinentMapProps) {
         </div>
       </div>
 
-      <MapGenieWitcherAtlas compact={compact} />
+      <div ref={atlasPreviewRef}>
+        {shouldLoadAtlas ? (
+          <Suspense
+            fallback={
+              <div className={atlasSkeletonClasses}>
+                <AtlasSkeleton compact={compact} />
+              </div>
+            }
+          >
+            <DeferredMapGenieWitcherAtlas compact={compact} />
+          </Suspense>
+        ) : (
+          <div className={atlasSkeletonClasses}>
+            <AtlasSkeleton compact={compact} />
+          </div>
+        )}
+      </div>
     </section>
   );
 }
