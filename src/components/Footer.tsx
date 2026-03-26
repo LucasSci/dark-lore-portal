@@ -5,6 +5,9 @@ import logoEmblem from "@/assets/logo-emblem-256.webp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+const darkLorePortalLogo = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dark_Lore_Portal_202603261340-tFiL0GwQKsqU9W5MgxKjLQtCvhoO0s.jpeg";
+const gothicSymbol = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gothic_ritual_symbol_202603261340-kzvAt1efPqFlvpJiAmY8uvQLUAS6WK.jpeg";
+
 const footerLinks = [
   {
     title: "Descobrir",
@@ -41,33 +44,29 @@ export default function Footer() {
       <div className="container relative z-10 py-14 md:py-18">
         <div className="mx-auto max-w-6xl space-y-10">
           <div className="flex flex-col items-center gap-5 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[hsl(var(--brand)/0.22)] bg-[linear-gradient(180deg,hsl(var(--background)/0.82),hsl(var(--surface-base)/0.96))] shadow-panel">
-              <img
-                src={logoEmblem}
-                alt="Emblema da campanha"
-                width={256}
-                height={256}
-                decoding="async"
-                loading="lazy"
-                className="h-10 w-10 object-contain"
-              />
-            </div>
+            <img
+              src={gothicSymbol}
+              alt="Simbolo do Dark Lore Portal"
+              decoding="async"
+              loading="lazy"
+              className="h-24 w-24 object-contain opacity-80"
+            />
             <div className="space-y-3">
-              <p className="section-kicker">Portal do continente</p>
+              <p className="section-kicker">Arquivo Proibido</p>
               <h3 className="font-display text-4xl text-brand-gradient md:text-5xl">
-                Estrada, rumor, mapa e sessao na mesma moldura.
+                Bestiario, cronicas e rituais aguardam nas sombras.
               </h3>
               <p className="mx-auto max-w-3xl text-sm leading-7 text-muted-foreground md:text-base">
-                Quando a leitura termina, o arquivo ainda deixa atalhos para o atlas, para a
-                campanha e para a proxima noite de mesa.
+                O portal permanece aberto para aqueles que buscam conhecimento proibido, 
+                criaturas ancestrais e historias que a luz nao ousa contar.
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-3">
               <Button asChild>
-                <Link to="/universo">Abrir o arquivo</Link>
+                <Link to="/universo">Explorar o Bestiario</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/criacao">Forjar personagem</Link>
+                <Link to="/criacao">Invocar Personagem</Link>
               </Button>
             </div>
           </div>
@@ -81,10 +80,10 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Badge variant="outline"><Compass className="mr-2 h-3.5 w-3.5" />Atlas</Badge>
-            <Badge variant="outline"><BookOpenText className="mr-2 h-3.5 w-3.5" />Campanha</Badge>
-            <Badge variant="outline"><Users className="mr-2 h-3.5 w-3.5" />Comunidade</Badge>
-            <Badge variant="outline"><Shield className="mr-2 h-3.5 w-3.5" />Mestre</Badge>
+            <Badge variant="outline"><Compass className="mr-2 h-3.5 w-3.5" />Atlas das Sombras</Badge>
+            <Badge variant="outline"><BookOpenText className="mr-2 h-3.5 w-3.5" />Bestiario</Badge>
+            <Badge variant="outline"><Users className="mr-2 h-3.5 w-3.5" />Circulo Oculto</Badge>
+            <Badge variant="outline"><Shield className="mr-2 h-3.5 w-3.5" />Circulo do Mestre</Badge>
           </div>
 
           <div className="flex items-center justify-center gap-3">
@@ -100,8 +99,8 @@ export default function Footer() {
           </div>
 
           <div className="text-center text-xs text-muted-foreground">
-            <p>(c) 2026 Areias de Zerrikania. Todos os direitos reservados.</p>
-            <p className="mt-2">Arquivo do Continente, cronicas e rotas do mundo de Areias de Zerrikania.</p>
+            <p>(c) 2026 Dark Lore Portal. Todos os direitos reservados.</p>
+            <p className="mt-2">Arquivo Proibido de criaturas, cronicas e conhecimento ancestral.</p>
           </div>
         </div>
       </div>

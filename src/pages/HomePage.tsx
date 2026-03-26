@@ -18,6 +18,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import ContinentMap from "@/components/world/ContinentMap";
 import { CURRENT_PROTAGONISTS } from "@/lib/immersive-lore";
+
+// Dark Lore Portal decorative assets
+const gothicDivider = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gothic_flourish_divider_202603261340-wnSifBidSx2WXYHomTpeOxecUcF4IM.jpeg";
+const cornerOrnament = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cantos_ornamentais.png_202603261340-pu2SDbcVqe9wDZHZ4SA6mSaSc7sKlk.jpeg";
 import {
   bulletinPanels,
   campaignPublicationLabel,
@@ -349,18 +353,18 @@ export default function HomePage() {
       <section className="container space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl space-y-4">
-            <p className="section-kicker">Ultimos ecos do continente</p>
+            <p className="section-kicker">Ecos das Profundezas</p>
             <h2 className="font-display text-5xl leading-[0.94] text-brand-gradient">
-              Cronicas, contratos e modulos abrem a entrada principal do arquivo.
+              Cronicas malditas e segredos desenterrados aguardam sua leitura.
             </h2>
             <p className="text-sm leading-7 text-foreground/76 md:text-base">
-              Noticias da estrada, capitulos de campanha e trilhas abertas do arquivo aparecem
-              reunidos aqui, para que cada retorno ao portal comece pelo que mudou no continente.
+              Cada entrada no arquivo revela fragmentos de conhecimento proibido, historias de horror
+              e advertencias para aqueles que ousam adentrar as trevas.
             </p>
           </div>
 
           <ArtifactLink to="/campanha" className="w-full justify-center lg:w-auto">
-            Ver todas as cronicas
+            Explorar as cronicas
             <ArrowRight className="h-4 w-4" />
           </ArtifactLink>
         </div>
@@ -388,15 +392,21 @@ export default function HomePage() {
         <Card variant="elevated" className="reliquary-grain overflow-hidden">
           <CardContent className="p-0">
             <div className="border-b border-[hsl(var(--brand)/0.16)] px-6 py-10 md:px-8 lg:px-10">
+              <img 
+                src={gothicDivider} 
+                alt="" 
+                aria-hidden="true"
+                className="mx-auto mb-8 h-16 w-auto opacity-60"
+              />
               <div className="mx-auto max-w-3xl text-center">
-                <p className="section-kicker">Boas-vindas ao novo reliquiario</p>
+                <p className="section-kicker">Bem-vindo ao Arquivo Proibido</p>
                 <h2 className="mt-4 font-display text-5xl leading-[0.94] text-brand-gradient md:text-6xl">
-                  Um reliquiario feito para guardar rotas, nomes e sinais do continente.
+                  Um grimorio vivo de criaturas, rituais e segredos ancestrais.
                 </h2>
                 <p className="mt-5 text-sm leading-7 text-foreground/76 md:text-base">
-                  Cada secao funciona como um caderno de campo: algumas abrem caminho para a
-                  proxima sessao, outras preservam memoria, rumor e perigo antes que a estrada os
-                  apague.
+                  Cada secao do portal guarda conhecimento que muitos prefeririam esquecido:
+                  bestiarios de horrores, cronicas de campanhas sombrias e ferramentas para
+                  mestres que ousam conduzir historias nas trevas.
                 </p>
               </div>
             </div>
@@ -422,13 +432,13 @@ export default function HomePage() {
                 </div>
 
                 <div className="relic-parchment p-6">
-                  <p className="section-kicker text-[hsl(24_31%_20%/0.74)]">Leitura de direcao</p>
+                  <p className="section-kicker text-[hsl(24_31%_20%/0.74)]">Advertência do Arquivo</p>
                   <p className="mt-4 font-display text-4xl leading-[1.02] text-[hsl(24_31%_16%)]">
-                    Um topo de vigilia, uma grade de ecos e atalhos para tudo que continua vivo.
+                    Nem todo conhecimento deve ser buscado. Nem toda verdade deve ser revelada.
                   </p>
                   <p className="mt-4 text-sm leading-7 text-[hsl(24_31%_22%/0.84)]">
-                    O arquivo abre pelo que importa agora: o rumor mais recente, a rota mais
-                    perigosa e o modulo que pede atencao antes do proximo descanso.
+                    O portal apresenta primeiro o que pulsa nas sombras: a criatura mais recente catalogada,
+                    a rota mais perigosa mapeada e o ritual que exige cautela antes de ser invocado.
                   </p>
                 </div>
               </div>
@@ -447,9 +457,9 @@ export default function HomePage() {
         <Card variant="panel" className="reliquary-grain xl:sticky xl:top-32">
           <CardContent className="space-y-6 p-6 md:p-8">
             <div className="space-y-4">
-              <p className="section-kicker">Vitrine de modulos</p>
+              <p className="section-kicker">Portais do Conhecimento</p>
               <h2 className="font-display text-5xl leading-[0.94] text-brand-gradient">
-                Cada ala do arquivo conduz a um tipo diferente de travessia.
+                Cada portal conduz a profundezas diferentes do arquivo proibido.
               </h2>
               <p className="text-sm leading-7 text-foreground/76">{activeModule.body}</p>
             </div>
@@ -474,7 +484,7 @@ export default function HomePage() {
             </div>
 
             <div className="relic-parchment p-5">
-              <p className="section-kicker text-[hsl(24_31%_20%/0.74)]">Leitura sugerida</p>
+              <p className="section-kicker text-[hsl(24_31%_20%/0.74)]">Portal Recomendado</p>
               <p className="mt-4 font-display text-3xl leading-[1.02] text-[hsl(24_31%_16%)]">
                 {activeModule.title}
               </p>
@@ -499,13 +509,13 @@ export default function HomePage() {
               <CardContent className="grid gap-6 p-6 md:p-8 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
                 <div className="space-y-5">
                   <div className="space-y-4">
-                    <Badge variant="outline">Ritmo de sessao</Badge>
+                    <Badge variant="outline">Ritual da Sessao</Badge>
                     <h3 className="font-display text-5xl leading-[0.95] text-brand-gradient">
-                      Campanha, dossies e preparacao da mesa seguindo a mesma trilha.
+                      Campanha, bestiario e ferramentas do mestre em harmonia sombria.
                     </h3>
                     <p className="text-sm leading-7 text-foreground/76">
-                      Quando a historia aperta, o portal aponta sem rodeio para o proximo relatorio,
-                      para a ala do mestre e para os nomes que ainda precisam de resposta.
+                      Quando as trevas se adensam, o portal guia diretamente para a proxima cronica,
+                      para o circulo do mestre e para as criaturas que ainda espreitam nas sombras.
                     </p>
                   </div>
 
@@ -515,10 +525,10 @@ export default function HomePage() {
                         <BookOpenText className="h-4 w-4" />
                       </div>
                       <h4 className="mt-4 font-display text-3xl leading-none text-foreground">
-                        Arquivo de leitura
+                        Grimorio de Sessao
                       </h4>
                       <p className="mt-3 text-sm leading-6 text-foreground/72">
-                        Contratos, relatorios e boatos reforcam o que a mesa acabou de viver.
+                        Cronicas, contratos cumpridos e segredos revelados durante a campanha.
                       </p>
                     </div>
 
@@ -527,10 +537,10 @@ export default function HomePage() {
                         <Shield className="h-4 w-4" />
                       </div>
                       <h4 className="mt-4 font-display text-3xl leading-none text-foreground">
-                        Controle do mestre
+                        Circulo do Mestre
                       </h4>
                       <p className="mt-3 text-sm leading-6 text-foreground/72">
-                        A ala do mestre fica logo ao alcance quando a sessao pede preparo rapido.
+                        Ferramentas e segredos do mestre sempre ao alcance quando o ritual exige.
                       </p>
                     </div>
                   </div>

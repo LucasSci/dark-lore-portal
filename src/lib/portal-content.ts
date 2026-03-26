@@ -11,12 +11,22 @@ import {
   Users,
 } from "lucide-react";
 
-import heroBackground from "@/assets/hero-bg.jpg";
-import heroZerrikania from "@/assets/hero-zerrikania.jpg";
-import characterIllustration from "@/assets/encyclopedia/character-illustration.svg";
-import factionIllustration from "@/assets/encyclopedia/faction-illustration.svg";
-import historyIllustration from "@/assets/encyclopedia/history-illustration.svg";
-import locationIllustration from "@/assets/encyclopedia/location-illustration.svg";
+// Dark Lore Portal - Assets externos
+const darkFantasyArchive = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dark_fantasy_archive_202603261340-AEAC2u1N5Pqt88hzQ1DFnnjvDKqehy.jpeg";
+const creatureArchiveChamber = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Creature_archive_chamber_202603261340-u2nZboDvjllbMKiqKVRbnlrIfhD704.jpeg";
+const loneWanderer = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Lone_wanderer_in_202603261340-yT7oDA9kTDAUzZdS4jCG7s3H9MTjNU.jpeg";
+const darkFantasyForgotten = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dark_fantasy_forgotten_202603261340-QhRD5besx3eFTVhYC72COdor80LeMX.jpeg";
+const occultDesk = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Occult_desk_with_202603261340-ONjeZ0L3bOwKFj885bfVpCcL8eLBvs.jpeg";
+const gothicRitualSymbol = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gothic_ritual_symbol_202603261340-kzvAt1efPqFlvpJiAmY8uvQLUAS6WK.jpeg";
+const darkLorePortalLogo = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dark_Lore_Portal_202603261340-tFiL0GwQKsqU9W5MgxKjLQtCvhoO0s.jpeg";
+const gothicFlourish = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gothic_flourish_divider_202603261340-wnSifBidSx2WXYHomTpeOxecUcF4IM.jpeg";
+const heroFrame = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/moldura_hero_principal.png_202603261340-WPvSCUuI6ZolJrzm0YMHW6IiP1bPnb.jpeg";
+const cardFrame = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/moldura_de_card.png_202603261340-ieddw6KR7I5m13R3mZ95rOC2fHLrQ3.jpeg";
+const cornerOrnament = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cantos_ornamentais.png_202603261340-pu2SDbcVqe9wDZHZ4SA6mSaSc7sKlk.jpeg";
+const parchmentTexture = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Parchment_texture_with_202603261340-FdBJuRgbfqJSJ5irE9YHjbBY0MPQzZ.jpeg";
+const emberParticles = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Ember_particles_glowing_202603261340-x3A77UI3JnkYJBbviVNIivGFXbmIBg.jpeg";
+const smokeOverlay = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Soft_dark_smoke_202603261340-ilvltwcEkyXGxFxE2UG2N6INDZpJ6d.jpeg";
+const gothicCornerOrnament = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gothic_corner_ornament_202603261340-F8s2LUEpDAw9lV2QbKIsocT7tL9ngp.jpeg";
 import type { CampaignPublication } from "@/lib/publications";
 
 export type PortalFeatureSpec = {
@@ -91,66 +101,73 @@ export type PortalHeroScene = {
 };
 
 export const portalReferenceArt = {
-  hero: heroBackground,
-  mask: "/chrome/header-frame.png",
-  gold: "/textures/parchment-aged.png",
-  goldBright: "/chrome/button-frame.png",
-  bannerConcert: heroZerrikania,
-  bannerRedkit: locationIllustration,
+  hero: darkFantasyArchive,
+  mask: heroFrame,
+  gold: parchmentTexture,
+  goldBright: cardFrame,
+  bannerConcert: occultDesk,
+  bannerRedkit: loneWanderer,
   heroVideo: undefined,
+  logo: darkLorePortalLogo,
+  divider: gothicFlourish,
+  corner: cornerOrnament,
+  cornerGothic: gothicCornerOrnament,
+  ember: emberParticles,
+  smoke: smokeOverlay,
+  symbol: gothicRitualSymbol,
 } as const;
 
 export const portalHeroScenes: PortalHeroScene[] = [
   {
     id: "hero-saga",
-    eyebrow: "UMA NOVA SAGA SE INICIA",
-    sceneLabel: "Cena I · O chamado do continente",
-    title: "Areias de Zerrikania",
+    eyebrow: "OS PORTAIS SE ABREM",
+    sceneLabel: "Cena I · O chamado das sombras",
+    title: "Dark Lore Portal",
     description:
-      "As cronicas do Veu, os mapas de travessia e a campanha viva se encontram aqui como portas do mesmo arquivo.",
-    primaryCta: "Ler o prologo",
-    primaryPath: "/universo/cronica-prologo-do-veu",
-    secondaryCta: "Explorar o atlas",
+      "Um arquivo vivo de conhecimento proibido, bestiarios ancestrais e cronicas esquecidas aguarda aqueles que ousam adentrar.",
+    primaryCta: "Explorar o bestiario",
+    primaryPath: "/universo/bestiario",
+    secondaryCta: "Ver o atlas",
     secondaryPath: "/mapa",
-    poster: heroBackground,
-    thumbnail: heroBackground,
-    thumbnailTitle: "O Veu volta a respirar",
+    poster: darkFantasyArchive,
+    thumbnail: darkFantasyArchive,
+    thumbnailTitle: "O Arquivo Desperta",
     thumbnailBody:
-      "Comece pela ferida antiga que colocou o continente em vigilia.",
+      "Adentre a biblioteca proibida onde segredos ancestrais aguardam.",
   },
   {
     id: "hero-chronicles",
-    eyebrow: "CRONICAS, DOSSIES E ECOS RECENTES",
-    sceneLabel: "Cena II · O arquivo fala primeiro",
-    title: "Os capitulos se abrem como trilhas de leitura",
+    eyebrow: "CRONICAS DAS TREVAS",
+    sceneLabel: "Cena II · Ecos do abismo",
+    title: "Cada pagina guarda um segredo maldito",
     description:
-      "Cada registro do arquivo pode levar a um personagem, a um lugar esquecido ou a um conflito que ainda nao terminou.",
-    primaryCta: "Abrir o universo",
+      "Registros antigos revelam criaturas esquecidas, rituais proibidos e verdades que deveriam permanecer ocultas.",
+    primaryCta: "Ler as cronicas",
     primaryPath: "/universo",
     secondaryCta: "Ver a campanha",
     secondaryPath: "/campanha",
-    poster: heroZerrikania,
-    thumbnail: heroZerrikania,
-    thumbnailTitle: "Rumores, testemunhas e ruinas",
+    poster: creatureArchiveChamber,
+    thumbnail: creatureArchiveChamber,
+    thumbnailTitle: "Bestas e Abominacoes",
     thumbnailBody:
-      "Siga as entradas que ligam o Prologo a Merlin, Nashara e aos vetores de Elarion.",
+      "O catalogo de horrores cresce a cada lua negra que passa.",
   },
   {
     id: "hero-systems",
-    eyebrow: "ATLAS, MESTRE E RITUAIS DE CRIACAO",
-    sceneLabel: "Cena III · Ferramentas do continente",
-    title: "Mesa, mestre e campanha seguem o mesmo pulso",
+    eyebrow: "RITUAIS E FERRAMENTAS",
+    sceneLabel: "Cena III · O circulo se completa",
+    title: "Forje seu destino nas chamas do conhecimento",
     description:
-      "Dos contratos em campo ao preparo do mestre, tudo pode ser retomado sem sair do mesmo clima de estrada, poeira e pressagio.",
-    primaryCta: "Entrar na mesa",
+      "Mesa virtual, criacao de personagens e ferramentas do mestre convergem para dar vida as historias mais sombrias.",
+    primaryCta: "Abrir a mesa",
     primaryPath: "/mesa",
     secondaryCta: "Painel do mestre",
     secondaryPath: "/mestre",
-    poster: characterIllustration,
-    thumbnail: characterIllustration,
-    thumbnailTitle: "Preparar a proxima noite",
+    poster: occultDesk,
+    thumbnail: occultDesk,
+    thumbnailTitle: "O Circulo do Mestre",
     thumbnailBody:
-      "Retome a sessao, organize a cena e volte ao arquivo quando a fogueira baixar.",
+      "Prepare rituais, invoque criaturas e conduza a narrativa.",
   },
 ] as const;
 
@@ -175,102 +192,102 @@ export const portalEmberSpecs = [
 export const heroSignals: PortalFeatureSpec[] = [
   {
     icon: Map,
-    title: "Atlas navegavel",
-    body: "Regioes, fronteiras e passagens ficam visiveis logo no primeiro olhar.",
+    title: "Bestiario Vivo",
+    body: "Criaturas, abominacoes e entidades catalogadas em detalhes sombrios.",
   },
   {
     icon: ScrollText,
-    title: "Cronicas em fluxo",
-    body: "Prologos, capitulos e contratos mantem a campanha em movimento.",
+    title: "Cronicas Ancestrais",
+    body: "Historias proibidas, rituais esquecidos e segredos revelados.",
   },
   {
     icon: Users,
-    title: "Mesa conectada",
-    body: "Personagens, mestre e comunidade continuam puxando a mesma historia.",
+    title: "Circulo de Mestres",
+    body: "Ferramentas para conduzir campanhas nas profundezas do desconhecido.",
   },
 ];
 
 export const manifestoPanels: PortalFeatureSpec[] = [
   {
     icon: Sparkles,
-    title: "Sangue de cronica",
-    body: "Cada destaque precisa apontar para uma historia, nao para uma interface explicando a si mesma.",
+    title: "Conhecimento Oculto",
+    body: "Cada entrada revela fragmentos de sabedoria proibida, nunca mera decoracao.",
   },
   {
     icon: Compass,
-    title: "Rotas claras",
-    body: "Atravessar do hero para atlas, universo ou campanha deve soar natural, como seguir um rastro.",
+    title: "Trilhas nas Trevas",
+    body: "Navegue do bestiario aos rituais, das cronicas aos mapas malditos.",
   },
   {
     icon: Users,
-    title: "Continente vivo",
-    body: "Personagens, lugares e relatos se cruzam como partes do mesmo mundo em disputa.",
+    title: "Mundo em Ruinas",
+    body: "Criaturas, lugares e lendas se entrelaçam num universo de horror e maravilha.",
   },
 ];
 
 export const manifestoQuotes: PortalQuoteSpec[] = [
   {
-    quote: "Toda pagina deve soar como pagina arrancada do mesmo tomo.",
-    source: "Arquivo do continente",
+    quote: "Nas sombras mais profundas, a verdade aguarda aqueles que nao temem olhar.",
+    source: "Grimorio dos Ancestrais",
   },
   {
-    quote: "Mapa, cronica e mesa precisam continuar a mesma estrada.",
-    source: "Cronicas da campanha",
+    quote: "Cada criatura catalogada e um aviso; cada ritual, uma porta que nao deveria ser aberta.",
+    source: "Bestiario Proibido",
   },
   {
-    quote: "Quando um eco aparece, ele deve levar a algum lugar real do mundo.",
-    source: "Memoria dos vigias",
+    quote: "O conhecimento tem seu preco, e as trevas sempre cobram o devido.",
+    source: "Cronicas da Noite Eterna",
   },
 ];
 
 export const editorialFallbacks: PortalEditorialEntry[] = [
   {
     id: "fallback-atlas",
-    title: "Novas linhas de travessia foram abertas sobre o continente.",
+    title: "Novas rotas foram mapeadas atraves de terras corrompidas.",
     excerpt:
-      "As regioes marcam onde a poeira engrossa, onde as ruinas chamam e onde a campanha pode virar de rumo.",
-    location: "Atlas do continente",
-    label: "Relatorio",
+      "Regioes esquecidas, ruinas ancestrais e passagens para dimensoes sombrias foram catalogadas.",
+    location: "Atlas das Sombras",
+    label: "Mapeamento",
     updatedAt: "2026-03-18T12:00:00.000Z",
     href: "/mapa",
   },
   {
     id: "fallback-universe",
-    title: "O arquivo reuniu os capitulos do Veu em uma nova serie de publicacoes.",
+    title: "Novas criaturas foram adicionadas ao Bestiario Proibido.",
     excerpt:
-      "Cada capitulo abre seus nomes citados, suas testemunhas e os rastros que levam aos perfis do universo.",
-    location: "Universo",
-    label: "Dossie",
+      "Cada entrada revela fraquezas, habitos de caca e o preco de enfrentar tais aberracoes.",
+    location: "Bestiario",
+    label: "Catalogo",
     updatedAt: "2026-03-18T18:00:00.000Z",
     href: "/universo",
   },
   {
     id: "fallback-table",
-    title: "A mesa foi preparada para receber criaturas, paginas e rotas de batalha.",
+    title: "A mesa de rituais foi preparada para a proxima invocacao.",
     excerpt:
-      "Os tabuleiros e frentes de cena permanecem prontos para a proxima sessao da companhia.",
-    location: "Mesa virtual",
-    label: "Mesa",
+      "Mapas taticos, iniciativa e atmosfera sombria aguardam a proxima sessao.",
+    location: "Mesa Virtual",
+    label: "Ritual",
     updatedAt: "2026-03-19T08:30:00.000Z",
     href: "/mesa",
   },
   {
     id: "fallback-creation",
-    title: "Novos nomes podem ser forjados para a estrada antes da proxima sessao.",
+    title: "Novos herois podem ser invocados das profundezas.",
     excerpt:
-      "Classe, origem e historico se unem para abrir uma nova ficha dentro do mesmo arquivo.",
-    location: "Criacao",
-    label: "Ritual",
+      "Classe, origem e pactos sombrios se unem para criar personagens marcados pelo destino.",
+    location: "Invocacao",
+    label: "Criacao",
     updatedAt: "2026-03-19T13:10:00.000Z",
     href: "/criacao",
   },
   {
     id: "fallback-mestre",
-    title: "O mestre segue com o comando das cenas, contratos e sinais em campo.",
+    title: "O Circulo do Mestre foi atualizado com novos segredos.",
     excerpt:
-      "Notas, NPCs e ganchos de sessao permanecem reunidos para a proxima noite de jogo.",
-    location: "Mestre",
-    label: "Comando",
+      "NPCs, encontros e geradores de horror aguardam para serem desencadeados na proxima sessao.",
+    location: "Circulo do Mestre",
+    label: "Ferramentas",
     updatedAt: "2026-03-19T17:45:00.000Z",
     href: "/mestre",
   },
@@ -279,42 +296,42 @@ export const editorialFallbacks: PortalEditorialEntry[] = [
 export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
   exploracao: {
     label: "Exploracao",
-    title: "O continente se abre por rotas de leitura, viagem e descoberta.",
+    title: "As trevas se revelam para aqueles que sabem onde olhar.",
     body:
-      "Atlas, universo e comunidade funcionam como trilhas complementares para seguir rumores, capitulos e encontros.",
+      "Bestiario, atlas e arquivo formam o triplo caminho do conhecimento proibido.",
     accent:
-      "Quem entra por esta trilha encontra rapido um mapa, um verbete ou um eco de campanha.",
+      "Cada entrada abre portas para criaturas, lugares malditos e segredos ancestrais.",
     items: [
       {
-        eyebrow: "Atlas do continente",
-        title: "Mappa mundi, regioes e passagens de fronteira.",
+        eyebrow: "Atlas das Sombras",
+        title: "Mapas de reinos esquecidos e terras corrompidas.",
         description:
-          "As rotas mais perigosas do continente podem ser lidas como convite para a proxima jornada.",
+          "Rotas perigosas, ruinas ancestrais e portais para dimensoes sombrias.",
         path: "/mapa",
-        image: heroBackground,
+        image: loneWanderer,
         imagePosition: "center center",
         icon: Map,
         destination: "atlas",
       },
       {
-        eyebrow: "Arquivo do universo",
-        title: "Capitulos, personagens e faccoes em dossies ligados entre si.",
+        eyebrow: "Bestiario Proibido",
+        title: "Catalogo de criaturas, demônios e aberracoes.",
         description:
-          "Os capitulos do lore levam aos nomes citados, e os verbetes devolvem o leitor para a historia maior.",
+          "Cada entrada revela fraquezas, habitos e o preco de enfrentar tais horrores.",
         path: "/universo",
-        image: historyIllustration,
+        image: creatureArchiveChamber,
         imagePosition: "center center",
         icon: Compass,
         destination: "universo",
       },
       {
-        eyebrow: "Comunidade",
-        title: "Os ecos da campanha continuam circulando fora da mesa.",
+        eyebrow: "Circulo Oculto",
+        title: "A comunidade dos que buscam conhecimento nas trevas.",
         description:
-          "Chamados, feitos e rodas de conversa mantem a companhia em movimento entre uma sessao e outra.",
+          "Compartilhe descobertas, teorias e advertências com outros exploradores.",
         path: "/comunidade",
-        image: factionIllustration,
-        imagePosition: "right center",
+        image: gothicRitualSymbol,
+        imagePosition: "center center",
         icon: Users,
         destination: "comunidade",
       },
@@ -322,41 +339,41 @@ export const moduleViews: Record<PortalModuleViewKey, PortalModuleView> = {
   },
   campanha: {
     label: "Campanha",
-    title: "Sessao, preparacao e comando seguem reunidos na mesma frente.",
+    title: "A mesa se prepara para rituais de narrativa sombria.",
     body:
-      "Cronicas, mesa e mestre ocupam o mesmo campo de leitura para a campanha nao perder o pulso.",
+      "Cronicas, mesa virtual e ferramentas do mestre convergem para campanhas memoraveis.",
     accent:
-      "As tres portas abaixo levam direto para o que move a historia em campo.",
+      "Tres portais conduzem ao coracao da experiencia de jogo.",
     items: [
       {
-        eyebrow: "Cronicas e contratos",
-        title: "O arquivo de campanha guarda ecos, contratos e recados de fronteira.",
+        eyebrow: "Cronicas das Trevas",
+        title: "O arquivo guarda cada sessao, cada decisao, cada consequência.",
         description:
-          "Cada entrada publicada ajuda a lembrar o que ocorreu, o que falta resolver e quem ainda esta em risco.",
+          "Relatos de campanha, contratos cumpridos e segredos ainda por desvendar.",
         path: "/campanha",
-        image: historyIllustration,
+        image: darkFantasyForgotten,
         imagePosition: "center center",
         icon: ScrollText,
         destination: "campanha",
       },
       {
-        eyebrow: "Mesa virtual",
-        title: "A sessao ao vivo segue pronta para o proximo encontro.",
+        eyebrow: "Mesa Virtual",
+        title: "O campo de batalha aguarda sob a luz de velas.",
         description:
-          "Battlemap, neblina e iniciativa podem ser retomados sem romper o clima do resto do continente.",
+          "Mapas taticos, iniciativa e atmosfera sombria para suas sessoes.",
         path: "/mesa",
-        image: heroBackground,
+        image: darkFantasyArchive,
         imagePosition: "left center",
         icon: Sword,
         destination: "mesa",
       },
       {
-        eyebrow: "Painel do mestre",
-        title: "O comando do mestre fica reservado para a proxima decisao dificil.",
+        eyebrow: "Circulo do Mestre",
+        title: "Ferramentas para tecer historias de horror e maravilha.",
         description:
-          "NPCs, publicacoes e notas de sessao ficam sob guarda ate a proxima rodada de jogo.",
+          "NPCs, encontros, geradores e o controle total da narrativa.",
         path: "/mestre",
-        image: characterIllustration,
+        image: occultDesk,
         imagePosition: "center center",
         icon: Shield,
         destination: "mestre",

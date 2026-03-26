@@ -4,6 +4,8 @@ import { Link, useLocation } from "react-router-dom";
 
 import logoEmblem from "@/assets/logo-emblem-256.webp";
 import { Badge } from "@/components/ui/badge";
+
+const gothicSymbol = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gothic_ritual_symbol_202603261340-kzvAt1efPqFlvpJiAmY8uvQLUAS6WK.jpeg";
 import { Button } from "@/components/ui/button";
 import { usePortalState } from "@/lib/portal-state";
 
@@ -67,23 +69,23 @@ export default function Header() {
 
           <div className={`relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 lg:px-6 xl:grid-cols-[auto_minmax(0,1fr)_auto] ${atlasMode ? "xl:py-2.5" : ""}`}>
             <Link to="/" className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[hsl(var(--brand)/0.26)] bg-[linear-gradient(180deg,hsl(var(--background)/0.78),hsl(var(--surface-base)/0.94))] shadow-[0_18px_34px_hsl(var(--background)/0.34)]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[hsl(var(--brand)/0.26)] bg-[linear-gradient(180deg,hsl(var(--background)/0.78),hsl(var(--surface-base)/0.94))] shadow-[0_18px_34px_hsl(var(--background)/0.34)] overflow-hidden">
                 <img
-                  src={logoEmblem}
-                  alt="Emblema de Areias de Zerrikania"
+                  src={gothicSymbol}
+                  alt="Simbolo Dark Lore Portal"
                   width={256}
                   height={256}
                   decoding="async"
-                  className="h-7 w-7 object-contain"
+                  className="h-9 w-9 object-cover"
                 />
               </div>
 
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary/82">
-                  Arquivo do continente
+                  Arquivo Proibido
                 </p>
                 <p className="font-display text-lg tracking-[0.05em] text-brand-gradient drop-shadow-[0_0_18px_hsl(var(--brand)/0.12)] sm:text-xl">
-                  Areias de Zerrikania
+                  Dark Lore Portal
                 </p>
               </div>
             </Link>
@@ -111,7 +113,7 @@ export default function Header() {
               {atlasMode ? (
                 <div className="header-status-pill">
                   <Flame className="mr-2 h-3.5 w-3.5" />
-                  {atlasFocus?.title ?? "Atlas em foco"}
+                  {atlasFocus?.title ?? "Atlas das Sombras"}
                 </div>
               ) : null}
               {atlasMode && atlasFocus?.stage ? (
@@ -140,7 +142,7 @@ export default function Header() {
               <div className="space-y-4 px-4 py-4 sm:px-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <Badge variant="outline">
-                    {atlasMode ? atlasFocus?.title ?? "Atlas do continente" : "Arquivo vivo do continente"}
+                    {atlasMode ? atlasFocus?.title ?? "Atlas das Sombras" : "Arquivo do Conhecimento Proibido"}
                   </Badge>
                   <Button asChild size="sm" variant="outline">
                     <Link to="/conta">Conta</Link>

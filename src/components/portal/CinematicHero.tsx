@@ -5,7 +5,7 @@ import { gsap } from "gsap";
 import { Link } from "react-router-dom";
 
 import logoEmblem from "@/assets/logo-emblem-256.webp";
-import { portalEmberSpecs, portalHeroScenes } from "@/lib/portal-content";
+import { portalEmberSpecs, portalHeroScenes, portalReferenceArt } from "@/lib/portal-content";
 import { cn } from "@/lib/utils";
 
 export default function CinematicHero() {
@@ -397,16 +397,12 @@ export default function CinematicHero() {
             <p className="reference-hero-eyebrow">{currentScene.eyebrow}</p>
 
             <div className="mt-7 flex items-center justify-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[hsl(var(--brand)/0.28)] bg-[linear-gradient(180deg,hsl(var(--background)/0.42),hsl(var(--surface-base)/0.88))] shadow-[0_22px_56px_rgba(0,0,0,0.34)] backdrop-blur-sm">
-                <img
-                  src={logoEmblem}
-                  alt="Emblema de Areias de Zerrikania"
-                  width={256}
-                  height={256}
-                  decoding="async"
-                  className="h-10 w-10 object-contain opacity-90"
-                />
-              </div>
+              <img
+                src={portalReferenceArt.logo}
+                alt="Dark Lore Portal"
+                decoding="async"
+                className="h-32 w-auto object-contain drop-shadow-[0_0_40px_rgba(200,160,80,0.4)] md:h-40 lg:h-48"
+              />
             </div>
 
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
