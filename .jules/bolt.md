@@ -4,3 +4,7 @@
 ## 2026-03-21 - State co-location for high-frequency text inputs
 **Learning:** High-frequency state updates like `chatDraft` and `diceDraft` mapped directly in massive parent components (like `MesaPage`) force expensive full-tree React diffs on every keystroke. This causes rendering lag and unnecessarily runs hooks like `useMemo` and function recreating, even with large sub-components like `VttPixiStage` in the tree.
 **Action:** Always co-locate high-frequency text input states into their own small components (`ChatInput`, `DiceInput`) that manage their own local `draft` state and pass the finalized value back up to the parent using an `onSend` callback.
+
+## 2025-03-26 - Garbage collection overhead in coordinate mappings
+**Learning:** The map rendering logic used chained `.map()` calls (e.g. `points.map(projectCoordinate).map(toLeafletPoint)`) when processing large arrays of coordinates for polygons and polylines (regions, roads, rivers, etc). This `.map().map()` pattern allocates an intermediate array in memory that is immediately discarded, causing unnecessary garbage collection overhead when rendering large maps.
+**Action:** Combine coordinate transformations into a single `.map()` callback (e.g. `points.map(p => toLeafletPoint(projectCoordinate(p)))`) to prevent intermediate array allocation and reduce garbage collection pressure.
