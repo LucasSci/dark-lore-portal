@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { generateSecureId, generateSecureShortId } from "./utils";
 import { resolveBattlemapPublicUrl } from "@/lib/vtt-assets";
 import {
   applySceneEvent,
@@ -23,7 +24,7 @@ type UntypedSupabaseClient = typeof supabase & {
 const db = supabase as UntypedSupabaseClient;
 
 function makePresenceKey() {
-  return `presence-${Math.random().toString(36).slice(2, 10)}`;
+  return `presence-${generateSecureShortId()}`;
 }
 
 function normalizePresence(presenceState: Record<string, Array<Record<string, unknown>>>) {
@@ -296,7 +297,7 @@ export async function loadSceneSnapshot(sessionId: string) {
           : defaultLayerOrder(),
         connections: Array.isArray(row.connections)
           ? row.connections.map((connection: Record<string, any>) => ({
-              id: String(connection.id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 8)),
+              id: String(connection.id ?? generateSecureId()),
               edge:
                 connection.edge === "north" ||
                 connection.edge === "east" ||
