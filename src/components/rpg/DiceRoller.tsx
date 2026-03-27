@@ -78,11 +78,11 @@ export default function DiceRoller() {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Qtd</span>
             <div className="metric-panel flex items-center">
-              <Button variant="ghost" size="sm" onClick={() => setNumDice(Math.max(1, numDice - 1))} className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" onClick={() => setNumDice(Math.max(1, numDice - 1))} aria-label="Diminuir quantidade de dados" className="h-8 w-8 p-0">
                 -
               </Button>
               <span className="w-8 text-center font-heading text-foreground">{numDice}</span>
-              <Button variant="ghost" size="sm" onClick={() => setNumDice(Math.min(10, numDice + 1))} className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" onClick={() => setNumDice(Math.min(10, numDice + 1))} aria-label="Aumentar quantidade de dados" className="h-8 w-8 p-0">
                 +
               </Button>
             </div>
@@ -91,13 +91,13 @@ export default function DiceRoller() {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Mod</span>
             <div className="metric-panel flex items-center">
-              <Button variant="ghost" size="sm" onClick={() => setModifier((previous) => previous - 1)} className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" onClick={() => setModifier((previous) => previous - 1)} aria-label="Diminuir modificador" className="h-8 w-8 p-0">
                 -
               </Button>
               <span className="w-10 text-center font-heading text-foreground">
                 {modifier >= 0 ? `+${modifier}` : modifier}
               </span>
-              <Button variant="ghost" size="sm" onClick={() => setModifier((previous) => previous + 1)} className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" onClick={() => setModifier((previous) => previous + 1)} aria-label="Aumentar modificador" className="h-8 w-8 p-0">
                 +
               </Button>
             </div>
