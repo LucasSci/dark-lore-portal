@@ -4,7 +4,6 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { componentTagger } from "lovable-tagger";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -93,7 +92,7 @@ function witcherLocalTilesPlugin() {
   };
 }
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   server: {
     host: PREVIEW_HOST,
     port: PREVIEW_PORT,
@@ -107,7 +106,7 @@ export default defineConfig(({ mode }) => ({
     port: PREVIEW_PORT,
     strictPort: true,
   },
-  plugins: [react(), witcherLocalTilesPlugin(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), witcherLocalTilesPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
