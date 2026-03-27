@@ -276,6 +276,31 @@ function TimelineRail({
   );
 }
 
+function UniverseAtlasActionButton({
+  to,
+  label,
+  icon: Icon,
+  variant = "primary",
+}: {
+  to: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  variant?: "primary" | "secondary";
+}) {
+  return (
+    <Link
+      to={to}
+      className={cn(
+        "dark-lore-button dark-lore-button-small dark-lore-atlas-action-button",
+        variant === "secondary" && "dark-lore-atlas-action-button-secondary",
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      <span>{label}</span>
+    </Link>
+  );
+}
+
 function EncyclopediaEntryCard({
   entry,
   detailBase,
@@ -300,7 +325,9 @@ function EncyclopediaEntryCard({
             entry={entry}
             className={cn(
               "dark-lore-hover-image h-full w-full transition duration-500 group-hover:scale-[1.03]",
-              entry.category === "monstros" ? "object-contain p-4" : "object-cover",
+              entry.category === "monstros"
+                ? "dark-lore-monster-thumb object-contain p-4"
+                : "object-cover",
             )}
           />
         </div>
@@ -469,6 +496,9 @@ function UniverseIndex() {
     () => filteredEntries.filter((entry) => entry.category === "monstros"),
     [filteredEntries],
   );
+  const activeFilterCount = [monsterType, monsterRegion, monsterDanger].filter(
+    (value) => value !== "all",
+  ).length;
 
   const featuredMonster =
     filteredMonsterEntries[0] ??
@@ -1036,6 +1066,9 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
   const atlasContext = getAtlasContextForEntry(entry);
   const [heroDrift, setHeroDrift] = useState({ x: 0, y: 0 });
   const [scrollOffset, setScrollOffset] = useState(0);
+  const bestiaryHeadline = bestiaryMeta
+    ? `${bestiaryMeta.type} - ameaca ${bestiaryMeta.dangerLevel}/5`
+    : entry.subtitle;
   const sectionNavItems = useMemo(
     () =>
       [
@@ -1075,47 +1108,112 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
         }}
         onMouseLeave={() => setHeroDrift({ x: 0, y: 0 })}
       >
-        <motion.div
-          animate={{
-            x: heroDrift.x * 22,
-            y: heroDrift.y * 18 + scrollOffset * -0.06,
-            scale: 1.05,
-          }}
-          transition={{ type: "spring", stiffness: 80, damping: 18 }}
-          className="absolute inset-0"
-        >
-          <EncyclopediaImage entry={entry} className="dark-lore-hero-background object-contain p-8 md:p-12" />
-        </motion.div>
-        <div className="dark-lore-grain-overlay" />
-        <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
-        <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
+        {bestiaryMode ? (
+          <>
+            <div className="dark-lore-grain-overlay dark-lore-bestiary-overlay" />
+            <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+            <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
 
-        <div className="dark-lore-hero-copy">
-          <Link to={indexPath} className="dark-lore-chip is-muted">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar ao arquivo
-          </Link>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="border-primary/30 text-primary">
-              {encyclopediaCategories[entry.category].label}
-            </Badge>
-            {bestiaryMeta ? (
-              <Badge variant="secondary">
-                {bestiaryMeta.type} - Perigo {bestiaryMeta.dangerLevel}/5
-              </Badge>
-            ) : null}
-          </div>
-          <h1 className="dark-lore-display-title">{entry.title}</h1>
-          <p className="dark-lore-hero-text max-w-3xl">{entry.subtitle}</p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {entry.stats.slice(0, 3).map((stat) => (
-              <div key={`${entry.slug}-${stat.label}`} className="dark-lore-hero-stat">
-                <p className="dark-lore-card-meta">{stat.label}</p>
-                <p className="dark-lore-card-copy mt-2 text-[hsl(var(--foreground)/0.92)]">{stat.value}</p>
+            <div className="dark-lore-bestiary-layout">
+              <motion.div
+                animate={{
+                  x: heroDrift.x * 16,
+                  y: heroDrift.y * 12 + scrollOffset * -0.04,
+                  scale: 1.04,
+                }}
+                transition={{ type: "spring", stiffness: 82, damping: 18 }}
+                className="dark-lore-bestiary-showcase"
+              >
+                <div className="dark-lore-bestiary-portrait-shell">
+                  <div className="dark-lore-bestiary-portrait-glow" />
+                  <EncyclopediaImage
+                    entry={entry}
+                    className="dark-lore-bestiary-portrait object-contain p-6 md:p-10"
+                  />
+                </div>
+              </motion.div>
+
+              <div className="dark-lore-hero-copy dark-lore-bestiary-copy">
+                <Link to={indexPath} className="dark-lore-chip is-muted w-fit">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Voltar ao arquivo
+                </Link>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="border-primary/30 text-primary">
+                    {encyclopediaCategories[entry.category].label}
+                  </Badge>
+                  {bestiaryMeta ? (
+                    <Badge variant="secondary">
+                      {bestiaryMeta.type} - Perigo {bestiaryMeta.dangerLevel}/5
+                    </Badge>
+                  ) : null}
+                </div>
+                <h1 className="dark-lore-display-title dark-lore-bestiary-title">{entry.title}</h1>
+                <p className="dark-lore-hero-text max-w-2xl">{bestiaryHeadline}</p>
+                <p className="dark-lore-card-copy max-w-3xl">{entry.summary}</p>
+                <div className="grid gap-3 sm:grid-cols-3 dark-lore-bestiary-stat-grid">
+                  {entry.stats.slice(0, 3).map((stat) => (
+                    <div key={`${entry.slug}-${stat.label}`} className="dark-lore-hero-stat">
+                      <p className="dark-lore-card-meta">{stat.label}</p>
+                      <p className="dark-lore-card-copy mt-2 text-[hsl(var(--foreground)/0.92)]">
+                        {stat.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <motion.div
+              animate={{
+                x: heroDrift.x * 22,
+                y: heroDrift.y * 18 + scrollOffset * -0.06,
+                scale: 1.05,
+              }}
+              transition={{ type: "spring", stiffness: 80, damping: 18 }}
+              className="absolute inset-0"
+            >
+              <EncyclopediaImage
+                entry={entry}
+                className="dark-lore-hero-background object-contain p-8 md:p-12"
+              />
+            </motion.div>
+            <div className="dark-lore-grain-overlay" />
+            <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+            <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
+
+            <div className="dark-lore-hero-copy">
+              <Link to={indexPath} className="dark-lore-chip is-muted">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar ao arquivo
+              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="border-primary/30 text-primary">
+                  {encyclopediaCategories[entry.category].label}
+                </Badge>
+                {bestiaryMeta ? (
+                  <Badge variant="secondary">
+                    {bestiaryMeta.type} - Perigo {bestiaryMeta.dangerLevel}/5
+                  </Badge>
+                ) : null}
+              </div>
+              <h1 className="dark-lore-display-title">{entry.title}</h1>
+              <p className="dark-lore-hero-text max-w-3xl">{entry.subtitle}</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {entry.stats.slice(0, 3).map((stat) => (
+                  <div key={`${entry.slug}-${stat.label}`} className="dark-lore-hero-stat">
+                    <p className="dark-lore-card-meta">{stat.label}</p>
+                    <p className="dark-lore-card-copy mt-2 text-[hsl(var(--foreground)/0.92)]">
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </section>
 
       <section id="universo-detalhes" className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
@@ -1165,18 +1263,17 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-3 pt-2">
-                  {atlasContext.actions.slice(0, 2).map((action, index) => (
-                    <Link
-                      key={action.label}
-                      to={action.href}
-                      className={cn(
-                        "dark-lore-button",
-                        index > 0 && "dark-lore-button-ghost",
-                      )}
-                    >
-                      {action.label}
-                    </Link>
-                  ))}
+                  <UniverseAtlasActionButton
+                    to={atlasContext.actions[0]?.href ?? atlasContext.href}
+                    label="Abrir atlas completo"
+                    icon={MapPin}
+                  />
+                  <UniverseAtlasActionButton
+                    to={atlasContext.actions[1]?.href ?? "/universo"}
+                    label="Cruzar com o universo"
+                    icon={BookMarked}
+                    variant="secondary"
+                  />
                 </div>
               </div>
             </div>

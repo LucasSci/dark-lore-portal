@@ -433,9 +433,13 @@
 
   .archive-oracle-whisper {
     position: fixed;
-    inset: auto 1.5rem 6.5rem auto;
+    top: 6.5rem;
+    right: 1.5rem;
     width: min(26rem, calc(100vw - 2rem));
+    max-height: min(78vh, 48rem);
     z-index: 45;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   @media (max-width: 1279px) {
@@ -477,7 +481,8 @@
       right: 1rem;
       left: 1rem;
       width: auto;
-      bottom: 5.8rem;
+      top: 5.8rem;
+      max-height: calc(100vh - 7.4rem);
     }
   }
 }

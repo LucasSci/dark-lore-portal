@@ -13,6 +13,7 @@ const queryClient = new QueryClient();
 const HomePage = lazy(() => import("./pages/HomePage"));
 const CampaignPage = lazy(() => import("./pages/CampaignPage"));
 const PlayPage = lazy(() => import("./pages/PlayPage"));
+const OraclePage = lazy(() => import("./pages/OraclePage"));
 const MesaPage = lazy(() => import("./pages/MesaPage"));
 const MapaPage = lazy(() => import("./pages/MapaPage"));
 const LocationMapPage = lazy(() => import("./pages/LocationMapPage"));
@@ -41,6 +42,7 @@ function AppRoutes() {
             <Route path="/campanha" element={<CampaignPage />} />
             <Route path="/cronicas" element={<CampaignPage />} />
             <Route path="/jogar" element={<PlayPage />} />
+            <Route path="/jogar/oraculo" element={<OraclePage />} />
             <Route path="/mesa" element={<MesaPage />} />
             <Route path="/mapa" element={<MapaPage />} />
             <Route path="/mapa/regional/:mapId" element={<RegionalAtlasPage />} />
