@@ -399,7 +399,7 @@ export default function CinematicHero() {
             <div className="mt-7 flex items-center justify-center">
               <img
                 src={portalReferenceArt.logo}
-                alt="Dark Lore Portal"
+                alt="Arquivo do Continente"
                 decoding="async"
                 className="h-32 w-auto object-contain drop-shadow-[0_0_40px_rgba(200,160,80,0.4)] md:h-40 lg:h-48"
               />

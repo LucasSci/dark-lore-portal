@@ -26,6 +26,7 @@ const UniversePage = lazy(() => import("./pages/UniversePage"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const StorePage = lazy(() => import("./pages/StorePage"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function AppRoutes() {
@@ -38,6 +39,7 @@ function AppRoutes() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/campanha" element={<CampaignPage />} />
+            <Route path="/cronicas" element={<CampaignPage />} />
             <Route path="/jogar" element={<PlayPage />} />
             <Route path="/mesa" element={<MesaPage />} />
             <Route path="/mapa" element={<MapaPage />} />
@@ -50,7 +52,10 @@ function AppRoutes() {
             <Route path="/mestre" element={<MestrePage />} />
             <Route path="/universo" element={<UniversePage />} />
             <Route path="/universo/:entrySlug" element={<UniversePage />} />
+            <Route path="/bestiario" element={<UniversePage />} />
+            <Route path="/bestiario/:entrySlug" element={<UniversePage />} />
             <Route path="/comunidade" element={<CommunityPage />} />
+            <Route path="/contato" element={<ContactPage />} />
             <Route path="/loja" element={<StorePage />} />
             <Route path="/conta" element={<AccountPage />} />
             <Route path="*" element={<NotFound />} />
