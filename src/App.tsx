@@ -43,6 +43,8 @@ function AppRoutes() {
             <Route path="/cronicas" element={<CampaignPage />} />
             <Route path="/jogar" element={<PlayPage />} />
             <Route path="/jogar/oraculo" element={<OraclePage />} />
+            <Route path="/oraculo" element={<OraclePage />} />
+            <Route path="/luna" element={<OraclePage />} />
             <Route path="/mesa" element={<MesaPage />} />
             <Route path="/mapa" element={<MapaPage />} />
             <Route path="/mapa/regional/:mapId" element={<RegionalAtlasPage />} />

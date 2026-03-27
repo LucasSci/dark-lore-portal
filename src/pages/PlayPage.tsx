@@ -20,9 +20,9 @@ const moduleCards = [
   },
   {
     title: "Oraculo do arquivo",
-    description: "Consulte o oraculo fiel ao projeto original para leitura, voz e visoes do arquivo.",
-    path: "/jogar/oraculo",
-    cta: "Invocar oraculo",
+    description: "Abra Luna em pagina completa, com leitura ritual, voz e visoes do arquivo no formato original.",
+    path: "/oraculo",
+    cta: "Abrir Luna",
     icon: Sparkles,
   },
   {
@@ -79,6 +79,9 @@ export default function PlayPage() {
             <div className="flex flex-wrap gap-3">
               <Link to="/mesa" className="dark-lore-button">
                 Abrir mesa de sessao
+              </Link>
+              <Link to="/oraculo" className="dark-lore-button dark-lore-button-ghost">
+                Abrir Luna em pagina inteira
               </Link>
               <Link to="/jogar/oraculo" className="dark-lore-button dark-lore-button-ghost">
                 Consultar o oraculo
@@ -144,6 +147,9 @@ export default function PlayPage() {
                   {route.title}
                 </Link>
               ))}
+              <Link to="/oraculo" className="dark-lore-button dark-lore-button-small">
+                Abrir experiencia completa
+              </Link>
             </div>
           </div>
 
@@ -164,6 +170,9 @@ export default function PlayPage() {
         <div className="flex flex-wrap justify-center gap-3">
           <Link to="/mesa" className="dark-lore-button">
             Ir para a mesa
+          </Link>
+          <Link to="/oraculo" className="dark-lore-button dark-lore-button-ghost">
+            Abrir Luna em tela cheia
           </Link>
           <Link to="/jogar/oraculo" className="dark-lore-button dark-lore-button-ghost">
             Abrir oraculo original

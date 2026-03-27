@@ -6,7 +6,10 @@ import { usePortalState } from "@/lib/portal-state";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const isTabletopRoute = location.pathname.startsWith("/mesa");
-  const isOracleRoute = location.pathname.startsWith("/jogar/oraculo");
+  const isOracleRoute =
+    location.pathname.startsWith("/jogar/oraculo") ||
+    location.pathname.startsWith("/oraculo") ||
+    location.pathname.startsWith("/luna");
   const isAtlasRoute = location.pathname.startsWith("/mapa/");
   const { motionIntensity, navigationMode } = usePortalState();
 

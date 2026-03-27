@@ -12,6 +12,7 @@ const leftNavItems = [
 
 const rightNavItems = [
   { label: "Jogar", path: "/jogar" },
+  { label: "Oraculo", path: "/oraculo" },
   { label: "Mapa", path: "/mapa" },
   { label: "Contato", path: "/contato" },
 ];
