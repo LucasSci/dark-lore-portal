@@ -28,20 +28,31 @@ export interface VisionDef {
   radius: number;
 }
 
-/** Ray-segment intersection. Returns distance t along ray (0–1+), or null. */
-function raySegmentIntersect(
-  origin: Point,
-  dir: Point,
-  seg: Segment,
+/**
+ * Fast ray-segment intersection avoiding object allocations.
+ * Returns distance t along ray (0-1+), or null.
+ */
+function fastIntersect(
+  originX: number,
+  originY: number,
+  dirX: number,
+  dirY: number,
+  segAX: number,
+  segAY: number,
+  segBX: number,
+  segBY: number
 ): number | null {
-  const dx = seg.b.x - seg.a.x;
-  const dy = seg.b.y - seg.a.y;
+  const dx = segBX - segAX;
+  const dy = segBY - segAY;
 
-  const denom = dir.x * dy - dir.y * dx;
+  const denom = dirX * dy - dirY * dx;
   if (Math.abs(denom) < 1e-10) return null;
 
-  const t = ((seg.a.x - origin.x) * dy - (seg.a.y - origin.y) * dx) / denom;
-  const u = ((seg.a.x - origin.x) * dir.y - (seg.a.y - origin.y) * dir.x) / denom;
+  const diffX = segAX - originX;
+  const diffY = segAY - originY;
+
+  const t = (diffX * dy - diffY * dx) / denom;
+  const u = (diffX * dirY - diffY * dirX) / denom;
 
   if (t >= 0 && u >= 0 && u <= 1) return t;
   return null;
@@ -49,8 +60,10 @@ function raySegmentIntersect(
 
 /**
  * Compute a visibility polygon from `origin` given a set of wall segments.
- * Uses the classic 2D raycasting approach: cast rays toward each wall endpoint
- * (plus slight offsets), find nearest intersection, and collect the hull.
+ * ⚡ Performance optimizations:
+ * - Pre-filters walls using an AABB (Axis-Aligned Bounding Box) check against maxRadius.
+ * - Uses a pre-allocated Float64Array instead of Set to avoid object allocation and GC overhead for angles.
+ * - Inlines intersection coordinate variables directly into math operations to avoid Point object allocations.
  *
  * Returns an array of points forming the visibility polygon, sorted by angle.
  */
@@ -60,36 +73,86 @@ export function computeVisibilityPolygon(
   bounds: { width: number; height: number },
   maxRadius?: number,
 ): Point[] {
-  // Add bounding box walls
-  const allWalls: Segment[] = [
-    ...walls,
-    { a: { x: 0, y: 0 }, b: { x: bounds.width, y: 0 } },
-    { a: { x: bounds.width, y: 0 }, b: { x: bounds.width, y: bounds.height } },
-    { a: { x: bounds.width, y: bounds.height }, b: { x: 0, y: bounds.height } },
-    { a: { x: 0, y: bounds.height }, b: { x: 0, y: 0 } },
-  ];
+  const ox = origin.x;
+  const oy = origin.y;
 
-  // Collect unique angles toward every endpoint
-  const angles = new Set<number>();
-  for (const wall of allWalls) {
-    for (const point of [wall.a, wall.b]) {
-      const angle = Math.atan2(point.y - origin.y, point.x - origin.x);
-      angles.add(angle);
-      // Slight offsets to peek around corners
-      angles.add(angle - 0.0001);
-      angles.add(angle + 0.0001);
+  const allWalls: Segment[] = [];
+
+  if (maxRadius !== undefined) {
+    const minX = ox - maxRadius;
+    const maxX = ox + maxRadius;
+    const minY = oy - maxRadius;
+    const maxY = oy + maxRadius;
+
+    // Fast AABB filter to discard walls definitely out of reach
+    for (let i = 0; i < walls.length; i++) {
+      const w = walls[i];
+      if ((w.a.x < minX && w.b.x < minX) ||
+          (w.a.x > maxX && w.b.x > maxX) ||
+          (w.a.y < minY && w.b.y < minY) ||
+          (w.a.y > maxY && w.b.y > maxY)) {
+        continue;
+      }
+      allWalls.push(w);
+    }
+  } else {
+    for (let i = 0; i < walls.length; i++) {
+      allWalls.push(walls[i]);
     }
   }
 
-  // Cast rays
-  const points: Array<{ angle: number; point: Point }> = [];
+  // ALWAYS add map bounding box walls. The 2D raycasting algorithm relies on
+  // casting rays towards the 4 corners of the map to establish a full 360-degree
+  // angular sweep for the resulting polygon. If these are omitted when maxRadius
+  // is small, the vision polygon collapses into a thin sliver or vanishes entirely.
+  allWalls.push({ a: { x: 0, y: 0 }, b: { x: bounds.width, y: 0 } });
+  allWalls.push({ a: { x: bounds.width, y: 0 }, b: { x: bounds.width, y: bounds.height } });
+  allWalls.push({ a: { x: bounds.width, y: bounds.height }, b: { x: 0, y: bounds.height } });
+  allWalls.push({ a: { x: 0, y: bounds.height }, b: { x: 0, y: 0 } });
 
-  for (const angle of angles) {
-    const dir: Point = { x: Math.cos(angle), y: Math.sin(angle) };
+  const numWalls = allWalls.length;
+  if (numWalls === 0) return [];
+
+  // Each wall segment has 2 endpoints. For each endpoint, we cast 3 rays:
+  // directly at it, and slightly offset left/right to peek around corners.
+  const angles = new Float64Array(numWalls * 6);
+  let angleCount = 0;
+
+  for (let i = 0; i < numWalls; i++) {
+    const wall = allWalls[i];
+
+    const angleA = Math.atan2(wall.a.y - oy, wall.a.x - ox);
+    angles[angleCount++] = angleA;
+    angles[angleCount++] = angleA - 0.0001;
+    angles[angleCount++] = angleA + 0.0001;
+
+    const angleB = Math.atan2(wall.b.y - oy, wall.b.x - ox);
+    angles[angleCount++] = angleB;
+    angles[angleCount++] = angleB - 0.0001;
+    angles[angleCount++] = angleB + 0.0001;
+  }
+
+  // Sort numeric array in place (much faster than converting Sets to Arrays)
+  angles.sort();
+
+  const points: Point[] = [];
+
+  let prevAngle = -Infinity;
+  for (let a = 0; a < angleCount; a++) {
+    const angle = angles[a];
+    // Skip duplicate angles to save on raycasts
+    if (angle === prevAngle) continue;
+    prevAngle = angle;
+
+    const dirX = Math.cos(angle);
+    const dirY = Math.sin(angle);
 
     let closestT = Infinity;
-    for (const wall of allWalls) {
-      const t = raySegmentIntersect(origin, dir, wall);
+    for (let i = 0; i < numWalls; i++) {
+      const wall = allWalls[i];
+      const t = fastIntersect(
+        ox, oy, dirX, dirY, wall.a.x, wall.a.y, wall.b.x, wall.b.y
+      );
       if (t !== null && t < closestT) {
         closestT = t;
       }
@@ -97,24 +160,18 @@ export function computeVisibilityPolygon(
 
     if (closestT === Infinity) continue;
 
-    // Clamp to max radius if specified
+    // Clamp ray length to vision maxRadius
     if (maxRadius !== undefined && closestT > maxRadius) {
       closestT = maxRadius;
     }
 
     points.push({
-      angle,
-      point: {
-        x: origin.x + dir.x * closestT,
-        y: origin.y + dir.y * closestT,
-      },
+      x: ox + dirX * closestT,
+      y: oy + dirY * closestT,
     });
   }
 
-  // Sort by angle
-  points.sort((a, b) => a.angle - b.angle);
-
-  return points.map((p) => p.point);
+  return points;
 }
 
 /**
