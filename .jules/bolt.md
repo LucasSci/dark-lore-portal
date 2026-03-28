@@ -4,3 +4,7 @@
 ## 2026-03-21 - State co-location for high-frequency text inputs
 **Learning:** High-frequency state updates like `chatDraft` and `diceDraft` mapped directly in massive parent components (like `MesaPage`) force expensive full-tree React diffs on every keystroke. This causes rendering lag and unnecessarily runs hooks like `useMemo` and function recreating, even with large sub-components like `VttPixiStage` in the tree.
 **Action:** Always co-locate high-frequency text input states into their own small components (`ChatInput`, `DiceInput`) that manage their own local `draft` state and pass the finalized value back up to the parent using an `onSend` callback.
+
+## 2024-05-19 - Fast 2D Raycasting
+**Learning:** In the VTT feature, the O(n^2) 2D raycasting loop in `computeVisibilityPolygon` was creating massive garbage collection overhead by repeatedly allocating vector `Point` objects and using `Set` for angle deduplication in the hot loop. Furthermore, it wasn't filtering out distant walls before calculating intersections.
+**Action:** When working on math-heavy hot loops, unpack objects into primitive arrays (e.g. `Float64Array`) to eliminate GC pressure. Always inline simple vector math like Cramer's rule for segment intersection. Implement Axis-Aligned Bounding Box (AABB) checks first to cheaply filter out irrelevant elements before falling into O(n^2) calculations, but ensure you unconditionally include global map boundaries if the algorithm relies on them to seal the polygon.

@@ -60,37 +60,100 @@ export function computeVisibilityPolygon(
   bounds: { width: number; height: number },
   maxRadius?: number,
 ): Point[] {
-  // Add bounding box walls
-  const allWalls: Segment[] = [
-    ...walls,
-    { a: { x: 0, y: 0 }, b: { x: bounds.width, y: 0 } },
-    { a: { x: bounds.width, y: 0 }, b: { x: bounds.width, y: bounds.height } },
-    { a: { x: bounds.width, y: bounds.height }, b: { x: 0, y: bounds.height } },
-    { a: { x: 0, y: bounds.height }, b: { x: 0, y: 0 } },
-  ];
+  const ox = origin.x;
+  const oy = origin.y;
 
-  // Collect unique angles toward every endpoint
-  const angles = new Set<number>();
-  for (const wall of allWalls) {
-    for (const point of [wall.a, wall.b]) {
-      const angle = Math.atan2(point.y - origin.y, point.x - origin.x);
-      angles.add(angle);
-      // Slight offsets to peek around corners
-      angles.add(angle - 0.0001);
-      angles.add(angle + 0.0001);
+  // Filter walls by AABB if maxRadius is provided to reduce O(n^2) workload.
+  // We allocate a flat typed array to avoid object GC overhead in the hot loop.
+  const numOriginalWalls = walls.length;
+  let activeWallsCount = 0;
+
+  const flatWalls = new Float64Array((numOriginalWalls + 4) * 4);
+
+  for (let i = 0; i < numOriginalWalls; i++) {
+    const w = walls[i];
+
+    if (maxRadius !== undefined) {
+      const minX = Math.min(w.a.x, w.b.x);
+      const maxX = Math.max(w.a.x, w.b.x);
+      const minY = Math.min(w.a.y, w.b.y);
+      const maxY = Math.max(w.a.y, w.b.y);
+
+      if (minX > ox + maxRadius || maxX < ox - maxRadius ||
+          minY > oy + maxRadius || maxY < oy - maxRadius) {
+        continue; // Wall is completely outside the vision/light radius AABB
+      }
     }
+
+    const idx = activeWallsCount * 4;
+    flatWalls[idx] = w.a.x;
+    flatWalls[idx + 1] = w.a.y;
+    flatWalls[idx + 2] = w.b.x;
+    flatWalls[idx + 3] = w.b.y;
+    activeWallsCount++;
   }
 
-  // Cast rays
-  const points: Array<{ angle: number; point: Point }> = [];
+  // Add bounds (must be unconditionally included for full 360-degree raycasting)
+  let idx = activeWallsCount * 4;
+  flatWalls[idx++] = 0; flatWalls[idx++] = 0; flatWalls[idx++] = bounds.width; flatWalls[idx++] = 0;
+  flatWalls[idx++] = bounds.width; flatWalls[idx++] = 0; flatWalls[idx++] = bounds.width; flatWalls[idx++] = bounds.height;
+  flatWalls[idx++] = bounds.width; flatWalls[idx++] = bounds.height; flatWalls[idx++] = 0; flatWalls[idx++] = bounds.height;
+  flatWalls[idx++] = 0; flatWalls[idx++] = bounds.height; flatWalls[idx++] = 0; flatWalls[idx++] = 0;
 
-  for (const angle of angles) {
-    const dir: Point = { x: Math.cos(angle), y: Math.sin(angle) };
+  activeWallsCount += 4;
+
+  // Replace Set<number> with Float64Array to minimize GC pauses
+  const rawAngles = new Float64Array(activeWallsCount * 6);
+  let angleCount = 0;
+
+  for (let i = 0; i < activeWallsCount * 4; i += 4) {
+    const ax = flatWalls[i];
+    const ay = flatWalls[i+1];
+    const bx = flatWalls[i+2];
+    const by = flatWalls[i+3];
+
+    const angleA = Math.atan2(ay - oy, ax - ox);
+    rawAngles[angleCount++] = angleA;
+    rawAngles[angleCount++] = angleA - 0.0001;
+    rawAngles[angleCount++] = angleA + 0.0001;
+
+    const angleB = Math.atan2(by - oy, bx - ox);
+    rawAngles[angleCount++] = angleB;
+    rawAngles[angleCount++] = angleB - 0.0001;
+    rawAngles[angleCount++] = angleB + 0.0001;
+  }
+
+  rawAngles.sort();
+
+  const points: Point[] = [];
+
+  for (let i = 0; i < angleCount; i++) {
+    const angle = rawAngles[i];
+    // Skip duplicate angles to save work
+    if (i > 0 && angle === rawAngles[i - 1]) continue;
+
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
 
     let closestT = Infinity;
-    for (const wall of allWalls) {
-      const t = raySegmentIntersect(origin, dir, wall);
-      if (t !== null && t < closestT) {
+
+    for (let j = 0; j < activeWallsCount * 4; j += 4) {
+      const ax = flatWalls[j];
+      const ay = flatWalls[j+1];
+      const bx = flatWalls[j+2];
+      const by = flatWalls[j+3];
+
+      const wdx = bx - ax;
+      const wdy = by - ay;
+
+      // Inlined raySegmentIntersect logic
+      const denom = dx * wdy - dy * wdx;
+      if (Math.abs(denom) < 1e-10) continue;
+
+      const t = ((ax - ox) * wdy - (ay - oy) * wdx) / denom;
+      const u = ((ax - ox) * dy - (ay - oy) * dx) / denom;
+
+      if (t >= 0 && u >= 0 && u <= 1 && t < closestT) {
         closestT = t;
       }
     }
@@ -103,18 +166,12 @@ export function computeVisibilityPolygon(
     }
 
     points.push({
-      angle,
-      point: {
-        x: origin.x + dir.x * closestT,
-        y: origin.y + dir.y * closestT,
-      },
+      x: ox + dx * closestT,
+      y: oy + dy * closestT,
     });
   }
 
-  // Sort by angle
-  points.sort((a, b) => a.angle - b.angle);
-
-  return points.map((p) => p.point);
+  return points;
 }
 
 /**
