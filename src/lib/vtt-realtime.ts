@@ -24,12 +24,14 @@ import {
 
 const db = supabase as typeof supabase & LooseSupabaseClient;
 
+import { generateSecureId, generateSecureShortId } from "@/lib/utils";
+
 function toLooseRows(value: unknown) {
   return Array.isArray(value) ? value.filter(isLooseRecord) : [];
 }
 
 function makePresenceKey() {
-  return `presence-${Math.random().toString(36).slice(2, 10)}`;
+  return `presence-${generateSecureShortId()}`;
 }
 
 function normalizePresence(presenceState: Record<string, Array<Record<string, unknown>>>) {
@@ -317,7 +319,7 @@ export async function loadSceneSnapshot(sessionId: string) {
               const spawn = asLooseRecord(connection.spawn);
 
               return {
-                id: String(connection.id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 8)),
+                id: String(connection.id ?? generateSecureId()),
                 edge:
                   connection.edge === "north" ||
                   connection.edge === "east" ||
