@@ -13,10 +13,10 @@ const contactPanels = [
   },
   {
     icon: MessageSquareMore,
-    title: "Sala de Ecos",
-    body: "Canal para leitores, mestres e cronistas que desejam compartilhar rumores.",
-    action: "Abrir comunidade",
-    href: "/comunidade",
+    title: "Sala de Sessao",
+    body: "Acesso rapido ao nucleo de jogo para mesa, oraculo e acompanhamento da campanha.",
+    action: "Ir para jogar",
+    href: "/jogar",
   },
   {
     icon: MapPin,
@@ -37,8 +37,8 @@ export default function ContactPage() {
           <p className="dark-lore-section-kicker justify-center">{archiveBrand.subtitle}</p>
           <h1 className="dark-lore-display-title">Fale com o Arquivo</h1>
           <p className="dark-lore-hero-text max-w-3xl text-center">
-            Toda correspondencia que cruza estas portas passa pelo arquivo vivo de Areias de
-            Zerrikania. Se houver algo a registrar, este e o limiar.
+            Toda correspondencia que cruza estas portas passa por Areias de Zerrikania. Se houver
+            algo a registrar, este e o limiar.
           </p>
         </div>
       </section>

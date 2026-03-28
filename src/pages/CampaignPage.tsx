@@ -127,7 +127,7 @@ export default function CampaignPage() {
       <section className="dark-lore-cta-band">
         <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>
         <Link to="/jogar" className="dark-lore-button">
-          Ler no arquivo vivo
+          Entrar na sessao
         </Link>
       </section>
     </div>

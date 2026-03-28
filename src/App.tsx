@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AppErrorBoundary from "@/components/app/AppErrorBoundary";
 import RouteFallback from "@/components/app/RouteFallback";
+import { archiveBrand } from "@/lib/archive-reference";
+import { buildDocumentTitle, resolveRouteManifest } from "@/lib/route-manifest";
 import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
@@ -30,11 +32,59 @@ const AccountPage = lazy(() => import("./pages/AccountPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+function upsertMetaTag(selector: string, attributes: Record<string, string>) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const element = document.head.querySelector(selector) ?? document.createElement("meta");
+
+  Object.entries(attributes).forEach(([key, value]) => {
+    element.setAttribute(key, value);
+  });
+
+  if (!element.parentElement) {
+    document.head.appendChild(element);
+  }
+}
+
+function RouteMetaController() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const entry = resolveRouteManifest(location.pathname);
+    const title = buildDocumentTitle(entry?.title ?? archiveBrand.title);
+    const description =
+      entry?.description ??
+      "Arquivo do Continente reúne dossiês, bestiário, crônicas, cartografia e sessão em torno de Areias de Zerrikania.";
+
+    document.title = title;
+    upsertMetaTag('meta[name="description"]', { name: "description", content: description });
+    upsertMetaTag('meta[property="og:title"]', { property: "og:title", content: title });
+    upsertMetaTag('meta[property="og:description"]', {
+      property: "og:description",
+      content: description,
+    });
+    upsertMetaTag('meta[name="twitter:title"]', { name: "twitter:title", content: title });
+    upsertMetaTag('meta[name="twitter:description"]', {
+      name: "twitter:description",
+      content: description,
+    });
+    upsertMetaTag('meta[name="robots"]', {
+      name: "robots",
+      content: entry?.noIndex ? "noindex, nofollow" : "index, follow",
+    });
+  }, [location.pathname]);
+
+  return null;
+}
+
 function AppRoutes() {
   const location = useLocation();
 
   return (
     <AppErrorBoundary resetKey={location.pathname}>
+      <RouteMetaController />
       <Suspense fallback={<RouteFallback />}>
         <Layout>
           <Routes>

@@ -1,3 +1,5 @@
+import { LOCAL_SESSION_ID } from "@/lib/local-identities";
+
 export const BOARD_COLUMNS = 12;
 export const BOARD_ROWS = 8;
 export const DEFAULT_GRID_SIZE = 72;
@@ -591,7 +593,7 @@ export function countRevealedCells(fog: FogState) {
   return Object.values(fog).filter(Boolean).length;
 }
 
-export function createDemoTokens(): TabletopToken[] {
+export function createSeedTokens(): TabletopToken[] {
   return [
     {
       id: makeEntityId(),
@@ -844,7 +846,7 @@ export function createScenePage(
   };
 }
 
-function createDemoPage(sessionId: string): VttPage {
+function createSeedPage(sessionId: string): VttPage {
   return {
     ...createScenePage(sessionId, "Cripta de Velkyn", {
       region: "Velkyn",
@@ -872,9 +874,9 @@ export function createTokenObject(token: TabletopToken, pageId: string): VttToke
   };
 }
 
-export function createSceneModel(sessionId: string = "demo-session"): SceneModel {
-  const page = createDemoPage(sessionId);
-  const objects = createDemoTokens().map((token) => createTokenObject(token, page.id));
+export function createSceneModel(sessionId: string = LOCAL_SESSION_ID): SceneModel {
+  const page = createSeedPage(sessionId);
+  const objects = createSeedTokens().map((token) => createTokenObject(token, page.id));
 
   return {
     sessionId,

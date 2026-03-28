@@ -145,8 +145,8 @@ export default function MapaPage() {
                   O continente conhecido
                 </h2>
                 <p className="dark-lore-card-copy max-w-[70ch] text-sm">
-                  O motor do atlas continua intacto. A mudanca aqui e de moldura, leitura e
-                  hierarquia visual, para que o mapa respire como parte do mesmo arquivo.
+                  Abra o mappa mundi, desca por regioes e carregue a leitura ate a mesa sem perder
+                  o fio entre cartografia, dossies e campanha.
                 </p>
               </div>
 
@@ -220,8 +220,8 @@ export default function MapaPage() {
         <p className="dark-lore-section-kicker">Travessia</p>
         <h2 className="dark-lore-cta-line">Toda rota pede contexto.</h2>
         <p className="dark-lore-hero-text text-center">
-          O mapa agora fala a mesma lingua do arquivo, sem perder o atlas, os filtros e a leitura
-          por camadas que ja sustentavam a exploracao.
+          O atlas conserva suas camadas, filtros e cartas regionais, agora ligados ao mesmo ritmo
+          de leitura do restante do arquivo.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <Link to="/universo" className="dark-lore-button">

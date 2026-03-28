@@ -66,7 +66,7 @@ export default function HomePage() {
               Explorar Universo
             </Link>
             <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
-              Abrir Arquivo Vivo
+              Entrar para Jogar
             </Link>
           </div>
         </motion.div>
@@ -106,11 +106,11 @@ export default function HomePage() {
             cronicas de estrada retornam como se nunca tivessem sido encerradas.
           </p>
           <p className="dark-lore-editorial-text">
-            O portal agora funciona como o arquivo vivo de Areias de Zerrikania: universo,
-            bestiario, cronicas, cartografia e leitura ritual partilham o mesmo limiar.
+            Universo, bestiario, cronicas, cartografia e sessao partilham o mesmo eixo de leitura,
+            com Areias de Zerrikania servindo de selo para tudo o que e aberto aqui.
           </p>
           <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
-            Abrir o arquivo vivo
+            Abrir a camara de sessao
           </Link>
         </div>
 

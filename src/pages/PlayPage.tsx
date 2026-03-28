@@ -72,8 +72,8 @@ export default function PlayPage() {
             <span className="dark-lore-section-kicker">Camara de sessao</span>
             <h1 className="dark-lore-section-title max-w-[12ch]">Jogar sem romper o arquivo.</h1>
             <p className="dark-lore-hero-text max-w-[62ch] text-base md:text-lg">
-              O nucleo de jogo volta a reunir mesa, oraculo, ficha e comando. A sessao acontece
-              aqui, e o oraculo entra como uma camada viva do mesmo ritual, nao como substituicao.
+              A sessao parte deste nucleo. Mesa, oraculo, ficha e painel do mestre entram como
+              ferramentas do mesmo jogo, sem disputar o centro da campanha.
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -161,7 +161,7 @@ export default function PlayPage() {
       </section>
 
       <section className="dark-lore-cta-band">
-        <p className="dark-lore-section-kicker">Arquivo vivo</p>
+        <p className="dark-lore-section-kicker">Sessao em curso</p>
         <h2 className="dark-lore-cta-line">A sessao permanece aberta.</h2>
         <p className="dark-lore-hero-text text-center">
           Entre pela mesa quando for hora de jogar. Abra o oraculo quando o arquivo precisar
