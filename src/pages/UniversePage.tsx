@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import ContinentMap from "@/components/world/ContinentMap";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,60 @@ const bestiaryOrigins = [
     title: "Horrores Cosmicos",
     description: "Entidades antigas que nao pertencem a este mundo e tratam a realidade como pele fina.",
     icon: Skull,
+  },
+] as const;
+
+const universePortals = [
+  {
+    title: "Bestiario",
+    description: "Abra as criaturas do continente com leitura de campo, fraquezas e rotas ligadas ao atlas.",
+    to: "/bestiario",
+    cta: "Abrir bestiario",
+  },
+  {
+    title: "Cronicas",
+    description: "Continue pelos manuscritos e veja como nomes, locais e eras voltam a respirar em sessao.",
+    to: "/cronicas",
+    cta: "Ler cronicas",
+  },
+  {
+    title: "Mapa",
+    description: "Cruze dossies, reinos e locais com a cartografia do continente em leitura por camadas.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+  {
+    title: "Jogar",
+    description: "Leve o arquivo para a sessao e abra mesa, oraculo e ferramentas no mesmo eixo de leitura.",
+    to: "/jogar",
+    cta: "Abrir arquivo vivo",
+  },
+] as const;
+
+const bestiaryPortals = [
+  {
+    title: "Universo",
+    description: "Volte ao arquivo maior para cruzar criaturas com faccoes, locais e historia.",
+    to: "/universo",
+    cta: "Cruzar universo",
+  },
+  {
+    title: "Mapa",
+    description: "Abra a cartografia completa e veja onde cada ameaca ancora sua presenca.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+  {
+    title: "Cronicas",
+    description: "Siga os manuscritos onde os nomes das criaturas continuam a ecoar.",
+    to: "/cronicas",
+    cta: "Ler cronicas",
+  },
+  {
+    title: "Jogar",
+    description: "Leve a criatura para a mesa, cruze com a sessao e transforme a leitura em encontro.",
+    to: "/jogar",
+    cta: "Abrir sessao",
   },
 ] as const;
 
@@ -930,6 +985,13 @@ function UniverseIndex() {
             ) : null}
           </section>
 
+          <ArchivePortalSection
+            kicker="Portais da caca"
+            title="Cruze a criatura com o restante do arquivo"
+            description="O bestiario ganha mais peso quando se abre para mundo, manuscritos, mapa e sessao."
+            items={bestiaryPortals}
+          />
+
           <section className="dark-lore-cta-band">
             <p className="dark-lore-cta-line">Cada sombra esconde um nome. Cada nome, uma maldicao.</p>
             <Link to="/cronicas" className="dark-lore-button">
@@ -1082,7 +1144,7 @@ function UniverseIndex() {
                       className="dark-lore-archive-card"
                     >
                       <p className="dark-lore-card-meta">
-                        {publication.chapterLabel} · {publication.location}
+                        {publication.chapterLabel} - {publication.location}
                       </p>
                       <h3 className="dark-lore-card-title text-[clamp(1.5rem,2vw,2rem)]">
                         {publication.title}
@@ -1117,6 +1179,13 @@ function UniverseIndex() {
               ))}
             </div>
           </section>
+
+          <ArchivePortalSection
+            kicker="Portais do continente"
+            title="Continue a leitura por outras portas do arquivo"
+            description="O universo nao termina no verbete. Cada trilha pode descer ao bestiario, aos manuscritos, ao atlas ou a sessao."
+            items={universePortals}
+          />
 
         <section className="dark-lore-cta-band">
           <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>

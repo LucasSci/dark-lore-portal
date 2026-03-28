@@ -2,6 +2,7 @@ import { BookMarked, Compass, ScrollText, Skull, Swords } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import { encyclopediaEntries } from "@/lib/encyclopedia";
 import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
@@ -61,6 +62,33 @@ const archiveIndexCards = [
     title: "Jogar",
     description: "Hub de sessao com mesa, oraculo e caminhos de leitura viva para continuar a campanha.",
     path: "/jogar",
+  },
+] as const;
+
+const homeArchivePortals = [
+  {
+    title: "Universo",
+    description: "Leia eras, faccoes, locais e personagens antes de descer para o restante do arquivo.",
+    to: "/universo",
+    cta: "Abrir universo",
+  },
+  {
+    title: "Bestiario",
+    description: "Cruze criaturas, fraquezas, regioes e niveis de perigo num unico indice de caca.",
+    to: "/bestiario",
+    cta: "Abrir bestiario",
+  },
+  {
+    title: "Cronicas",
+    description: "Entre nos manuscritos de sessao, contratos e registros que mantem a campanha viva.",
+    to: "/cronicas",
+    cta: "Ler cronicas",
+  },
+  {
+    title: "Mapa",
+    description: "Abra o continente por camadas e ligue rotas, dossies e a mesa sem romper a leitura.",
+    to: "/mapa",
+    cta: "Abrir atlas",
   },
 ] as const;
 
@@ -225,7 +253,7 @@ export default function HomePage() {
                     </h3>
                     <p className="dark-lore-card-meta">
                       {metadata?.type ?? "Entidade"}
-                      {metadata ? ` · Perigo ${metadata.dangerLevel}/5` : ""}
+                      {metadata ? ` - Perigo ${metadata.dangerLevel}/5` : ""}
                     </p>
                     <p className="dark-lore-card-copy">{entry.summary}</p>
                     <Link
@@ -241,6 +269,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <ArchivePortalSection
+        kicker="Explore o arquivo"
+        title="Quatro portas para continuar a leitura"
+        description="O portal inteiro foi organizado como uma estante coerente: mundo, criaturas, manuscritos e atlas se abrem sob a mesma voz editorial."
+        items={homeArchivePortals}
+      />
 
       <section className="dark-lore-cta-band">
         <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>

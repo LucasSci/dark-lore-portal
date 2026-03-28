@@ -2,6 +2,7 @@ import { BookMarked, ScrollText, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import { archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
 import { useCampaignPublications } from "@/lib/publications";
@@ -20,13 +21,40 @@ const chronicleWays = [
   },
   {
     icon: Sparkles,
-    title: "Maldições Ancestrais",
+    title: "Maldicoes Ancestrais",
     description: "Rumores de mesa, rastros de horror e profecias que voltam em ciclos.",
   },
   {
     icon: BookMarked,
     title: "Arquivo Velado",
     description: "Um acervo continuo de sessao, campanha e cronicas ligadas ao mesmo mundo.",
+  },
+] as const;
+
+const chroniclePortals = [
+  {
+    title: "Universo",
+    description: "Cruze os manuscritos com reinos, faccoes e personagens do mesmo arquivo.",
+    to: "/universo",
+    cta: "Cruzar universo",
+  },
+  {
+    title: "Bestiario",
+    description: "Abra criaturas, rastros e ameacas citadas nos relatos para manter o contexto vivo.",
+    to: "/bestiario",
+    cta: "Abrir bestiario",
+  },
+  {
+    title: "Mapa",
+    description: "Siga as rotas, fronteiras e locais mencionados nas cronicas sem perder a trilha.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+  {
+    title: "Jogar",
+    description: "Leve os relatos para a sessao e transforme manuscritos em cena, mesa e decisao.",
+    to: "/jogar",
+    cta: "Entrar na sessao",
   },
 ] as const;
 
@@ -72,9 +100,7 @@ export default function CampaignPage() {
       <section className="dark-lore-page-frame dark-lore-editorial-grid">
         <div className="dark-lore-editorial-copy">
           <p className="dark-lore-section-kicker">Os manuscritos velados</p>
-          <h2 className="dark-lore-section-title">
-            Cada entrada preserva uma noite mal encerrada.
-          </h2>
+          <h2 className="dark-lore-section-title">Cada entrada preserva uma noite mal encerrada.</h2>
           <p className="dark-lore-editorial-text">
             O arquivo reune chamadas de sessao, contratos pagos em silencio, memorias de estrada e
             testemunhos recolhidos perto demais do abismo. Cada pagina foi mantida para que a mesa
@@ -154,7 +180,7 @@ export default function CampaignPage() {
             </div>
             <div className="dark-lore-feature-body">
               <p className="dark-lore-card-meta">
-                {String(publication.chapterNumber).padStart(2, "0")} · {publication.location}
+                {String(publication.chapterNumber).padStart(2, "0")} - {publication.location}
               </p>
               <h2 className="dark-lore-card-title">{publication.title}</h2>
               <p className="dark-lore-card-copy">{publication.excerpt}</p>
@@ -171,7 +197,9 @@ export default function CampaignPage() {
           <div className="space-y-6">
             <div className="text-center">
               <p className="dark-lore-section-kicker justify-center">Arquivo continuo</p>
-              <h2 className="dark-lore-section-title mx-auto">Rastros, contratos e rumores preservados</h2>
+              <h2 className="dark-lore-section-title mx-auto">
+                Rastros, contratos e rumores preservados
+              </h2>
             </div>
 
             <div className="dark-lore-list-grid">
@@ -185,7 +213,7 @@ export default function CampaignPage() {
                   className="dark-lore-archive-card"
                 >
                   <p className="dark-lore-card-meta">
-                    {publication.location} · {publication.kind}
+                    {publication.location} - {publication.kind}
                   </p>
                   <h3 className="dark-lore-card-title text-[clamp(1.5rem,2vw,2rem)]">
                     {publication.title}
@@ -197,6 +225,13 @@ export default function CampaignPage() {
           </div>
         </section>
       ) : null}
+
+      <ArchivePortalSection
+        kicker="Portais do arquivo"
+        title="Continue a cronica por outras rotas"
+        description="Os manuscritos nao terminam na leitura. Cada registro pode abrir criaturas, atlas, sessao ou universo no mesmo compasso."
+        items={chroniclePortals}
+      />
 
       <section className="dark-lore-cta-band">
         <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>
