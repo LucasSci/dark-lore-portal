@@ -90,6 +90,14 @@ const bestiaryOrigins = [
   },
 ] as const;
 
+const archiveCategoryDescriptions: Record<EncyclopediaCategory, string> = {
+  personagens: "Perfis, linhagens e nomes que sustentam as cronicas e os conflitos do continente.",
+  monstros: "Criaturas, ameacas e registros de caca cruzados com atlas, fraquezas e sessao.",
+  locais: "Ruinas, cidades, fronteiras e passagens que ancoram a geografia do arquivo.",
+  faccoes: "Ordens, cultos e interesses em choque, mantidos sob o mesmo selo editorial.",
+  historia: "Capitulos, acontecimentos e ecos de eras antigas organizados para leitura continua.",
+};
+
 function useActiveUniverseSection(items: SectionNavItem[]) {
   const [activeId, setActiveId] = useState(items[0]?.id ?? "");
 
@@ -504,6 +512,17 @@ function UniverseIndex() {
     filteredMonsterEntries[0] ??
     immersiveEntries.find((entry) => entry.category === "monstros") ??
     immersiveEntries[0];
+  const archiveCategoryCards = useMemo(
+    () =>
+      categories.map((category) => ({
+        category,
+        count: getEntriesByCategory(category).length,
+        description: archiveCategoryDescriptions[category],
+      })),
+    [categories],
+  );
+  const featuredPublications = filteredPublications.slice(0, 3);
+  const archivePublicationList = filteredPublications.slice(3, 7);
 
   const heroImage = bestiaryMode
     ? featuredMonster?.image ?? archiveReferenceArt.creature
@@ -714,7 +733,10 @@ function UniverseIndex() {
 
       {bestiaryMode ? (
         <>
-          <section id="universo-categorias" className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+          <section
+            id="universo-categorias"
+            className="dark-lore-anchor-section dark-lore-page-frame px-6 py-8 md:px-8 md:py-10"
+          >
             <div className="space-y-6">
               <div className="text-center">
                 <p className="dark-lore-section-kicker justify-center">Busca ritual</p>
@@ -744,7 +766,7 @@ function UniverseIndex() {
             </div>
           </section>
 
-          <section id="universo-verbetes" className="space-y-6">
+          <section id="universo-verbetes" className="dark-lore-anchor-section space-y-6">
             <div className="text-center">
               <p className="dark-lore-section-kicker justify-center">Criaturas catalogadas</p>
               <h2 className="dark-lore-section-title mx-auto">O arquivo das criaturas</h2>
@@ -767,7 +789,7 @@ function UniverseIndex() {
             )}
           </section>
 
-          <section id="universo-atlas" className="space-y-6">
+          <section id="universo-atlas" className="dark-lore-anchor-section space-y-6">
             <div className="grid gap-6 md:grid-cols-3">
               {bestiaryOrigins.map(({ title, description, icon: Icon }, index) => (
                 <motion.article
@@ -834,46 +856,97 @@ function UniverseIndex() {
         </>
       ) : (
         <>
-          <section id="universo-categorias" className="dark-lore-page-frame dark-lore-editorial-grid">
-            <div className="dark-lore-editorial-figure">
-              <img
-                src={archiveReferenceArt.forgotten}
-                alt=""
-                aria-hidden="true"
-                className="dark-lore-editorial-image"
-              />
-              <div className="dark-lore-editorial-glow" />
-            </div>
+          <section id="universo-categorias" className="dark-lore-anchor-section space-y-6">
+            <section className="dark-lore-page-frame dark-lore-editorial-grid">
+              <div className="dark-lore-editorial-copy">
+                <p className="dark-lore-section-kicker">Introducao ao mundo</p>
+                <h2 className="dark-lore-section-title">
+                  Entre as areias, o arquivo ainda respira.
+                </h2>
+                <p className="dark-lore-editorial-text">
+                  O universo do continente mistura reinos esquecidos, capitulos velados, faccoes
+                  em choque e criaturas que seguem atadas a lugares, ruinas e nomes proibidos.
+                </p>
+                <p className="dark-lore-editorial-text">
+                  A leitura foi organizada como estante de arquivo: primeiro o limiar do mundo,
+                  depois a cartografia, os manuscritos e por fim os dossies que sustentam cada
+                  rastro.
+                </p>
+                <Link to="/jogar" className="dark-lore-button">
+                  Abrir Arquivo Vivo
+                </Link>
+              </div>
 
-            <div className="dark-lore-editorial-copy">
-              <p className="dark-lore-section-kicker">Limiar</p>
-              <h2 className="dark-lore-section-title">Entre as areias, o arquivo ainda respira.</h2>
-              <p className="dark-lore-editorial-text">
-                O universo do arquivo mistura reinos esquecidos, manuscritos velados, linhagens
-                partidas e criaturas mantidas vivas por relatos, rituais e ruinas abertas demais.
-              </p>
-              <p className="dark-lore-editorial-text">
-                Explore as camadas do continente como quem abre uma estante proibida:
-                cartografia, dossies, cronicas e leitura viva costurados pela mesma memoria.
-              </p>
-              <Link to="/jogar" className="dark-lore-button">
-                Abrir Arquivo Vivo
-              </Link>
-            </div>
+              <div className="dark-lore-editorial-figure">
+                <img
+                  src={archiveReferenceArt.forgotten}
+                  alt=""
+                  aria-hidden="true"
+                  className="dark-lore-editorial-image"
+                />
+                <div className="dark-lore-editorial-glow" />
+              </div>
+            </section>
+
+            <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <p className="dark-lore-section-kicker justify-center">Estrutura do arquivo</p>
+                  <h2 className="dark-lore-section-title mx-auto">
+                    Cinco trilhas sustentam a leitura do continente
+                  </h2>
+                </div>
+
+                <div className="dark-lore-codex-grid">
+                  {archiveCategoryCards.map(({ category, count, description }, index) => {
+                    const Icon = categoryIcons[category];
+
+                    return (
+                      <motion.article
+                        key={category}
+                        initial={{ opacity: 0, y: 18 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={revealViewport}
+                        transition={{ duration: 0.45, delay: index * 0.05 }}
+                        className="dark-lore-archive-card dark-lore-archive-card-compact"
+                      >
+                        <Link
+                          to={category === "monstros" ? "/bestiario" : "/universo#universo-verbetes"}
+                          className="dark-lore-codex-card"
+                        >
+                          <div className="dark-lore-icon-emblem">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="space-y-3">
+                            <p className="dark-lore-card-meta">
+                              {String(count).padStart(2, "0")} registros
+                            </p>
+                            <h3 className="dark-lore-card-title text-[clamp(1.35rem,1.8vw,1.72rem)]">
+                              {encyclopediaCategories[category].label}
+                            </h3>
+                            <p className="dark-lore-card-copy">{description}</p>
+                          </div>
+                        </Link>
+                      </motion.article>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
           </section>
 
-          <section id="universo-atlas" className="space-y-6">
+          <section id="universo-atlas" className="dark-lore-anchor-section space-y-6">
             <div className="text-center">
               <p className="dark-lore-section-kicker justify-center">Cartografia</p>
               <h2 className="dark-lore-section-title mx-auto">Rotas, reinos e arquivos arcanos</h2>
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(21rem,0.92fr)]">
               <div className="dark-lore-map-wrapper">
-                <ContinentMap compact={false} />
+                <ContinentMap compact />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
+              <div className="grid auto-rows-fr gap-4 md:grid-cols-3 xl:grid-cols-1">
                 {archiveHighlights.map((highlight, index) => (
                   <motion.article
                     key={highlight.title}
@@ -902,21 +975,50 @@ function UniverseIndex() {
           </section>
 
           {filteredPublications.length > 0 ? (
-            <section id="universo-cronicas" className="space-y-6">
+            <section id="universo-cronicas" className="dark-lore-anchor-section space-y-6">
               <div className="text-center">
                 <p className="dark-lore-section-kicker justify-center">Leitura exclusiva</p>
                 <h2 className="dark-lore-section-title mx-auto">Manuscritos velados</h2>
               </div>
 
               <div className="dark-lore-feature-grid">
-                {filteredPublications.slice(0, 6).map((publication) => (
+                {featuredPublications.map((publication) => (
                   <UniversePublicationCard key={publication.slug} publication={publication} />
                 ))}
               </div>
+
+              {archivePublicationList.length > 0 ? (
+                <div className="dark-lore-list-grid">
+                  {archivePublicationList.map((publication, index) => (
+                    <motion.article
+                      key={publication.slug}
+                      initial={{ opacity: 0, y: 16 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ duration: 0.45, delay: index * 0.05 }}
+                      className="dark-lore-archive-card"
+                    >
+                      <p className="dark-lore-card-meta">
+                        {publication.chapterLabel} · {publication.location}
+                      </p>
+                      <h3 className="dark-lore-card-title text-[clamp(1.5rem,2vw,2rem)]">
+                        {publication.title}
+                      </h3>
+                      <p className="dark-lore-card-copy">{publication.excerpt}</p>
+                      <Link
+                        to={`/universo/${publication.slug}`}
+                        className="dark-lore-button dark-lore-button-small"
+                      >
+                        Ler manuscrito
+                      </Link>
+                    </motion.article>
+                  ))}
+                </div>
+              ) : null}
             </section>
           ) : null}
 
-          <section id="universo-verbetes" className="space-y-6">
+          <section id="universo-verbetes" className="dark-lore-anchor-section space-y-6">
             <div className="text-center">
               <p className="dark-lore-section-kicker justify-center">Dossies do continente</p>
               <h2 className="dark-lore-section-title mx-auto">Arquivos arcanos</h2>
@@ -1097,7 +1199,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
       <section
         id="universo-visao-geral"
         className={cn(
-          "dark-lore-page-frame dark-lore-page-hero",
+          "dark-lore-anchor-section dark-lore-page-frame dark-lore-page-hero",
           bestiaryMode ? "dark-lore-bestiary-hero" : "dark-lore-universe-hero",
         )}
         onMouseMove={(event) => {
@@ -1216,7 +1318,10 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
         )}
       </section>
 
-      <section id="universo-detalhes" className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+      <section
+        id="universo-detalhes"
+        className="dark-lore-anchor-section dark-lore-page-frame px-6 py-8 md:px-8 md:py-10"
+      >
         <div className="space-y-6">
           <div>
             <p className="dark-lore-section-kicker">Leitura narrativa</p>
@@ -1244,7 +1349,10 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
         </div>
       </section>
 
-      <section id="universo-cronologia" className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <section
+        id="universo-cronologia"
+        className="dark-lore-anchor-section grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
+      >
         <TimelineRail title="Rastro temporal" events={entry.timeline} />
 
         <div className="space-y-6">
@@ -1309,7 +1417,7 @@ function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
         </div>
       </section>
 
-      <section id="universo-relacoes" className="space-y-6">
+      <section id="universo-relacoes" className="dark-lore-anchor-section space-y-6">
         <div className="text-center">
           <p className="dark-lore-section-kicker justify-center">Relacoes</p>
           <h2 className="dark-lore-section-title mx-auto">Lacos, nomes e rastros vizinhos</h2>

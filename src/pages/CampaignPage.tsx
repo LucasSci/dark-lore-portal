@@ -1,3 +1,4 @@
+import { BookMarked, ScrollText, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
@@ -9,7 +10,25 @@ const archiveGallery = [
   archiveReferenceArt.desk,
   archiveReferenceArt.wanderer,
   archiveReferenceArt.forgotten,
-];
+] as const;
+
+const chronicleWays = [
+  {
+    icon: ScrollText,
+    title: "Relatos Sombrios",
+    description: "Leitura corrida de capitulos, contratos e memorias que sobreviveram ao tempo.",
+  },
+  {
+    icon: Sparkles,
+    title: "Maldições Ancestrais",
+    description: "Rumores de mesa, rastros de horror e profecias que voltam em ciclos.",
+  },
+  {
+    icon: BookMarked,
+    title: "Arquivo Velado",
+    description: "Um acervo continuo de sessao, campanha e cronicas ligadas ao mesmo mundo.",
+  },
+] as const;
 
 export default function CampaignPage() {
   usePortalShellMode("editorial", "ambient");
@@ -39,8 +58,8 @@ export default function CampaignPage() {
           <p className="dark-lore-section-kicker justify-center">Arquivo das cronicas</p>
           <h1 className="dark-lore-display-title">Cronicas Veladas</h1>
           <p className="dark-lore-hero-text max-w-3xl text-center">
-            Relatos de sessao, contratos, profecias e testemunhos que sobreviveram ao tempo para
-            continuar sussurrando dentro do arquivo.
+            Relatos de sessao, contratos, pressagios e testemunhos que continuaram a respirar
+            dentro do arquivo.
           </p>
           <div className="flex justify-center pt-2">
             <Link to="#cronicas-arquivo" className="dark-lore-button">
@@ -50,14 +69,69 @@ export default function CampaignPage() {
         </motion.div>
       </section>
 
-      <section className="dark-lore-page-frame px-6 py-8 text-center md:px-8 md:py-10">
-        <p className="dark-lore-section-kicker justify-center">Manuscritos velados</p>
-        <h2 className="dark-lore-section-title mx-auto">Cada entrada preserva uma noite mal encerrada.</h2>
-        <p className="mx-auto max-w-4xl text-sm leading-8 text-[hsl(var(--foreground)/0.76)] md:text-base">
-          O arquivo mistura memorias de estrada, chamados de sessao, contratos pagos em silencio e
-          testemunhos recolhidos perto demais do abismo. Cada pagina e um fragmento que se recusou
-          a morrer.
-        </p>
+      <section className="dark-lore-page-frame dark-lore-editorial-grid">
+        <div className="dark-lore-editorial-copy">
+          <p className="dark-lore-section-kicker">Os manuscritos velados</p>
+          <h2 className="dark-lore-section-title">
+            Cada entrada preserva uma noite mal encerrada.
+          </h2>
+          <p className="dark-lore-editorial-text">
+            O arquivo reune chamadas de sessao, contratos pagos em silencio, memorias de estrada e
+            testemunhos recolhidos perto demais do abismo. Cada pagina foi mantida para que a mesa
+            nunca perca seu rastro.
+          </p>
+          <p className="dark-lore-editorial-text">
+            Leia as cronicas como registros de mundo, ecos de campanha e documentos que podem ser
+            abertos outra vez quando a sessao pedir.
+          </p>
+          <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
+            Abrir Arquivo Vivo
+          </Link>
+        </div>
+
+        <div className="dark-lore-editorial-figure">
+          <img
+            src={archiveReferenceArt.forgotten}
+            alt=""
+            aria-hidden="true"
+            className="dark-lore-editorial-image"
+          />
+          <div className="dark-lore-editorial-glow" />
+        </div>
+      </section>
+
+      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+        <div className="space-y-6">
+          <div className="text-center">
+            <p className="dark-lore-section-kicker justify-center">Formas de leitura</p>
+            <h2 className="dark-lore-section-title mx-auto">Tres trilhas para entrar no arquivo</h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {chronicleWays.map(({ icon: Icon, title, description }, index) => (
+              <motion.article
+                key={title}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.45, delay: index * 0.05 }}
+                className="dark-lore-archive-card dark-lore-archive-card-compact"
+              >
+                <div className="dark-lore-codex-card">
+                  <div className="dark-lore-icon-emblem">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="dark-lore-card-title text-[clamp(1.4rem,1.9vw,1.8rem)]">
+                      {title}
+                    </h3>
+                    <p className="dark-lore-card-copy">{description}</p>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section id="cronicas-arquivo" className="dark-lore-feature-grid">
@@ -80,7 +154,7 @@ export default function CampaignPage() {
             </div>
             <div className="dark-lore-feature-body">
               <p className="dark-lore-card-meta">
-                {String(publication.chapterNumber).padStart(2, "0")} - {publication.location}
+                {String(publication.chapterNumber).padStart(2, "0")} · {publication.location}
               </p>
               <h2 className="dark-lore-card-title">{publication.title}</h2>
               <p className="dark-lore-card-copy">{publication.excerpt}</p>
@@ -100,7 +174,7 @@ export default function CampaignPage() {
               <h2 className="dark-lore-section-title mx-auto">Rastros, contratos e rumores preservados</h2>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="dark-lore-list-grid">
               {archive.map((publication, index) => (
                 <motion.article
                   key={publication.id}
@@ -111,7 +185,7 @@ export default function CampaignPage() {
                   className="dark-lore-archive-card"
                 >
                   <p className="dark-lore-card-meta">
-                    {publication.location} - {publication.kind}
+                    {publication.location} · {publication.kind}
                   </p>
                   <h3 className="dark-lore-card-title text-[clamp(1.5rem,2vw,2rem)]">
                     {publication.title}
