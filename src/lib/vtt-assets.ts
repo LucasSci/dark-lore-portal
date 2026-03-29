@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isLooseRecord, type LooseSupabaseClient } from "@/lib/loose-supabase";
 import type { AssetManifest } from "@/lib/virtual-tabletop";
+import { generateSecureShortId } from "@/lib/utils";
 
 const db = supabase as typeof supabase & LooseSupabaseClient;
 
@@ -18,7 +19,7 @@ export function createAssetManifestDraft(file: {
   name: string;
   type: string;
 }): AssetManifest {
-  const assetId = `asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const assetId = generateSecureShortId("asset");
   const safeName = sanitizeFileName(file.name);
 
   return {

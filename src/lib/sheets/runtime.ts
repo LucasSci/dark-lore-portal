@@ -5,6 +5,7 @@ import {
   buildCharacterDraftFromStore,
   createAttributeStore,
 } from "@/lib/sheets/engine";
+import { generateSecureShortId } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 import type {
   AttributeStore,
@@ -29,7 +30,7 @@ const pendingRequests = new Map<
 >();
 
 function createRequestId() {
-  return `sheet-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return generateSecureShortId("sheet");
 }
 
 function getWorker() {

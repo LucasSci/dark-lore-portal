@@ -8,6 +8,7 @@ import {
   type LooseSupabaseClient,
 } from "@/lib/loose-supabase";
 import { resolveBattlemapPublicUrl } from "@/lib/vtt-assets";
+import { generateSecureShortId } from "@/lib/utils";
 import {
   applySceneEvent,
   createBoard,
@@ -29,7 +30,7 @@ function toLooseRows(value: unknown) {
 }
 
 function makePresenceKey() {
-  return `presence-${Math.random().toString(36).slice(2, 10)}`;
+  return generateSecureShortId("presence");
 }
 
 function normalizePresence(presenceState: Record<string, Array<Record<string, unknown>>>) {
@@ -317,7 +318,7 @@ export async function loadSceneSnapshot(sessionId: string) {
               const spawn = asLooseRecord(connection.spawn);
 
               return {
-                id: String(connection.id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 8)),
+                id: String(connection.id ?? generateSecureShortId()),
                 edge:
                   connection.edge === "north" ||
                   connection.edge === "east" ||
