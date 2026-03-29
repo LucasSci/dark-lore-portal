@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 import { isLooseRecord, type LooseSupabaseClient } from "@/lib/loose-supabase";
 import type { AssetManifest } from "@/lib/virtual-tabletop";
 
@@ -124,6 +125,15 @@ export async function uploadBattlemapAsset(options: {
   };
   manifest.processingStatus = "ready";
   manifest.pageCount = 1;
+
+  if (options.sessionId === LOCAL_SESSION_ID) {
+    return {
+      assetId: null,
+      assetUrl: URL.createObjectURL(options.file),
+      manifest,
+      persisted: false,
+    };
+  }
 
   const {
     data: { user },

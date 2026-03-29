@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 import {
   asLooseRecord,
   isLooseRecord,
@@ -23,6 +24,10 @@ import {
 } from "@/lib/virtual-tabletop";
 
 const db = supabase as typeof supabase & LooseSupabaseClient;
+
+function shouldUseRemoteVttPersistence(sessionId: string) {
+  return sessionId !== LOCAL_SESSION_ID;
+}
 
 function toLooseRows(value: unknown) {
   return Array.isArray(value) ? value.filter(isLooseRecord) : [];
@@ -213,6 +218,10 @@ function normalizeSceneObject(row: LooseRecord): VttSceneObject {
 }
 
 export async function loadSceneSnapshot(sessionId: string) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return null;
+  }
+
   try {
     const [
       { data: pageRows },
@@ -405,7 +414,7 @@ export async function loadSceneSnapshot(sessionId: string) {
 }
 
 export async function persistSceneSnapshot(scene: SceneModel) {
-  if (!scene.pages.length) {
+  if (!shouldUseRemoteVttPersistence(scene.sessionId) || !scene.pages.length) {
     return;
   }
 
@@ -421,6 +430,10 @@ export async function persistSceneSnapshot(scene: SceneModel) {
 }
 
 export async function persistScenePage(sessionId: string, page: VttPage, revision: number) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   await db.from("vtt_pages").upsert({
     id: page.id,
     session_id: sessionId,
@@ -444,6 +457,10 @@ export async function persistFogState(
   fog: Record<string, boolean>,
   revision: number,
 ) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   await db.from("vtt_fog_states").upsert({
     page_id: pageId,
     session_id: sessionId,
@@ -453,7 +470,7 @@ export async function persistFogState(
 }
 
 export async function persistSceneObjects(sessionId: string, objects: VttSceneObject[]) {
-  if (!objects.length) {
+  if (!shouldUseRemoteVttPersistence(sessionId) || !objects.length) {
     return;
   }
 
@@ -474,6 +491,10 @@ export async function persistSceneObjects(sessionId: string, objects: VttSceneOb
 }
 
 export async function removeSceneObject(sessionId: string, objectId: string) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   await db
     .from("vtt_scene_objects")
     .delete()
@@ -482,6 +503,10 @@ export async function removeSceneObject(sessionId: string, objectId: string) {
 }
 
 export async function persistSceneEventLog(event: SceneEvent) {
+  if (!shouldUseRemoteVttPersistence(event.sessionId)) {
+    return;
+  }
+
   await db.from("vtt_event_log").insert({
     session_id: event.sessionId,
     page_id: event.pageId,
@@ -493,6 +518,10 @@ export async function persistSceneEventLog(event: SceneEvent) {
 }
 
 export async function persistChatMessage(sessionId: string, pageId: string, message: ChatMessage) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   try {
     await db.from("vtt_chat_messages").insert({
       session_id: sessionId,
@@ -516,6 +545,10 @@ export async function persistInitiativeSnapshot(
   initiative: InitiativeState,
   revision: number,
 ) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   try {
     await db.from("vtt_event_log").insert({
       session_id: sessionId,
@@ -557,6 +590,11 @@ export function useVttRealtime({
   onRemoteEventRef.current = onRemoteEvent;
 
   useEffect(() => {
+    if (!shouldUseRemoteVttPersistence(sessionId)) {
+      setPresence([]);
+      return;
+    }
+
     let active = true;
 
     const queueReload = () => {
@@ -676,7 +714,7 @@ export function useVttRealtime({
   }, [displayName, role, sessionId]);
 
   const broadcastScene = async (scene: SceneModel) => {
-    if (!channelRef.current) {
+    if (!shouldUseRemoteVttPersistence(scene.sessionId) || !channelRef.current) {
       return;
     }
 
@@ -690,7 +728,7 @@ export function useVttRealtime({
   };
 
   const broadcastSceneEvent = async (scene: SceneModel, event: SceneEvent) => {
-    if (!channelRef.current) {
+    if (!shouldUseRemoteVttPersistence(scene.sessionId) || !channelRef.current) {
       return;
     }
 
