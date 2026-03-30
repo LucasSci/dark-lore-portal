@@ -1,8 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
-import { supabase } from "@/integrations/supabase/client";
 import { generateSecureId, generateSecureShortId } from "./utils";
+import { supabase } from "@/integrations/supabase/client";
+import { LOCAL_SESSION_ID } from "@/lib/local-identities";
+import { generateSecureId, generateSecureShortId } from "@/lib/utils";
+import {
+  asLooseRecord,
+  isLooseRecord,
+  type LooseRecord,
+  type LooseSupabaseClient,
+} from "@/lib/loose-supabase";
 import { resolveBattlemapPublicUrl } from "@/lib/vtt-assets";
+import { generateSecureShortId } from "@/lib/utils";
 import {
   applySceneEvent,
   createBoard,
@@ -17,11 +26,15 @@ import {
   type VttSceneObject,
 } from "@/lib/virtual-tabletop";
 
-type UntypedSupabaseClient = typeof supabase & {
-  from: (table: string) => any;
-};
+const db = supabase as typeof supabase & LooseSupabaseClient;
 
-const db = supabase as UntypedSupabaseClient;
+function shouldUseRemoteVttPersistence(sessionId: string) {
+  return sessionId !== LOCAL_SESSION_ID;
+}
+
+function toLooseRows(value: unknown) {
+  return Array.isArray(value) ? value.filter(isLooseRecord) : [];
+}
 
 function makePresenceKey() {
   return `presence-${generateSecureShortId()}`;
@@ -82,15 +95,18 @@ function normalizeInitiativeState(value: unknown): InitiativeState {
   };
 }
 
-function normalizeSceneObject(row: Record<string, any>): VttSceneObject {
+function normalizeSceneObject(row: LooseRecord): VttSceneObject {
+  const positionRecord = asLooseRecord(row.position);
+  const sizeRecord = asLooseRecord(row.size);
+  const payload = asLooseRecord(row.payload);
   const objectType = String(row.object_type ?? "token");
   const position = {
-    x: Number(row.position?.x ?? 0),
-    y: Number(row.position?.y ?? 0),
+    x: Number(positionRecord.x ?? 0),
+    y: Number(positionRecord.y ?? 0),
   };
   const size = {
-    width: Number(row.size?.width ?? 1),
-    height: Number(row.size?.height ?? 1),
+    width: Number(sizeRecord.width ?? 1),
+    height: Number(sizeRecord.height ?? 1),
   };
   const baseObject = {
     id: String(row.id),
@@ -107,8 +123,8 @@ function normalizeSceneObject(row: Record<string, any>): VttSceneObject {
       objectType: "wall",
       layer: "walls",
       payload: {
-        points: Array.isArray(row.payload?.points) ? row.payload.points : [],
-        blocksSight: row.payload?.blocksSight !== false,
+        points: Array.isArray(payload.points) ? payload.points : [],
+        blocksSight: payload.blocksSight !== false,
       },
     };
   }
@@ -119,12 +135,9 @@ function normalizeSceneObject(row: Record<string, any>): VttSceneObject {
       objectType: "drawing",
       layer: row.layer === "gm" ? "gm" : "foreground",
       payload: {
-        kind:
-          row.payload?.kind === "ellipse" || row.payload?.kind === "polygon"
-            ? row.payload.kind
-            : "rect",
-        stroke: String(row.payload?.stroke ?? "#E5E7EB"),
-        fill: String(row.payload?.fill ?? "#111827"),
+        kind: payload.kind === "ellipse" || payload.kind === "polygon" ? payload.kind : "rect",
+        stroke: String(payload.stroke ?? "#E5E7EB"),
+        fill: String(payload.fill ?? "#111827"),
       },
     };
   }
@@ -135,9 +148,9 @@ function normalizeSceneObject(row: Record<string, any>): VttSceneObject {
       objectType: "light",
       layer: "walls",
       payload: {
-        radius: Number(row.payload?.radius ?? 0),
-        intensity: Number(row.payload?.intensity ?? 0),
-        color: String(row.payload?.color ?? "#F8FAFC"),
+        radius: Number(payload.radius ?? 0),
+        intensity: Number(payload.intensity ?? 0),
+        color: String(payload.color ?? "#F8FAFC"),
       },
     };
   }
@@ -148,34 +161,37 @@ function normalizeSceneObject(row: Record<string, any>): VttSceneObject {
       objectType: "map-decal",
       layer: row.layer === "foreground" ? "foreground" : "map",
       payload: {
-        assetId: typeof row.payload?.assetId === "string" ? row.payload.assetId : null,
-        imageUrl: typeof row.payload?.imageUrl === "string" ? row.payload.imageUrl : null,
-        opacity: Number(row.payload?.opacity ?? 1),
+        assetId: typeof payload.assetId === "string" ? payload.assetId : null,
+        imageUrl: typeof payload.imageUrl === "string" ? payload.imageUrl : null,
+        opacity: Number(payload.opacity ?? 1),
         blendMode:
-          row.payload?.blendMode === "multiply" || row.payload?.blendMode === "screen"
-            ? row.payload.blendMode
+          payload.blendMode === "multiply" || payload.blendMode === "screen"
+            ? payload.blendMode
             : "normal",
       },
     };
   }
 
   if (objectType === "measurement") {
+    const from = asLooseRecord(payload.from);
+    const to = asLooseRecord(payload.to);
+
     return {
       ...baseObject,
       objectType: "measurement",
       layer: row.layer === "gm" ? "gm" : "foreground",
       payload: {
         from: {
-          x: Number(row.payload?.from?.x ?? 0),
-          y: Number(row.payload?.from?.y ?? 0),
+          x: Number(from.x ?? 0),
+          y: Number(from.y ?? 0),
         },
         to: {
-          x: Number(row.payload?.to?.x ?? 0),
-          y: Number(row.payload?.to?.y ?? 0),
+          x: Number(to.x ?? 0),
+          y: Number(to.y ?? 0),
         },
-        distance: Number(row.payload?.distance ?? 0),
-        unit: String(row.payload?.unit ?? "ft"),
-        label: String(row.payload?.label ?? ""),
+        distance: Number(payload.distance ?? 0),
+        unit: String(payload.unit ?? "ft"),
+        label: String(payload.label ?? ""),
       },
     };
   }
@@ -185,26 +201,30 @@ function normalizeSceneObject(row: Record<string, any>): VttSceneObject {
     objectType: "token",
     layer: row.layer === "gm" ? "gm" : "objects",
     payload: {
-      ...(row.payload ?? {}),
-      id: String(row.payload?.id ?? row.id),
-      name: String(row.payload?.name ?? "Token"),
-      shortName: String(row.payload?.shortName ?? "TK"),
-      team: row.payload?.team === "npc" ? "npc" : "party",
-      role: String(row.payload?.role ?? "Adventurer"),
+      ...payload,
+      id: String(payload.id ?? row.id),
+      name: String(payload.name ?? "Token"),
+      shortName: String(payload.shortName ?? "TK"),
+      team: payload.team === "npc" ? "npc" : "party",
+      role: String(payload.role ?? "Adventurer"),
       x: position.x,
       y: position.y,
-      hp: Number(row.payload?.hp ?? 1),
-      hpMax: Number(row.payload?.hpMax ?? row.payload?.hp ?? 1),
-      ac: Number(row.payload?.ac ?? 10),
-      initiativeBonus: Number(row.payload?.initiativeBonus ?? 0),
-      color: String(row.payload?.color ?? "#2563EB"),
-      note: String(row.payload?.note ?? ""),
-      controlledBy: row.payload?.controlledBy === "gm" ? "gm" : "party",
+      hp: Number(payload.hp ?? 1),
+      hpMax: Number(payload.hpMax ?? payload.hp ?? 1),
+      ac: Number(payload.ac ?? 10),
+      initiativeBonus: Number(payload.initiativeBonus ?? 0),
+      color: String(payload.color ?? "#2563EB"),
+      note: String(payload.note ?? ""),
+      controlledBy: payload.controlledBy === "gm" ? "gm" : "party",
     },
   };
 }
 
 export async function loadSceneSnapshot(sessionId: string) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return null;
+  }
+
   try {
     const [
       { data: pageRows },
@@ -240,32 +260,38 @@ export async function loadSceneSnapshot(sessionId: string) {
         .limit(1),
     ]);
 
-    if (!Array.isArray(pageRows) || pageRows.length === 0) {
+    const safePageRows = toLooseRows(pageRows);
+    const safeFogRows = toLooseRows(fogRows);
+    const safeObjectRows = toLooseRows(objectRows);
+    const safeChatRows = toLooseRows(chatRows);
+    const safeAssetRows = toLooseRows(assetRows);
+    const safeInitiativeRows = toLooseRows(initiativeRows);
+
+    if (safePageRows.length === 0) {
       return null;
     }
 
     const fogByPage = new Map(
-      (Array.isArray(fogRows) ? fogRows : []).map((row) => [String(row.page_id), row]),
+      safeFogRows.map((row) => [String(row.page_id), row]),
     );
     const assetsById = new Map(
-      (Array.isArray(assetRows) ? assetRows : []).map((row) => [String(row.id), row as Record<string, any>]),
+      safeAssetRows.map((row) => [String(row.id), row]),
     );
 
-    const pages: VttPage[] = pageRows.map((row) => {
+    const pages: VttPage[] = safePageRows.map((row) => {
       const width = Number(row.width ?? 12);
       const height = Number(row.height ?? 8);
       const fogRow = fogByPage.get(String(row.id));
       const backgroundAssetId = row.background_asset_id ? String(row.background_asset_id) : null;
       const backgroundAsset = backgroundAssetId ? assetsById.get(backgroundAssetId) : null;
+      const backgroundFrameRecord = isLooseRecord(row.background_frame) ? row.background_frame : null;
       const backgroundFrame =
-        row.background_frame &&
-        typeof row.background_frame === "object" &&
-        !Array.isArray(row.background_frame)
+        backgroundFrameRecord
           ? {
-              x: Number(row.background_frame.x ?? 0),
-              y: Number(row.background_frame.y ?? 0),
-              width: Number(row.background_frame.width ?? width),
-              height: Number(row.background_frame.height ?? height),
+              x: Number(backgroundFrameRecord.x ?? 0),
+              y: Number(backgroundFrameRecord.y ?? 0),
+              width: Number(backgroundFrameRecord.width ?? width),
+              height: Number(backgroundFrameRecord.height ?? height),
             }
           : backgroundAssetId
             ? {
@@ -288,33 +314,43 @@ export async function loadSceneSnapshot(sessionId: string) {
         backgroundAssetId,
         backgroundAssetUrl:
           resolveBattlemapPublicUrl(
-            (backgroundAsset?.board_variant_path as string | undefined)
-              ?? (backgroundAsset?.original_path as string | undefined),
+            typeof backgroundAsset?.board_variant_path === "string"
+              ? backgroundAsset.board_variant_path
+              : typeof backgroundAsset?.original_path === "string"
+                ? backgroundAsset.original_path
+                : undefined,
           ) ?? null,
         backgroundFrame,
         layerOrder: Array.isArray(row.layer_order)
           ? (row.layer_order as VttLayer[])
           : defaultLayerOrder(),
         connections: Array.isArray(row.connections)
-          ? row.connections.map((connection: Record<string, any>) => ({
-              id: String(connection.id ?? generateSecureId()),
-              edge:
-                connection.edge === "north" ||
-                connection.edge === "east" ||
-                connection.edge === "south" ||
-                connection.edge === "west"
-                  ? connection.edge
-                  : "east",
-              label: String(connection.label ?? "Passagem"),
-              targetPageId: String(connection.targetPageId ?? ""),
-              spawn: {
-                x: Number(connection.spawn?.x ?? 0),
-                y: Number(connection.spawn?.y ?? 0),
-              },
-            }))
+          ? row.connections.filter(isLooseRecord).map((connection) => {
+              const spawn = asLooseRecord(connection.spawn);
+
+              return {
+                id: String(connection.id ?? generateSecureId()),
+                edge:
+                  connection.edge === "north" ||
+                  connection.edge === "east" ||
+                  connection.edge === "south" ||
+                  connection.edge === "west"
+                    ? connection.edge
+                    : "east",
+                label: String(connection.label ?? "Passagem"),
+                targetPageId: String(connection.targetPageId ?? ""),
+                spawn: {
+                  x: Number(spawn.x ?? 0),
+                  y: Number(spawn.y ?? 0),
+                },
+              };
+            })
           : [],
         cells: createBoard(width, height),
-        fog: (fogRow?.fog_state as Record<string, boolean> | undefined) ?? createInitialFog(width, height),
+        fog:
+          (fogRow && isLooseRecord(fogRow.fog_state)
+            ? (fogRow.fog_state as Record<string, boolean>)
+            : undefined) ?? createInitialFog(width, height),
         camera: {
           x: 0,
           y: 0,
@@ -327,11 +363,11 @@ export async function loadSceneSnapshot(sessionId: string) {
       };
     });
 
-    const objects = Array.isArray(objectRows)
-      ? objectRows.map((row) => normalizeSceneObject(row as Record<string, any>))
-      : [];
-    const chatMessages: ChatMessage[] = Array.isArray(chatRows)
-      ? chatRows.map((row) => ({
+    const objects = safeObjectRows.map((row) => normalizeSceneObject(row));
+    const chatMessages: ChatMessage[] = safeChatRows.map((row) => {
+      const metadata = asLooseRecord(row.metadata);
+
+      return {
           id: String(row.id),
           author: String(row.author_name ?? "Sistema"),
           tone:
@@ -340,15 +376,16 @@ export async function loadSceneSnapshot(sessionId: string) {
               : "party",
           text: String(row.message ?? ""),
           time:
-            typeof row.metadata?.time === "string"
-              ? row.metadata.time
+            typeof metadata.time === "string"
+              ? metadata.time
               : chatTimeFormatter.format(new Date(row.created_at ?? Date.now())),
-        }))
-      : [];
-    const latestInitiative = Array.isArray(initiativeRows) ? initiativeRows[0] : null;
-    const initiative = normalizeInitiativeState(latestInitiative?.payload?.initiative);
+        };
+    });
+    const latestInitiative = safeInitiativeRows[0] ?? null;
+    const latestInitiativePayload = latestInitiative ? asLooseRecord(latestInitiative.payload) : null;
+    const initiative = normalizeInitiativeState(latestInitiativePayload?.initiative);
     const sceneRevision = Math.max(
-      ...pages.map((page, index) => Number(pageRows[index]?.revision ?? 1)),
+      ...pages.map((page, index) => Number(safePageRows[index]?.revision ?? 1)),
       ...objects.map((object) => object.revision),
       Number(latestInitiative?.revision ?? 1),
       1,
@@ -380,7 +417,7 @@ export async function loadSceneSnapshot(sessionId: string) {
 }
 
 export async function persistSceneSnapshot(scene: SceneModel) {
-  if (!scene.pages.length) {
+  if (!shouldUseRemoteVttPersistence(scene.sessionId) || !scene.pages.length) {
     return;
   }
 
@@ -396,6 +433,10 @@ export async function persistSceneSnapshot(scene: SceneModel) {
 }
 
 export async function persistScenePage(sessionId: string, page: VttPage, revision: number) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   await db.from("vtt_pages").upsert({
     id: page.id,
     session_id: sessionId,
@@ -419,6 +460,10 @@ export async function persistFogState(
   fog: Record<string, boolean>,
   revision: number,
 ) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   await db.from("vtt_fog_states").upsert({
     page_id: pageId,
     session_id: sessionId,
@@ -428,7 +473,7 @@ export async function persistFogState(
 }
 
 export async function persistSceneObjects(sessionId: string, objects: VttSceneObject[]) {
-  if (!objects.length) {
+  if (!shouldUseRemoteVttPersistence(sessionId) || !objects.length) {
     return;
   }
 
@@ -449,6 +494,10 @@ export async function persistSceneObjects(sessionId: string, objects: VttSceneOb
 }
 
 export async function removeSceneObject(sessionId: string, objectId: string) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   await db
     .from("vtt_scene_objects")
     .delete()
@@ -457,6 +506,10 @@ export async function removeSceneObject(sessionId: string, objectId: string) {
 }
 
 export async function persistSceneEventLog(event: SceneEvent) {
+  if (!shouldUseRemoteVttPersistence(event.sessionId)) {
+    return;
+  }
+
   await db.from("vtt_event_log").insert({
     session_id: event.sessionId,
     page_id: event.pageId,
@@ -468,6 +521,10 @@ export async function persistSceneEventLog(event: SceneEvent) {
 }
 
 export async function persistChatMessage(sessionId: string, pageId: string, message: ChatMessage) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   try {
     await db.from("vtt_chat_messages").insert({
       session_id: sessionId,
@@ -491,6 +548,10 @@ export async function persistInitiativeSnapshot(
   initiative: InitiativeState,
   revision: number,
 ) {
+  if (!shouldUseRemoteVttPersistence(sessionId)) {
+    return;
+  }
+
   try {
     await db.from("vtt_event_log").insert({
       session_id: sessionId,
@@ -532,6 +593,11 @@ export function useVttRealtime({
   onRemoteEventRef.current = onRemoteEvent;
 
   useEffect(() => {
+    if (!shouldUseRemoteVttPersistence(sessionId)) {
+      setPresence([]);
+      return;
+    }
+
     let active = true;
 
     const queueReload = () => {
@@ -651,7 +717,7 @@ export function useVttRealtime({
   }, [displayName, role, sessionId]);
 
   const broadcastScene = async (scene: SceneModel) => {
-    if (!channelRef.current) {
+    if (!shouldUseRemoteVttPersistence(scene.sessionId) || !channelRef.current) {
       return;
     }
 
@@ -665,7 +731,7 @@ export function useVttRealtime({
   };
 
   const broadcastSceneEvent = async (scene: SceneModel, event: SceneEvent) => {
-    if (!channelRef.current) {
+    if (!shouldUseRemoteVttPersistence(scene.sessionId) || !channelRef.current) {
       return;
     }
 

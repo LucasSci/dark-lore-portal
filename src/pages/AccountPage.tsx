@@ -157,11 +157,11 @@ export default function AccountPage() {
                 <div className="max-w-3xl space-y-4">
                   <p className="section-kicker">Arquivo pessoal</p>
                   <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    Biblioteca digital tratada como cofre de campanha, nao pagina utilitaria.
+                    Cofre pessoal da campanha, com registros, downloads e rastros do grupo.
                   </h1>
                   <p className="text-base leading-8 text-foreground/88">
-                    Login, compras e downloads agora entram no mesmo clima do portal. A conta
-                    funciona como um acervo pessoal para mapas, PDFs, aventuras, classes e itens.
+                    Sua conta guarda mapas, PDFs, aventuras, classes e itens como parte do mesmo
+                    acervo pessoal que acompanha a campanha.
                   </p>
                 </div>
 
@@ -195,7 +195,7 @@ export default function AccountPage() {
 
                 <Card variant="panel">
                   <CardContent className="space-y-4 p-5">
-                    <p className="section-kicker">Fluxo</p>
+                    <p className="section-kicker">Acesso</p>
                     <DataSection
                       label="Compra"
                       value="Stripe seguro + biblioteca conectada"
@@ -359,8 +359,8 @@ export default function AccountPage() {
                       Autenticacao e cadastro no mesmo idioma visual do portal.
                     </h2>
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                      Nada de painel generico: a entrada da conta agora tambem parece parte do
-                      reliquario digital.
+                      Entre, compre e recupere seu acervo sem sair do mesmo reliquiario que guarda
+                      atlas, campanha e universo.
                     </p>
                   </div>
 

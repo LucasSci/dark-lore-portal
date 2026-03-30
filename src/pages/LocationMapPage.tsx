@@ -19,7 +19,7 @@ export default function LocationMapPage() {
         ...atlasContext,
         title: regionalMapId ? "Mapa regional em alta" : atlasContext.title,
         description: regionalMapId
-          ? "Locais detalhados agora abrem sobre a carta regional em alta resolucao sempre que existir mapa dedicado para essa area."
+          ? "Quando houver carta dedicada para esta area, o atlas a abre em alta resolucao para mostrar cada marco do terreno."
           : "Nesta camada o atlas revela POIs, NPCs, comercio e o link direto para a mesa jogavel.",
       }}
       headerActions={

@@ -1,4 +1,4 @@
-## 2024-05-24 - Fix weak ID generation
-**Vulnerability:** Insecure ID generation using `Math.random()` for entities and connections, which can lead to predictable IDs.
-**Learning:** `Math.random()` is not a cryptographically secure pseudo-random number generator (CSPRNG). It should not be used for security-sensitive operations like generating unique IDs.
-**Prevention:** Use `crypto.randomUUID()` or `crypto.getRandomValues()` for secure ID generation, with a fallback to `Math.random()` only for non-secure contexts where crypto is unavailable.
+## 2024-05-18 - Avoid Math.random() for Secure Identifiers
+**Vulnerability:** Core systems (Virtual Tabletop, real-time sync, asset manifest) generated collision-prone, predictable identifiers via `Math.random().toString(36)` instead of utilizing native, cryptographically secure random values.
+**Learning:** `Math.random()` lacks required entropy and predictability guarantees needed for secure ID generation (such as session connection IDs or unique sheet request IDs), increasing vulnerability to ID collisions and potential session/asset hijacking.
+**Prevention:** Always use the centralized `generateSecureId()` or `generateSecureShortId()` from `src/lib/utils.ts` to tap into `crypto.randomUUID()` and `crypto.getRandomValues()` respectively, assuring robust fallback behaviors are present without compromising security in supporting contexts.

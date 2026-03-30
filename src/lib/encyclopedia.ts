@@ -121,7 +121,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "personagens",
     subtitle: "Erudito costeiro que presencia o inicio visivel do rasgo no Veu e decide nao organizar tudo em um livro seguro demais.",
     summary:
-      "No PDF correto, Merlin deixa de ser apenas testemunha e se torna referencia moral da primeira metade da cronica: ele ve cedo o que esta acontecendo e entende cedo demais o perigo de transformar isso em sistema fechadinho.",
+      "Merlin deixa de ser apenas testemunha e se torna eixo moral da primeira metade da cronica: ele ve cedo o que esta acontecendo e entende cedo demais o perigo de transformar isso em sistema fechado demais.",
     image: characterIllustration,
     imageAlt: "Retrato ilustrado de um erudito envelhecido diante do mar.",
     narrative: [
@@ -133,7 +133,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
       {
         heading: "O homem que nomeia sem domesticar",
         body:
-          "Ele observa as Irmas de Prata, escuta pescadores, sacerdotes, reis e magos, mas se recusa a tratar o problema como uma equacao confortável. O PDF insiste que Merlin compreende algo raro: conhecimento arrancado do conjunto pode ser mais perigoso do que ignorancia.",
+          "Ele observa as Irmas de Prata, escuta pescadores, sacerdotes, reis e magos, mas se recusa a tratar o problema como uma equacao confortável. Merlin compreende algo raro: conhecimento arrancado do conjunto pode ser mais perigoso do que ignorancia.",
       },
       {
         heading: "Legado de fragmento",
@@ -174,7 +174,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "personagens",
     subtitle: "Figura profetizada de Zerrikania que caminha entre Guardioes e recusa a solucao perfeita demais.",
     summary:
-      "No PDF correto, Nashara nao e so heroina do deserto. Ela se torna o ponto em que a historia pergunta se o mundo vale mais inteiro sem excecoes ou ferido, mas ainda capaz de mudar.",
+      "Nashara nao e so heroina do deserto. Ela se torna o ponto em que a historia pergunta se o mundo vale mais inteiro sem excecoes ou ferido, mas ainda capaz de mudar.",
     image: characterIllustration,
     imageAlt: "Retrato ilustrado de uma mulher do deserto sob um ceu rachado.",
     narrative: [
@@ -227,7 +227,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "personagens",
     subtitle: "Erudito de Novigrad que usa o Grimorio Lunar para medir uma falha e acaba puxado para dentro dela.",
     summary:
-      "Alaric representa a segunda metade do PDF: um homem de metodo, desconfiado do sobrenatural teatral, que descobre tarde demais que o livro ja estava lendo ele de volta.",
+      "Alaric representa a segunda metade da cronica: um homem de metodo, desconfiado do sobrenatural teatral, que descobre tarde demais que o livro ja estava lendo ele de volta.",
     image: characterIllustration,
     imageAlt: "Retrato ilustrado de um mago erudito com grimorio fechado.",
     narrative: [
@@ -280,7 +280,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "personagens",
     subtitle: "Mercenario elfico de ironia seca, arrastado por contratos ruins e por uma relacao nada natural com a morte.",
     summary:
-      "Sorrow entra no PDF como o personagem que mais rapidamente fareja falsidade em cenas construidas demais, mas isso nao o impede de ser escolhido pela propria distorcao do mundo.",
+      "Sorrow e o personagem que mais rapidamente fareja falsidade em cenas construidas demais, mas isso nao o impede de ser escolhido pela propria distorcao do mundo.",
     image: characterIllustration,
     imageAlt: "Retrato ilustrado de um elfo com taça e alaude ao alcance da mao.",
     narrative: [
@@ -333,7 +333,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "personagens",
     subtitle: "Guerreiro de leitura economica, guiado por uma espada que reconhece nomes antes da mente aceitar o que eles significam.",
     summary:
-      "Hauz carrega o polo mais fisico da convergencia, mas o PDF faz questao de mostrar que sua arma e seu instinto lembram coisas mais antigas do que ele gostaria.",
+      "Hauz carrega o polo mais fisico da convergencia, e sua arma comeca a lembrar coisas mais antigas do que ele gostaria.",
     image: characterIllustration,
     imageAlt: "Retrato ilustrado de um guerreiro com espada envolta em pano.",
     narrative: [
@@ -345,7 +345,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
       {
         heading: "A espada conhece Elarion",
         body:
-          "Quando o nome Elarion surge, a lamina reage antes de qualquer explicacao satisfatoria. Isso faz de Hauz um personagem particularmente interessante: ele nao e o erudito do grupo, mas carrega um arquivo de reconhecimento no proprio metal que empunha.",
+          "Quando o nome Elarion surge, a lamina reage antes de qualquer explicacao satisfatoria. Hauz nao e o erudito do grupo, mas carrega um arquivo de reconhecimento no proprio metal que empunha.",
       },
       {
         heading: "Centro de gravidade do trio",
@@ -381,12 +381,106 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     ],
   },
   {
+    slug: "agregor",
+    title: "Agregor",
+    category: "personagens",
+    subtitle: "Vigia das marinhas frias que nota a mudanca no horizonte antes do resto da costa encontrar coragem para nomea-la.",
+    summary:
+      "Agregor e um dos primeiros homens a ver a estranheza se aproximando pelo mar e a compreender que o fenomeno nao se parece com pressagio, tempestade ou supersticao comum.",
+    image: characterIllustration,
+    imageAlt: "Retrato ilustrado de um vigia costeiro diante de um mar metalico.",
+    narrative: [
+      {
+        heading: "Olhos voltados para o horizonte",
+        body:
+          "Na beira do mar, Agregor observa a luz se movendo sobre a agua com paciencia de homem acostumado a diferenciar milagre, fraude e desastre. O que ele encontra nao cabe em nenhuma dessas caixas por muito tempo.",
+      },
+      {
+        heading: "Primeiro a desconfiar da forma errada do mundo",
+        body:
+          "Sua importancia esta menos no combate e mais na leitura do instante. Ele sente cedo demais que a agua, a lua e o brilho no horizonte estao obedecendo a outra ordem.",
+      },
+      {
+        heading: "Testemunha antes do rumor",
+        body:
+          "Os relatos sobre o que vem do mar ganham corpo porque Agregor viu antes de quase todos e nao se permitiu chamar aquilo de exagero por conforto.",
+      },
+    ],
+    internalLinks: ["merlin", "irmas-de-prata", "cedencia-do-veu"],
+    timeline: [
+      {
+        period: "Prologo",
+        title: "Percebe a luz sobre o mar",
+        description:
+          "O primeiro pressentimento da crise ganha forma diante dele antes de se espalhar pela costa.",
+      },
+      {
+        period: "Vigilia da costa",
+        title: "Ajuda a transformar espanto em relato",
+        description:
+          "Sua observacao reforca a ideia de que o fenomeno nao e alucinacao isolada.",
+      },
+    ],
+    stats: [
+      { label: "Funcao", value: "Testemunha da costa" },
+      { label: "Marca", value: "Olhar treinado para o mar" },
+      { label: "Ligacao", value: "Primeiros sinais do Veu" },
+    ],
+  },
+  {
+    slug: "vazhir",
+    title: "Vaz'hir",
+    category: "personagens",
+    subtitle: "Figura do limiar que recebe o trio em Elarion e fala como quem ja mede o mundo por outras regras.",
+    summary:
+      "Vaz'hir ocupa a borda entre guia, carcereiro e leitor da falha. Sua presenca marca o ponto em que Alaric, Sorrow e Hauz deixam de atravessar a crise e passam a ser atravessados por ela.",
+    image: characterIllustration,
+    imageAlt: "Retrato ilustrado de uma figura silenciosa junto a um braseiro no limiar.",
+    narrative: [
+      {
+        heading: "Guardiao do espaco instavel",
+        body:
+          "Ele surge em Elarion como alguem que conhece a sala, o braseiro, o vinho e a tensao daquele ambiente melhor do que qualquer recem-chegado jamais conseguiria conhecer.",
+      },
+      {
+        heading: "Leitor de gente e de falha",
+        body:
+          "Vaz'hir observa o trio nao apenas como visitantes, mas como vetores possiveis de uma abertura que o mundo ainda nao conseguiu fechar.",
+      },
+      {
+        heading: "Calma mais inquietante que ameaca aberta",
+        body:
+          "Sua fala pesa porque nunca precisa de pressa. Ele fala como quem ja conhece a margem do que esta por vir e so espera descobrir quem entre os presentes vai aguentar ficar de pe.",
+      },
+    ],
+    internalLinks: ["alaric-dorne", "sorrow-noxmourn", "hauz-darnen", "elarion"],
+    timeline: [
+      {
+        period: "Capitulos 16-17",
+        title: "Recebe os vetores em Elarion",
+        description:
+          "O encontro com Alaric, Sorrow e Hauz muda o tom da cronica e torna o limiar mais pessoal.",
+      },
+      {
+        period: "A leitura comeca",
+        title: "Define o trio como parte do problema e da resposta",
+        description:
+          "Sua presenca transforma a caverna em sala de prova e de avaliacao.",
+      },
+    ],
+    stats: [
+      { label: "Natureza", value: "Figura do limiar" },
+      { label: "Dominio", value: "Elarion" },
+      { label: "Funcao", value: "Leitor da convergencia" },
+    ],
+  },
+  {
     slug: "irmas-de-prata",
     title: "Irmas de Prata",
     category: "monstros",
     subtitle: "Nome dado pelos vivos a aparicoes femininas ligadas ao afrouxamento do Veu e ao medo que aprende a se repetir.",
     summary:
-      "As Irmas de Prata nao sao santas, nem simplesmente espectros. O PDF as apresenta como um dos primeiros sinais de que a realidade parou de obedecer ao costume.",
+      "As Irmas de Prata nao sao santas, nem simplesmente espectros. Elas surgem como um dos primeiros sinais de que a realidade parou de obedecer ao costume.",
     image: monsterIllustration,
     imageAlt: "Ilustracao de figuras prateadas junto ao mar.",
     narrative: [
@@ -439,7 +533,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "monstros",
     subtitle: "Colosso que se move sob o deserto e opera menos como predador comum do que como peso cravado na ferida do mundo.",
     summary:
-      "O grande escorpiao do PDF certo nao e so besta do deserto. Ele representa a classe dos Guardioes: criaturas antigas cuja simples permanencia segura um pedaço do rasgo.",
+      "O grande escorpiao nao e so besta do deserto. Ele representa a classe dos Guardioes: criaturas antigas cuja simples permanencia segura um pedaco do rasgo.",
     image: monsterIllustration,
     imageAlt: "Ilustracao de um escorpiao colossal sob dunas escuras.",
     narrative: [
@@ -456,7 +550,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
       {
         heading: "Ameaca de campanha",
         body:
-          "Para o site, este verbete permite unir a escala cosmologica do PDF com uso imediato de mesa. O escorpiao pode ser lido como boss, guardiao regional ou prova de que alguem esta perto demais de uma rachadura sensivel.",
+          "O escorpiao sustenta a escala cosmologica da historia sem perder uso imediato de mesa. Pode surgir como boss, guardiao regional ou prova de que alguem esta perto demais de uma rachadura sensivel.",
       },
     ],
     internalLinks: ["guardioes-do-veu", "zerrikania-de-areia-negra", "profecia-de-nashara"],
@@ -501,7 +595,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "monstros",
     subtitle: "Criatura-voz que oferece correcao absoluta e trata a excecao como o custo inaceitavel de um mundo imperfeito.",
     summary:
-      "O Dragao Negro e um dos seres mais perigosos do PDF porque nao convence pela força bruta primeiro, mas por um raciocinio de paz total que elimina aquilo que escapa.",
+      "O Dragao Negro e um dos seres mais perigosos da cronica porque nao convence pela força bruta primeiro, mas por um raciocinio de paz total que elimina aquilo que escapa.",
     image: monsterIllustration,
     imageAlt: "Ilustracao de um dragao negro emergindo de rochas escuras.",
     narrative: [
@@ -562,7 +656,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "monstros",
     subtitle: "Classe de criaturas antigas que nao existe para ser entendida como fauna comum, mas como contençao viva da ferida do mundo.",
     summary:
-      "O PDF correto trata os Guardioes como entidades cuja permanencia pesa mais do que qualquer ataque isolado. Eles seguram, atrasam e estabilizam partes do rasgo, mesmo quando ninguem compreende totalmente o custo disso.",
+      "Os Guardioes pesam mais do que qualquer ataque isolado. Eles seguram, atrasam e estabilizam partes do rasgo, mesmo quando ninguem compreende totalmente o custo disso.",
     image: monsterIllustration,
     imageAlt: "Ilustracao de guardioes antigos surgindo entre areia, asa e rocha.",
     narrative: [
@@ -615,7 +709,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "locais",
     subtitle: "Versao ferida do deserto em que a areia escurece, o horizonte se move errado e o mundo inteiro passa a soar gasto.",
     summary:
-      "No PDF certo, Zerrikania deixa de ser so paisagem exotica. Ela vira o corpo visivel da crise: um territorio onde o Veu falhou de forma persistente.",
+      "Zerrikania deixa de ser so paisagem exotica. Ela vira o corpo visivel da crise: um territorio onde o Veu falhou de forma persistente.",
     image: locationIllustration,
     imageAlt: "Ilustracao de dunas escuras sob um ceu quebrado.",
     narrative: [
@@ -668,7 +762,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "locais",
     subtitle: "Rede de adegas, alçapoes e camaras escondidas onde o metodo de Alaric encontra o perigo de um livro que responde demais.",
     summary:
-      "O trecho de Novigrad no PDF correto e importante porque mostra que a crise ja nao pertence apenas ao deserto: cidades racionais tambem possuem porões prontos para falhar.",
+      "Novigrad subterranea mostra que a crise ja nao pertence apenas ao deserto: cidades racionais tambem possuem poroes prontos para falhar.",
     image: locationIllustration,
     imageAlt: "Ilustracao de uma adega escondida sob a cidade.",
     narrative: [
@@ -721,7 +815,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "locais",
     subtitle: "Nome-lugar reconhecido por espada, portal e sombra antes que qualquer personagem consiga explica-lo de forma segura.",
     summary:
-      "Elarion funciona no PDF como destino e conceito ao mesmo tempo: uma borda onde caverna, estalagem, leitura e captura coexistem sem se resolver totalmente.",
+      "Elarion funciona como destino e conceito ao mesmo tempo: uma borda onde caverna, estalagem, leitura e captura coexistem sem se resolver totalmente.",
     image: locationIllustration,
     imageAlt: "Ilustracao de um limiar rochoso que se dobra em sala iluminada.",
     narrative: [
@@ -774,7 +868,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "faccoes",
     subtitle: "Rede dispersa de magos, eruditos e copistas que tenta medir, conter e nomear a falha sem jamais controlá-la por inteiro.",
     summary:
-      "O PDF correto mostra que o estudo do colapso nunca pertenceu a um único centro. Conclaves, magos e escribas aparecem como infraestrutura intelectual da crise, ao mesmo tempo útil e insuficiente.",
+      "O estudo do colapso nunca pertenceu a um unico centro. Conclaves, magos e escribas aparecem como infraestrutura intelectual da crise, ao mesmo tempo util e insuficiente.",
     image: factionIllustration,
     imageAlt: "Ilustracao de um conclave de estudiosos sobre mapas e runas.",
     narrative: [
@@ -827,7 +921,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "faccoes",
     subtitle: "Sacerdotes, santuários e tradições que absorvem os versos do colapso e os convertem em destino socialmente utilizável.",
     summary:
-      "Os templos do PDF correto nao apenas rezam. Eles recortam versos, transformam rumor em profecia compartilhável e ajudam a produzir a forma pública de figuras como Nashara.",
+      "Os templos nao apenas rezam. Eles recortam versos, transformam rumor em profecia compartilhavel e ajudam a produzir a forma publica de figuras como Nashara.",
     image: factionIllustration,
     imageAlt: "Ilustracao de templos e sacerdotes em torno de pergaminhos profeticos.",
     narrative: [
@@ -880,7 +974,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "historia",
     subtitle: "Momento em que a fronteira entre mundos deixa de se sustentar sozinha e obriga a realidade a conviver com passagem, eco e erro.",
     summary:
-      "O prologo do PDF correto redefine a base do universo: antes de qualquer cidade, profecia ou espada, existe o fato de que o Veu cedeu e nunca mais deixou o mundo plenamente inteiro.",
+      "O prologo redefine a base do universo: antes de qualquer cidade, profecia ou espada, existe o fato de que o Veu cedeu e nunca mais deixou o mundo plenamente inteiro.",
     image: historyIllustration,
     imageAlt: "Ilustracao de cronica com uma fissura luminosa entre mundos.",
     narrative: [
@@ -933,7 +1027,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     category: "historia",
     subtitle: "Conjunto de versos, medos e expectativas que transforma uma vida em ponto de apoio para reis, templos e povos exaustos.",
     summary:
-      "A profecia no PDF correto nao e só mensagem sobrenatural. E uma estrutura de repetição social que prepara o mundo para desejar uma figura que resolva aquilo que ninguem mais consegue suportar.",
+      "A profecia nao e so mensagem sobrenatural. E uma estrutura de repeticao social que prepara o mundo para desejar uma figura que resolva aquilo que ninguem mais consegue suportar.",
     image: historyIllustration,
     imageAlt: "Ilustracao de um pergaminho profetico sobre areia escura.",
     narrative: [
@@ -984,7 +1078,7 @@ const handcraftedEncyclopediaEntries: EncyclopediaEntry[] = [
     slug: "fragmentos-de-luna",
     title: "Fragmentos de Luna",
     category: "historia",
-    subtitle: "Residuos de passagem e memoria imperfeita que tornam possivel a convergencia da segunda metade do PDF.",
+    subtitle: "Residuos de passagem e memoria imperfeita que tornam possivel a convergencia do segundo arco.",
     summary:
       "Os Fragmentos de Luna explicam por que o colapso deixa de agir apenas por paisagem e passa a agir por pessoas, vidas e vetores capazes de serem lidos e rearranjados.",
     image: historyIllustration,

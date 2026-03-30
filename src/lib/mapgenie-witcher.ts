@@ -2,7 +2,7 @@ export const LOCAL_WITCHER_TILE_PREFIX = "/local-witcher3map";
 export const WITCHER_MAP_ASSET_VERSION = "20260317-maxnative";
 
 function withBaseUrl(relativePath: string) {
-  const base = (import.meta as any).env?.BASE_URL ?? "/";
+  const base = import.meta.env.BASE_URL ?? "/";
   const normalizedBase = base.endsWith("/") ? base : `${base}/`;
   const normalizedPath = relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
   return `${normalizedBase}${normalizedPath}`;
@@ -158,7 +158,7 @@ export const mapGenieWitcherMaps: MapGenieWitcherMap[] = [
     title: "Skellige",
     subtitle: "Arquipelago, fiordes, portos e travessias maritimas.",
     description:
-      "Referencia para navegar entre ilhas, enseadas, aldeias costeiras e fortalezas dos clas.",
+      "Rotas entre ilhas, enseadas, aldeias costeiras e fortalezas dos clas de Skellige.",
     kind: "tiles",
     tileFolder: "skellige",
     initialZoom: 3,
@@ -303,7 +303,7 @@ export function getLocalWitcherTileProbeUrl(mapId: Exclude<MapGenieWitcherMapId,
 }
 
 export const witcherAtlasAttributionNote =
-  "Base local integrada para consulta geografica dentro deste projeto de mesa, com creditos visiveis as fontes e uso contextualizado para referencia nao comercial.";
+  "Atlas local integrado para consulta geografica nao comercial do continente, com creditos preservados nas fontes cartograficas.";
 
 function normalize(value?: string | null) {
   return (value ?? "")
