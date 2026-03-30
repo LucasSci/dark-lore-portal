@@ -35,7 +35,7 @@ export const routeManifest: RouteManifestEntry[] = [
     label: "Inicio",
     title: "Inicio",
     description:
-      "Arquivo do Continente reúne bestiário, crônicas, cartografia e sessões em torno de Areias de Zerrikania.",
+      "Arquivo do Continente reune bestiario, cronicas, cartografia e sessoes em torno de Areias de Zerrikania.",
     visibility: "public",
     navGroup: "primary-left",
     ...defaultEditorial,
@@ -44,8 +44,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/universo/:entrySlug",
     label: "Universo",
     title: "Dossie do Universo",
-    description:
-      "Perfis, verbetes e relações do Continente reunidos sob o selo do arquivo.",
+    description: "Perfis, verbetes e relacoes do Continente reunidos sob o selo do arquivo.",
     visibility: "public",
     navGroup: "none",
     ...defaultEditorial,
@@ -55,7 +54,7 @@ export const routeManifest: RouteManifestEntry[] = [
     label: "Universo",
     title: "Universo",
     description:
-      "Explore reinos, personagens, facções, lugares e eventos ligados a Areias de Zerrikania.",
+      "Explore reinos, personagens, faccoes, lugares e eventos ligados a Areias de Zerrikania.",
     visibility: "public",
     navGroup: "primary-left",
     ...defaultEditorial,
@@ -65,7 +64,7 @@ export const routeManifest: RouteManifestEntry[] = [
     label: "Bestiario",
     title: "Ficha de Criatura",
     description:
-      "Consulte sinais, fraquezas, habitats e relatos de caça preservados no bestiário do arquivo.",
+      "Consulte sinais, fraquezas, habitats e relatos de caca preservados no bestiario do arquivo.",
     visibility: "public",
     navGroup: "none",
     ...defaultEditorial,
@@ -74,8 +73,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/bestiario",
     label: "Bestiario",
     title: "Bestiario",
-    description:
-      "Criaturas, entidades e horrores catalogados em dossiês de caça e observação.",
+    description: "Criaturas, entidades e horrores catalogados em dossies de caca e observacao.",
     visibility: "public",
     navGroup: "primary-left",
     ...defaultEditorial,
@@ -85,7 +83,7 @@ export const routeManifest: RouteManifestEntry[] = [
     label: "Cronicas",
     title: "Cronicas",
     description:
-      "Leia capítulos, relatos de estrada e manuscritos ligados ao arquivo de Areias de Zerrikania.",
+      "Leia capitulos, relatos de estrada e manuscritos ligados ao arquivo de Areias de Zerrikania.",
     visibility: "public",
     navGroup: "primary-left",
     ...defaultEditorial,
@@ -94,8 +92,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/campanha",
     label: "Campanha",
     title: "Campanha",
-    description:
-      "Entrada legada para as crônicas principais do arquivo.",
+    description: "Entrada legada para as cronicas principais do arquivo.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
@@ -118,8 +115,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/oraculo",
     label: "Oraculo",
     title: "Oraculo do Arquivo",
-    description:
-      "Experiência completa de Luna, com leitura contínua e consulta ao arquivo.",
+    description: "Experiencia completa de Luna, com leitura continua e consulta ao arquivo.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
@@ -131,8 +127,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/luna",
     label: "Luna",
     title: "Luna",
-    description:
-      "Acesso direto ao oráculo do arquivo em experiência integral.",
+    description: "Acesso direto ao oraculo do arquivo em experiencia integral.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
@@ -145,7 +140,7 @@ export const routeManifest: RouteManifestEntry[] = [
     label: "Jogar",
     title: "Jogar",
     description:
-      "Entre na sessão, abra a mesa, consulte o oráculo e revise fichas a partir do mesmo hub.",
+      "Entre na sessao, abra a mesa, consulte o oraculo e revise fichas a partir do mesmo hub.",
     visibility: "public",
     navGroup: "primary-right",
     ...defaultEditorial,
@@ -154,8 +149,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/mesa",
     label: "Mesa",
     title: "Mesa de Sessao",
-    description:
-      "Ambiente tático para conduzir a sessão, organizar cena, iniciativa e presença.",
+    description: "Ambiente tatico para conduzir a sessao, organizar cena, iniciativa e presenca.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
@@ -167,8 +161,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/mapa/regional/:mapId",
     label: "Mapa Regional",
     title: "Carta Regional",
-    description:
-      "Explore uma carta regional ligada ao atlas do Continente.",
+    description: "Explore uma carta regional ligada ao atlas do Continente.",
     visibility: "public",
     navGroup: "none",
     theme: "atlas",
@@ -179,8 +172,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/mapa/:regionSlug/:subRegionSlug/:locationSlug",
     label: "Local",
     title: "Local do Atlas",
-    description:
-      "Leitura localizada do atlas com vínculos para dossiês, rotas e sessão.",
+    description: "Leitura localizada do atlas com vinculos para dossies, rotas e sessao.",
     visibility: "public",
     navGroup: "none",
     theme: "atlas",
@@ -191,8 +183,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/mapa/:regionSlug/:subRegionSlug",
     label: "Sub-regiao",
     title: "Sub-regiao do Atlas",
-    description:
-      "Camada intermediária do atlas, conectando região, local e rota.",
+    description: "Camada intermediaria do atlas, conectando regiao, local e rota.",
     visibility: "public",
     navGroup: "none",
     theme: "atlas",
@@ -203,8 +194,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/mapa/:regionSlug",
     label: "Regiao",
     title: "Regiao do Atlas",
-    description:
-      "Navegue por uma região do Continente com contexto ligado ao arquivo.",
+    description: "Navegue por uma regiao do Continente com contexto ligado ao arquivo.",
     visibility: "public",
     navGroup: "none",
     theme: "atlas",
@@ -216,7 +206,7 @@ export const routeManifest: RouteManifestEntry[] = [
     label: "Mapa",
     title: "Mapa",
     description:
-      "Abra o atlas do Continente, desça por cartas regionais e cruze rotas com verbetes e sessão.",
+      "Abra o atlas do Continente, desca por cartas regionais e cruze rotas com verbetes e sessao.",
     visibility: "public",
     navGroup: "primary-right",
     theme: "atlas",
@@ -227,8 +217,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/contato",
     label: "Contato",
     title: "Contato",
-    description:
-      "Canal de correspondência do arquivo para registros, propostas e contato direto.",
+    description: "Canal de correspondencia do arquivo para registros, propostas e contato direto.",
     visibility: "public",
     navGroup: "primary-right",
     ...defaultEditorial,
@@ -237,8 +226,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/comunidade",
     label: "Comunidade",
     title: "Comunidade",
-    description:
-      "Área interna de ecos, relatos e trocas entre leitores, jogadores e mestres.",
+    description: "Area interna de ecos, relatos e trocas entre leitores, jogadores e mestres.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
@@ -248,8 +236,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/loja",
     label: "Loja",
     title: "Loja",
-    description:
-      "Área interna de itens e seleções do arquivo.",
+    description: "Area interna de itens e selecoes do arquivo.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
@@ -259,8 +246,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/conta",
     label: "Conta",
     title: "Conta",
-    description:
-      "Área interna para identidade, acesso e preferências do arquivo.",
+    description: "Area interna para identidade, acesso e preferencias do arquivo.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
@@ -270,8 +256,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/criacao",
     label: "Criacao",
     title: "Criacao",
-    description:
-      "Ferramenta interna para criação de personagens e registros.",
+    description: "Ferramenta interna para criacao de personagens e registros.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
@@ -281,8 +266,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/ficha",
     label: "Ficha",
     title: "Ficha",
-    description:
-      "Ferramenta interna de ficha, recursos e acompanhamento de sessão.",
+    description: "Ferramenta interna de ficha, recursos e acompanhamento de sessao.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
@@ -292,8 +276,7 @@ export const routeManifest: RouteManifestEntry[] = [
     path: "/mestre",
     label: "Mestre",
     title: "Painel do Mestre",
-    description:
-      "Ferramenta interna para condução de sessão, controle de cena e notas do mestre.",
+    description: "Ferramenta interna para conducao de sessao, controle de cena e notas do mestre.",
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
