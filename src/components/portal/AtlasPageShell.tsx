@@ -15,12 +15,21 @@ interface AtlasPageShellProps {
   headerActions?: ReactNode;
 }
 
+const stageLabels: Record<AtlasContextModel["stage"], string> = {
+  world: "Mundo",
+  region: "Regiao",
+  subregion: "Sub-regiao",
+  location: "Local",
+  battlemap: "Battlemap",
+};
+
 export default function AtlasPageShell({
   context,
   children,
   headerActions,
 }: AtlasPageShellProps) {
   usePortalShellMode("atlas", "atlas");
+  const stageLabel = stageLabels[context.stage];
 
   useEffect(() => {
     const segments = context.href.split("/").filter(Boolean);
@@ -43,27 +52,27 @@ export default function AtlasPageShell({
           <CardContent className="space-y-6 p-6 md:p-8">
             <div className="flex flex-wrap items-start justify-between gap-5">
               <div className="max-w-4xl space-y-4">
-                <AtlasBreadcrumbs items={context.breadcrumbs} />
+                <AtlasBreadcrumbs items={context.breadcrumbs} className="atlas-stage-breadcrumbs" />
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="border-primary/30 text-primary">
+                  <Badge variant="outline" className="atlas-stage-badge border-primary/30 text-primary">
                     {context.eyebrow}
                   </Badge>
-                  <Badge variant="outline" className="border-primary/25 text-primary">
+                  <Badge variant="outline" className="atlas-stage-badge border-primary/25 text-primary">
                     <Compass className="mr-2 h-3.5 w-3.5" />
-                    Leitura {context.stage}
+                    Camada {stageLabel}
                   </Badge>
                 </div>
                 <div>
-                  <h1 className="font-display text-4xl text-gold-gradient md:text-5xl">
+                  <h1 className="atlas-stage-title font-display text-4xl text-gold-gradient md:text-5xl">
                     {context.title}
                   </h1>
-                  <p className="mt-3 max-w-4xl text-sm leading-7 text-muted-foreground md:text-base">
+                  <p className="atlas-stage-description mt-3 max-w-4xl text-sm leading-7 text-muted-foreground md:text-base">
                     {context.description}
                   </p>
                 </div>
               </div>
 
-              {headerActions ? <div className="flex flex-wrap items-center gap-2">{headerActions}</div> : null}
+              {headerActions ? <div className="atlas-stage-actions flex flex-wrap items-center gap-2">{headerActions}</div> : null}
             </div>
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -74,11 +83,12 @@ export default function AtlasPageShell({
                   value={metric.value}
                   variant="quiet"
                   tone={metric.tone}
+                  className={`atlas-stage-metric atlas-stage-metric--${metric.tone ?? "neutral"}`}
                 />
               ))}
             </div>
 
-            <div className="field-note flex flex-wrap items-start gap-3 border-primary/20 bg-primary/10 px-4 py-3">
+            <div className="atlas-stage-note field-note flex flex-wrap items-start gap-3 border-primary/20 bg-primary/10 px-4 py-3">
               <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <p className="text-sm leading-6 text-foreground/84">{context.orientationHint}</p>
             </div>
@@ -90,7 +100,7 @@ export default function AtlasPageShell({
         <PortalContextPanel
           eyebrow="Leitura conectada"
           title={`Continuar a partir de ${context.title}`}
-          description="Atlas, universo, campanha e mesa compartilham os mesmos atalhos para que a navegacao continue sem quebrar a imersao."
+          description="Atlas, universo, campanha e mesa seguem ligados pelos mesmos rastros desta leitura."
           image={context.image}
           metrics={context.metrics.slice(0, 3)}
           actions={context.actions}
@@ -101,8 +111,8 @@ export default function AtlasPageShell({
         <div className="field-note flex flex-wrap items-start gap-3 px-4 py-3">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p className="text-sm leading-6 text-foreground/84">
-            O atlas agora funciona em modo proprio de navegacao: menos ornamento concorrendo, mais
-            contexto persistente e atalhos claros entre mapa, lore e sessao.
+            O atlas guarda o contexto da travessia e mantem os atalhos entre mapa, lore e sessao
+            sempre a mao.
           </p>
         </div>
       </div>

@@ -121,7 +121,7 @@ export const VttCommandPanel = memo(function VttCommandPanel({
                 Direcao da cena
               </CardTitle>
               <CardDescription>
-                Estado page-scoped com fog, tokens, presenca e revisao incremental.
+                Controle de neblina, presenca e revisao da cena em um unico quadro.
               </CardDescription>
             </div>
             <Crown className="h-5 w-5 text-primary" />
@@ -462,10 +462,10 @@ export const VttMapPanel = memo(function VttMapPanel({
           <div className="flex items-center justify-between gap-3">
             <div>
               <CardTitle className="font-heading text-lg text-foreground">
-                Page-scoped VTT
+                Palco da area
               </CardTitle>
               <CardDescription>
-                Renderer PixiJS com layers, zoom no scroll, pan com botao direito e drag de verbetes da lore.
+                Palco tatico com camadas, zoom, deslocamento e entrada direta de registros do arquivo.
               </CardDescription>
             </div>
             <Map className="h-5 w-5 text-primary" />
@@ -551,7 +551,7 @@ export const VttSessionPanel = memo(function VttSessionPanel({
                 Chat de Sessao
               </CardTitle>
               <CardDescription>
-                Canal rapido para narracao, avisos do mestre e resultados de rolagem.
+                Canal da mesa para narracao, avisos do mestre e resultados de rolagem.
               </CardDescription>
             </div>
             <MessageSquare className="h-5 w-5 text-primary" />
@@ -695,7 +695,7 @@ export const VttSessionPanel = memo(function VttSessionPanel({
 
           <div className="info-panel p-4 backdrop-blur-md">
             <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              Direcao dramatica
+              Pressao da cena
             </p>
             <ul className="mt-3 space-y-2 text-sm text-foreground/90">
               <li>Use a neblina para esconder o flanco norte do altar.</li>

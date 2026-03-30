@@ -1,3 +1,7 @@
+import { LOCAL_SESSION_ID } from "@/lib/local-identities";
+
+import { generateSecureId, generateSecureShortId } from "@/lib/utils";
+
 export const BOARD_COLUMNS = 12;
 export const BOARD_ROWS = 8;
 export const DEFAULT_GRID_SIZE = 72;
@@ -443,24 +447,11 @@ const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
 });
 
 function makeId(prefix: string) {
-  return `${prefix}-${makeEntityId().slice(0, 8)}`;
+  return `${prefix}-${generateSecureShortId()}`;
 }
 
-export function makeEntityId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
-    let random: number;
-    if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
-      random = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
-    } else {
-      random = Math.floor(Math.random() * 16);
-    }
-    const value = char === "x" ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
+function makeEntityId() {
+  return generateSecureId();
 }
 
 function stampTime() {
@@ -596,7 +587,7 @@ export function countRevealedCells(fog: FogState) {
   return Object.values(fog).filter(Boolean).length;
 }
 
-export function createDemoTokens(): TabletopToken[] {
+export function createSeedTokens(): TabletopToken[] {
   return [
     {
       id: makeEntityId(),
@@ -849,7 +840,7 @@ export function createScenePage(
   };
 }
 
-function createDemoPage(sessionId: string): VttPage {
+function createSeedPage(sessionId: string): VttPage {
   return {
     ...createScenePage(sessionId, "Cripta de Velkyn", {
       region: "Velkyn",
@@ -877,9 +868,9 @@ export function createTokenObject(token: TabletopToken, pageId: string): VttToke
   };
 }
 
-export function createSceneModel(sessionId: string = "demo-session"): SceneModel {
-  const page = createDemoPage(sessionId);
-  const objects = createDemoTokens().map((token) => createTokenObject(token, page.id));
+export function createSceneModel(sessionId: string = LOCAL_SESSION_ID): SceneModel {
+  const page = createSeedPage(sessionId);
+  const objects = createSeedTokens().map((token) => createTokenObject(token, page.id));
 
   return {
     sessionId,

@@ -190,7 +190,7 @@ export default function CombatTracker() {
     setRound(1);
     setCurrentTurn(0);
     setBattleLog([]);
-    addLog("Sistema", "start", "Encontro de referencia iniciado.", 1);
+    addLog("Sistema", "start", "Encontro iniciado.", 1);
   };
 
   const startCombat = () => {
@@ -347,7 +347,7 @@ export default function CombatTracker() {
           <Sparkles />
           <AlertTitle>Preparacao de encontro</AlertTitle>
           <AlertDescription>
-            Carregue um confronto de referencia ou cadastre NPCs antes de iniciar a ordem de iniciativa.
+            Carregue um confronto salvo ou cadastre NPCs antes de iniciar a ordem de iniciativa.
           </AlertDescription>
         </Alert>
       ) : (
@@ -411,7 +411,7 @@ export default function CombatTracker() {
           <Card variant="panel">
             <CardContent className="space-y-3 p-6">
               <Button variant="secondary" className="w-full" onClick={addSampleEncounter}>
-                Carregar encontro de referencia
+                Carregar encontro salvo
               </Button>
               <Button
                 className="w-full"

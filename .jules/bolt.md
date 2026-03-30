@@ -4,3 +4,7 @@
 ## 2026-03-21 - State co-location for high-frequency text inputs
 **Learning:** High-frequency state updates like `chatDraft` and `diceDraft` mapped directly in massive parent components (like `MesaPage`) force expensive full-tree React diffs on every keystroke. This causes rendering lag and unnecessarily runs hooks like `useMemo` and function recreating, even with large sub-components like `VttPixiStage` in the tree.
 **Action:** Always co-locate high-frequency text input states into their own small components (`ChatInput`, `DiceInput`) that manage their own local `draft` state and pass the finalized value back up to the parent using an `onSend` callback.
+
+## 2025-05-18 - AABB Filtering and Typed Arrays for Dynamic Lighting Raycasting
+**Learning:** During 2D raycasting (e.g. `computeVisibilityPolygon`), processing every single map wall during the hot intersection loop results in a massive GC overhead due to `Set` iterations, nested point coordinate lookups, and the volume of vector operations. Simply allocating a new `{x, y}` point for each ray direction and checking distance can significantly lag the canvas rendering.
+**Action:** Unroll vector math objects (`{x, y}`) into primitive numbers, inline simple vector math (like Cramer's rule for segment intersection), replace `Set` iterations with pre-allocated typed arrays (like `Float64Array`) for angles/walls, and importantly, utilize an AABB check to entirely filter out distant walls (excluding the map boundary walls) from the loop.

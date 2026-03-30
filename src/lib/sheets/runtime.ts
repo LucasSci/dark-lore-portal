@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { generateSecureShortId } from "@/lib/utils";
 import {
   buildAttributeValuesFromCharacterRow,
   buildCharacterDraftFromStore,
@@ -29,10 +30,7 @@ const pendingRequests = new Map<
 >();
 
 function createRequestId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return `sheet-${crypto.randomUUID()}`;
-  }
-  return `sheet-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `sheet-${generateSecureShortId()}`;
 }
 
 function getWorker() {

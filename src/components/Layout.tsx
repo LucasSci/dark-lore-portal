@@ -2,14 +2,19 @@ import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import { usePortalState } from "@/lib/portal-state";
+import { resolveRouteManifest } from "@/lib/route-manifest";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isTabletopRoute = location.pathname.startsWith("/mesa");
-  const isAtlasRoute = location.pathname.startsWith("/mapa");
+  const currentRoute = resolveRouteManifest(location.pathname);
   const { motionIntensity, navigationMode } = usePortalState();
+  const themeMode = currentRoute?.theme ?? (location.pathname.startsWith("/mapa/") ? "atlas" : "editorial");
+  const showHeader = currentRoute?.showHeader ?? true;
+  const showFooter = currentRoute?.showFooter ?? !location.pathname.startsWith("/mapa/");
+  const isStandaloneRoute = themeMode === "tabletop" || themeMode === "oracle";
+  const isAtlasRoute = themeMode === "atlas" && location.pathname.startsWith("/mapa/");
 
-  if (isTabletopRoute) {
+  if (isStandaloneRoute) {
     return <>{children}</>;
   }
 
@@ -18,6 +23,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="page-shell min-h-screen flex flex-col scrollbar-dark">
+      <a href="#main-content" className="skip-link">
+        Pular para o conteudo principal
+      </a>
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="page-reading-focus absolute inset-y-0 left-1/2 w-[min(calc(100%-1.5rem),88rem)] -translate-x-1/2" />
         <div className="page-edge-vignette absolute inset-0" />
@@ -29,15 +37,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           }`}
         />
       </div>
-      <Header />
+      {showHeader ? <Header /> : null}
       <main
+        id="main-content"
+        tabIndex={-1}
         className={`relative z-10 flex-1 ${
           isAtlasRoute ? "pb-0 pt-24 md:pt-28" : "pb-16 pt-28 md:pt-32"
         }`}
       >
         {children}
       </main>
-      {!isAtlasRoute ? <Footer /> : null}
+      {showFooter ? <Footer /> : null}
     </div>
   );
 }
