@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { generateSecureId, generateSecureShortId } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
 import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 import { generateSecureId, generateSecureShortId } from "@/lib/utils";
