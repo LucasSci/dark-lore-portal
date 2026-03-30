@@ -111,6 +111,7 @@ import {
 import { ensureMesaSession } from "@/lib/sheets/persistence";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 
 const VttPixiStage = lazy(() => import("@/components/rpg/VttPixiStage"));
 
@@ -309,10 +310,10 @@ export default function MesaPage() {
 
     void (async () => {
       const session = await ensureMesaSession();
-      const nextSessionId = session?.id ?? "demo-session";
+      const nextSessionId = session?.id ?? LOCAL_SESSION_ID;
       const loadedScene = (await loadSceneSnapshot(nextSessionId)) ?? createSceneModel(nextSessionId);
 
-      if (!session && nextSessionId === "demo-session") {
+      if (!session && nextSessionId === LOCAL_SESSION_ID) {
         if (!cancelled) {
           sceneRef.current = loadedScene;
           setScene(loadedScene);

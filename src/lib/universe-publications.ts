@@ -92,31 +92,25 @@ function cleanHeading(heading: string) {
   return heading.replace(/\.$/, "").trim();
 }
 
-function parseHeading(heading: string) {
-  if (heading === "Prologo") {
+function parseHeading(heading: string, index: number) {
+  const cleanedHeading = cleanHeading(heading);
+  const headingParts = cleanedHeading.split(/\s+--\s+/, 2);
+
+  if (index === 0 || headingParts.length < 2) {
     return {
-      chapterNumber: 0,
-      chapterLabel: "Prologo",
-      title: "O Veu comeca a ceder",
+      chapterNumber: index,
+      chapterLabel: index === 0 ? "Prologo" : `Capitulo ${String(index).padStart(2, "0")}`,
+      title: index === 0 ? "O Veu comeca a ceder" : cleanedHeading,
     };
   }
 
-  const match = heading.match(/^Capitulo\s+(\d+)\s+--\s+(.+)$/);
-
-  if (!match) {
-    return {
-      chapterNumber: 0,
-      chapterLabel: heading,
-      title: cleanHeading(heading),
-    };
-  }
-
-  const chapterNumber = Number(match[1]);
+  const [labelPart, titlePart] = headingParts;
+  const chapterNumber = Number(labelPart.match(/(\d+)/)?.[1] ?? index);
 
   return {
     chapterNumber,
     chapterLabel: `Capitulo ${String(chapterNumber).padStart(2, "0")}`,
-    title: cleanHeading(match[2]),
+    title: cleanHeading(titlePart),
   };
 }
 
@@ -150,14 +144,21 @@ function collectMentions(paragraphs: string[]) {
   });
 }
 
-export const universePublications: UniversePublication[] = rawLoreChapters.map((chapter) => {
-  const parsed = parseHeading(chapter.heading);
+const usedPublicationSlugs = new Map<string, number>();
+
+export const universePublications: UniversePublication[] = rawLoreChapters.map((chapter, index) => {
+  const parsed = parseHeading(chapter.heading, index);
+  const baseSlug =
+    parsed.chapterNumber === 0
+      ? "cronica-prologo-do-veu"
+      : `cronica-${String(parsed.chapterNumber).padStart(2, "0")}-${slugify(parsed.title)}`;
+  const slugCount = usedPublicationSlugs.get(baseSlug) ?? 0;
+  const slug = slugCount === 0 ? baseSlug : `${baseSlug}-${slugCount + 1}`;
+
+  usedPublicationSlugs.set(baseSlug, slugCount + 1);
 
   return {
-    slug:
-      parsed.chapterNumber === 0
-        ? "cronica-prologo-do-veu"
-        : `cronica-${String(parsed.chapterNumber).padStart(2, "0")}-${slugify(parsed.title)}`,
+    slug,
     chapterNumber: parsed.chapterNumber,
     chapterLabel: parsed.chapterLabel,
     title: parsed.title,

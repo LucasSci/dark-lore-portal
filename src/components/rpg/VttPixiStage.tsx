@@ -300,6 +300,7 @@ export default function VttPixiStage({
   const wallStartRef = useRef<{ x: number; y: number } | null>(null);
   const onAddWallRef = useRef(onAddWall);
   const onAddLightRef = useRef(onAddLight);
+  const onTravelEdgeRef = useRef(onTravelEdge);
   const [mapTexture, setMapTexture] = useState<Texture | null>(null);
   const [measureState, setMeasureState] = useState<{
     active: boolean;
@@ -348,6 +349,17 @@ export default function VttPixiStage({
   });
   const [viewportSize, setViewportSize] = useState({ width: 960, height: 560 });
 
+  // ⚡ Bolt Optimization: Cache visibility polygons to avoid expensive raycasting on every render
+  const visionCacheRef = useRef<Map<string, {
+    originX: number;
+    originY: number;
+    radius: number;
+    boundsWidth: number;
+    boundsHeight: number;
+    wallHash: string;
+    polygon: Array<{ x: number; y: number }>;
+  }>>(new Map());
+
   useEffect(() => {
     pageRef.current = page;
     cameraChangeRef.current = onCameraChange;
@@ -359,6 +371,7 @@ export default function VttPixiStage({
     moveTokenRef.current = onMoveToken;
     selectTokenRef.current = onSelectToken;
     cellClickRef.current = onCellClick;
+    onTravelEdgeRef.current = onTravelEdge;
   }, [
     onAddLight,
     onAddWall,
@@ -368,6 +381,7 @@ export default function VttPixiStage({
     onSelectToken,
     onTravelEdge,
     onCellClick,
+    onTravelEdge,
     page,
     boardMode,
   ]);
@@ -1395,30 +1409,83 @@ export default function VttPixiStage({
         a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
         b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
       }));
+      // Create a simple hash of walls to invalidate cache if walls change
+      const wallHash = page.wallSegments.map((w) => `${w.x1},${w.y1},${w.x2},${w.y2}`).join('|');
 
       const bounds = { width: boardWidth, height: boardHeight };
 
       // Collect all vision sources: party tokens + light sources
       const visionPolygons: Array<{ x: number; y: number }[]> = [];
+      const cache = visionCacheRef.current;
+      const seenKeys = new Set<string>();
 
       for (const token of tokens) {
         if (token.payload.team === "party" && token.payload.hp > 0) {
-          const origin = {
-            x: token.position.x * gs + gs / 2,
-            y: token.position.y * gs + gs / 2,
-          };
-          const poly = computeVisibilityPolygon(origin, wallSegs, bounds, page.tokenVisionRadius * gs);
-          visionPolygons.push(poly);
+          const originX = token.position.x * gs + gs / 2;
+          const originY = token.position.y * gs + gs / 2;
+          const radius = page.tokenVisionRadius * gs;
+          const cacheKey = `token-${token.id}`;
+          seenKeys.add(cacheKey);
+
+          let cached = cache.get(cacheKey);
+          if (
+            !cached ||
+            cached.originX !== originX ||
+            cached.originY !== originY ||
+            cached.radius !== radius ||
+            cached.boundsWidth !== bounds.width ||
+            cached.boundsHeight !== bounds.height ||
+            cached.wallHash !== wallHash
+          ) {
+            const origin = { x: originX, y: originY };
+            const poly = computeVisibilityPolygon(origin, wallSegs, bounds, radius);
+            cached = {
+              originX, originY, radius,
+              boundsWidth: bounds.width, boundsHeight: bounds.height,
+              wallHash, polygon: poly,
+            };
+            cache.set(cacheKey, cached);
+          }
+          visionPolygons.push(cached.polygon);
         }
       }
 
-      for (const light of page.lightSources) {
-        const origin = {
-          x: light.cellX * gs + gs / 2,
-          y: light.cellY * gs + gs / 2,
-        };
-        const poly = computeVisibilityPolygon(origin, wallSegs, bounds, light.radius * gs);
-        visionPolygons.push(poly);
+      for (let i = 0; i < page.lightSources.length; i++) {
+        const light = page.lightSources[i]!;
+        const originX = light.cellX * gs + gs / 2;
+        const originY = light.cellY * gs + gs / 2;
+        const radius = light.radius * gs;
+        // Lights don't have IDs, so use their index
+        const cacheKey = `light-${i}`;
+        seenKeys.add(cacheKey);
+
+        let cached = cache.get(cacheKey);
+        if (
+          !cached ||
+          cached.originX !== originX ||
+          cached.originY !== originY ||
+          cached.radius !== radius ||
+          cached.boundsWidth !== bounds.width ||
+          cached.boundsHeight !== bounds.height ||
+          cached.wallHash !== wallHash
+        ) {
+          const origin = { x: originX, y: originY };
+          const poly = computeVisibilityPolygon(origin, wallSegs, bounds, radius);
+          cached = {
+            originX, originY, radius,
+            boundsWidth: bounds.width, boundsHeight: bounds.height,
+            wallHash, polygon: poly,
+          };
+          cache.set(cacheKey, cached);
+        }
+        visionPolygons.push(cached.polygon);
+      }
+
+      // Cleanup unused cache entries to prevent memory leaks
+      for (const key of cache.keys()) {
+        if (!seenKeys.has(key)) {
+          cache.delete(key);
+        }
       }
 
       // Draw darkness overlay with cutouts for visible areas
