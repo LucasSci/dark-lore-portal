@@ -1,12 +1,10 @@
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   Application,
   Assets,
   Container,
   Graphics,
   Sprite,
-  Text,
-  TextStyle,
   Texture,
 } from "pixi.js";
 
@@ -21,7 +19,6 @@ import type {
 } from "@/lib/virtual-tabletop";
 import {
   computeVisibilityPolygon,
-  wallObjectsToSegments,
   type Segment,
 } from "@/lib/vtt-lighting";
 
@@ -48,32 +45,74 @@ interface Props {
 const CAMERA_SCALE_MIN = 0.55;
 const CAMERA_SCALE_MAX = 2.1;
 const BOARD_STAGE_MARGIN = 0;
-const EDGE_CONTROL_MARGIN = 28;
 const PARTY_TOKEN_COLOR = 0x6e92a6;
 const NPC_TOKEN_COLOR = 0xbb533b;
 const SELECTED_TOKEN_COLOR = 0xcfab67;
 const MEASURE_LINE_COLOR = 0xf5c842;
 const MEASURE_CELL_COLOR = 0xf5c842;
-const GRID_LABEL_STYLE = new TextStyle({
-  fill: 0xe7dfd4,
+const HTML_OVERLAY_STYLE: CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  overflow: "hidden",
+  pointerEvents: "none",
+  zIndex: 10,
+};
+const TOKEN_LABEL_STYLE: CSSProperties = {
+  position: "absolute",
+  left: 0,
+  top: 0,
+  transform: "translate(-50%, -50%)",
+  color: "#f8f4ec",
+  fontFamily: "Fraunces, serif",
+  fontSize: 17,
+  fontWeight: 700,
+  lineHeight: 1,
+  textShadow: "0 1px 6px rgba(0, 0, 0, 0.85)",
+  whiteSpace: "nowrap",
+};
+const DEAD_TOKEN_LABEL_STYLE: CSSProperties = {
+  ...TOKEN_LABEL_STYLE,
+  color: "#d15a41",
+  fontFamily: "\"IBM Plex Sans\", sans-serif",
+  fontSize: 20,
+};
+const GM_TAG_STYLE: CSSProperties = {
+  position: "absolute",
+  left: 0,
+  top: 0,
+  transform: "translate(-50%, -50%)",
+  color: "#e8d7b3",
+  fontFamily: "\"IBM Plex Mono\", monospace",
   fontSize: 9,
-  fontFamily: "IBM Plex Mono",
-  fontWeight: "500",
+  fontWeight: 600,
   letterSpacing: 1,
-});
-const MEASURE_LABEL_STYLE = new TextStyle({
-  fill: 0xffffff,
+  lineHeight: 1,
+  textShadow: "0 1px 4px rgba(0, 0, 0, 0.85)",
+  textTransform: "uppercase",
+  whiteSpace: "nowrap",
+};
+const GRID_LABEL_TEXT_STYLE: CSSProperties = {
+  position: "absolute",
+  color: "rgba(231, 223, 212, 0.42)",
+  fontFamily: "\"IBM Plex Mono\", monospace",
+  fontSize: 9,
+  fontWeight: 500,
+  letterSpacing: 1,
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+};
+const MEASURE_LABEL_TEXT_STYLE: CSSProperties = {
+  position: "absolute",
+  transform: "translate(-50%, -50%)",
+  color: "#ffffff",
+  fontFamily: "\"IBM Plex Mono\", monospace",
   fontSize: 13,
-  fontFamily: "IBM Plex Mono",
-  fontWeight: "700",
+  fontWeight: 700,
   letterSpacing: 0.5,
-  dropShadow: {
-    color: 0x000000,
-    alpha: 0.7,
-    distance: 1,
-    blur: 3,
-  },
-});
+  lineHeight: 1,
+  textShadow: "0 1px 6px rgba(0, 0, 0, 0.9)",
+  whiteSpace: "nowrap",
+};
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -240,6 +279,7 @@ export default function VttPixiStage({
   const cameraChangeRef = useRef(onCameraChange);
   const dropEntryRef = useRef(onDropEntry);
   const moveTokenRef = useRef(onMoveToken);
+  const travelEdgeRef = useRef(onTravelEdge);
   const selectTokenRef = useRef(onSelectToken);
   const cellClickRef = useRef(onCellClick);
   const panStateRef = useRef({
@@ -269,6 +309,7 @@ export default function VttPixiStage({
     endX: number;
     endY: number;
   } | null>(null);
+  const [draggingTokenId, setDraggingTokenId] = useState<string | null>(null);
   const [wallPreview, setWallPreview] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const dragStateRef = useRef<{
     tokenId: string | null;
@@ -323,6 +364,7 @@ export default function VttPixiStage({
     pageRef.current = page;
     cameraChangeRef.current = onCameraChange;
     dropEntryRef.current = onDropEntry;
+    travelEdgeRef.current = onTravelEdge;
     boardModeRef.current = boardMode;
     onAddWallRef.current = onAddWall;
     onAddLightRef.current = onAddLight;
@@ -337,6 +379,7 @@ export default function VttPixiStage({
     onDropEntry,
     onMoveToken,
     onSelectToken,
+    onTravelEdge,
     onCellClick,
     onTravelEdge,
     page,
@@ -352,6 +395,9 @@ export default function VttPixiStage({
     if (boardMode !== "wall") {
       wallStartRef.current = null;
       setWallPreview(null);
+    }
+    if (boardMode !== "move") {
+      setDraggingTokenId(null);
     }
   }, [boardMode]);
 
@@ -519,6 +565,7 @@ export default function VttPixiStage({
         dragState.container.scale.set(1);
         dragState.container.position.set(dragState.initialX, dragState.initialY);
         host.style.cursor = "";
+        setDraggingTokenId(null);
 
         dragStateRef.current = {
           tokenId: null,
@@ -647,11 +694,12 @@ export default function VttPixiStage({
         dragState.container.alpha = 1;
         dragState.container.scale.set(1);
         host.style.cursor = "";
+        setDraggingTokenId(null);
 
         selectTokenRef.current(dragState.tokenId);
 
-        if (dragState.moved && overflowEdge && onTravelEdgeRef.current) {
-          void onTravelEdgeRef.current(overflowEdge, dragState.tokenId);
+        if (dragState.moved && overflowEdge && travelEdgeRef.current) {
+          void travelEdgeRef.current(overflowEdge, dragState.tokenId);
         } else if (dragState.moved) {
           moveTokenRef.current(dragState.tokenId, cellX, cellY);
         }
@@ -1043,8 +1091,6 @@ export default function VttPixiStage({
     tokenLayer.zIndex = 20;
     const gmLayer = new Container();
     gmLayer.zIndex = 25;
-    const overlayLayer = new Container();
-    overlayLayer.zIndex = 30;
 
     const background = new Graphics();
     background.roundRect(-6, -6, boardWidth + 12, boardHeight + 12, 12);
@@ -1112,17 +1158,6 @@ export default function VttPixiStage({
       cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
       cellGraphic.on("pointertap", () => cellClickRef.current(cell));
       interactionLayer.addChild(cellGraphic);
-
-      if (showGrid && (cell.x === 0 || cell.y === 0)) {
-        const label = new Text({
-          text: cell.label,
-          style: GRID_LABEL_STYLE,
-        });
-
-        label.position.set(cell.x * page.gridSize + 4, cell.y * page.gridSize + 3);
-        label.alpha = 0.42;
-        overlayLayer.addChild(label);
-      }
 
       if (!page.fog[cell.id]) {
         const fog = new Graphics();
@@ -1196,51 +1231,6 @@ export default function VttPixiStage({
         container.addChild(hpFill);
       }
 
-      if (isDead) {
-        const marker = new Text({
-          text: "X",
-          style: new TextStyle({
-            fill: 0xd15a41,
-            fontSize: 20,
-            fontWeight: "700",
-          }),
-        });
-
-        marker.anchor.set(0.5);
-        container.addChild(marker);
-      } else {
-        const shortName = new Text({
-          text: token.payload.shortName,
-          style: new TextStyle({
-            fill: 0xf8f4ec,
-            fontSize: 17,
-            fontFamily: "Fraunces",
-            fontWeight: "700",
-          }),
-        });
-
-        shortName.anchor.set(0.5);
-        shortName.y = -2;
-        container.addChild(shortName);
-      }
-
-      if (token.layer === "gm") {
-        const gmTag = new Text({
-          text: "GM",
-          style: new TextStyle({
-            fill: 0xe8d7b3,
-            fontSize: 9,
-            fontFamily: "IBM Plex Mono",
-            fontWeight: "600",
-            letterSpacing: 1,
-          }),
-        });
-
-        gmTag.anchor.set(0.5);
-        gmTag.y = -page.gridSize * 0.48;
-        container.addChild(gmTag);
-      }
-
       container.eventMode = "static";
       container.cursor = boardMode === "move" ? "grab" : "pointer";
       container.on("pointerdown", (event) => {
@@ -1286,6 +1276,7 @@ export default function VttPixiStage({
           initialY: container.y,
           moved: false,
         };
+        setDraggingTokenId(token.id);
       });
 
       renderLayer.addChild(container);
@@ -1350,17 +1341,6 @@ export default function VttPixiStage({
       endDot.fill({ color: MEASURE_LINE_COLOR, alpha: 0.95 });
       measureLayer.addChild(endDot);
 
-      // Distance = Chebyshev (diagonal = 1 cell) — standard 5ft grid
-      const distCells = Math.max(Math.abs(endX - startX), Math.abs(endY - startY));
-      const distFt = distCells * 5;
-
-      const label = new Text({
-        text: `${distCells} casas · ${distFt} ft`,
-        style: MEASURE_LABEL_STYLE,
-      });
-      label.anchor.set(0.5);
-      label.position.set((fromCx + toCx) / 2, (fromCy + toCy) / 2 - 14);
-      measureLayer.addChild(label);
     }
 
     // ── Wall rendering ──────────────────────────────────────────
@@ -1578,7 +1558,6 @@ export default function VttPixiStage({
       tokenLayer,
       lightIconLayer,
       gmLayer,
-      overlayLayer,
       measureLayer,
     );
   }, [
@@ -1594,6 +1573,34 @@ export default function VttPixiStage({
     tokens,
   ]);
 
+  const { boardWidth, boardHeight, paddingX, paddingY } = getBoardMetrics(
+    page,
+    viewportSize.width,
+    viewportSize.height,
+  );
+  const overlayOffsetX = paddingX + page.camera.x;
+  const overlayOffsetY = paddingY + page.camera.y;
+  const gridLabels = showGrid ? page.cells.filter((cell) => cell.x === 0 || cell.y === 0) : [];
+  const visibleTokenLabels = tokens.filter((token) => token.id !== draggingTokenId);
+  const measureLabel = measureState
+    ? (() => {
+        const fromCx = measureState.startX * page.gridSize + page.gridSize / 2;
+        const fromCy = measureState.startY * page.gridSize + page.gridSize / 2;
+        const toCx = measureState.endX * page.gridSize + page.gridSize / 2;
+        const toCy = measureState.endY * page.gridSize + page.gridSize / 2;
+        const distCells = Math.max(
+          Math.abs(measureState.endX - measureState.startX),
+          Math.abs(measureState.endY - measureState.startY),
+        );
+
+        return {
+          label: `${distCells} casas | ${distCells * 5} ft`,
+          left: (fromCx + toCx) / 2,
+          top: (fromCy + toCy) / 2 - 14,
+        };
+      })()
+    : null;
+
   return (
     <div className="absolute inset-0 h-full w-full overflow-hidden bg-background-strong">
       <div
@@ -1602,64 +1609,144 @@ export default function VttPixiStage({
         style={{ touchAction: "none" }}
         title="Use o scroll para zoom, botao direito para pan, pinça no mobile para aproximar, arraste tokens pelo mapa e solte criaturas do codex no grid."
       />
+      <div style={HTML_OVERLAY_STYLE}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: boardWidth,
+            height: boardHeight,
+            transform: `translate3d(${overlayOffsetX}px, ${overlayOffsetY}px, 0)`,
+            transformOrigin: "top left",
+          }}
+        >
+          <div
+            style={{
+              position: "relative",
+              width: boardWidth,
+              height: boardHeight,
+              transform: `scale(${page.camera.scale})`,
+              transformOrigin: "top left",
+            }}
+          >
+            {gridLabels.map((cell) => (
+              <span
+                key={`grid-label-${cell.id}`}
+                style={{
+                  ...GRID_LABEL_TEXT_STYLE,
+                  left: cell.x * page.gridSize + 4,
+                  top: cell.y * page.gridSize + 3,
+                }}
+              >
+                {cell.label}
+              </span>
+            ))}
+            {visibleTokenLabels.map((token) => {
+              const centerX = token.position.x * page.gridSize + page.gridSize / 2;
+              const centerY = token.position.y * page.gridSize + page.gridSize / 2;
+              const isDead = token.payload.hp <= 0;
+
+              return (
+                <div
+                  key={`token-label-${token.id}`}
+                  style={{
+                    position: "absolute",
+                    left: centerX,
+                    top: centerY,
+                    width: 0,
+                    height: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      ...(isDead ? DEAD_TOKEN_LABEL_STYLE : TOKEN_LABEL_STYLE),
+                      top: isDead ? 0 : -2,
+                    }}
+                  >
+                    {isDead ? "X" : token.payload.shortName}
+                  </span>
+                  {token.layer === "gm" ? (
+                    <span
+                      style={{
+                        ...GM_TAG_STYLE,
+                        top: -page.gridSize * 0.48,
+                      }}
+                    >
+                      GM
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
+            {measureLabel ? (
+              <span
+                style={{
+                  ...MEASURE_LABEL_TEXT_STYLE,
+                  left: measureLabel.left,
+                  top: measureLabel.top,
+                }}
+              >
+                {measureLabel.label}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </div>
       {onExpandMap && (() => {
         const controls: Array<{
           edge: PageConnectionEdge;
-          style: CSSProperties;
           label: string;
+          shortLabel: string;
+          symbol: string;
         }> = [
           {
             edge: "north",
             label: "Expandir para o norte",
-            style: {
-              left: "50%",
-              top: EDGE_CONTROL_MARGIN,
-              transform: "translateX(-50%)",
-            } as CSSProperties,
+            shortLabel: "Norte",
+            symbol: "^",
           },
           {
             edge: "south",
             label: "Expandir para o sul",
-            style: {
-              left: "50%",
-              bottom: EDGE_CONTROL_MARGIN,
-              transform: "translateX(-50%)",
-            } as CSSProperties,
+            shortLabel: "Sul",
+            symbol: "v",
           },
           {
             edge: "west",
             label: "Expandir para o oeste",
-            style: {
-              left: EDGE_CONTROL_MARGIN,
-              top: "50%",
-              transform: "translateY(-50%)",
-            } as CSSProperties,
+            shortLabel: "Oeste",
+            symbol: "<",
           },
           {
             edge: "east",
             label: "Expandir para o leste",
-            style: {
-              right: EDGE_CONTROL_MARGIN,
-              top: "50%",
-              transform: "translateY(-50%)",
-            } as CSSProperties,
+            shortLabel: "Leste",
+            symbol: ">",
           },
         ];
 
         return (
-          <div className="pointer-events-none absolute inset-0 z-20">
-            {controls.map((control) => (
-              <button
-                key={control.edge}
-                type="button"
-                title={control.label}
-                onClick={() => onExpandMap(control.edge)}
-                className="pointer-events-auto absolute flex h-10 w-10 items-center justify-center border border-primary/40 bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.96),hsl(var(--surface-base)/0.98))] text-primary shadow-[0_10px_24px_rgba(0,0,0,0.35)] backdrop-blur transition-all hover:scale-105 hover:border-primary hover:bg-background"
-                style={control.style}
-              >
-                <span className="text-lg leading-none">+</span>
-              </button>
-            ))}
+          <div className="pointer-events-none absolute bottom-3 left-3 z-20">
+            <div className="vtt-expand-controls pointer-events-auto">
+              <div className="vtt-expand-controls__label">Expandir mesa</div>
+              <div className="grid grid-cols-2 gap-2">
+                {controls.map((control) => (
+                  <button
+                    key={control.edge}
+                    type="button"
+                    title={control.label}
+                    onClick={() => onExpandMap(control.edge)}
+                    className="vtt-expand-controls__button"
+                  >
+                    <span className="vtt-expand-controls__symbol" aria-hidden="true">
+                      {control.symbol}
+                    </span>
+                    <span>{control.shortLabel}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         );
       })()}

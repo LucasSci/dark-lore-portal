@@ -1,325 +1,244 @@
+import { BookMarked, ScrollText, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpenText, ScrollText, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import PortalContextPanel from "@/components/portal/PortalContextPanel";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { DataSection } from "@/components/ui/data-section";
-import { getAtlasContextForCampaignPublication } from "@/lib/atlas-context";
-import { CURRENT_PROTAGONISTS } from "@/lib/immersive-lore";
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
+import { archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
-import {
-  type CampaignPublication,
-  useCampaignPublications,
-} from "@/lib/publications";
+import { useCampaignPublications } from "@/lib/publications";
 
-const publicationTone: Record<
-  CampaignPublication["kind"],
-  "info" | "warning" | "danger" | "secondary"
-> = {
-  cronica: "info",
-  contrato: "warning",
-  rumor: "secondary",
-  relatorio: "danger",
-};
+const archiveGallery = [
+  archiveReferenceArt.desk,
+  archiveReferenceArt.wanderer,
+  archiveReferenceArt.forgotten,
+] as const;
 
-const publicationLabel: Record<CampaignPublication["kind"], string> = {
-  cronica: "Cronica",
-  contrato: "Contrato",
-  rumor: "Rumor",
-  relatorio: "Relatorio",
-};
+const chronicleWays = [
+  {
+    icon: ScrollText,
+    title: "Relatos Sombrios",
+    description: "Leitura corrida de capitulos, contratos e memorias que sobreviveram ao tempo.",
+  },
+  {
+    icon: Sparkles,
+    title: "Maldicoes Ancestrais",
+    description: "Rumores de mesa, rastros de horror e profecias que voltam em ciclos.",
+  },
+  {
+    icon: BookMarked,
+    title: "Arquivo Velado",
+    description: "Um acervo continuo de sessao, campanha e cronicas ligadas ao mesmo mundo.",
+  },
+] as const;
+
+const chroniclePortals = [
+  {
+    title: "Universo",
+    description: "Cruze os manuscritos com reinos, faccoes e personagens do mesmo arquivo.",
+    to: "/universo",
+    cta: "Cruzar universo",
+  },
+  {
+    title: "Bestiario",
+    description: "Abra criaturas, rastros e ameacas citadas nos relatos para manter o contexto vivo.",
+    to: "/bestiario",
+    cta: "Abrir bestiario",
+  },
+  {
+    title: "Mapa",
+    description: "Siga as rotas, fronteiras e locais mencionados nas cronicas sem perder a trilha.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+  {
+    title: "Jogar",
+    description: "Leve os relatos para a sessao e transforme manuscritos em cena, mesa e decisao.",
+    to: "/jogar",
+    cta: "Entrar na sessao",
+  },
+] as const;
 
 export default function CampaignPage() {
   usePortalShellMode("editorial", "ambient");
   const { publishedPublications } = useCampaignPublications();
-  const leadPublication = publishedPublications[0];
-  const leadAtlasContext = leadPublication
-    ? getAtlasContextForCampaignPublication(leadPublication)
-    : null;
-  const latestUpdate = leadPublication
-    ? new Date(leadPublication.updatedAt).toLocaleDateString("pt-BR")
-    : "Sem registro";
+  const featured = publishedPublications.slice(0, 3);
+  const archive = publishedPublications.slice(3);
 
   return (
-    <div className="container py-12 md:py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-12"
-      >
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
-          <Card variant="elevated" className="overflow-hidden">
-            <CardContent className="grid gap-8 p-6 md:p-8 xl:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline">Arquivo vivo da campanha</Badge>
-                  <Badge variant="info">{publishedPublications.length} entradas em circulacao</Badge>
-                </div>
+    <div className="mx-auto max-w-[1320px] space-y-10 px-4 py-8 md:px-6 md:py-12">
+      <section className="dark-lore-page-frame dark-lore-page-hero dark-lore-chronicles-hero">
+        <img
+          src={archiveReferenceArt.desk}
+          alt=""
+          aria-hidden="true"
+          className="dark-lore-hero-background object-cover opacity-55"
+        />
+        <div className="dark-lore-grain-overlay" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
 
-                <div className="max-w-3xl space-y-4">
-                <p className="section-kicker">Cronicas e contratos</p>
-                  <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    O arquivo agora parece um tomo de guerra, nao uma lista de posts.
-                  </h1>
-                  <p className="text-base leading-8 text-foreground/88">
-                    Cronicas, rumores, informes e contratos foram reencenados como partes de um
-                    dossie de campanha. A leitura ficou mais editorial, mais diegetica e mais
-                    alinhada ao peso do continente.
-                  </p>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <DataSection
-                    label="Frente atual"
-                    value="Elarion, Korath e Vaz'hir"
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Ultima atualizacao"
-                    value={latestUpdate}
-                    variant="quiet"
-                    tone="info"
-                  />
-                  <DataSection
-                    label="Companhia"
-                    value={CURRENT_PROTAGONISTS.join(" / ")}
-                    variant="quiet"
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-                  <Button asChild>
-                    <Link to="/universo">
-                      Abrir o universo
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  {leadAtlasContext ? (
-                    <Button asChild variant="secondary">
-                      <Link to={leadAtlasContext.href}>Ver foco no mapa</Link>
-                    </Button>
-                  ) : null}
-                  <Button asChild variant="outline">
-                    <Link to="/comunidade">Ver ecos no mural</Link>
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="paper-strip p-5">
-                  <p className="text-[10px] uppercase tracking-[0.24em]">Capitulo dominante</p>
-                  <p className="mt-3 font-display text-4xl">
-                    {leadPublication
-                      ? String(leadPublication.chapterNumber).padStart(2, "0")
-                      : "00"}
-                  </p>
-                </div>
-
-                <Card variant="panel">
-                  <CardContent className="space-y-4 p-5">
-                    <div>
-                      <p className="section-kicker">Leitura rapida</p>
-                      <h2 className="mt-2 font-heading text-2xl text-foreground">
-                        Mesa em movimento
-                      </h2>
-                    </div>
-
-                    <DataSection
-                      label="Tom"
-                      value="Estrada, vigia e pressao de fronteira"
-                      variant="quiet"
-                    />
-                    <DataSection
-                      label="Uso"
-                      value="Rumor, pista, deslocamento e caca"
-                      variant="quiet"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4">
-            <DataSection
-              label="Arquivo"
-              value="Cronicas de sessao"
-              icon={<BookOpenText className="h-4 w-4" />}
-            >
-              <p className="text-sm leading-6 text-muted-foreground">
-                Registros publicados pelo mestre para manter a campanha viva entre uma sessao e
-                outra.
-              </p>
-            </DataSection>
-            <DataSection
-              label="Uso na mesa"
-              value="Contratos e gatilhos"
-              icon={<ScrollText className="h-4 w-4" />}
-              tone="info"
-            >
-              <p className="text-sm leading-6 text-muted-foreground">
-                Cada bloco pode virar pista, recompensa, emboscada ou deslocamento entre regioes.
-              </p>
-            </DataSection>
-            <DataSection
-              label="Risco"
-              value="Alta tensao de fronteira"
-              icon={<ShieldAlert className="h-4 w-4" />}
-              tone="warn"
-            >
-              <p className="text-sm leading-6 text-muted-foreground">
-                O continente aperta por todos os lados: estrada, vigia, deserto, culto e coisa
-                pior.
-              </p>
-            </DataSection>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="dark-lore-hero-copy dark-lore-hero-copy-centered"
+        >
+          <p className="dark-lore-section-kicker justify-center">Arquivo das cronicas</p>
+          <h1 className="dark-lore-display-title">Cronicas Veladas</h1>
+          <p className="dark-lore-hero-text max-w-3xl text-center">
+            Relatos de sessao, contratos, pressagios e testemunhos que continuaram a respirar
+            dentro do arquivo.
+          </p>
+          <div className="flex justify-center pt-2">
+            <Link to="#cronicas-arquivo" className="dark-lore-button">
+              Abrir manuscritos
+            </Link>
           </div>
-        </section>
+        </motion.div>
+      </section>
 
-        {publishedPublications.length === 0 ? (
-          <Card variant="panel">
-            <CardContent className="space-y-4 p-8">
-              <p className="section-kicker">Arquivo vazio</p>
-              <h2 className="font-heading text-3xl text-foreground">
-                O mestre ainda nao publicou novas entradas
-              </h2>
-              <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-                Quando novas cronicas, rumores ou contratos forem liberados, eles aparecerao aqui
-                como parte do dossie principal da campanha.
+      <section className="dark-lore-page-frame dark-lore-editorial-grid">
+        <div className="dark-lore-editorial-copy">
+          <p className="dark-lore-section-kicker">Os manuscritos velados</p>
+          <h2 className="dark-lore-section-title">Cada entrada preserva uma noite mal encerrada.</h2>
+          <p className="dark-lore-editorial-text">
+            O arquivo reune chamadas de sessao, contratos pagos em silencio, memorias de estrada e
+            testemunhos recolhidos perto demais do abismo. Cada pagina foi mantida para que a mesa
+            nunca perca seu rastro.
+          </p>
+          <p className="dark-lore-editorial-text">
+            Leia as cronicas como registros de mundo, ecos de campanha e documentos que podem ser
+            abertos outra vez quando a sessao pedir.
+          </p>
+          <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
+            Abrir Arquivo Vivo
+          </Link>
+        </div>
+
+        <div className="dark-lore-editorial-figure">
+          <img
+            src={archiveReferenceArt.forgotten}
+            alt=""
+            aria-hidden="true"
+            className="dark-lore-editorial-image"
+          />
+          <div className="dark-lore-editorial-glow" />
+        </div>
+      </section>
+
+      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+        <div className="space-y-6">
+          <div className="text-center">
+            <p className="dark-lore-section-kicker justify-center">Formas de leitura</p>
+            <h2 className="dark-lore-section-title mx-auto">Tres trilhas para entrar no arquivo</h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {chronicleWays.map(({ icon: Icon, title, description }, index) => (
+              <motion.article
+                key={title}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.45, delay: index * 0.05 }}
+                className="dark-lore-archive-card dark-lore-archive-card-compact"
+              >
+                <div className="dark-lore-codex-card">
+                  <div className="dark-lore-icon-emblem">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="dark-lore-card-title text-[clamp(1.4rem,1.9vw,1.8rem)]">
+                      {title}
+                    </h3>
+                    <p className="dark-lore-card-copy">{description}</p>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="cronicas-arquivo" className="dark-lore-feature-grid">
+        {featured.map((publication, index) => (
+          <motion.article
+            key={publication.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.28 }}
+            transition={{ duration: 0.55, delay: index * 0.08 }}
+            className="dark-lore-feature-card"
+          >
+            <div className="dark-lore-feature-image-wrap">
+              <img
+                src={archiveGallery[index % archiveGallery.length]}
+                alt=""
+                aria-hidden="true"
+                className="dark-lore-feature-image"
+              />
+            </div>
+            <div className="dark-lore-feature-body">
+              <p className="dark-lore-card-meta">
+                {String(publication.chapterNumber).padStart(2, "0")} - {publication.location}
               </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-            <div className="space-y-4">
-              {publishedPublications.map((publication, index) => (
-                <motion.div
+              <h2 className="dark-lore-card-title">{publication.title}</h2>
+              <p className="dark-lore-card-copy">{publication.excerpt}</p>
+              <Link to="/jogar" className="dark-lore-button dark-lore-button-small">
+                Ler relato
+              </Link>
+            </div>
+          </motion.article>
+        ))}
+      </section>
+
+      {archive.length > 0 ? (
+        <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+          <div className="space-y-6">
+            <div className="text-center">
+              <p className="dark-lore-section-kicker justify-center">Arquivo continuo</p>
+              <h2 className="dark-lore-section-title mx-auto">
+                Rastros, contratos e rumores preservados
+              </h2>
+            </div>
+
+            <div className="dark-lore-list-grid">
+              {archive.map((publication, index) => (
+                <motion.article
                   key={publication.id}
-                  initial={{ opacity: 0, x: -18 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.45, delay: index * 0.05 }}
+                  className="dark-lore-archive-card"
                 >
-                  <Card
-                    variant={publication.kind === "contrato" ? "elevated" : "panel"}
-                    className="overflow-hidden"
-                  >
-                    <CardContent className="grid gap-6 p-6 md:grid-cols-[110px_minmax(0,1fr)_200px] md:p-8">
-                      <div className="space-y-3">
-                        <div className="paper-strip p-4 text-center">
-                          <p className="text-[10px] uppercase tracking-[0.24em]">Capitulo</p>
-                          <p className="mt-2 font-display text-4xl">
-                            {String(publication.chapterNumber).padStart(2, "0")}
-                          </p>
-                        </div>
-                        <Badge variant={publicationTone[publication.kind]} className="w-fit">
-                          {publicationLabel[publication.kind]}
-                        </Badge>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline">{publication.location}</Badge>
-                          <Badge variant="secondary">
-                            {publication.protagonists.join(" / ")}
-                          </Badge>
-                        </div>
-
-                        <div>
-                          <h2 className="font-heading text-3xl text-foreground">
-                            {publication.title}
-                          </h2>
-                          <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                            {publication.excerpt}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3 border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.72))] p-4">
-                        <DataSection
-                          label="Atualizada"
-                          value={new Date(publication.updatedAt).toLocaleDateString("pt-BR")}
-                          variant="quiet"
-                        />
-                        <DataSection
-                          label="Autor"
-                          value={publication.author}
-                          variant="quiet"
-                        />
-                        <DataSection
-                          label="Status"
-                          value="Em circulacao"
-                          variant="quiet"
-                          tone="info"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                  <p className="dark-lore-card-meta">
+                    {publication.location} - {publication.kind}
+                  </p>
+                  <h3 className="dark-lore-card-title text-[clamp(1.5rem,2vw,2rem)]">
+                    {publication.title}
+                  </h3>
+                  <p className="dark-lore-card-copy">{publication.excerpt}</p>
+                </motion.article>
               ))}
             </div>
-
-            <div className="space-y-4 xl:sticky xl:top-28 xl:self-start">
-              {leadAtlasContext ? (
-                <PortalContextPanel
-                  eyebrow="Rota sugerida"
-                  title={leadAtlasContext.title}
-                  description="A campanha agora aponta de volta para o atlas como continuidade natural entre leitura, deslocamento e sessao."
-                  image={leadAtlasContext.image}
-                  metrics={leadAtlasContext.metrics.slice(0, 3)}
-                  actions={leadAtlasContext.actions}
-                  related={leadAtlasContext.related}
-                  relatedLabel="Verbetes recomendados para esta frente"
-                />
-              ) : null}
-
-              <Card variant="panel">
-                <CardContent className="space-y-5 p-6">
-                  <div>
-                  <p className="section-kicker">Como ler</p>
-                    <h2 className="mt-2 font-heading text-2xl text-foreground">
-                      Ordem de leitura recomendada
-                    </h2>
-                  </div>
-
-                  <p className="text-sm leading-7 text-muted-foreground">
-                    Use o numero do capitulo para seguir o pulso da campanha e os selos de tipo para
-                    distinguir cronica, rumor, relatorio e contrato.
-                  </p>
-
-                  <div className="grid gap-3">
-                    <DataSection
-                      label="Capitulo dominante"
-                      value={
-                        leadPublication
-                          ? String(leadPublication.chapterNumber).padStart(2, "0")
-                          : "00"
-                      }
-                      variant="quiet"
-                    />
-                    <DataSection
-                      label="Ultimo foco"
-                      value={leadPublication?.location ?? "Aguardando"}
-                      variant="quiet"
-                    />
-                    <DataSection
-                      label="Protagonistas"
-                      value={CURRENT_PROTAGONISTS.join(" / ")}
-                      variant="quiet"
-                      tone="info"
-                    />
-                  </div>
-
-                  <Button asChild variant="outline" className="w-full">
-                    <Link to="/mesa">Levar leitura para a mesa</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
           </div>
-        )}
-      </motion.div>
+        </section>
+      ) : null}
+
+      <ArchivePortalSection
+        kicker="Portais do arquivo"
+        title="Continue a cronica por outras rotas"
+        description="Os manuscritos nao terminam na leitura. Cada registro pode abrir criaturas, atlas, sessao ou universo no mesmo compasso."
+        items={chroniclePortals}
+      />
+
+      <section className="dark-lore-cta-band">
+        <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>
+        <Link to="/jogar" className="dark-lore-button">
+          Entrar na sessao
+        </Link>
+      </section>
     </div>
   );
 }

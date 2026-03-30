@@ -59,14 +59,14 @@ export default function CommunityPage() {
               <>
                 <Badge variant="outline">
                   <Users className="mr-2 h-3.5 w-3.5" />
-                  Mural diegetico
+                  Mural do arquivo
                 </Badge>
                 <Tag active>{recentPosts.length} ecos recentes</Tag>
               </>
             }
             eyebrow="Comunidade dentro da ficcao"
-            title="Comunidade tratada como quadro de rumores, nao feed generico."
-            description="A pagina virou mural de campanha: avisos, ecos, feitos e chamados agora leem como extensao do mundo, em vez de area social separada da atmosfera principal."
+            title="Rumores, chamados e feitos reunidos no mesmo mural da campanha."
+            description="Aqui a comunidade registra avisos, ecos, feitos e chamados como se cada mensagem tivesse sido pregada na madeira ainda quente da ultima sessao."
             aside={
               <Panel tone="accent" className="space-y-4 p-5">
                 <div className="paper-strip p-5">
@@ -100,7 +100,7 @@ export default function CommunityPage() {
           >
             <Grid layout="stats">
               <StatCard label="Sinais ativos" value={String(recentPosts.length).padStart(2, "0")} />
-              <StatCard label="Circuitos" value="Mesa, chamados e feitos" note="Fluxos conectados" />
+              <StatCard label="Circuitos" value="Mesa, chamados e feitos" note="Trilhas conectadas" />
               <StatCard label="Ritmo" value="Entre sessoes e contratos" note="Sem feed paralelo" />
             </Grid>
           </FeatureCard>
@@ -229,7 +229,7 @@ export default function CommunityPage() {
               <Panel tone="accent" className="p-6">
                 <p className="section-kicker">Mural expandido</p>
                 <h3 className="mt-2 font-heading text-2xl text-foreground">
-                  Leve os ecos para o fluxo principal da campanha
+                  Leve os ecos de volta para a campanha principal
                 </h3>
                 <p className="mt-3 max-w-[56ch] text-sm leading-7 text-foreground/72">
                   O mural social entra como extensao do arquivo principal, mantendo o mesmo ritmo

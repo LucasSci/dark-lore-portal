@@ -60,7 +60,20 @@ export function computeVisibilityPolygon(
   bounds: { width: number; height: number },
   maxRadius?: number,
 ): Point[] {
-  // Add bounding box walls
+  // ⚡ Bolt: AABB filter and unrolled vector math for dynamic lighting raycasting
+  const ox = origin.x;
+  const oy = origin.y;
+
+  // AABB for quick rejection of distant walls
+  let minX = -Infinity, maxX = Infinity, minY = -Infinity, maxY = Infinity;
+  if (maxRadius !== undefined) {
+    minX = ox - maxRadius;
+    maxX = ox + maxRadius;
+    minY = oy - maxRadius;
+    maxY = oy + maxRadius;
+  }
+
+  // Add bounding box walls unconditionally to the end so they are never filtered
   const allWalls: Segment[] = [
     ...walls,
     { a: { x: 0, y: 0 }, b: { x: bounds.width, y: 0 } },
@@ -69,52 +82,119 @@ export function computeVisibilityPolygon(
     { a: { x: 0, y: bounds.height }, b: { x: 0, y: 0 } },
   ];
 
-  // Collect unique angles toward every endpoint
-  const angles = new Set<number>();
-  for (const wall of allWalls) {
-    for (const point of [wall.a, wall.b]) {
-      const angle = Math.atan2(point.y - origin.y, point.x - origin.x);
-      angles.add(angle);
-      // Slight offsets to peek around corners
-      angles.add(angle - 0.0001);
-      angles.add(angle + 0.0001);
+  // ⚡ Bolt: Filter active walls and pre-extract coordinates to avoid object lookups
+  const activeWalls: Segment[] = [];
+  for (let i = 0; i < allWalls.length; i++) {
+    const w = allWalls[i];
+
+    // Unconditionally include the 4 boundary walls (the last 4 in the array)
+    if (i >= allWalls.length - 4) {
+      activeWalls.push(w);
+      continue;
     }
+
+    // AABB check
+    if (maxRadius !== undefined) {
+      const wMinX = Math.min(w.a.x, w.b.x);
+      const wMaxX = Math.max(w.a.x, w.b.x);
+      const wMinY = Math.min(w.a.y, w.b.y);
+      const wMaxY = Math.max(w.a.y, w.b.y);
+
+      if (wMaxX < minX || wMinX > maxX || wMaxY < minY || wMinY > maxY) {
+        continue; // Skip wall if strictly outside AABB
+      }
+    }
+    activeWalls.push(w);
   }
 
-  // Cast rays
-  const points: Array<{ angle: number; point: Point }> = [];
+  const activeWallsCount = activeWalls.length;
 
-  for (const angle of angles) {
-    const dir: Point = { x: Math.cos(angle), y: Math.sin(angle) };
+  // ⚡ Bolt: Use Typed Arrays to avoid Garbage Collection (GC) overhead during Set iteration
+  // Each wall contributes up to 2 endpoints * 3 angles = 6 angles
+  const angles = new Float64Array(activeWallsCount * 6);
+  let angleCount = 0;
+
+  const wallAx = new Float64Array(activeWallsCount);
+  const wallAy = new Float64Array(activeWallsCount);
+  const wallDx = new Float64Array(activeWallsCount);
+  const wallDy = new Float64Array(activeWallsCount);
+
+  for (let i = 0; i < activeWallsCount; i++) {
+    const wall = activeWalls[i];
+
+    wallAx[i] = wall.a.x;
+    wallAy[i] = wall.a.y;
+    wallDx[i] = wall.b.x - wall.a.x;
+    wallDy[i] = wall.b.y - wall.a.y;
+
+    let angle = Math.atan2(wall.a.y - oy, wall.a.x - ox);
+    angles[angleCount++] = angle;
+    angles[angleCount++] = angle - 0.0001;
+    angles[angleCount++] = angle + 0.0001;
+
+    angle = Math.atan2(wall.b.y - oy, wall.b.x - ox);
+    angles[angleCount++] = angle;
+    angles[angleCount++] = angle - 0.0001;
+    angles[angleCount++] = angle + 0.0001;
+  }
+
+  // Deduplicate angles using a sorted view
+  const anglesView = angles.subarray(0, angleCount);
+  anglesView.sort();
+
+  const points: Point[] = [];
+  let lastAngle = -Infinity;
+
+  for (let i = 0; i < angleCount; i++) {
+    const angle = anglesView[i];
+
+    // Deduplication step
+    if (angle - lastAngle < 1e-8) {
+      continue;
+    }
+    lastAngle = angle;
+
+    const dirX = Math.cos(angle);
+    const dirY = Math.sin(angle);
 
     let closestT = Infinity;
-    for (const wall of allWalls) {
-      const t = raySegmentIntersect(origin, dir, wall);
-      if (t !== null && t < closestT) {
+
+    // ⚡ Bolt: Inline ray-segment intersection math (Cramer's rule) for maximum performance
+    for (let j = 0; j < activeWallsCount; j++) {
+      const dx = wallDx[j];
+      const dy = wallDy[j];
+
+      const denom = dirX * dy - dirY * dx;
+      // Skip if lines are parallel or collinear
+      if (denom > -1e-10 && denom < 1e-10) continue;
+
+      const ax = wallAx[j];
+      const ay = wallAy[j];
+      const diffX = ax - ox;
+      const diffY = ay - oy;
+
+      const u = (diffX * dirY - diffY * dirX) / denom;
+      if (u < 0 || u > 1) continue;
+
+      const t = (diffX * dy - diffY * dx) / denom;
+      if (t >= 0 && t < closestT) {
         closestT = t;
       }
     }
 
     if (closestT === Infinity) continue;
 
-    // Clamp to max radius if specified
     if (maxRadius !== undefined && closestT > maxRadius) {
       closestT = maxRadius;
     }
 
     points.push({
-      angle,
-      point: {
-        x: origin.x + dir.x * closestT,
-        y: origin.y + dir.y * closestT,
-      },
+      x: ox + dirX * closestT,
+      y: oy + dirY * closestT,
     });
   }
 
-  // Sort by angle
-  points.sort((a, b) => a.angle - b.angle);
-
-  return points.map((p) => p.point);
+  return points;
 }
 
 /**
