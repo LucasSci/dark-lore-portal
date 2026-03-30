@@ -6,11 +6,12 @@ import {
   setAttributeValue,
   validateWizardStep,
 } from "@/lib/sheets/engine";
+import { SEED_CHARACTER_ID } from "@/lib/local-identities";
 import { NOIR_CHRONICLE_SHEET } from "@/lib/sheets/noir-chronicle-sheet";
 
 describe("sheet engine", () => {
   it("derives combat stats from the attribute store", () => {
-    const store = createAttributeStore(NOIR_CHRONICLE_SHEET, "demo-character", {
+    const store = createAttributeStore(NOIR_CHRONICLE_SHEET, SEED_CHARACTER_ID, {
       class: "guerreiro",
       level: 3,
       constituicao: 16,
@@ -26,7 +27,7 @@ describe("sheet engine", () => {
   });
 
   it("recalculates derived values when an attribute changes", () => {
-    const initial = createAttributeStore(NOIR_CHRONICLE_SHEET, "demo-character", {
+    const initial = createAttributeStore(NOIR_CHRONICLE_SHEET, SEED_CHARACTER_ID, {
       class: "mago",
       inteligencia: 12,
       destreza: 10,
@@ -44,7 +45,7 @@ describe("sheet engine", () => {
   });
 
   it("blocks wizard progression when required fields are missing", () => {
-    const store = createAttributeStore(NOIR_CHRONICLE_SHEET, "demo-character");
+    const store = createAttributeStore(NOIR_CHRONICLE_SHEET, SEED_CHARACTER_ID);
     const result = validateWizardStep(NOIR_CHRONICLE_SHEET, store, "identity");
 
     expect(result.valid).toBe(false);
@@ -52,7 +53,7 @@ describe("sheet engine", () => {
   });
 
   it("imports compendium rows into repeating groups", () => {
-    const store = createAttributeStore(NOIR_CHRONICLE_SHEET, "demo-character");
+    const store = createAttributeStore(NOIR_CHRONICLE_SHEET, SEED_CHARACTER_ID);
     const next = importCompendiumRow(NOIR_CHRONICLE_SHEET, store, "inventory", {
       id: "item-sword",
       kind: "inventory",

@@ -21,14 +21,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DataSection } from "@/components/ui/data-section";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   buyMerchantItem,
   createInitialShopState,
   formatShopGold,
   getInventoryWeight,
-  getShopCatalogEntries,
-  getShopIconCatalog,
   getShopItemIconUrl,
   getTradePrice,
   merchantProfile,
@@ -149,107 +146,6 @@ function DetailMetric({
       <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
       <p className="mt-2 font-heading text-lg text-foreground">{value}</p>
     </div>
-  );
-}
-
-function StoreAuditPanel() {
-  const catalogEntries = getShopCatalogEntries();
-  const iconCatalog = getShopIconCatalog();
-
-  return (
-    <Card variant="panel">
-      <CardHeader className="pb-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <CardTitle className="text-xl">Auditoria de itens e icones</CardTitle>
-            <CardDescription>
-              Painel para revisar rapidamente o que ja esta configurado na loja e como cada
-              asset esta sendo usado.
-            </CardDescription>
-          </div>
-          <Badge variant="outline" className="border-primary/30 text-primary">
-            {catalogEntries.length} itens catalogados
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <Tabs defaultValue="itens">
-          <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="itens">Itens da loja</TabsTrigger>
-            <TabsTrigger value="icones">Galeria de icones</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="itens" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {catalogEntries.map((entry) => (
-                <div
-                  key={`${entry.owner}-${entry.id}`}
-                  className="info-panel p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <ShopItemArt item={entry} size="list" />
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-heading text-base text-foreground">{entry.name}</p>
-                        <Badge variant={entry.owner === "merchant" ? "secondary" : "outline"}>
-                          {entry.owner === "merchant" ? "Estoque" : "Companhia"}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.16em]">
-                        <span className="metric-panel px-2.5 py-1 text-primary/85">
-                          {shopCategoryLabels[entry.category]}
-                        </span>
-                        <span className="metric-panel px-2.5 py-1 text-muted-foreground">
-                          {entry.iconAsset}
-                        </span>
-                      </div>
-                      <p className="text-sm leading-6 text-foreground/78">{entry.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="icones" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {iconCatalog.map(({ iconAsset, entries }) => (
-                <div
-                  key={iconAsset}
-                  className="info-panel p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="tool-stage-frame relative h-16 w-16 shrink-0 overflow-hidden bg-background/70">
-                      <TgaIcon
-                        src={getShopItemIconUrl({ iconAsset })}
-                        alt={iconAsset}
-                        renderSize={64}
-                        className="h-16 w-16 object-contain"
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <p className="text-xs uppercase tracking-[0.18em] text-primary/80">
-                        {iconAsset}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {entries.map((entry) => (
-                          <Badge
-                            key={`${iconAsset}-${entry.id}`}
-                            variant={entry.owner === "merchant" ? "secondary" : "outline"}
-                          >
-                            {entry.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -416,9 +312,9 @@ export default function StorePage() {
               <div className="relative space-y-6 p-6 md:p-8">
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge variant="outline" className="border-primary/30 text-primary">
-                    Ambiente in-game
+                    Mercado de fronteira
                   </Badge>
-                  <Badge variant="secondary">Banca inspirada em inventarios de RPG</Badge>
+                  <Badge variant="secondary">Negociacao aberta ao grupo</Badge>
                 </div>
 
                 <div className="space-y-3">
@@ -437,8 +333,8 @@ export default function StorePage() {
                   </div>
                   <p className="max-w-3xl text-base leading-8 text-foreground/90">
                     {merchantProfile.summary} Entre laminas, reagentes e trofeus, a banca foi
-                    organizada para leitura rapida durante a sessao e negociacao direta na
-                    estrada.
+                    erguida para compras urgentes, barganhas secas e acordos fechados sob poeira
+                    e vigia.
                   </p>
                 </div>
 
@@ -484,7 +380,7 @@ export default function StorePage() {
                 <div>
                   <h2 className="font-heading text-lg text-foreground">Resumo da troca</h2>
                   <p className="text-sm text-muted-foreground">
-                    Marwen vende pelo valor cheio e compra por uma fracao do valor base.
+                    Marwen cobra caro por raridade e paga menos do que promete quando sente pressa.
                   </p>
                 </div>
               </div>
@@ -500,8 +396,8 @@ export default function StorePage() {
                 variant="quiet"
               />
               <DataSection
-                label="Biblioteca digital"
-                value="Continua disponivel na conta"
+                label="Arquivo pessoal"
+                value="Acesso ao cofre da companhia"
                 variant="quiet"
               />
 
@@ -609,8 +505,8 @@ export default function StorePage() {
                           </div>
 
                           <p className="text-sm leading-7 text-foreground/88">
-                            Os icones foram preservados a partir do pacote original do inventario,
-                            mantendo leitura limpa sem ampliar arte comprimida demais.
+                            Peca separada na banca com peso, raridade e valor prontos para fechar
+                            negocio sem atrasar a caravana.
                           </p>
 
                           <div className="grid gap-3 sm:grid-cols-2">
@@ -701,18 +597,16 @@ export default function StorePage() {
             <CardHeader className="pb-4">
               <CardTitle className="text-xl">Regras da banca</CardTitle>
               <CardDescription>
-                Economia simples para mesa, inspirada em mercadores de RPG dark fantasy.
+                Termos da banca enquanto a estrada ainda permite negocio.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm leading-7 text-foreground/88">
               <p>Marwen vende pelo valor cheio de tabela e compra por cerca de 45% do valor base.</p>
               <p>Itens vendidos voltam para o estoque da banca e itens comprados entram na mochila da companhia.</p>
-              <p>Ouro, peso e quantidades sao atualizados na hora, mantendo a loja como um ambiente totalmente in-game.</p>
+              <p>Cada troca altera ouro, peso e quantidades no mesmo instante em que o acordo e fechado.</p>
             </CardContent>
           </Card>
         </div>
-
-        <StoreAuditPanel />
       </motion.div>
     </div>
   );
