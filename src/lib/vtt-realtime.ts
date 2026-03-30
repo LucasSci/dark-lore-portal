@@ -10,6 +10,7 @@ import {
   type LooseSupabaseClient,
 } from "@/lib/loose-supabase";
 import { resolveBattlemapPublicUrl } from "@/lib/vtt-assets";
+import { generateSecureShortId } from "@/lib/utils";
 import {
   applySceneEvent,
   createBoard,

@@ -6,6 +6,7 @@ import {
   buildCharacterDraftFromStore,
   createAttributeStore,
 } from "@/lib/sheets/engine";
+import { generateSecureShortId } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 import type {
   AttributeStore,

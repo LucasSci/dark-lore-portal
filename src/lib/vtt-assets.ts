@@ -3,6 +3,7 @@ import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 import { isLooseRecord, type LooseSupabaseClient } from "@/lib/loose-supabase";
 import { generateSecureShortId } from "@/lib/utils";
 import type { AssetManifest } from "@/lib/virtual-tabletop";
+import { generateSecureShortId } from "@/lib/utils";
 
 const db = supabase as typeof supabase & LooseSupabaseClient;
 
