@@ -30,8 +30,10 @@ export interface VisionDef {
 
 /**
  * Compute a visibility polygon from `origin` given a set of wall segments.
- * Uses the classic 2D raycasting approach: cast rays toward each wall endpoint
- * (plus slight offsets), find nearest intersection, and collect the hull.
+ * ⚡ Performance optimizations:
+ * - Pre-filters walls using an AABB (Axis-Aligned Bounding Box) check against maxRadius.
+ * - Uses a pre-allocated Float64Array instead of Set to avoid object allocation and GC overhead for angles.
+ * - Inlines intersection coordinate variables directly into math operations to avoid Point object allocations.
  *
  * ⚡ Bolt: Replaced object allocations (Set, objects) with pre-allocated Float64Array
  * and unrolled vector math to reduce GC pressure in the hot loop.
