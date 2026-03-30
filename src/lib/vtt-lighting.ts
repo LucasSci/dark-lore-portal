@@ -28,31 +28,13 @@ export interface VisionDef {
   radius: number;
 }
 
-/** Ray-segment intersection. Returns distance t along ray (0–1+), or null. */
-function raySegmentIntersect(
-  origin: Point,
-  dir: Point,
-  seg: Segment,
-): number | null {
-  const dx = seg.b.x - seg.a.x;
-  const dy = seg.b.y - seg.a.y;
-
-  const denom = dir.x * dy - dir.y * dx;
-  if (Math.abs(denom) < 1e-10) return null;
-
-  const t = ((seg.a.x - origin.x) * dy - (seg.a.y - origin.y) * dx) / denom;
-  const u = ((seg.a.x - origin.x) * dir.y - (seg.a.y - origin.y) * dir.x) / denom;
-
-  if (t >= 0 && u >= 0 && u <= 1) return t;
-  return null;
-}
-
 /**
  * Compute a visibility polygon from `origin` given a set of wall segments.
  * Uses the classic 2D raycasting approach: cast rays toward each wall endpoint
  * (plus slight offsets), find nearest intersection, and collect the hull.
  *
- * Returns an array of points forming the visibility polygon, sorted by angle.
+ * ⚡ Bolt: Replaced object allocations (Set, objects) with pre-allocated Float64Array
+ * and unrolled vector math to reduce GC pressure in the hot loop.
  */
 export function computeVisibilityPolygon(
   origin: Point,
