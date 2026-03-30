@@ -1,7 +1,10 @@
 import { generateSecureShortId } from "./utils";
 import { supabase } from "@/integrations/supabase/client";
+import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 import { isLooseRecord, type LooseSupabaseClient } from "@/lib/loose-supabase";
+import { generateSecureShortId } from "@/lib/utils";
 import type { AssetManifest } from "@/lib/virtual-tabletop";
+import { generateSecureShortId } from "@/lib/utils";
 
 const db = supabase as typeof supabase & LooseSupabaseClient;
 
@@ -19,7 +22,7 @@ export function createAssetManifestDraft(file: {
   name: string;
   type: string;
 }): AssetManifest {
-  const assetId = `asset-${Date.now()}-${generateSecureShortId()}`;
+  const assetId = `asset-${generateSecureShortId()}`;
   const safeName = sanitizeFileName(file.name);
 
   return {
@@ -125,6 +128,15 @@ export async function uploadBattlemapAsset(options: {
   };
   manifest.processingStatus = "ready";
   manifest.pageCount = 1;
+
+  if (options.sessionId === LOCAL_SESSION_ID) {
+    return {
+      assetId: null,
+      assetUrl: URL.createObjectURL(options.file),
+      manifest,
+      persisted: false,
+    };
+  }
 
   const {
     data: { user },

@@ -11,7 +11,7 @@ import {
   Users,
 } from "lucide-react";
 
-// Dark Lore Portal - Assets externos
+// Arquivo do Continente - Assets externos
 const darkFantasyArchive = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dark_fantasy_archive_202603261340-AEAC2u1N5Pqt88hzQ1DFnnjvDKqehy.jpeg";
 const creatureArchiveChamber = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Creature_archive_chamber_202603261340-u2nZboDvjllbMKiqKVRbnlrIfhD704.jpeg";
 const loneWanderer = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Lone_wanderer_in_202603261340-yT7oDA9kTDAUzZdS4jCG7s3H9MTjNU.jpeg";
@@ -122,9 +122,9 @@ export const portalHeroScenes: PortalHeroScene[] = [
     id: "hero-saga",
     eyebrow: "OS PORTAIS SE ABREM",
     sceneLabel: "Cena I · O chamado das sombras",
-    title: "Dark Lore Portal",
+    title: "Arquivo do Continente",
     description:
-      "Um arquivo vivo de conhecimento proibido, bestiarios ancestrais e cronicas esquecidas aguarda aqueles que ousam adentrar.",
+      "Conhecimento proibido, bestiarios ancestrais e cronicas esquecidas aguardam aqueles que ousam atravessar o limiar.",
     primaryCta: "Explorar o bestiario",
     primaryPath: "/universo/bestiario",
     secondaryCta: "Ver o atlas",

@@ -265,6 +265,8 @@ export default function CharacterCreator({ onSave }: Props) {
                           size="sm"
                           onClick={() => void setAttr(attribute.key, -1)}
                           className="h-8 w-8 p-0"
+                          aria-label={`Diminuir ${attribute.label}`}
+                          title={`Diminuir ${attribute.label}`}
                         >
                           -
                         </Button>
@@ -274,6 +276,8 @@ export default function CharacterCreator({ onSave }: Props) {
                           size="sm"
                           onClick={() => void setAttr(attribute.key, 1)}
                           className="h-8 w-8 p-0"
+                          aria-label={`Aumentar ${attribute.label}`}
+                          title={`Aumentar ${attribute.label}`}
                         >
                           +
                         </Button>

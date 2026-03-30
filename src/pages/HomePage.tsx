@@ -1,644 +1,287 @@
-import { type ReactNode, useState } from "react";
+import { BookMarked, Compass, ScrollText, Skull, Swords } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  BookOpenText,
-  Compass,
-  type LucideIcon,
-  Map,
-  ScrollText,
-  Shield,
-  Sword,
-  Users,
-} from "lucide-react";
 import { Link } from "react-router-dom";
 
-import CinematicHero from "@/components/portal/CinematicHero";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import ContinentMap from "@/components/world/ContinentMap";
-import { CURRENT_PROTAGONISTS } from "@/lib/immersive-lore";
-
-// Dark Lore Portal decorative assets
-const gothicDivider = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gothic_flourish_divider_202603261340-wnSifBidSx2WXYHomTpeOxecUcF4IM.jpeg";
-const cornerOrnament = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cantos_ornamentais.png_202603261340-pu2SDbcVqe9wDZHZ4SA6mSaSc7sKlk.jpeg";
-import {
-  bulletinPanels,
-  campaignPublicationLabel,
-  editorialFallbacks,
-  heroSignals,
-  manifestoPanels,
-  manifestoQuotes,
-  moduleViews,
-  portalReferenceArt,
-  promoBanners,
-  type PortalEditorialEntry,
-  type PortalModuleCardSpec,
-  type PortalModuleViewKey,
-  type PortalPromoBannerSpec,
-} from "@/lib/portal-content";
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
+import { encyclopediaEntries } from "@/lib/encyclopedia";
+import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
-import { type CampaignPublication, useCampaignPublications } from "@/lib/publications";
-import { cn } from "@/lib/utils";
+import { getWitcherBestiaryMetadata } from "@/lib/witcher-bestiary";
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
+const featureCards = [
+  {
+    title: "Universo",
+    description: "Reinos esquecidos, linhagens partidas e nomes soterrados sob o mesmo arquivo.",
+    path: "/universo",
+    image: archiveReferenceArt.wanderer,
+    cta: "Explorar Universo",
+  },
+  {
+    title: "Bestiario",
+    description: "Criaturas antigas, entidades sem repouso e dossies de caca preservados no escuro.",
+    path: "/bestiario",
+    image: archiveReferenceArt.creature,
+    cta: "Abrir Bestiario",
+  },
+  {
+    title: "Cronicas",
+    description: "Relatos de sessao, contratos velados e manuscritos que continuaram a respirar.",
+    path: "/cronicas",
+    image: archiveReferenceArt.desk,
+    cta: "Explorar Cronicas",
+  },
+] as const;
 
-function formatEditorialDate(value: string) {
-  return new Date(value).toLocaleDateString("pt-BR");
-}
+const archiveIndexCards = [
+  {
+    icon: BookMarked,
+    title: "Universo",
+    description: "Origem, eras, faccoes, ruinas e dossies que sustentam a leitura do continente.",
+    path: "/universo",
+  },
+  {
+    icon: Skull,
+    title: "Bestiario",
+    description: "Monstros, reliquias vivas e ameacas catalogadas com fraquezas, regioes e risco.",
+    path: "/bestiario",
+  },
+  {
+    icon: ScrollText,
+    title: "Cronicas",
+    description: "Capitulos exclusivos, memoria de estrada e registros de sessao preservados no arquivo.",
+    path: "/cronicas",
+  },
+  {
+    icon: Compass,
+    title: "Mapa",
+    description: "Rotas, fronteiras, locais e leituras em camadas conectadas aos verbetes do portal.",
+    path: "/mapa",
+  },
+  {
+    icon: Swords,
+    title: "Jogar",
+    description: "Hub de sessao com mesa, oraculo e caminhos de leitura viva para continuar a campanha.",
+    path: "/jogar",
+  },
+] as const;
 
-function ArtifactLink({
-  to,
-  children,
-  secondary = false,
-  className,
-}: {
-  to: string;
-  children: ReactNode;
-  secondary?: boolean;
-  className?: string;
-}) {
-  return (
-    <Link to={to} className={cn("artifact-cta", secondary && "artifact-cta-secondary", className)}>
-      {children}
-    </Link>
-  );
-}
+const homeArchivePortals = [
+  {
+    title: "Universo",
+    description: "Leia eras, faccoes, locais e personagens antes de descer para o restante do arquivo.",
+    to: "/universo",
+    cta: "Abrir universo",
+  },
+  {
+    title: "Bestiario",
+    description: "Cruze criaturas, fraquezas, regioes e niveis de perigo num unico indice de caca.",
+    to: "/bestiario",
+    cta: "Abrir bestiario",
+  },
+  {
+    title: "Cronicas",
+    description: "Entre nos manuscritos de sessao, contratos e registros que mantem a campanha viva.",
+    to: "/cronicas",
+    cta: "Ler cronicas",
+  },
+  {
+    title: "Mapa",
+    description: "Abra o continente por camadas e ligue rotas, dossies e a mesa sem romper a leitura.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+] as const;
 
-function CampaignSlot({
-  index,
-  name,
-  status,
-}: {
-  index: number;
-  name: string;
-  status: string;
-}) {
-  return (
-    <div className="campaign-slot">
-      <div className="campaign-portrait">{getInitials(name)}</div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] uppercase tracking-[0.24em] text-primary/74">
-          Slot {String(index + 1).padStart(2, "0")}
-        </p>
-        <h3 className="mt-2 font-display text-[1.55rem] leading-none text-foreground">{name}</h3>
-        <p className="mt-1 text-sm text-foreground/68">{status}</p>
-      </div>
-    </div>
-  );
-}
-
-function EditorialCard({
-  entry,
-  featured = false,
-  className,
-}: {
-  entry: PortalEditorialEntry;
-  featured?: boolean;
-  className?: string;
-}) {
-  return (
-    <motion.article
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
-      className={cn(
-        "reference-frame reference-surface-card group relative isolate overflow-hidden",
-        featured ? "min-h-[360px] md:col-span-2 xl:min-h-[420px]" : "min-h-[250px]",
-        className,
-      )}
-    >
-      <div className="absolute inset-0">
-        <img
-          src={featured ? portalReferenceArt.hero : portalReferenceArt.bannerRedkit}
-          alt=""
-          aria-hidden="true"
-          className="h-full w-full object-cover opacity-20 transition duration-700 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--brand)/0.16),transparent_36%),linear-gradient(180deg,hsl(var(--surface-strong)/0.82),hsl(var(--surface-base)/0.94)_48%,hsl(var(--background-strong)/0.98))]" />
-      </div>
-
-      <Link to={entry.href} className="relative flex h-full flex-col justify-between p-6 md:p-7">
-        <div className="flex flex-wrap gap-2">
-          <Badge variant={featured ? "warning" : "outline"}>{entry.label}</Badge>
-          <Badge variant="secondary">{entry.location}</Badge>
-        </div>
-
-        <div>
-          <p className="section-kicker">{featured ? "Cronica em foco" : "Eco recente"}</p>
-          <h3
-            className={cn(
-              "mt-4 font-display leading-[0.95] text-foreground",
-              featured ? "text-5xl md:text-6xl" : "text-3xl md:text-[2.3rem]",
-            )}
-          >
-            {entry.title}
-          </h3>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-foreground/76 md:text-base">
-            {entry.excerpt}
-          </p>
-
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <span className="text-[11px] uppercase tracking-[0.22em] text-primary/72">
-              Atualizada em {formatEditorialDate(entry.updatedAt)}
-            </span>
-            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-primary">
-              Abrir
-              <ArrowRight className="h-4 w-4" />
-            </span>
-          </div>
-        </div>
-      </Link>
-    </motion.article>
-  );
-}
-
-function QuoteSeal({ quote, source }: { quote: string; source: string }) {
-  return (
-    <motion.div
-      whileHover={{ y: -3 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className="paper-strip border border-[hsl(36_32%_42%/0.22)] p-5 md:p-6"
-    >
-      <p className="font-display text-4xl leading-none text-[hsl(25_34%_20%/0.62)]">"</p>
-      <p className="mt-3 font-display text-3xl leading-tight text-[hsl(24_31%_16%)]">{quote}</p>
-      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(24_31%_20%/0.76)]">
-        {source}
-      </p>
-    </motion.div>
-  );
-}
-
-function ModuleCard({
-  item,
-  featured = false,
-  className,
-}: {
-  item: PortalModuleCardSpec;
-  featured?: boolean;
-  className?: string;
-}) {
-  const Icon = item.icon;
-
-  return (
-    <motion.article
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
-      className={cn(
-        "reference-frame reference-surface-card group relative isolate overflow-hidden",
-        featured ? "min-h-[360px] lg:col-span-2" : "min-h-[280px]",
-        className,
-      )}
-    >
-      <img
-        src={item.image}
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover opacity-24 transition duration-700 group-hover:scale-105"
-        style={{ objectPosition: item.imagePosition ?? "center" }}
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--background)/0.1),hsl(var(--background)/0.42)_24%,hsl(var(--background-strong)/0.9)_100%),radial-gradient(circle_at_top_left,hsl(var(--brand)/0.18),transparent_36%)]" />
-
-      <Link to={item.path} className="relative flex h-full flex-col justify-between p-6 md:p-7">
-        <div className="flex items-center justify-between gap-4">
-          <Badge variant="outline">{item.eyebrow}</Badge>
-          <div className="icon-slot h-11 w-11 shrink-0">
-            <Icon className="h-4 w-4" />
-          </div>
-        </div>
-
-        <div>
-          <h3
-            className={cn(
-              "max-w-3xl font-display leading-[0.96] text-foreground",
-              featured ? "text-5xl md:text-6xl" : "text-4xl",
-            )}
-          >
-            {item.title}
-          </h3>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-foreground/76 md:text-base">
-            {item.description}
-          </p>
-          <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-primary">
-            Abrir rota
-            <ArrowRight className="h-4 w-4" />
-          </span>
-        </div>
-      </Link>
-    </motion.article>
-  );
-}
-
-function PromoBanner({
-  eyebrow,
-  title,
-  body,
-  path,
-  image,
-  imagePosition,
-  icon: Icon,
-  cta,
-}: {
-  eyebrow: string;
-  title: string;
-  body: string;
-  path: string;
-  image: string;
-  imagePosition?: string;
-  icon: LucideIcon;
-  cta: string;
-}) {
-  const lightCard = image === portalReferenceArt.bannerConcert;
-
-  return (
-    <motion.article whileHover={{ y: -4 }} transition={{ duration: 0.22, ease: "easeOut" }}>
-      <Link
-        to={path}
-        className={cn(
-          "reference-frame group relative isolate block min-h-[320px] overflow-hidden shadow-elevated",
-          lightCard ? "reference-promo-card-light" : "reference-promo-card-dark",
-        )}
-      >
-        <img
-          src={image}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover opacity-24 transition duration-700 group-hover:scale-105"
-          style={{ objectPosition: imagePosition ?? "center" }}
-        />
-        <div
-          className={cn(
-            "absolute inset-0",
-            lightCard
-              ? "bg-[linear-gradient(90deg,hsl(41_37%_90%/0.95),hsl(41_37%_90%/0.76)_42%,transparent_82%)]"
-              : "bg-[linear-gradient(180deg,hsl(var(--background)/0.1),hsl(var(--background)/0.42)_26%,hsl(var(--background-strong)/0.92)_100%),radial-gradient(circle_at_top,hsl(var(--brand)/0.16),transparent_36%)]",
-          )}
-        />
-
-        <div className="relative flex h-full flex-col justify-between p-6 md:p-8">
-          <div className="flex items-center justify-between gap-4">
-            <Badge variant={lightCard ? "warning" : "secondary"}>{eyebrow}</Badge>
-            <div className="icon-slot h-11 w-11 shrink-0">
-              <Icon className="h-4 w-4" />
-            </div>
-          </div>
-
-          <div className="max-w-xl">
-            <h3 className={cn("font-display text-5xl leading-[0.95]", lightCard ? "text-[hsl(30_24%_14%)]" : "text-foreground")}>
-              {title}
-            </h3>
-            <p className={cn("mt-4 text-sm leading-7 md:text-base", lightCard ? "text-[hsl(28_16%_24%/0.9)]" : "text-foreground/78")}>
-              {body}
-            </p>
-            <div className="mt-6">
-              <span className={cn("reference-inline-cta", lightCard && "reference-inline-cta-light")}>{cta}</span>
-            </div>
-          </div>
-        </div>
-      </Link>
-    </motion.article>
-  );
-}
+const bestiaryPreview = encyclopediaEntries
+  .filter((entry) => entry.category === "monstros")
+  .slice(0, 4);
 
 export default function HomePage() {
-  usePortalShellMode("editorial", "interactive");
-  const { publishedPublications } = useCampaignPublications();
-  const [moduleView, setModuleView] = useState<PortalModuleViewKey>("exploracao");
-
-  const editorialEntries: PortalEditorialEntry[] = [
-    ...publishedPublications.map((publication) => ({
-      id: publication.id,
-      title: publication.title,
-      excerpt: publication.excerpt,
-      location: publication.location,
-      label: campaignPublicationLabel[publication.kind],
-      updatedAt: publication.updatedAt,
-      href: "/campanha",
-    })),
-    ...editorialFallbacks,
-  ].slice(0, 5);
-
-  const featuredEditorial = editorialEntries[0];
-  const supportingEditorial = editorialEntries.slice(1);
-  const activeModule = moduleViews[moduleView];
+  usePortalShellMode("editorial", "ambient");
 
   return (
-    <div className="space-y-16 pb-12 md:space-y-24">
-      <CinematicHero />
+    <div className="mx-auto max-w-[1320px] space-y-10 px-4 py-8 md:px-6 md:py-12">
+      <section className="dark-lore-page-frame dark-lore-page-hero dark-lore-home-hero">
+        <img
+          src={archiveReferenceArt.hero}
+          alt=""
+          aria-hidden="true"
+          className="dark-lore-hero-background"
+        />
+        <div className="dark-lore-grain-overlay" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
 
-      <section className="container grid gap-4 md:grid-cols-3">
-        {heroSignals.map((signal) => {
-          const Icon = signal.icon;
-
-          return (
-            <div key={signal.title} className="reference-frame reference-surface-card p-5">
-              <div className="icon-slot h-10 w-10">
-                <Icon className="h-4 w-4" />
-              </div>
-              <p className="mt-4 font-display text-3xl leading-none text-foreground">
-                {signal.title}
-              </p>
-              <p className="mt-3 text-sm leading-6 text-foreground/72">{signal.body}</p>
-            </div>
-          );
-        })}
-      </section>
-
-      <section className="container space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl space-y-4">
-            <p className="section-kicker">Ecos das Profundezas</p>
-            <h2 className="font-display text-5xl leading-[0.94] text-brand-gradient">
-              Cronicas malditas e segredos desenterrados aguardam sua leitura.
-            </h2>
-            <p className="text-sm leading-7 text-foreground/76 md:text-base">
-              Cada entrada no arquivo revela fragmentos de conhecimento proibido, historias de horror
-              e advertencias para aqueles que ousam adentrar as trevas.
-            </p>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="dark-lore-hero-copy dark-lore-hero-copy-centered"
+        >
+          <p className="dark-lore-section-kicker justify-center">{archiveBrand.subtitle}</p>
+          <h1 className="dark-lore-display-title">{archiveBrand.title}</h1>
+          <p className="dark-lore-hero-text max-w-3xl text-center">
+            {archiveBrand.heroLine}
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
+            <Link to="/universo" className="dark-lore-button">
+              Explorar Universo
+            </Link>
+            <Link to="/bestiario" className="dark-lore-button dark-lore-button-ghost">
+              Abrir Bestiario
+            </Link>
           </div>
+        </motion.div>
+      </section>
 
-          <ArtifactLink to="/campanha" className="w-full justify-center lg:w-auto">
-            Explorar as cronicas
-            <ArrowRight className="h-4 w-4" />
-          </ArtifactLink>
+      <section className="dark-lore-page-frame dark-lore-editorial-grid">
+        <div className="dark-lore-editorial-copy">
+          <p className="dark-lore-section-kicker">Sobre o portal</p>
+          <h2 className="dark-lore-section-title">
+            Um arquivo unico para ler o continente com calma, peso e continuidade.
+          </h2>
+          <p className="dark-lore-editorial-text">
+            O portal reune universo, bestiario, cronicas, cartografia e sessao sob a mesma
+            linguagem de leitura. Cada rota abre um tipo de registro, mas todas pertencem ao mesmo
+            arquivo.
+          </p>
+          <p className="dark-lore-editorial-text">
+            Em vez de telas isoladas, a travessia foi organizada como estante viva: primeiro voce
+            entende o mundo, depois cruza as criaturas, desce aos manuscritos e por fim leva tudo
+            para a mesa.
+          </p>
+          <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
+            Abrir a camara de sessao
+          </Link>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {featuredEditorial ? (
-            <EditorialCard
-              entry={featuredEditorial}
-              featured
-              className="xl:col-span-2 xl:row-span-2"
-            />
-          ) : null}
-
-          {supportingEditorial.map((entry, index) => (
-            <EditorialCard
-              key={entry.id}
-              entry={entry}
-              className={index === 2 ? "md:col-span-2 xl:col-span-2" : ""}
-            />
-          ))}
+        <div className="dark-lore-editorial-figure">
+          <img
+            src={archiveReferenceArt.desk}
+            alt=""
+            aria-hidden="true"
+            className="dark-lore-editorial-image"
+          />
+          <div className="dark-lore-editorial-glow" />
         </div>
       </section>
 
-      <section className="container">
-        <Card variant="elevated" className="reliquary-grain overflow-hidden">
-          <CardContent className="p-0">
-            <div className="border-b border-[hsl(var(--brand)/0.16)] px-6 py-10 md:px-8 lg:px-10">
-              <img 
-                src={gothicDivider} 
-                alt="" 
-                aria-hidden="true"
-                className="mx-auto mb-8 h-16 w-auto opacity-60"
-              />
-              <div className="mx-auto max-w-3xl text-center">
-                <p className="section-kicker">Bem-vindo ao Arquivo Proibido</p>
-                <h2 className="mt-4 font-display text-5xl leading-[0.94] text-brand-gradient md:text-6xl">
-                  Um grimorio vivo de criaturas, rituais e segredos ancestrais.
-                </h2>
-                <p className="mt-5 text-sm leading-7 text-foreground/76 md:text-base">
-                  Cada secao do portal guarda conhecimento que muitos prefeririam esquecido:
-                  bestiarios de horrores, cronicas de campanhas sombrias e ferramentas para
-                  mestres que ousam conduzir historias nas trevas.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-8 px-6 py-8 md:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:px-10">
-              <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-3">
-                  {manifestoPanels.map((panel) => {
-                    const Icon = panel.icon;
-
-                    return (
-                      <div key={panel.title} className="info-panel p-5">
-                        <div className="icon-slot h-10 w-10">
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <h3 className="mt-4 font-display text-3xl leading-none text-foreground">
-                          {panel.title}
-                        </h3>
-                        <p className="mt-3 text-sm leading-6 text-foreground/72">{panel.body}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="relic-parchment p-6">
-                  <p className="section-kicker text-[hsl(24_31%_20%/0.74)]">Advertência do Arquivo</p>
-                  <p className="mt-4 font-display text-4xl leading-[1.02] text-[hsl(24_31%_16%)]">
-                    Nem todo conhecimento deve ser buscado. Nem toda verdade deve ser revelada.
-                  </p>
-                  <p className="mt-4 text-sm leading-7 text-[hsl(24_31%_22%/0.84)]">
-                    O portal apresenta primeiro o que pulsa nas sombras: a criatura mais recente catalogada,
-                    a rota mais perigosa mapeada e o ritual que exige cautela antes de ser invocado.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1">
-                {manifestoQuotes.map((quote) => (
-                  <QuoteSeal key={quote.source} quote={quote.quote} source={quote.source} />
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="container grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-start">
-        <Card variant="panel" className="reliquary-grain xl:sticky xl:top-32">
-          <CardContent className="space-y-6 p-6 md:p-8">
-            <div className="space-y-4">
-              <p className="section-kicker">Portais do Conhecimento</p>
-              <h2 className="font-display text-5xl leading-[0.94] text-brand-gradient">
-                Cada portal conduz a profundezas diferentes do arquivo proibido.
-              </h2>
-              <p className="text-sm leading-7 text-foreground/76">{activeModule.body}</p>
-            </div>
-
-            <div className="space-y-2">
-              {(Object.entries(moduleViews) as [PortalModuleViewKey, (typeof moduleViews)[PortalModuleViewKey]][]).map(
-                ([key, view]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    data-active={moduleView === key ? "true" : "false"}
-                    className="tool-rail-button w-full justify-between border px-4 py-4 text-left"
-                    onClick={() => setModuleView(key)}
-                  >
-                    <span className="font-display text-2xl text-foreground">{view.label}</span>
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary/72">
-                      Abrir
-                    </span>
-                  </button>
-                ),
-              )}
-            </div>
-
-            <div className="relic-parchment p-5">
-              <p className="section-kicker text-[hsl(24_31%_20%/0.74)]">Portal Recomendado</p>
-              <p className="mt-4 font-display text-3xl leading-[1.02] text-[hsl(24_31%_16%)]">
-                {activeModule.title}
-              </p>
-              <p className="mt-4 text-sm leading-7 text-[hsl(24_31%_22%/0.84)]">
-                {activeModule.accent}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
+      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
         <div className="space-y-6">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <ModuleCard item={activeModule.items[0]} featured />
-            <ModuleCard item={activeModule.items[1]} />
-            <ModuleCard item={activeModule.items[2]} />
+          <div className="text-center">
+            <p className="dark-lore-section-kicker justify-center">Indice do arquivo</p>
+            <h2 className="dark-lore-section-title mx-auto">O que permanece acessivel no limiar</h2>
           </div>
 
-          {moduleView === "exploracao" ? (
-            <ContinentMap compact />
-          ) : (
-            <Card variant="panel">
-              <CardContent className="grid gap-6 p-6 md:p-8 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                <div className="space-y-5">
-                  <div className="space-y-4">
-                    <Badge variant="outline">Ritual da Sessao</Badge>
-                    <h3 className="font-display text-5xl leading-[0.95] text-brand-gradient">
-                      Campanha, bestiario e ferramentas do mestre em harmonia sombria.
+          <div className="dark-lore-codex-grid">
+            {archiveIndexCards.map(({ icon: Icon, title, description, path }, index) => (
+              <motion.article
+                key={title}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.45, delay: index * 0.05 }}
+                className="dark-lore-archive-card dark-lore-archive-card-compact"
+              >
+                <Link to={path} className="dark-lore-codex-card">
+                  <div className="dark-lore-icon-emblem">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="dark-lore-card-title text-[clamp(1.35rem,1.8vw,1.7rem)]">
+                      {title}
                     </h3>
-                    <p className="text-sm leading-7 text-foreground/76">
-                      Quando as trevas se adensam, o portal guia diretamente para a proxima cronica,
-                      para o circulo do mestre e para as criaturas que ainda espreitam nas sombras.
-                    </p>
+                    <p className="dark-lore-card-copy">{description}</p>
                   </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="info-panel p-5">
-                      <div className="icon-slot h-10 w-10">
-                        <BookOpenText className="h-4 w-4" />
-                      </div>
-                      <h4 className="mt-4 font-display text-3xl leading-none text-foreground">
-                        Grimorio de Sessao
-                      </h4>
-                      <p className="mt-3 text-sm leading-6 text-foreground/72">
-                        Cronicas, contratos cumpridos e segredos revelados durante a campanha.
-                      </p>
-                    </div>
-
-                    <div className="info-panel p-5">
-                      <div className="icon-slot h-10 w-10">
-                        <Shield className="h-4 w-4" />
-                      </div>
-                      <h4 className="mt-4 font-display text-3xl leading-none text-foreground">
-                        Circulo do Mestre
-                      </h4>
-                      <p className="mt-3 text-sm leading-6 text-foreground/72">
-                        Ferramentas e segredos do mestre sempre ao alcance quando o ritual exige.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {CURRENT_PROTAGONISTS.map((name, index) => (
-                    <CampaignSlot
-                      key={name}
-                      index={index}
-                      name={name}
-                      status={
-                        index === 0
-                          ? "Pronto para conflito"
-                          : index === 1
-                            ? "Leitura tensa"
-                            : "Rastro ainda aberto"
-                      }
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                </Link>
+              </motion.article>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="container">
-        <Card variant="elevated" className="reliquary-grain relative overflow-hidden">
-          <div className="absolute inset-0">
-            <img
-              src={portalReferenceArt.bannerRedkit}
-              alt=""
-              aria-hidden="true"
-              className="h-full w-full object-cover opacity-14"
-            />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--brand)/0.18),transparent_34%),linear-gradient(180deg,hsl(var(--background)/0.04),hsl(var(--background-strong)/0.3)_100%)]" />
-          </div>
-
-          <CardContent className="relative grid gap-6 p-6 md:p-8 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-5">
-              <div className="space-y-4">
-                <p className="section-kicker">Sempre em dia com o reliquiario</p>
-                <h2 className="font-display text-5xl leading-[0.94] text-brand-gradient md:text-6xl">
-                  Receba o proximo rumor antes da fogueira apagar.
-                </h2>
-                <p className="max-w-3xl text-sm leading-7 text-foreground/76 md:text-base">
-                  Abra seu dossie pessoal, siga os ecos da comunidade e acompanhe o que acabou de
-                  entrar no arquivo sem perder o fio da campanha.
-                </p>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                {bulletinPanels.map((panel) => {
-                  const Icon = panel.icon;
-
-                  return (
-                    <div key={panel.title} className="info-panel p-5">
-                      <div className="icon-slot h-10 w-10">
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <h3 className="mt-4 font-display text-3xl leading-none text-foreground">
-                        {panel.title}
-                      </h3>
-                      <p className="mt-3 text-sm leading-6 text-foreground/72">{panel.body}</p>
-                    </div>
-                  );
-                })}
-              </div>
+      <section className="dark-lore-feature-grid">
+        {featureCards.map((card, index) => (
+          <motion.article
+            key={card.title}
+            initial={{ opacity: 0, y: 22 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.55, delay: index * 0.08 }}
+            className="dark-lore-feature-card"
+          >
+            <div className="dark-lore-feature-image-wrap">
+              <img src={card.image} alt="" aria-hidden="true" className="dark-lore-feature-image" />
             </div>
-
-            <div className="campaign-board p-6">
-              <Badge variant="outline">Arquivo pessoal</Badge>
-              <h3 className="mt-4 font-display text-4xl leading-[0.96] text-foreground">
-                Dois caminhos para seguir sem quebrar a imersao.
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-foreground/72">
-                Continue pelo seu dossie pessoal ou atravesse a ponte para comunidade e campanha
-                publica. Tudo ainda parece parte do mesmo artefato.
-              </p>
-
-              <div className="mt-6 flex flex-col gap-3">
-                <ArtifactLink to="/conta" className="justify-center">
-                  Abrir a conta
-                </ArtifactLink>
-                <ArtifactLink to="/comunidade" secondary className="justify-center">
-                  Ouvir a comunidade
-                </ArtifactLink>
-              </div>
+            <div className="dark-lore-feature-body">
+              <h2 className="dark-lore-card-title">{card.title}</h2>
+              <p className="dark-lore-card-copy">{card.description}</p>
+              <Link to={card.path} className="dark-lore-button dark-lore-button-small">
+                {card.cta}
+              </Link>
             </div>
-          </CardContent>
-        </Card>
+          </motion.article>
+        ))}
       </section>
 
-      <section className="container grid gap-6 xl:grid-cols-2">
-        {promoBanners.map((banner) => (
-          <PromoBanner key={banner.title} {...banner} />
-        ))}
+      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+        <div className="space-y-6">
+          <div className="text-center">
+            <p className="dark-lore-section-kicker justify-center">Criaturas em vigilia</p>
+            <h2 className="dark-lore-section-title mx-auto">Quatro presencas ja despertas</h2>
+          </div>
+
+          <div className="dark-lore-bestiary-grid">
+            {bestiaryPreview.map((entry, index) => {
+              const metadata = getWitcherBestiaryMetadata(entry.slug);
+
+              return (
+                <motion.article
+                  key={entry.slug}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.5, delay: index * 0.06 }}
+                  className="dark-lore-beast-card"
+                >
+                  <div className="dark-lore-beast-image-wrap">
+                    <img src={entry.image} alt={entry.imageAlt} className="dark-lore-beast-image" />
+                  </div>
+                  <div className="dark-lore-beast-body">
+                    <h3 className="dark-lore-card-title text-[clamp(1.55rem,2vw,2rem)]">
+                      {entry.title}
+                    </h3>
+                    <p className="dark-lore-card-meta">
+                      {metadata?.type ?? "Entidade"}
+                      {metadata ? ` - Perigo ${metadata.dangerLevel}/5` : ""}
+                    </p>
+                    <p className="dark-lore-card-copy">{entry.summary}</p>
+                    <Link
+                      to={`/bestiario/${entry.slug}`}
+                      className="dark-lore-button dark-lore-button-small"
+                    >
+                      Ver ficha
+                    </Link>
+                  </div>
+                </motion.article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <ArchivePortalSection
+        kicker="Explore o arquivo"
+        title="Quatro portas para continuar a leitura"
+        description="O portal inteiro foi organizado como uma estante coerente: mundo, criaturas, manuscritos e atlas se abrem sob a mesma voz editorial."
+        items={homeArchivePortals}
+      />
+
+      <section className="dark-lore-cta-band">
+        <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>
+        <Link to="/jogar" className="dark-lore-button">
+          Entrar no Portal
+        </Link>
       </section>
     </div>
   );

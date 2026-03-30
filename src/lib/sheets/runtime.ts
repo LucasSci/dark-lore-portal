@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { generateSecureShortId } from "../utils";
+import { generateSecureShortId } from "@/lib/utils";
 import {
   buildAttributeValuesFromCharacterRow,
   buildCharacterDraftFromStore,
   createAttributeStore,
 } from "@/lib/sheets/engine";
+import { generateSecureShortId } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 import type {
   AttributeStore,
@@ -30,7 +31,7 @@ const pendingRequests = new Map<
 >();
 
 function createRequestId() {
-  return `sheet-${Date.now()}-${generateSecureShortId()}`;
+  return `sheet-${generateSecureShortId()}`;
 }
 
 function getWorker() {
