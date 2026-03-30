@@ -60,114 +60,137 @@ export function computeVisibilityPolygon(
   bounds: { width: number; height: number },
   maxRadius?: number,
 ): Point[] {
+  // ⚡ Bolt: AABB filter and unrolled vector math for dynamic lighting raycasting
   const ox = origin.x;
   const oy = origin.y;
 
-  // Filter walls by AABB if maxRadius is provided to reduce O(n^2) workload.
-  // We allocate a flat typed array to avoid object GC overhead in the hot loop.
-  const numOriginalWalls = walls.length;
-  let activeWallsCount = 0;
+  // AABB for quick rejection of distant walls
+  let minX = -Infinity, maxX = Infinity, minY = -Infinity, maxY = Infinity;
+  if (maxRadius !== undefined) {
+    minX = ox - maxRadius;
+    maxX = ox + maxRadius;
+    minY = oy - maxRadius;
+    maxY = oy + maxRadius;
+  }
 
-  const flatWalls = new Float64Array((numOriginalWalls + 4) * 4);
+  // Add bounding box walls unconditionally to the end so they are never filtered
+  const allWalls: Segment[] = [
+    ...walls,
+    { a: { x: 0, y: 0 }, b: { x: bounds.width, y: 0 } },
+    { a: { x: bounds.width, y: 0 }, b: { x: bounds.width, y: bounds.height } },
+    { a: { x: bounds.width, y: bounds.height }, b: { x: 0, y: bounds.height } },
+    { a: { x: 0, y: bounds.height }, b: { x: 0, y: 0 } },
+  ];
 
-  for (let i = 0; i < numOriginalWalls; i++) {
-    const w = walls[i];
+  // ⚡ Bolt: Filter active walls and pre-extract coordinates to avoid object lookups
+  const activeWalls: Segment[] = [];
+  for (let i = 0; i < allWalls.length; i++) {
+    const w = allWalls[i];
 
-    if (maxRadius !== undefined) {
-      const minX = Math.min(w.a.x, w.b.x);
-      const maxX = Math.max(w.a.x, w.b.x);
-      const minY = Math.min(w.a.y, w.b.y);
-      const maxY = Math.max(w.a.y, w.b.y);
-
-      if (minX > ox + maxRadius || maxX < ox - maxRadius ||
-          minY > oy + maxRadius || maxY < oy - maxRadius) {
-        continue; // Wall is completely outside the vision/light radius AABB
-      }
+    // Unconditionally include the 4 boundary walls (the last 4 in the array)
+    if (i >= allWalls.length - 4) {
+      activeWalls.push(w);
+      continue;
     }
 
-    const idx = activeWallsCount * 4;
-    flatWalls[idx] = w.a.x;
-    flatWalls[idx + 1] = w.a.y;
-    flatWalls[idx + 2] = w.b.x;
-    flatWalls[idx + 3] = w.b.y;
-    activeWallsCount++;
+    // AABB check
+    if (maxRadius !== undefined) {
+      const wMinX = Math.min(w.a.x, w.b.x);
+      const wMaxX = Math.max(w.a.x, w.b.x);
+      const wMinY = Math.min(w.a.y, w.b.y);
+      const wMaxY = Math.max(w.a.y, w.b.y);
+
+      if (wMaxX < minX || wMinX > maxX || wMaxY < minY || wMinY > maxY) {
+        continue; // Skip wall if strictly outside AABB
+      }
+    }
+    activeWalls.push(w);
   }
 
-  // Add bounds (must be unconditionally included for full 360-degree raycasting)
-  let idx = activeWallsCount * 4;
-  flatWalls[idx++] = 0; flatWalls[idx++] = 0; flatWalls[idx++] = bounds.width; flatWalls[idx++] = 0;
-  flatWalls[idx++] = bounds.width; flatWalls[idx++] = 0; flatWalls[idx++] = bounds.width; flatWalls[idx++] = bounds.height;
-  flatWalls[idx++] = bounds.width; flatWalls[idx++] = bounds.height; flatWalls[idx++] = 0; flatWalls[idx++] = bounds.height;
-  flatWalls[idx++] = 0; flatWalls[idx++] = bounds.height; flatWalls[idx++] = 0; flatWalls[idx++] = 0;
+  const activeWallsCount = activeWalls.length;
 
-  activeWallsCount += 4;
-
-  // Replace Set<number> with Float64Array to minimize GC pauses
-  const rawAngles = new Float64Array(activeWallsCount * 6);
+  // ⚡ Bolt: Use Typed Arrays to avoid Garbage Collection (GC) overhead during Set iteration
+  // Each wall contributes up to 2 endpoints * 3 angles = 6 angles
+  const angles = new Float64Array(activeWallsCount * 6);
   let angleCount = 0;
 
-  for (let i = 0; i < activeWallsCount * 4; i += 4) {
-    const ax = flatWalls[i];
-    const ay = flatWalls[i+1];
-    const bx = flatWalls[i+2];
-    const by = flatWalls[i+3];
+  const wallAx = new Float64Array(activeWallsCount);
+  const wallAy = new Float64Array(activeWallsCount);
+  const wallDx = new Float64Array(activeWallsCount);
+  const wallDy = new Float64Array(activeWallsCount);
 
-    const angleA = Math.atan2(ay - oy, ax - ox);
-    rawAngles[angleCount++] = angleA;
-    rawAngles[angleCount++] = angleA - 0.0001;
-    rawAngles[angleCount++] = angleA + 0.0001;
+  for (let i = 0; i < activeWallsCount; i++) {
+    const wall = activeWalls[i];
 
-    const angleB = Math.atan2(by - oy, bx - ox);
-    rawAngles[angleCount++] = angleB;
-    rawAngles[angleCount++] = angleB - 0.0001;
-    rawAngles[angleCount++] = angleB + 0.0001;
+    wallAx[i] = wall.a.x;
+    wallAy[i] = wall.a.y;
+    wallDx[i] = wall.b.x - wall.a.x;
+    wallDy[i] = wall.b.y - wall.a.y;
+
+    let angle = Math.atan2(wall.a.y - oy, wall.a.x - ox);
+    angles[angleCount++] = angle;
+    angles[angleCount++] = angle - 0.0001;
+    angles[angleCount++] = angle + 0.0001;
+
+    angle = Math.atan2(wall.b.y - oy, wall.b.x - ox);
+    angles[angleCount++] = angle;
+    angles[angleCount++] = angle - 0.0001;
+    angles[angleCount++] = angle + 0.0001;
   }
 
-  rawAngles.sort();
+  // Deduplicate angles using a sorted view
+  const anglesView = angles.subarray(0, angleCount);
+  anglesView.sort();
 
   const points: Point[] = [];
+  let lastAngle = -Infinity;
 
   for (let i = 0; i < angleCount; i++) {
-    const angle = rawAngles[i];
-    // Skip duplicate angles to save work
-    if (i > 0 && angle === rawAngles[i - 1]) continue;
+    const angle = anglesView[i];
 
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
+    // Deduplication step
+    if (angle - lastAngle < 1e-8) {
+      continue;
+    }
+    lastAngle = angle;
+
+    const dirX = Math.cos(angle);
+    const dirY = Math.sin(angle);
 
     let closestT = Infinity;
 
-    for (let j = 0; j < activeWallsCount * 4; j += 4) {
-      const ax = flatWalls[j];
-      const ay = flatWalls[j+1];
-      const bx = flatWalls[j+2];
-      const by = flatWalls[j+3];
+    // ⚡ Bolt: Inline ray-segment intersection math (Cramer's rule) for maximum performance
+    for (let j = 0; j < activeWallsCount; j++) {
+      const dx = wallDx[j];
+      const dy = wallDy[j];
 
-      const wdx = bx - ax;
-      const wdy = by - ay;
+      const denom = dirX * dy - dirY * dx;
+      // Skip if lines are parallel or collinear
+      if (denom > -1e-10 && denom < 1e-10) continue;
 
-      // Inlined raySegmentIntersect logic
-      const denom = dx * wdy - dy * wdx;
-      if (Math.abs(denom) < 1e-10) continue;
+      const ax = wallAx[j];
+      const ay = wallAy[j];
+      const diffX = ax - ox;
+      const diffY = ay - oy;
 
-      const t = ((ax - ox) * wdy - (ay - oy) * wdx) / denom;
-      const u = ((ax - ox) * dy - (ay - oy) * dx) / denom;
+      const u = (diffX * dirY - diffY * dirX) / denom;
+      if (u < 0 || u > 1) continue;
 
-      if (t >= 0 && u >= 0 && u <= 1 && t < closestT) {
+      const t = (diffX * dy - diffY * dx) / denom;
+      if (t >= 0 && t < closestT) {
         closestT = t;
       }
     }
 
     if (closestT === Infinity) continue;
 
-    // Clamp to max radius if specified
     if (maxRadius !== undefined && closestT > maxRadius) {
       closestT = maxRadius;
     }
 
     points.push({
-      x: ox + dx * closestT,
-      y: oy + dy * closestT,
+      x: ox + dirX * closestT,
+      y: oy + dirY * closestT,
     });
   }
 

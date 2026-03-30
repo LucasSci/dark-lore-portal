@@ -2,21 +2,16 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { archiveBrand } from "@/lib/archive-reference";
+import { getNavigationEntries } from "@/lib/route-manifest";
 
-const leftNavItems = [
-  { label: "Inicio", path: "/" },
-  { label: "Universo", path: "/universo" },
-  { label: "Bestiario", path: "/bestiario" },
-  { label: "Cronicas", path: "/cronicas" },
-];
-
-const rightNavItems = [
-  { label: "Jogar", path: "/jogar" },
-  { label: "Oraculo", path: "/oraculo" },
-  { label: "Mapa", path: "/mapa" },
-  { label: "Contato", path: "/contato" },
-];
-
+const leftNavItems = getNavigationEntries("primary-left").map(({ label, path }) => ({
+  label,
+  path,
+}));
+const rightNavItems = getNavigationEntries("primary-right").map(({ label, path }) => ({
+  label,
+  path,
+}));
 const mobileNavItems = [...leftNavItems, ...rightNavItems];
 
 export default function Header() {
