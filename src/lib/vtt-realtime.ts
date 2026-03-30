@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { LOCAL_SESSION_ID } from "@/lib/local-identities";
+import { generateSecureId, generateSecureShortId } from "@/lib/utils";
 import {
   asLooseRecord,
   isLooseRecord,
@@ -34,7 +35,7 @@ function toLooseRows(value: unknown) {
 }
 
 function makePresenceKey() {
-  return `presence-${Math.random().toString(36).slice(2, 10)}`;
+  return `presence-${generateSecureShortId()}`;
 }
 
 function normalizePresence(presenceState: Record<string, Array<Record<string, unknown>>>) {
@@ -326,7 +327,7 @@ export async function loadSceneSnapshot(sessionId: string) {
               const spawn = asLooseRecord(connection.spawn);
 
               return {
-                id: String(connection.id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 8)),
+                id: String(connection.id ?? generateSecureId()),
                 edge:
                   connection.edge === "north" ||
                   connection.edge === "east" ||
