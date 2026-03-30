@@ -261,12 +261,14 @@
     position: relative;
     display: grid;
     gap: 1.5rem;
-    grid-template-columns: 300px minmax(0, 1fr) 74px;
+    grid-template-columns: minmax(0, 1fr) minmax(21rem, 24rem);
     align-items: start;
+    min-height: calc(100vh - 8rem);
   }
 
   .archive-oracle-panel {
     position: relative;
+    min-height: 0;
     overflow: hidden;
     border: 1px solid hsl(var(--foreground) / 0.1);
     background:
@@ -306,7 +308,8 @@
   }
 
   .archive-oracle-list {
-    max-height: 70vh;
+    min-height: 0;
+    max-height: none;
     overflow: auto;
   }
 
@@ -352,8 +355,8 @@
 
   .archive-oracle-stage {
     position: relative;
-    min-height: 70vh;
-    padding: 2rem;
+    min-height: 0;
+    padding: 1.5rem;
   }
 
   .archive-oracle-stage::before {
@@ -381,74 +384,15 @@
     margin-inline: auto;
   }
 
-  .archive-oracle-rail {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    padding-top: 1rem;
-  }
-
-  .archive-oracle-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 9999px;
-    border: 1px solid hsl(var(--foreground) / 0.16);
-    background: hsl(var(--foreground) / 0.08);
-    transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
-  }
-
-  .archive-oracle-dot:hover,
-  .archive-oracle-dot[data-active="true"] {
-    transform: scale(1.22);
-    background: hsl(var(--foreground) / 0.74);
-    box-shadow: 0 0 18px hsl(var(--foreground) / 0.18);
-  }
-
-  .archive-oracle-mic {
-    position: fixed;
-    right: 1.5rem;
-    bottom: 1.5rem;
-    z-index: 40;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.9rem;
-    padding: 0.7rem 1rem 0.7rem 0.7rem;
-    border: 1px solid hsl(var(--foreground) / 0.12);
-    background:
-      linear-gradient(180deg, hsl(232 18% 11% / 0.82), hsl(236 24% 6% / 0.94)),
-      radial-gradient(circle at top, hsl(var(--foreground) / 0.05), transparent 36%);
-    box-shadow:
-      0 24px 64px hsl(var(--background-strong) / 0.56),
-      0 0 26px hsl(var(--foreground) / 0.08);
-    backdrop-filter: blur(20px);
-  }
-
-  .archive-oracle-mic img {
-    width: 2.8rem;
-    height: 2.8rem;
-    object-fit: contain;
-    filter: grayscale(0.08);
-  }
-
-  .archive-oracle-whisper {
-    position: fixed;
-    top: 6.5rem;
-    right: 1.5rem;
-    width: min(26rem, calc(100vw - 2rem));
-    max-height: min(78vh, 48rem);
-    z-index: 45;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+  @media (min-width: 1280px) {
+    .archive-oracle-shell {
+      grid-template-columns: minmax(17rem, 19rem) minmax(0, 1fr) minmax(21rem, 24rem);
+    }
   }
 
   @media (max-width: 1279px) {
     .archive-oracle-shell {
-      grid-template-columns: 280px minmax(0, 1fr);
-    }
-
-    .archive-oracle-rail {
-      display: none;
+      grid-template-columns: minmax(0, 1fr) minmax(20rem, 23rem);
     }
   }
 
@@ -467,22 +411,6 @@
 
     .archive-oracle-list {
       max-height: none;
-    }
-  }
-
-  @media (max-width: 767px) {
-    .archive-oracle-mic {
-      right: 1rem;
-      bottom: 1rem;
-      padding-right: 0.85rem;
-    }
-
-    .archive-oracle-whisper {
-      right: 1rem;
-      left: 1rem;
-      width: auto;
-      top: 5.8rem;
-      max-height: calc(100vh - 7.4rem);
     }
   }
 }

@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cardVariants } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toastVariants } from "@/components/ui/toast";
+import { LOCAL_USER_ID } from "@/lib/local-identities";
 import { buildCharacterFromCreator, getResourceTone } from "@/lib/rpg-ui";
 
 function createDeferred<T>() {
@@ -63,7 +64,7 @@ describe("ui system", () => {
     expect(character.name).toBe("Aveline");
     expect(character.hp_current).toBe(character.hp_max);
     expect(character.mp_current).toBe(character.mp_max);
-    expect(character.user_id).toBe("demo-user");
+    expect(character.user_id).toBe(LOCAL_USER_ID);
   });
 
   it("renders semantic progress tones", () => {

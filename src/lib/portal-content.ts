@@ -124,7 +124,7 @@ export const portalHeroScenes: PortalHeroScene[] = [
     sceneLabel: "Cena I · O chamado das sombras",
     title: "Arquivo do Continente",
     description:
-      "Um arquivo vivo de conhecimento proibido, bestiarios ancestrais e cronicas esquecidas aguarda aqueles que ousam adentrar.",
+      "Conhecimento proibido, bestiarios ancestrais e cronicas esquecidas aguardam aqueles que ousam atravessar o limiar.",
     primaryCta: "Explorar o bestiario",
     primaryPath: "/universo/bestiario",
     secondaryCta: "Ver o atlas",

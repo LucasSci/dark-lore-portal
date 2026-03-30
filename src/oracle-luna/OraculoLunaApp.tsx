@@ -7,11 +7,9 @@ import {
   Home,
   Image as ImageIcon,
   Loader2,
-  Maximize2,
   MessageSquareText,
   Mic,
   MicOff,
-  Minimize2,
   RotateCcw,
   ScrollText,
   Search,
@@ -295,8 +293,6 @@ export default function OraculoLunaApp() {
   const [currentChapter, setCurrentChapter] = useState<LoreChapter | null>(null);
   const [showArchive, setShowArchive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [isReadingMode, setIsReadingMode] = useState(false);
   const [oraclePrompt, setOraclePrompt] = useState("");
 
   const chapters = useMemo(() => LORE_CHAPTERS, []);
@@ -326,34 +322,32 @@ export default function OraculoLunaApp() {
   const selectChapter = (chapter: LoreChapter) => {
     setCurrentChapter(chapter);
     setShowArchive(false);
-    updateCodeWithHistory(buildChapterDoc(chapter, isReadingMode));
+    updateCodeWithHistory(buildChapterDoc(chapter, true));
   };
 
   const resetToOrigin = () => {
     setCurrentChapter(null);
-    setIsReadingMode(false);
     updateCodeWithHistory(initialDoc);
   };
 
   const navigateHistory = (direction: "prev" | "next") => {
     if (direction === "prev" && historyIndex > 0) {
       const nextIndex = historyIndex - 1;
+      const nextDoc = history[nextIndex];
       setHistoryIndex(nextIndex);
-      setAppCode(history[nextIndex]);
+      setAppCode(nextDoc);
+      const matched = chapters.find((chapter) => nextDoc.includes(chapter.title));
+      setCurrentChapter(matched ?? null);
       return;
     }
     if (direction === "next" && historyIndex < history.length - 1) {
       const nextIndex = historyIndex + 1;
+      const nextDoc = history[nextIndex];
       setHistoryIndex(nextIndex);
-      setAppCode(history[nextIndex]);
+      setAppCode(nextDoc);
+      const matched = chapters.find((chapter) => nextDoc.includes(chapter.title));
+      setCurrentChapter(matched ?? null);
     }
-  };
-
-  const toggleReadingMode = () => {
-    if (!currentChapter) return;
-    const nextMode = !isReadingMode;
-    setIsReadingMode(nextMode);
-    setAppCode(buildChapterDoc(currentChapter, nextMode));
   };
 
   const navigateChapter = (direction: "prev" | "next") => {
@@ -386,6 +380,17 @@ export default function OraculoLunaApp() {
 
   const ringScale = 1 + Math.min(audioLevel * 6, 0.8);
   const oracleTurns = useMemo(() => dialogue.slice(-6), [dialogue]);
+  const currentChapterIndex = useMemo(
+    () => (currentChapter ? chapters.findIndex((chapter) => chapter.id === currentChapter.id) : -1),
+    [chapters, currentChapter],
+  );
+  const chapterParagraphs = useMemo(
+    () => (currentChapter ? currentChapter.content.split("\n\n").filter(Boolean) : []),
+    [currentChapter],
+  );
+  const archivePrompt = currentChapter
+    ? `Registro em foco: ${currentChapter.title}`
+    : "Escolha um registro do arquivo para abrir a leitura ritual ou conduza a conversa livremente.";
 
   const submitOraclePrompt = (prompt: string) => {
     const trimmed = prompt.trim();
@@ -418,192 +423,508 @@ export default function OraculoLunaApp() {
     navigate("/jogar");
   };
 
-  return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#050505] font-sans text-zinc-300">
-      <div className="pointer-events-none absolute inset-0 opacity-20">
-        <div className="absolute left-1/4 top-1/4 h-1 w-1 animate-pulse rounded-full bg-white blur-[2px]" />
-        <div className="absolute left-1/2 top-3/4 h-1 w-1 animate-pulse rounded-full bg-white blur-[2px] delay-700" />
-        <div className="absolute left-3/4 top-1/2 h-1 w-1 animate-pulse rounded-full bg-white blur-[2px] delay-1000" />
-      </div>
+  const archiveEntries = filteredChapters.map((chapter) => {
+    const isActive = currentChapter?.id === chapter.id;
 
-      <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="absolute left-6 top-6 z-[60] flex items-center gap-2">
-        <button onClick={handleReturn} className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/70 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-white/60 backdrop-blur-md transition-all hover:border-white/30 hover:text-white">
-          <ChevronLeft className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Voltar</span>
-        </button>
-        <button onClick={() => navigate("/")} className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/70 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-white/60 backdrop-blur-md transition-all hover:border-white/30 hover:text-white">
-          <Home className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Início</span>
-        </button>
-      </motion.div>
-
-      <AnimatePresence>
-        {!isReadingMode && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="absolute left-6 top-20 z-50 flex items-center gap-2 pointer-events-none sm:left-[11rem] sm:top-6">
-            <div className="flex items-center gap-2 rounded-full border border-white/5 bg-zinc-900/40 px-3 py-1.5 backdrop-blur-sm">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/20">Arquivo</span>
-              {currentChapter && <><ChevronRight className="h-3 w-3 text-white/10" /><span className="text-[10px] uppercase tracking-[0.2em] text-white/60">{chapterKind(currentChapter.title)}</span></>}
-              {historyIndex > 0 && !currentChapter && <><ChevronRight className="h-3 w-3 text-white/10" /><span className="text-[10px] uppercase tracking-[0.2em] text-white/60">Visão {historyIndex}</span></>}
+    return (
+      <button
+        key={chapter.id}
+        type="button"
+        onClick={() => selectChapter(chapter)}
+        data-active={isActive}
+        className="archive-oracle-entry rounded-2xl"
+      >
+        <div className="archive-oracle-entry-thumb rounded-xl">
+          {chapter.thumbnail ? (
+            <img src={chapter.thumbnail} alt="" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-white/25">
+              <ImageIcon className="h-4 w-4" />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </div>
+        <div className="min-w-0 space-y-1.5">
+          <p className="truncate text-[10px] uppercase tracking-[0.22em] text-white/38">
+            {chapterKind(chapter.title)}
+          </p>
+          <p className="truncate font-serif text-base text-white/86">
+            {chapterDisplayName(chapter.title)}
+          </p>
+          <p className="line-clamp-2 text-sm leading-6 text-white/54">
+            {chapter.content.slice(0, 118).trim()}
+            {chapter.content.length > 118 ? "..." : ""}
+          </p>
+        </div>
+      </button>
+    );
+  });
 
-      <AnimatePresence>
-        {!isReadingMode && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="absolute left-1/2 top-6 z-50 w-full max-w-md -translate-x-1/2 px-4">
-            <div className={`relative transition-all duration-300 ${isSearchFocused ? "scale-105" : "scale-100"}`}>
-              <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center"><Search className={`h-4 w-4 transition-colors ${isSearchFocused ? "text-white/60" : "text-white/20"}`} /></div>
-              <input type="text" placeholder="Pesquisar no arquivo de lore..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} onFocus={() => setIsSearchFocused(true)} onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)} className="w-full rounded-full border border-white/5 bg-zinc-900/40 py-2 pl-12 pr-10 text-xs text-white placeholder:text-white/20 backdrop-blur-md transition-all focus:border-white/20 focus:bg-zinc-900/60 focus:outline-none" />
-              {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute inset-y-0 right-4 flex items-center text-white/20 transition-colors hover:text-white/60"><X className="h-3 w-3" /></button>}
-              <AnimatePresence>
-                {searchQuery && isSearchFocused && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/90 shadow-2xl backdrop-blur-xl">
-                    <div className="max-h-64 overflow-y-auto p-2">
-                      {filteredChapters.length > 0 ? filteredChapters.map((chapter) => (
-                        <button key={chapter.id} onClick={() => { selectChapter(chapter); setSearchQuery(""); }} className="group flex w-full items-center gap-4 rounded-xl p-3 text-left transition-colors hover:bg-white/5">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/5">
-                            {chapter.thumbnail ? <img src={chapter.thumbnail} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" /> : <ImageIcon className="h-4 w-4 text-white/20" />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-1 truncate text-[10px] uppercase tracking-widest text-white/40 group-hover:text-white/60">{chapterKind(chapter.title)}</div>
-                            <div className="truncate font-serif text-xs italic text-white/60 group-hover:text-white">{chapterDisplayName(chapter.title)}</div>
-                          </div>
-                        </button>
-                      )) : <div className="p-4 text-center text-[10px] uppercase tracking-widest text-white/20 italic">Nenhum fragmento encontrado</div>}
-                    </div>
-                  </motion.div>
-                )}
+  const archivePanel = (
+    <aside className="archive-oracle-panel hidden h-full flex-col overflow-hidden rounded-[28px] xl:flex">
+      <div className="border-b border-white/8 px-5 py-5">
+        <div className="flex items-center gap-3">
+          <BookOpen className="h-4.5 w-4.5 text-white/42" />
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.24em] text-white/42">Arquivo de lore</p>
+            <p className="mt-1 text-sm leading-6 text-white/62">
+              Use a busca para abrir um capítulo e ler com calma.
+            </p>
+          </div>
+        </div>
+        <div className="archive-oracle-search mt-4">
+          <Search className="archive-oracle-search-icon h-4 w-4" />
+          <input
+            type="text"
+            placeholder="Buscar capítulo, profecia ou nome..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="archive-oracle-input rounded-2xl border border-white/10 bg-black/45 text-sm text-white/84 placeholder:text-white/24 focus:border-white/18 focus:outline-none"
+          />
+        </div>
+      </div>
+      <div className="archive-oracle-list flex-1 space-y-2 px-3 py-3">{archiveEntries}</div>
+      <div className="border-t border-white/8 px-5 py-4 text-sm leading-6 text-white/46">
+        O arquivo se abre em camadas: escolha um capítulo, leia o texto integral ou continue o diálogo a partir dele.
+      </div>
+    </aside>
+  );
+
+  const stagePanel = (
+    <main className="archive-oracle-panel archive-oracle-stage rounded-[32px]">
+      <div className="archive-oracle-reading is-focused">
+        <div className="rounded-[28px] border border-white/8 bg-black/18 p-5 md:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-200/12 bg-amber-100/6 px-4 py-2 text-[10px] uppercase tracking-[0.24em] text-amber-100/72">
+                {currentChapter ? `${chapterKind(currentChapter.title)} • registro canônico` : "Oráculo de Luna • leitura ritual"}
+              </div>
+              <div>
+                <h1 className="font-serif text-5xl leading-[0.92] text-[#f0dfb4] sm:text-6xl">
+                  {currentChapter ? chapterDisplayName(currentChapter.title) : "Oráculo de Luna"}
+                </h1>
+                <p className="mt-4 max-w-3xl text-base leading-8 text-white/68 md:text-lg">
+                  {currentChapter
+                    ? "O registro se abre em coluna contínua, com largura controlada e cadência de leitura pensada para acompanhar a narrativa sem interrupções visuais."
+                    : "Abra um capítulo do arquivo para leitura integral ou convoque o Oráculo ao lado para conversar sem perder o fio do registro."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end">
+              <button
+                type="button"
+                onClick={requestContinuation}
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-white/72 transition-all hover:border-white/22 hover:bg-white/8 hover:text-white"
+              >
+                <MessageSquareText className="h-3.5 w-3.5" />
+                Continuar
+              </button>
+              <button
+                type="button"
+                onClick={requestLiteralReading}
+                className="inline-flex items-center gap-2 rounded-full border border-amber-300/18 bg-amber-200/10 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-amber-100/88 transition-all hover:border-amber-200/30 hover:bg-amber-200/14"
+              >
+                <ScrollText className="h-3.5 w-3.5" />
+                Ler registro
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/8 bg-black/28 px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-white/34">Fonte</p>
+              <p className="mt-2 text-lg font-serif text-white/92">
+                {currentChapter ? chapterKind(currentChapter.title) : "Arquivo canônico"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/8 bg-black/28 px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-white/34">Leitura</p>
+              <p className="mt-2 text-lg font-serif text-white/92">
+                {currentChapter ? "Texto integral em coluna" : "Consulta guiada pelo Oráculo"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/8 bg-black/28 px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-white/34">Uso</p>
+              <p className="mt-2 text-lg font-serif text-white/92">
+                {currentChapter ? "Leitura + continuidade do diálogo" : "Abrir capítulos, ler e seguir a conversa"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {!currentChapter ? (
+          <div className="rounded-[28px] border border-white/8 bg-black/22 p-4 md:p-5">
+            <div className="overflow-hidden rounded-[24px] border border-white/8 bg-[#050505] shadow-[0_18px_50px_rgba(0,0,0,0.42)]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${appCode.substring(0, 100)}-${appCode.length}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.45, ease: "easeInOut" }}
+                  className="h-[60vh] min-h-[34rem] w-full"
+                >
+                  <iframe
+                    srcDoc={appCode}
+                    className="h-full w-full border-none"
+                    title="Visual do Oráculo"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  />
+                </motion.div>
               </AnimatePresence>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showArchive && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowArchive(false)} className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="absolute inset-y-0 left-0 z-[70] flex w-full max-w-sm flex-col border-r border-white/10 bg-zinc-950">
-              <div className="flex items-center justify-between border-b border-white/5 p-8">
-                <div className="flex items-center gap-3"><BookOpen className="h-5 w-5 text-white/40" /><h2 className="text-sm font-bold uppercase tracking-[0.3em] text-white/60">Arquivo de Lore</h2></div>
-                <button onClick={() => setShowArchive(false)} className="rounded-full p-2 text-white/40 transition-colors hover:bg-white/5"><X className="h-5 w-5" /></button>
+          </div>
+        ) : (
+          <div className="rounded-[28px] border border-white/8 bg-black/22 p-4 md:p-5">
+            <article className="mx-auto flex max-w-3xl flex-col gap-6 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(9,9,14,0.96),rgba(5,5,8,0.99))] px-6 py-7 shadow-[0_28px_64px_rgba(0,0,0,0.38)] md:px-10 md:py-9">
+              <div className="space-y-4 border-b border-white/8 pb-6">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-white/34">Entrada do arquivo</p>
+                <p className="font-serif text-[1.34rem] leading-[1.95] text-[#f5efe2]">
+                  {chapterParagraphs[0] ?? currentChapter.content}
+                </p>
               </div>
-              <div className="flex-1 space-y-2 overflow-y-auto p-4">
-                {filteredChapters.map((chapter) => (
-                  <button key={chapter.id} onClick={() => selectChapter(chapter)} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all ${currentChapter?.id === chapter.id ? "border-white/20 bg-white/5 text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]" : "border-transparent text-white/40 hover:bg-white/5 hover:text-white/60"}`}>
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/5">
-                      {chapter.thumbnail ? <img src={chapter.thumbnail} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" /> : <ImageIcon className="h-4 w-4 text-white/10" />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 truncate text-[10px] uppercase tracking-widest opacity-50">{chapterKind(chapter.title)}</div>
-                      <div className="truncate font-serif text-xs italic">{chapterDisplayName(chapter.title)}</div>
-                    </div>
-                  </button>
+              <div className="mx-auto h-px w-28 bg-gradient-to-r from-transparent via-amber-100/40 to-transparent" />
+              <div className="space-y-7">
+                {chapterParagraphs.slice(1).map((paragraph, index) => (
+                  <p
+                    key={`${currentChapter.id}-paragraph-${index + 1}`}
+                    className="font-serif text-[1.12rem] leading-[2.05] text-[#f2ece0]/92"
+                  >
+                    {paragraph}
+                  </p>
                 ))}
               </div>
-              <div className="border-t border-white/5 bg-black/20 p-6"><p className="text-center text-[10px] leading-relaxed text-white/20">"As areias guardam o que o tempo tenta apagar."</p></div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </article>
 
-      <AnimatePresence>
-        {currentChapter && (
-          <motion.div layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: isReadingMode ? -24 : 0 }} exit={{ opacity: 0, y: 20 }} className="absolute bottom-[18rem] left-1/2 z-40 flex -translate-x-1/2 items-center gap-4 md:bottom-[17rem]">
-            <button onClick={() => navigateChapter("prev")} disabled={chapters.findIndex((chapter) => chapter.id === currentChapter.id) === 0} className="group flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/60 px-4 py-2 text-white/40 backdrop-blur-md transition-all hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-20"><ChevronLeft className="h-4 w-4" />{!isReadingMode && <span className="text-[10px] uppercase tracking-widest">Anterior</span>}</button>
-            <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm"><span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/60">{chapters.findIndex((chapter) => chapter.id === currentChapter.id) + 1} / {chapters.length}</span></div>
-            <button onClick={() => navigateChapter("next")} disabled={chapters.findIndex((chapter) => chapter.id === currentChapter.id) === chapters.length - 1} className="group flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/60 px-4 py-2 text-white/40 backdrop-blur-md transition-all hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-20">{!isReadingMode && <span className="text-[10px] uppercase tracking-widest">Próximo</span>}<ChevronRight className="h-4 w-4" /></button>
-            <button onClick={toggleReadingMode} className={`rounded-full p-2 transition-all ${isReadingMode ? "bg-white text-zinc-950 shadow-[0_0_20px_rgba(255,255,255,0.3)]" : "border border-white/10 bg-zinc-900/60 text-white/40 hover:text-white"}`}>{isReadingMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}</button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {error && (
-          <motion.div initial={{ opacity: 0, y: -20, x: "-50%" }} animate={{ opacity: 1, y: 0, x: "-50%" }} exit={{ opacity: 0, y: -20, x: "-50%" }} className="absolute left-1/2 top-6 z-50 flex min-w-[320px] items-center gap-3 rounded-2xl border border-amber-300/20 bg-zinc-900 px-6 py-3 text-sm text-amber-100 shadow-2xl">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-300/10"><AlertCircle className="h-4 w-4" /></div>
-            <p className="font-medium">{error}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="absolute inset-0 z-10 h-full w-full overflow-hidden bg-[#050505]">
-        <AnimatePresence mode="wait">
-          <motion.div key={`${appCode.substring(0, 100)}-${appCode.length}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8, ease: "easeInOut" }} className="h-full w-full">
-            <iframe srcDoc={appCode} className="h-full w-full border-none" title="Live App" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" />
-          </motion.div>
-        </AnimatePresence>
-
-        <motion.div layout initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="pointer-events-none absolute inset-x-3 bottom-4 z-[55] md:inset-x-6">
-          <div className="pointer-events-auto mx-auto flex w-full max-w-5xl flex-col gap-3 rounded-[28px] border border-white/10 bg-black/72 p-3 shadow-[0_24px_80px_rgba(0,0,0,0.65)] backdrop-blur-xl md:p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  {isConnected && <><motion.div className="absolute inset-[-6px] rounded-full border-2 border-white/20" animate={{ scale: isModelSpeaking ? [1, 1.16, 1] : ringScale, opacity: isModelSpeaking ? [0.45, 0.85, 0.45] : Math.min(audioLevel * 10, 1) }} transition={isModelSpeaking ? { duration: 1.2, repeat: Infinity } : { duration: 0.08 }} /><motion.div className="absolute inset-[-14px] rounded-full bg-white/8" animate={{ scale: [1, 1.45, 1], opacity: [0.24, 0, 0.24] }} transition={{ duration: 2.2, repeat: Infinity }} /></>}
-                  <button onClick={isConnected ? disconnect : connect} disabled={isConnecting} className={`relative flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${isConnected ? "border-white/25 bg-zinc-900 text-white shadow-[0_0_30px_rgba(255,255,255,0.08)]" : "border-white/10 bg-zinc-950 text-white hover:border-white/25 hover:bg-zinc-900"} ${isConnecting ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
-                    {isConnecting ? <Loader2 className="h-5 w-5 animate-spin" /> : isConnected ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                  </button>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/55">{isConnecting ? "Alinhando estrelas" : isConnected ? (microphoneReady ? "Voz e texto" : "Texto ritual") : "Texto ritual pronto"}</span>
-                    {isModelSpeaking && <span className="rounded-full border border-amber-400/20 bg-amber-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-amber-100/85">O Oráculo está falando</span>}
-                  </div>
-                  <p className="max-w-xl text-xs leading-6 text-white/62 md:text-sm">Mantenha a conversa aberta para aprofundar perguntas, retomar um ponto anterior ou pedir a leitura literal de um registro do arquivo.</p>
-                </div>
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-white/8 bg-black/26 px-4 py-3">
+              <div className="text-xs uppercase tracking-[0.22em] text-white/34">
+                {currentChapterIndex >= 0 ? `${currentChapterIndex + 1} de ${chapters.length} registros` : "Arquivo sem foco"}
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button onClick={requestContinuation} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-white/68 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"><MessageSquareText className="h-3.5 w-3.5" />Continuar</button>
-                <button onClick={requestLiteralReading} className="inline-flex items-center gap-2 rounded-full border border-amber-300/15 bg-amber-300/10 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-amber-100/90 transition-all hover:border-amber-200/30 hover:bg-amber-200/12"><ScrollText className="h-3.5 w-3.5" />Ler registro</button>
-              </div>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_320px]">
-              <div className="rounded-[24px] border border-white/8 bg-black/55 p-3">
-                <div className="mb-3">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/35">Diálogo contínuo</p>
-                  <p className="mt-1 text-xs text-white/50">{currentChapter ? `Capítulo em foco: ${currentChapter.title}` : "Sem capítulo fixado. Pergunte livremente ou abra um registro do arquivo."}</p>
-                </div>
-                <div className="max-h-52 space-y-2 overflow-y-auto pr-1">
-                  {oracleTurns.length > 0 ? oracleTurns.map((turn, index) => (
-                    <div key={`${turn.role}-${index}`} className={`rounded-2xl border px-4 py-3 text-sm leading-6 ${turn.role === "user" ? "ml-auto max-w-[88%] border-white/10 bg-white/7 text-white/78" : "max-w-[92%] border-amber-300/12 bg-amber-200/8 text-amber-50/88"}`}>
-                      <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/35">{turn.role === "user" ? "Interlocutor" : "Oráculo"}</p>
-                      <p>{turn.text}</p>
-                    </div>
-                  )) : <div className="rounded-2xl border border-white/8 bg-white/4 px-4 py-4 text-sm leading-6 text-white/52">Desperte o Oráculo por voz ou por texto. Para ouvir o texto como ele existe no arquivo, use <span className="text-amber-100/80">Ler registro</span>.</div>}
-                </div>
-                <form onSubmit={(event) => { event.preventDefault(); submitOraclePrompt(oraclePrompt); }} className="mt-3 flex flex-col gap-3 md:flex-row">
-                  <label className="sr-only" htmlFor="oracle-text-prompt">Pergunta para o Oráculo</label>
-                  <textarea id="oracle-text-prompt" value={oraclePrompt} onChange={(event) => setOraclePrompt(event.target.value)} placeholder="Ex.: Leia exatamente o capítulo atual. Ou: continue a partir da última profecia sobre Nashara." className="min-h-[84px] flex-1 resize-none rounded-[20px] border border-white/10 bg-zinc-950/80 px-4 py-3 text-sm leading-6 text-white placeholder:text-white/22 focus:border-white/20 focus:outline-none" />
-                  <button type="submit" disabled={!oraclePrompt.trim()} className="inline-flex min-h-[84px] items-center justify-center gap-2 rounded-[20px] border border-amber-300/20 bg-amber-200/12 px-5 text-[11px] uppercase tracking-[0.22em] text-amber-50/90 transition-all hover:border-amber-200/32 hover:bg-amber-200/16 disabled:pointer-events-none disabled:opacity-40">{isConnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}{isConnecting ? "Invocando" : "Enviar"}</button>
-                </form>
-              </div>
-              <div className="rounded-[24px] border border-white/8 bg-black/55 p-3">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-white/35">Modo do arquivo</p>
-                <div className="mt-3 space-y-3 text-sm leading-6 text-white/60">
-                  <div className="rounded-2xl border border-white/8 bg-white/4 p-4"><p className="text-[10px] uppercase tracking-[0.22em] text-white/35">Fidelidade</p><p className="mt-2">O Oráculo consulta registros canônicos antes de responder. Se o arquivo não trouxer base, ele precisa admitir o silêncio do registro.</p></div>
-                  <div className="rounded-2xl border border-white/8 bg-white/4 p-4"><p className="text-[10px] uppercase tracking-[0.22em] text-white/35">Leitura literal</p><p className="mt-2">Use a leitura ritual para ouvir o texto original do arquivo, preservando a redação e a ordem dos registros.</p></div>
-                </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigateChapter("prev")}
+                  disabled={currentChapterIndex <= 0}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/36 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-white/68 transition-all hover:border-white/22 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Anterior
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateChapter("next")}
+                  disabled={currentChapterIndex === -1 || currentChapterIndex >= chapters.length - 1}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/36 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-white/68 transition-all hover:border-white/22 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  Próximo
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
               </div>
             </div>
           </div>
-        </motion.div>
+        )}
+      </div>
+    </main>
+  );
+
+  const oraclePanel = (
+    <aside className="archive-oracle-panel flex h-full flex-col overflow-hidden rounded-[28px]">
+      <div className="border-b border-white/8 px-5 py-5">
+        <div className="flex items-start gap-4">
+          <div className="relative shrink-0">
+            {isConnected && (
+              <>
+                <motion.div
+                  className="absolute inset-[-6px] rounded-full border-2 border-white/18"
+                  animate={{
+                    scale: isModelSpeaking ? [1, 1.16, 1] : ringScale,
+                    opacity: isModelSpeaking ? [0.45, 0.82, 0.45] : Math.min(audioLevel * 10, 1),
+                  }}
+                  transition={isModelSpeaking ? { duration: 1.2, repeat: Infinity } : { duration: 0.08 }}
+                />
+                <motion.div
+                  className="absolute inset-[-14px] rounded-full bg-white/8"
+                  animate={{ scale: [1, 1.45, 1], opacity: [0.24, 0, 0.24] }}
+                  transition={{ duration: 2.2, repeat: Infinity }}
+                />
+              </>
+            )}
+            <button
+              onClick={isConnected ? disconnect : connect}
+              disabled={isConnecting}
+              className={`relative flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${
+                isConnected
+                  ? "border-white/24 bg-zinc-900 text-white shadow-[0_0_30px_rgba(255,255,255,0.08)]"
+                  : "border-white/10 bg-zinc-950 text-white hover:border-white/22 hover:bg-zinc-900"
+              } ${isConnecting ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+            >
+              {isConnecting ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : isConnected ? (
+                <MicOff className="h-5 w-5" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/58">
+                {isConnecting ? "Alinhando estrelas" : isConnected ? (microphoneReady ? "Voz e texto" : "Texto ritual") : "Texto ritual pronto"}
+              </span>
+              {isModelSpeaking && (
+                <span className="rounded-full border border-amber-400/20 bg-amber-300/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-amber-100/88">
+                  O Oráculo fala
+                </span>
+              )}
+            </div>
+            <p className="text-sm leading-7 text-white/64">{archivePrompt}</p>
+          </div>
+        </div>
+      </div>
+      <div className="space-y-3 border-b border-white/8 px-5 py-4">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+          <button
+            type="button"
+            onClick={requestContinuation}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[10px] uppercase tracking-[0.22em] text-white/72 transition-all hover:border-white/22 hover:bg-white/8 hover:text-white"
+          >
+            <MessageSquareText className="h-3.5 w-3.5" />
+            Continuar diálogo
+          </button>
+          <button
+            type="button"
+            onClick={requestLiteralReading}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-amber-300/18 bg-amber-200/10 px-4 py-3 text-[10px] uppercase tracking-[0.22em] text-amber-100/88 transition-all hover:border-amber-200/30 hover:bg-amber-200/14"
+          >
+            <ScrollText className="h-3.5 w-3.5" />
+            Ler registro
+          </button>
+        </div>
+        <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-sm leading-7 text-white/58">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-white/36">Guia de uso</p>
+          <p className="mt-3">
+            Pergunte livremente para conversar. Quando quiser fidelidade textual, use <span className="text-amber-100/84">Ler registro</span>.
+          </p>
+        </div>
       </div>
 
-      <AnimatePresence>
-        {!isReadingMode && (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-6 top-6 z-50 flex items-center gap-3">
-            <button onClick={() => setShowArchive(true)} className="rounded-full border border-white/10 bg-zinc-900/60 p-3 text-white/40 shadow-sm backdrop-blur-md transition-all hover:border-white/30 hover:text-white"><BookOpen className="h-4 w-4" /></button>
-            <div className="flex items-center gap-1 rounded-full border border-white/10 bg-zinc-900/60 p-1 backdrop-blur-md">
-              <button onClick={() => navigateHistory("prev")} disabled={historyIndex === 0} className={`rounded-full p-2 transition-all ${historyIndex === 0 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/40 hover:bg-white/5 hover:text-white"}`}><ChevronLeft className="h-4 w-4" /></button>
-              <div className="px-2 text-[9px] font-bold uppercase tracking-widest text-white/20">{historyIndex + 1} / {history.length}</div>
-              <button onClick={() => navigateHistory("next")} disabled={historyIndex === history.length - 1} className={`rounded-full p-2 transition-all ${historyIndex === history.length - 1 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/40 hover:bg-white/5 hover:text-white"}`}><ChevronRight className="h-4 w-4" /></button>
+      <div className="flex min-h-0 flex-1 flex-col px-5 py-4">
+        <div className="mb-3">
+          <p className="text-[10px] uppercase tracking-[0.24em] text-white/35">Diálogo contínuo</p>
+          <p className="mt-1 text-sm leading-7 text-white/52">
+            O Oráculo mantém o contexto do que acabou de ser discutido e pode continuar a partir do mesmo ponto.
+          </p>
+        </div>
+
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+          {oracleTurns.length > 0 ? (
+            oracleTurns.map((turn, index) => (
+              <div
+                key={`${turn.role}-${index}`}
+                className={`rounded-2xl border px-4 py-3 text-sm leading-7 ${
+                  turn.role === "user"
+                    ? "ml-auto max-w-[92%] border-white/10 bg-white/[0.05] text-white/82"
+                    : "max-w-[96%] border-amber-300/12 bg-amber-200/[0.08] text-amber-50/88"
+                }`}
+              >
+                <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-white/35">
+                  {turn.role === "user" ? "Interlocutor" : "Oráculo"}
+                </p>
+                <p>{turn.text}</p>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-4 text-sm leading-7 text-white/56">
+              Abra um registro à esquerda ou desperte o Oráculo por texto e voz. O diálogo fica melhor quando um capítulo já está em foco.
             </div>
-            {appCode !== history[0] && <button onClick={resetToOrigin} className="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900/90 px-4 py-2 text-xs font-medium uppercase tracking-widest text-white/60 shadow-sm backdrop-blur-md transition-all hover:border-white/30 hover:text-white"><RotateCcw className="h-3 w-3" /><span>Resetar</span></button>}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </div>
+
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitOraclePrompt(oraclePrompt);
+          }}
+          className="mt-4 flex flex-col gap-3"
+        >
+          <label className="sr-only" htmlFor="oracle-text-prompt">
+            Pergunta para o Oráculo
+          </label>
+          <textarea
+            id="oracle-text-prompt"
+            value={oraclePrompt}
+            onChange={(event) => setOraclePrompt(event.target.value)}
+            placeholder="Ex.: continue a explicação sobre Nashara. Ou: leia exatamente o capítulo atual."
+            className="min-h-[112px] resize-none rounded-[24px] border border-white/10 bg-zinc-950/82 px-4 py-3 text-sm leading-7 text-white placeholder:text-white/22 focus:border-white/20 focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={!oraclePrompt.trim()}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[18px] border border-amber-300/20 bg-amber-200/12 px-5 text-[11px] uppercase tracking-[0.22em] text-amber-50/90 transition-all hover:border-amber-200/32 hover:bg-amber-200/16 disabled:pointer-events-none disabled:opacity-40"
+          >
+            {isConnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}
+            {isConnecting ? "Invocando" : "Enviar ao Oráculo"}
+          </button>
+        </form>
+      </div>
+    </aside>
+  );
+
+  const archiveDrawer = (
+    <AnimatePresence>
+      {showArchive && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowArchive(false)}
+            className="absolute inset-0 z-[60] bg-black/72 backdrop-blur-sm xl:hidden"
+          />
+          <motion.aside
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="absolute inset-y-0 left-0 z-[70] flex w-full max-w-sm flex-col border-r border-white/10 bg-zinc-950 xl:hidden"
+          >
+            <div className="flex items-center justify-between border-b border-white/8 px-5 py-5">
+              <div className="flex items-center gap-3">
+                <BookOpen className="h-4.5 w-4.5 text-white/42" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-white/42">Arquivo de lore</p>
+                  <p className="mt-1 text-sm leading-6 text-white/62">Abra um registro para ler sem distração.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowArchive(false)}
+                className="rounded-full p-2 text-white/40 transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="px-4 py-4">
+              <div className="archive-oracle-search">
+                <Search className="archive-oracle-search-icon h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Buscar capítulo, profecia ou nome..."
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  className="archive-oracle-input rounded-2xl border border-white/10 bg-black/45 text-sm text-white/84 placeholder:text-white/24 focus:border-white/18 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div className="archive-oracle-list flex-1 space-y-2 px-3 py-1">{archiveEntries}</div>
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
+  );
+
+  const errorToast = (
+    <AnimatePresence>
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -20, x: "-50%" }}
+          animate={{ opacity: 1, y: 0, x: "-50%" }}
+          exit={{ opacity: 0, y: -20, x: "-50%" }}
+          className="absolute left-1/2 top-6 z-[80] flex min-w-[320px] items-center gap-3 rounded-2xl border border-amber-300/20 bg-zinc-900 px-6 py-3 text-sm text-amber-100 shadow-2xl"
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-300/10">
+            <AlertCircle className="h-4 w-4" />
+          </div>
+          <p className="font-medium">{error}</p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-[#050507] font-sans text-zinc-300">
+      <div className="pointer-events-none absolute inset-0 opacity-30">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(220,190,120,0.08),transparent_28%),radial-gradient(circle_at_18%_30%,rgba(77,74,124,0.22),transparent_32%),radial-gradient(circle_at_82%_36%,rgba(114,82,48,0.16),transparent_26%),linear-gradient(180deg,rgba(4,4,8,0.22),rgba(4,4,8,0.92))]" />
+        <div className="absolute left-[18%] top-[20%] h-1.5 w-1.5 animate-pulse rounded-full bg-white/60 blur-[2px]" />
+        <div className="absolute left-[46%] top-[12%] h-1 w-1 animate-pulse rounded-full bg-white/60 blur-[2px] delay-700" />
+        <div className="absolute left-[78%] top-[30%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-200/70 blur-[2px] delay-1000" />
+      </div>
+
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1680px] flex-col px-4 pb-6 pt-6 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-5 flex flex-wrap items-center justify-between gap-3"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleReturn}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-950/72 px-4 py-2 text-[10px] uppercase tracking-[0.24em] text-white/70 backdrop-blur-md transition-all hover:border-white/25 hover:text-white"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Voltar
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-950/72 px-4 py-2 text-[10px] uppercase tracking-[0.24em] text-white/70 backdrop-blur-md transition-all hover:border-white/25 hover:text-white"
+            >
+              <Home className="h-3.5 w-3.5" />
+              Início
+            </button>
+            <div className="rounded-full border border-white/8 bg-black/35 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-white/42">
+              {currentChapter ? `${chapterKind(currentChapter.title)} • ${chapterDisplayName(currentChapter.title)}` : "Oráculo de Luna • Arquivo"}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowArchive(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-950/72 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-white/68 transition-all hover:border-white/24 hover:text-white xl:hidden"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              Arquivo
+            </button>
+            <div className="flex items-center gap-1 rounded-full border border-white/10 bg-zinc-950/72 p-1 backdrop-blur-md">
+              <button
+                onClick={() => navigateHistory("prev")}
+                disabled={historyIndex === 0}
+                className={`rounded-full p-2 transition-all ${historyIndex === 0 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="px-2 text-[9px] font-bold uppercase tracking-[0.24em] text-white/28">
+                {historyIndex + 1} / {history.length}
+              </div>
+              <button
+                onClick={() => navigateHistory("next")}
+                disabled={historyIndex === history.length - 1}
+                className={`rounded-full p-2 transition-all ${historyIndex === history.length - 1 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            {appCode !== history[0] && (
+              <button
+                onClick={resetToOrigin}
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-zinc-950/72 px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-white/68 transition-all hover:border-white/24 hover:text-white"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Resetar visão
+              </button>
+            )}
+          </div>
+        </motion.div>
+
+        <div className="archive-oracle-shell flex-1">
+          {archivePanel}
+          {stagePanel}
+          {oraclePanel}
+        </div>
+      </div>
+
+      {archiveDrawer}
+      {errorToast}
     </div>
   );
 }

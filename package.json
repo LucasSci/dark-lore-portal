@@ -1,5 +1,5 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "arquivo-do-continente",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,6 +8,7 @@
     "serve:dist": "node scripts/serve-dist.mjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "check:copy": "node scripts/check-public-copy.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

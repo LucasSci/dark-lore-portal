@@ -1,5 +1,6 @@
 import type { Database } from "@/integrations/supabase/types";
-import { buildCharacterFromCreator, buildDemoCharacter, type CharacterDraftData } from "@/lib/rpg-ui";
+import { LOCAL_SESSION_ID, LOCAL_USER_ID } from "@/lib/local-identities";
+import { buildCharacterFromCreator, buildSeedCharacter, type CharacterDraftData } from "@/lib/rpg-ui";
 import {
   buildAttributeValuesFromCharacterRow,
   buildCharacterDraftFromStore,
@@ -11,7 +12,7 @@ import type { AttributeStore } from "@/lib/sheets/types";
 type CharacterRow = Database["public"]["Tables"]["characters"]["Row"];
 type GameSessionRow = Database["public"]["Tables"]["game_sessions"]["Row"];
 
-type BundleSource = "local" | "remote" | "demo";
+type BundleSource = "local" | "remote" | "seed";
 
 export interface CharacterBundle {
   character: CharacterRow;
@@ -115,8 +116,8 @@ function mergeCharacterWithStore(character: CharacterRow, store: AttributeStore)
   };
 }
 
-function createDemoBundle(): CharacterBundle {
-  const character = buildDemoCharacter();
+function createSeedBundle(): CharacterBundle {
+  const character = buildSeedCharacter();
   const store = createAttributeStore(
     NOIR_CHRONICLE_SHEET,
     character.id,
@@ -127,7 +128,7 @@ function createDemoBundle(): CharacterBundle {
     character,
     store,
     sheetDefinitionId: NOIR_CHRONICLE_SHEET.id,
-    source: "demo",
+    source: "seed",
   };
 }
 
@@ -163,7 +164,7 @@ export async function loadCharacterBundle(characterId?: string | null): Promise<
       : null) ?? records[0];
 
   if (!record) {
-    return createDemoBundle();
+    return createSeedBundle();
   }
 
   setLatestCharacterId(record.character.id);
@@ -214,13 +215,13 @@ export async function ensureMesaSession(): Promise<GameSessionRow | null> {
 
   const now = new Date().toISOString();
   const session: GameSessionRow = {
-    id: "demo-session",
+    id: LOCAL_SESSION_ID,
     name: "Mesa local",
     description: "Sessao persistida localmente para manter a mesa ativa neste navegador.",
     created_at: now,
     updated_at: now,
     current_round: 1,
-    game_master_id: "demo-user",
+    game_master_id: LOCAL_USER_ID,
     is_active: true,
     max_players: 6,
   };
