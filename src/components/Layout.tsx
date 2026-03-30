@@ -2,14 +2,19 @@ import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import { usePortalState } from "@/lib/portal-state";
+import { resolveRouteManifest } from "@/lib/route-manifest";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isTabletopRoute = location.pathname.startsWith("/mesa");
-  const isAtlasRoute = location.pathname.startsWith("/mapa");
+  const currentRoute = resolveRouteManifest(location.pathname);
   const { motionIntensity, navigationMode } = usePortalState();
+  const themeMode = currentRoute?.theme ?? (location.pathname.startsWith("/mapa/") ? "atlas" : "editorial");
+  const showHeader = currentRoute?.showHeader ?? true;
+  const showFooter = currentRoute?.showFooter ?? !location.pathname.startsWith("/mapa/");
+  const isStandaloneRoute = themeMode === "tabletop" || themeMode === "oracle";
+  const isAtlasRoute = themeMode === "atlas" && location.pathname.startsWith("/mapa/");
 
-  if (isTabletopRoute) {
+  if (isStandaloneRoute) {
     return <>{children}</>;
   }
 
@@ -32,7 +37,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           }`}
         />
       </div>
-      <Header />
+      {showHeader ? <Header /> : null}
       <main
         id="main-content"
         tabIndex={-1}
@@ -42,7 +47,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
-      {!isAtlasRoute ? <Footer /> : null}
+      {showFooter ? <Footer /> : null}
     </div>
   );
 }
