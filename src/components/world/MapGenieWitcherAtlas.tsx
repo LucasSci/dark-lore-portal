@@ -70,6 +70,11 @@ const atlasCrs = L.extend({}, L.CRS.Simple, {
 });
 
 const LEAFLET_TILE_SIZE_PX = 256;
+type TileLayerWithCreateTile = L.TileLayer & {
+  createTile: (coords: L.Coords, done: L.DoneCallback) => HTMLElement;
+};
+
+const baseTileFactory = (L.TileLayer.prototype as unknown as TileLayerWithCreateTile).createTile;
 
 const locationTypeOptions: AtlasLocationType[] = [
   "city",
@@ -338,7 +343,7 @@ export default function MapGenieWitcherAtlas({
         minZoom: -4,
         usesRegionalMap: false,
       };
-    }, [mundiMap.imageNativeZoom, mundiMap.maxZoom, regionalMap?.imagePath, regionalMap?.imageSize, selectedRegion, world.bounds, world.imageUrl]);
+    }, [mundiMap.imageNativeZoom, mundiMap.maxZoom, regionalMap, selectedRegion, world.bounds, world.imageUrl]);
   const projectCoordinate = useMemo(
     () => (pointValue: AtlasCoordinate) =>
       projection.usesRegionalMap
@@ -1068,8 +1073,9 @@ export default function MapGenieWitcherAtlas({
 
       const tileLayer = L.tileLayer(getLocalWitcherTileUrl(projection.mapId), tileLayerOptions);
       // Enforce fixed tile element size to prevent hosted preview CSS from breaking Leaflet layout.
-      (tileLayer as any).createTile = function createTileWithFixedSize(coords: any, done: any) {
-        const tile = (L.TileLayer.prototype as any).createTile.call(this, coords, done) as HTMLImageElement;
+      const fixedTileLayer = tileLayer as TileLayerWithCreateTile;
+      fixedTileLayer.createTile = function createTileWithFixedSize(coords, done) {
+        const tile = baseTileFactory.call(this, coords, done) as HTMLImageElement;
         if (tile?.style) {
           tile.style.setProperty("width", `${LEAFLET_TILE_SIZE_PX}px`, "important");
           tile.style.setProperty("height", `${LEAFLET_TILE_SIZE_PX}px`, "important");
@@ -1161,15 +1167,16 @@ export default function MapGenieWitcherAtlas({
     battlemapDraft.width,
     battlemapPlacementMode,
     projection,
-    regionalMap?.crs,
+    regionalMap,
     selectedBattlemap,
+    unprojectCoordinate,
     world,
   ]);
 
   return (
     <div
       className={cn(
-        "grid gap-6",
+        "atlas-explorer grid gap-6",
         isCompactPreview
           ? "lg:grid-cols-2"
           : immersive
@@ -1181,7 +1188,7 @@ export default function MapGenieWitcherAtlas({
       <Card
         variant="panel"
         className={cn(
-          "overflow-hidden backdrop-blur-xl",
+          "atlas-sidebar-card overflow-hidden backdrop-blur-xl",
           isCompactPreview && "order-2",
           immersive && "xl:sticky xl:top-24 xl:max-h-[calc(100vh-8rem)]",
         )}
@@ -1192,7 +1199,7 @@ export default function MapGenieWitcherAtlas({
             <h2 className="font-heading text-xl text-foreground">Exploracao, camadas e rotas</h2>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cidade, regiao ou battlemap..." className="pl-10" />
+              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cidade, regiao ou battlemap..." className="atlas-search-input pl-10" />
             </div>
           </div>
           <ScrollArea
@@ -1212,7 +1219,7 @@ export default function MapGenieWitcherAtlas({
                   <p className="text-[11px] uppercase tracking-[0.18em] text-primary/80">Busca global</p>
                 </div>
                 {searchResults.length ? searchResults.map((result) => (
-                  <button key={result.id} type="button" onClick={() => navigate(buildPath(result.path))} className="tool-list-item w-full px-3 py-3 text-left backdrop-blur-md hover:bg-primary/10">
+                  <button key={result.id} type="button" onClick={() => navigate(buildPath(result.path))} className="atlas-search-result tool-list-item w-full px-3 py-3 text-left backdrop-blur-md">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-medium text-foreground">{result.label}</p>
                       <span className="text-[10px] uppercase tracking-[0.18em] text-primary/80">{result.kind}</span>
@@ -1233,14 +1240,14 @@ export default function MapGenieWitcherAtlas({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {(["roads", "rivers", "forests", "settlements", "pois", "npcs", "factions", "events", "battlemaps"] as AtlasLayerId[]).map((layer) => (
-                    <Button key={layer} type="button" size="sm" variant={layers.includes(layer) ? "primary" : "outline"} onClick={() => handleLayerToggle(layer)} className="text-xs uppercase tracking-[0.16em]">
+                    <Button key={layer} type="button" size="sm" variant={layers.includes(layer) ? "primary" : "outline"} onClick={() => handleLayerToggle(layer)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
                       {getAtlasLayerLabel(layer)}
                     </Button>
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {locationTypeOptions.map((type) => (
-                    <Button key={type} type="button" size="sm" variant={typeFilters.includes(type) ? "secondary" : "ghost"} onClick={() => handleLocationFilterToggle(type)} className="text-xs uppercase tracking-[0.16em]">
+                    <Button key={type} type="button" size="sm" variant={typeFilters.includes(type) ? "secondary" : "ghost"} onClick={() => handleLocationFilterToggle(type)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
                       {getAtlasLocationTypeLabel(type)}
                     </Button>
                   ))}
@@ -1312,7 +1319,7 @@ export default function MapGenieWitcherAtlas({
       <Card
         variant="elevated"
         className={cn(
-          "overflow-hidden border-primary/15 shadow-[0_24px_80px_hsl(var(--background)/0.45)]",
+          "atlas-main-card overflow-hidden border-primary/15 shadow-[0_24px_80px_hsl(var(--background)/0.45)]",
           isCompactPreview && "order-1 lg:col-span-2",
         )}
       >
@@ -1326,14 +1333,14 @@ export default function MapGenieWitcherAtlas({
                 </p>
               </div>
               <h2 className="font-display text-3xl text-gold-gradient">{currentTitle}</h2>
-              <p className="max-w-3xl text-sm leading-7 text-muted-foreground">{currentDescription}</p>
+              <p className="atlas-main-description max-w-3xl text-sm leading-7 text-muted-foreground">{currentDescription}</p>
               {focusTrail.length ? (
                 <div className="flex flex-wrap gap-2">
                   {focusTrail.map((segment) => (
                     <Badge
                       key={segment}
                       variant="outline"
-                      className="border-border/60 bg-background/55 text-foreground/90"
+                      className="atlas-focus-badge border-border/60 bg-background/55 text-foreground/90"
                     >
                       {segment}
                     </Badge>
@@ -1364,7 +1371,7 @@ export default function MapGenieWitcherAtlas({
                     type="button"
                     size="sm"
                     variant={isActive ? "primary" : nextFocus ? "outline" : "ghost"}
-                    className="text-[10px] uppercase tracking-[0.18em]"
+                    className="atlas-stage-switch text-[10px] uppercase tracking-[0.18em]"
                     onClick={() => handleZoomStageJump(stage)}
                     disabled={!nextFocus}
                   >
@@ -1374,7 +1381,7 @@ export default function MapGenieWitcherAtlas({
               })}
             </div>
           </div>
-          <div className="tool-stage-frame relative overflow-hidden bg-[#090806]">
+          <div className="atlas-map-frame tool-stage-frame relative overflow-hidden bg-[#090806]">
             {!isMapReady ? <AtlasSkeleton compact={compact} immersive={immersive} /> : null}
             <div
               className={cn(
@@ -1394,7 +1401,7 @@ export default function MapGenieWitcherAtlas({
             {!isCompactPreview ? (
               <div className="pointer-events-none absolute inset-x-0 top-0 p-4">
                 <div className="mx-auto flex max-w-4xl justify-center">
-                  <div className="pointer-events-auto field-note px-4 py-2 backdrop-blur-xl">
+                  <div className="atlas-map-overlay pointer-events-auto field-note px-4 py-2 backdrop-blur-xl">
                     <p className="text-center text-xs uppercase tracking-[0.18em] text-primary/80">
                       Visao por camadas: abra o mundo, mergulhe na regiao, entre no local, desca ao battlemap
                     </p>
@@ -1404,7 +1411,7 @@ export default function MapGenieWitcherAtlas({
             ) : (
               <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 md:p-4">
                 <div className="flex justify-start">
-                  <div className="pointer-events-auto field-note max-w-md px-4 py-2 backdrop-blur-xl">
+                  <div className="atlas-map-overlay pointer-events-auto field-note max-w-md px-4 py-2 backdrop-blur-xl">
                     <p className="text-xs uppercase tracking-[0.18em] text-primary/80">
                       Preview do atlas: abra o modo completo para mergulho por camadas.
                     </p>
@@ -1419,7 +1426,7 @@ export default function MapGenieWitcherAtlas({
       <Card
         variant="panel"
         className={cn(
-          "overflow-hidden backdrop-blur-xl",
+          "atlas-sidebar-card overflow-hidden backdrop-blur-xl",
           isCompactPreview && "order-3",
           immersive && "xl:sticky xl:top-24 xl:max-h-[calc(100vh-8rem)]",
         )}
@@ -1431,8 +1438,8 @@ export default function MapGenieWitcherAtlas({
               <h3 className="font-heading text-xl text-foreground">{rightMode === "details" ? "Lore do local" : "Ferramentas do mestre"}</h3>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" variant={rightMode === "details" ? "primary" : "outline"} onClick={() => setRightMode("details")}>Detalhes</Button>
-              <Button size="sm" variant={rightMode === "gm" ? "primary" : "outline"} onClick={() => setRightMode("gm")}>Mestre</Button>
+              <Button size="sm" variant={rightMode === "details" ? "primary" : "outline"} className="atlas-mode-button" onClick={() => setRightMode("details")}>Detalhes</Button>
+              <Button size="sm" variant={rightMode === "gm" ? "primary" : "outline"} className="atlas-mode-button" onClick={() => setRightMode("gm")}>Mestre</Button>
             </div>
           </div>
           <ScrollArea
