@@ -1,5 +1,7 @@
 import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 
+import { generateSecureId, generateSecureShortId } from "@/lib/utils";
+
 export const BOARD_COLUMNS = 12;
 export const BOARD_ROWS = 8;
 export const DEFAULT_GRID_SIZE = 72;
@@ -445,19 +447,11 @@ const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
 });
 
 function makeId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${prefix}-${generateSecureShortId()}`;
 }
 
 function makeEntityId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = char === "x" ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
+  return generateSecureId();
 }
 
 function stampTime() {
