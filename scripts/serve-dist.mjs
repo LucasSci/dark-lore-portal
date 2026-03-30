@@ -81,5 +81,5 @@ const server = http.createServer((request, response) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`Dark Lore Portal disponivel em http://${host}:${port}`);
+  console.log(`Arquivo do Continente disponivel em http://${host}:${port}`);
 });

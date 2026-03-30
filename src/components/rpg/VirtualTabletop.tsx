@@ -140,12 +140,12 @@ export default function VirtualTabletop() {
 
   const activePage = useMemo(
     () => getActivePage(scene) ?? null,
-    [scene.activePageId, scene.pages],
+    [scene],
   );
-  const tokens = useMemo(() => getSceneTokens(scene), [scene.objects]);
+  const tokens = useMemo(() => getSceneTokens(scene), [scene]);
   const selectedToken = useMemo(
     () => getSelectedToken(scene),
-    [scene.objects, scene.selectedObjectId],
+    [scene],
   );
   const activeTurn = useMemo(
     () =>

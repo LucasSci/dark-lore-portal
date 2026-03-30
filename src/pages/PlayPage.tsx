@@ -1,182 +1,219 @@
-import { motion } from "framer-motion";
+import { BookMarked, Map, ScrollText, Sparkles, Sword } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  BookMarked,
-  Map,
-  ScrollText,
-  Sword,
-  WandSparkles,
-} from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { DataSection } from "@/components/ui/data-section";
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
+import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
+import { usePortalShellMode } from "@/lib/portal-state";
 
-const sections = [
+const sessionMetrics = [
+  { label: "Nucleo", value: "Mesa, oraculo e comando" },
+  { label: "Ritmo", value: "Preparar, narrar, resolver" },
+  { label: "Entrada rapida", value: "Sessao ao vivo em um clique" },
+] as const;
+
+const moduleCards = [
   {
-    title: "Mesa Virtual",
-    description: "VTT completo com battlemap, grid, fog of war, tokens e chat em tempo real.",
-    icon: Map,
+    title: "Mesa de sessao",
+    description: "Abra o palco tatico, organize tokens, luzes, nevoa e fluxo de combate.",
     path: "/mesa",
-    eyebrow: "Combate e cena",
+    cta: "Abrir mesa",
+    icon: Map,
   },
   {
-    title: "Ficha de Personagem",
-    description: "Visualize a ficha narrativa com inventario, grimorio e rolagem de dados.",
-    icon: BookMarked,
+    title: "Oraculo do arquivo",
+    description: "Abra Luna em pagina completa, com leitura ritual, voz e visoes do arquivo no formato original.",
+    path: "/oraculo",
+    cta: "Abrir Luna",
+    icon: Sparkles,
+  },
+  {
+    title: "Ficha de personagem",
+    description: "Revise atributos, inventario, grimorio e o estado da companhia antes da sessao.",
     path: "/ficha",
-    eyebrow: "Perfil e recursos",
+    cta: "Abrir ficha",
+    icon: BookMarked,
   },
   {
-    title: "Criar Personagem",
-    description: "Monte um novo personagem escolhendo raca, classe, atributos e historia.",
-    icon: WandSparkles,
-    path: "/criacao",
-    eyebrow: "Forge the role",
-  },
-  {
-    title: "Painel do Mestre",
-    description: "Ferramentas de narrativa, gestao de sessao e controle de campanha.",
-    icon: ScrollText,
+    title: "Painel do mestre",
+    description: "Conduza encontros, acompanhe a sessao e gerencie os movimentos do grupo.",
     path: "/mestre",
-    eyebrow: "Command center",
+    cta: "Entrar no painel",
+    icon: ScrollText,
   },
-];
+] as const;
+
+const supportRoutes = [
+  {
+    title: "Criar personagem",
+    path: "/criacao",
+  },
+  {
+    title: "Seguir cronicas",
+    path: "/cronicas",
+  },
+] as const;
+
+const sessionPortals = [
+  {
+    title: "Mesa",
+    description: "Abra o palco tatico, mova tokens, organize visibilidade e conduza a cena ao vivo.",
+    to: "/mesa",
+    cta: "Abrir mesa",
+  },
+  {
+    title: "Oraculo",
+    description: "Converse com Luna, leia registros do arquivo e mantenha o fio da campanha.",
+    to: "/oraculo",
+    cta: "Abrir Luna",
+  },
+  {
+    title: "Cronicas",
+    description: "Volte aos manuscritos quando a sessao pedir contexto, memoria ou pressagio.",
+    to: "/cronicas",
+    cta: "Ler manuscritos",
+  },
+  {
+    title: "Mapa",
+    description: "Cruze o jogo com o atlas para levar regioes, rotas e locais para a mesa.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+] as const;
 
 export default function PlayPage() {
+  usePortalShellMode("editorial", "ambient");
+
   return (
-    <div className="container py-12 md:py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-12"
-      >
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
-          <Card variant="elevated" className="overflow-hidden">
-            <CardContent className="grid gap-8 p-6 md:p-8 xl:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline">Hub de jogo</Badge>
-                  <Badge variant="info">Mesa, ficha, criacao e mestre</Badge>
-                </div>
+    <div className="mx-auto max-w-[1480px] space-y-10 px-4 py-8 md:space-y-12 md:px-6 md:py-12">
+      <section className="dark-lore-page-frame overflow-hidden">
+        <div className="dark-lore-page-hero dark-lore-contact-hero relative">
+          <img
+            src={archiveReferenceArt.hero}
+            alt=""
+            className="dark-lore-hero-background object-[center_38%]"
+          />
+          <div className="dark-lore-grain-overlay" />
+          <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+          <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
 
-                <div className="max-w-3xl space-y-4">
-                <p className="section-kicker">Camada de jogo</p>
-                  <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    Todas as ferramentas de jogo reunidas em um unico eixo visual.
-                  </h1>
-                  <p className="text-base leading-8 text-foreground/88">
-                    O hub agora organiza as rotas principais da mesa em vez de agir como uma pagina
-                    de links. Cada modulo entra na mesma familia visual do portal e deixa claro o
-                    papel de cada ferramenta na campanha.
-                  </p>
-                </div>
+          <div className="dark-lore-hero-copy relative z-10 max-w-5xl">
+            <span className="dark-lore-section-kicker">Camara de sessao</span>
+            <h1 className="dark-lore-section-title max-w-[12ch]">Jogar sem romper o arquivo.</h1>
+            <p className="dark-lore-hero-text max-w-[62ch] text-base md:text-lg">
+              A sessao parte deste nucleo. Mesa, oraculo, ficha e painel do mestre entram como
+              ferramentas do mesmo jogo, sem disputar o centro da campanha.
+            </p>
 
-                <div className="grid gap-4 md:grid-cols-3">
-                  <DataSection label="Modulos" value="04" variant="quiet" />
-                  <DataSection label="Foco" value="Mesa, ficha e comando" variant="quiet" tone="info" />
-                  <DataSection label="Fluxo" value="Do preparo ao combate" variant="quiet" />
-                </div>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/mesa" className="dark-lore-button">
+                Abrir mesa de sessao
+              </Link>
+              <Link to="/oraculo" className="dark-lore-button dark-lore-button-ghost">
+                Abrir Luna em pagina inteira
+              </Link>
+              <Link to="/jogar/oraculo" className="dark-lore-button dark-lore-button-ghost">
+                Consultar o oraculo
+              </Link>
+              <Link to="/ficha" className="dark-lore-button dark-lore-button-ghost">
+                Revisar fichas
+              </Link>
+            </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <Button asChild>
-                    <Link to="/mesa">Abrir mesa virtual</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link to="/ficha">Ir para a ficha</Link>
-                  </Button>
+            <div className="grid gap-3 pt-2 md:grid-cols-3">
+              {sessionMetrics.map((metric) => (
+                <div key={metric.label} className="dark-lore-inline-metric">
+                  <p className="dark-lore-card-meta">{metric.label}</p>
+                  <p className="mt-2 font-display text-xl text-foreground">{metric.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        {moduleCards.map(({ title, description, path, cta, icon: Icon }) => (
+          <Link key={path} to={path} className="dark-lore-hover-surface">
+            <article className="dark-lore-feature-card dark-lore-hover-surface">
+              <div className="dark-lore-feature-body gap-5">
+                <div className="dark-lore-icon-emblem">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="space-y-3">
+                  <p className="dark-lore-card-meta">{archiveBrand.title}</p>
+                  <h2 className="dark-lore-card-title text-3xl">{title}</h2>
+                  <p className="dark-lore-card-copy text-sm">{description}</p>
+                </div>
+                <div className="mt-auto inline-flex items-center gap-2 font-display text-sm text-gold-light">
+                  <Sword className="h-4 w-4" />
+                  {cta}
                 </div>
               </div>
+            </article>
+          </Link>
+        ))}
+      </section>
 
-              <Card variant="panel">
-                <CardContent className="space-y-4 p-5">
-                  <div>
-                    <p className="section-kicker">Leitura rapida</p>
-                    <h2 className="mt-2 font-heading text-2xl text-foreground">
-                      Eixo operacional
-                    </h2>
-                  </div>
+      <section className="dark-lore-page-frame overflow-hidden">
+        <div className="dark-lore-editorial-grid">
+          <div className="dark-lore-editorial-copy">
+            <span className="dark-lore-section-kicker">Fluxo de sessao</span>
+            <h2 className="dark-lore-section-title max-w-[14ch]">Mesa, leitura e resposta no mesmo eixo.</h2>
+            <p className="dark-lore-editorial-text">
+              Abra a mesa quando a sessao pedir espaco tatico. Desca ao oraculo quando a campanha
+              pedir leitura, voz ou visoes. Entre uma cena e outra, a ficha e o painel do mestre
+              sustentam o mesmo fio de jogo.
+            </p>
 
-                  <DataSection
-                    label="Entrada principal"
-                    value="Mesa Virtual"
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Preparacao"
-                    value="Criacao e Ficha"
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Direcao"
-                    value="Painel do Mestre"
-                    variant="quiet"
-                    tone="info"
-                  />
-                </CardContent>
-              </Card>
-            </CardContent>
-          </Card>
-
-          <Card variant="panel">
-            <CardContent className="space-y-5 p-6">
-              <div>
-                  <p className="section-kicker">Fluxo de combate</p>
-                <h2 className="mt-2 font-heading text-2xl text-foreground">
-                  Rotas do jogo
-                </h2>
-              </div>
-
-              <DataSection label="Preparar" value="Criar e revisar personagens" variant="quiet" />
-              <DataSection label="Executar" value="Abrir mesa e operar combate" variant="quiet" />
-              <DataSection label="Controlar" value="Publicacoes, NPCs e sessao" variant="quiet" tone="warn" />
-            </CardContent>
-          </Card>
-        </section>
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {sections.map((section, index) => {
-            const Icon = section.icon;
-
-            return (
-              <motion.div
-                key={section.path}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
-              >
-                <Link to={section.path} className="block h-full">
-                  <Card
-                    variant={index === 0 ? "elevated" : "panel"}
-                    className="h-full transition-[transform,border-color] duration-200 hover:-translate-y-px hover:border-[hsl(var(--brand)/0.18)]"
-                  >
-                    <CardContent className="flex h-full flex-col gap-5 p-6">
-                      <div className="flex h-12 w-12 items-center justify-center border border-[hsl(var(--brand)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.86),hsl(var(--surface-base)/0.96))] text-primary">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="section-kicker">{section.eyebrow}</p>
-                        <h3 className="mt-2 font-heading text-2xl text-foreground">
-                          {section.title}
-                        </h3>
-                        <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                          {section.description}
-                        </p>
-                      </div>
-                      <div className="mt-auto flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                        <Sword className="h-4 w-4" />
-                        Abrir modulo
-                      </div>
-                    </CardContent>
-                  </Card>
+            <div className="flex flex-wrap gap-3">
+              {supportRoutes.map((route) => (
+                <Link
+                  key={route.path}
+                  to={route.path}
+                  className="dark-lore-button dark-lore-button-small dark-lore-button-ghost"
+                >
+                  {route.title}
                 </Link>
-              </motion.div>
-            );
-          })}
-        </section>
-      </motion.div>
+              ))}
+              <Link to="/oraculo" className="dark-lore-button dark-lore-button-small">
+                Abrir experiencia completa
+              </Link>
+            </div>
+          </div>
+
+          <figure className="dark-lore-editorial-figure">
+            <img src={archiveReferenceArt.wanderer} alt="" className="dark-lore-editorial-image" />
+            <div className="dark-lore-editorial-glow" />
+          </figure>
+        </div>
+      </section>
+
+      <ArchivePortalSection
+        kicker="Portais de sessao"
+        title="Quatro entradas para sustentar o jogo"
+        description="A camara de sessao se abre melhor quando mesa, oraculo, cronicas e mapa continuam ligados ao mesmo arquivo."
+        items={sessionPortals}
+      />
+
+      <section className="dark-lore-cta-band">
+        <p className="dark-lore-section-kicker">Sessao em curso</p>
+        <h2 className="dark-lore-cta-line">A sessao permanece aberta.</h2>
+        <p className="dark-lore-hero-text text-center">
+          Entre pela mesa quando for hora de jogar. Abra o oraculo quando o arquivo precisar
+          responder.
+        </p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link to="/mesa" className="dark-lore-button">
+            Ir para a mesa
+          </Link>
+          <Link to="/oraculo" className="dark-lore-button dark-lore-button-ghost">
+            Abrir Luna em tela cheia
+          </Link>
+          <Link to="/jogar/oraculo" className="dark-lore-button dark-lore-button-ghost">
+            Abrir oraculo original
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

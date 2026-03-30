@@ -167,7 +167,7 @@ export default function FichaPage() {
                         ? "Cloud"
                         : activeBundle?.source === "local"
                           ? "Cache local"
-                          : "Referencia inicial"
+                          : "Arquivo inicial"
                     }
                     variant="quiet"
                   />
@@ -188,7 +188,7 @@ export default function FichaPage() {
               <Card variant="panel">
                 <CardContent className="space-y-4 p-5">
                   <div>
-                    <p className="section-kicker">Leitura rapida</p>
+                    <p className="section-kicker">Resumo do personagem</p>
                     <h2 className="mt-2 font-heading text-2xl text-foreground">
                       Estado da ficha
                     </h2>
@@ -256,7 +256,7 @@ export default function FichaPage() {
                       ? "Cloud"
                       : activeBundle?.source === "local"
                         ? "Cache local"
-                        : "Referencia inicial"
+                        : "Arquivo inicial"
                   }
                   variant="quiet"
                 />
