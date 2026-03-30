@@ -240,7 +240,7 @@ export default function GameMasterPanel() {
                 <div>
                   <h3 className="font-heading text-lg text-foreground">Criar NPC</h3>
                   <p className="text-sm text-muted-foreground">
-                    Monte antagonistas, aliados ou figuras recorrentes sem sair do fluxo da mesa.
+                    Monte antagonistas, aliados ou figuras recorrentes sem interromper a sessao.
                   </p>
                 </div>
                 <Button onClick={addNpc}>

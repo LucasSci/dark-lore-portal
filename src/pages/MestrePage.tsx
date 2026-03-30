@@ -26,11 +26,11 @@ export default function MestrePage() {
                 <div className="max-w-3xl space-y-4">
                 <p className="section-kicker">Comando do mestre</p>
                   <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    O centro de comando agora parece sala de guerra, nao dashboard administrativo.
+                    Sessao, combate, NPCs e publicacoes reunidos no quadro de comando do mestre.
                   </h1>
                   <p className="text-base leading-8 text-foreground/88">
-                    Ferramentas de narrativa, combate, NPCs e publicacoes foram reorganizadas para
-                    operar a campanha sem quebrar o clima do portal.
+                    O mestre encontra aqui os rastros da campanha, os controles da cena e os
+                    registros que precisam circular para o grupo.
                   </p>
                 </div>
 

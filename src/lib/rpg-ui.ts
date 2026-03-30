@@ -7,6 +7,7 @@ import {
   getModifier,
   type AttributeKey,
 } from "@/lib/rpg-utils";
+import { LOCAL_USER_ID, SEED_CHARACTER_ID } from "@/lib/local-identities";
 
 export type CharacterRow = Database["public"]["Tables"]["characters"]["Row"];
 export type ResourceTone = "good" | "warn" | "bad" | "info";
@@ -46,7 +47,7 @@ export function getResourceTone(percent: number): ResourceTone {
   return "bad";
 }
 
-export function buildDemoCharacter(overrides: Partial<CharacterRow> = {}): CharacterRow {
+export function buildSeedCharacter(overrides: Partial<CharacterRow> = {}): CharacterRow {
   const now = new Date().toISOString();
 
   return {
@@ -65,7 +66,7 @@ export function buildDemoCharacter(overrides: Partial<CharacterRow> = {}): Chara
     gold: 240,
     hp_current: 46,
     hp_max: 58,
-    id: "demo-character",
+    id: SEED_CHARACTER_ID,
     initiative_bonus: 3,
     inteligencia: 12,
     is_active: true,
@@ -78,7 +79,7 @@ export function buildDemoCharacter(overrides: Partial<CharacterRow> = {}): Chara
     sabedoria: 13,
     speed: 30,
     updated_at: now,
-    user_id: "demo-user",
+    user_id: LOCAL_USER_ID,
     ...overrides,
   };
 }
@@ -113,7 +114,7 @@ export function buildCharacterFromCreator(draft: CharacterDraftData): CharacterR
     gold,
     hp_current: hp,
     hp_max: hp,
-    id: `demo-${Date.now()}`,
+    id: `local-character-${Date.now()}`,
     initiative_bonus: dexMod,
     inteligencia: draft.attributes.inteligencia,
     is_active: true,
@@ -126,6 +127,6 @@ export function buildCharacterFromCreator(draft: CharacterDraftData): CharacterR
     sabedoria: draft.attributes.sabedoria,
     speed,
     updated_at: createdAt,
-    user_id: "demo-user",
+    user_id: LOCAL_USER_ID,
   };
 }

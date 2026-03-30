@@ -3,77 +3,64 @@ import factionIllustration from "@/assets/encyclopedia/faction-illustration.svg"
 import historyIllustration from "@/assets/encyclopedia/history-illustration.svg";
 import locationIllustration from "@/assets/encyclopedia/location-illustration.svg";
 import monsterIllustration from "@/assets/encyclopedia/monster-illustration.svg";
-import type { ComponentType } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, type ComponentType, type ReactNode, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
   BookMarked,
-  Clock3,
   Flag,
-  Maximize2,
   MapPin,
-  Network,
   Search,
-  ScrollText,
   Skull,
   Sparkles,
   Users,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
-import PortalContextPanel from "@/components/portal/PortalContextPanel";
+import { Link, useLocation, useParams } from "react-router-dom";
+
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import ContinentMap from "@/components/world/ContinentMap";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { DataSection } from "@/components/ui/data-section";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CURRENT_PROTAGONISTS, sanitizeImmersiveEntry, sanitizeImmersiveTimeline } from "@/lib/immersive-lore";
+import { getAtlasContextForEntry } from "@/lib/atlas-context";
+import { sanitizeImmersiveEntry } from "@/lib/immersive-lore";
 import {
   encyclopediaCategories,
   encyclopediaEntries,
   getEncyclopediaEntry,
   getEntriesByCategory,
   getLinkedEntries,
-  getVttReadyEntries,
-  globalTimeline,
   type EncyclopediaCategory,
   type EncyclopediaEntry,
   type EncyclopediaTimelineEvent,
 } from "@/lib/encyclopedia";
-import { getAtlasContextForEntry } from "@/lib/atlas-context";
+import { usePortalShellMode } from "@/lib/portal-state";
+import {
+  getUniversePublication,
+  universePublications,
+  type UniversePublication,
+  type UniversePublicationMention,
+} from "@/lib/universe-publications";
 import {
   getWitcherBestiaryMetadata,
   witcherBestiaryRegions,
   witcherBestiaryTypes,
 } from "@/lib/witcher-bestiary";
-import { usePortalShellMode } from "@/lib/portal-state";
+import { archiveReferenceArt } from "@/lib/archive-reference";
 import { cn } from "@/lib/utils";
 
 type CategoryFilter = "todas" | EncyclopediaCategory;
+
+type SectionNavItem = {
+  id: string;
+  label: string;
+};
 
 const categoryIcons: Record<EncyclopediaCategory, ComponentType<{ className?: string }>> = {
   personagens: Users,
   monstros: Skull,
   locais: MapPin,
   faccoes: Flag,
-  historia: ScrollText,
+  historia: BookMarked,
 };
 
 const categoryFallbackImages: Record<EncyclopediaCategory, string> = {
@@ -83,6 +70,214 @@ const categoryFallbackImages: Record<EncyclopediaCategory, string> = {
   faccoes: factionIllustration,
   historia: historyIllustration,
 };
+
+const revealViewport = { once: true, amount: 0.22 };
+
+const bestiaryOrigins = [
+  {
+    title: "Cultos Profanos",
+    description: "Criaturas invocadas por rituais proibidos, restos de fe corrompida e sangue mal consagrado.",
+    icon: Sparkles,
+  },
+  {
+    title: "Reinos Caidos",
+    description: "Bestas nascidas de linhagens partidas, cidades perdidas e maldicoes deixadas sem vigia.",
+    icon: Flag,
+  },
+  {
+    title: "Horrores Cosmicos",
+    description: "Entidades antigas que nao pertencem a este mundo e tratam a realidade como pele fina.",
+    icon: Skull,
+  },
+] as const;
+
+const universePortals = [
+  {
+    title: "Bestiario",
+    description: "Abra as criaturas do continente com leitura de campo, fraquezas e rotas ligadas ao atlas.",
+    to: "/bestiario",
+    cta: "Abrir bestiario",
+  },
+  {
+    title: "Cronicas",
+    description: "Continue pelos manuscritos e veja como nomes, locais e eras voltam a respirar em sessao.",
+    to: "/cronicas",
+    cta: "Ler cronicas",
+  },
+  {
+    title: "Mapa",
+    description: "Cruze dossies, reinos e locais com a cartografia do continente em leitura por camadas.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+  {
+    title: "Jogar",
+    description: "Leve o arquivo para a sessao e abra mesa, oraculo e ferramentas no mesmo eixo de leitura.",
+    to: "/jogar",
+    cta: "Abrir arquivo vivo",
+  },
+] as const;
+
+const bestiaryPortals = [
+  {
+    title: "Universo",
+    description: "Volte ao arquivo maior para cruzar criaturas com faccoes, locais e historia.",
+    to: "/universo",
+    cta: "Cruzar universo",
+  },
+  {
+    title: "Mapa",
+    description: "Abra a cartografia completa e veja onde cada ameaca ancora sua presenca.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+  {
+    title: "Cronicas",
+    description: "Siga os manuscritos onde os nomes das criaturas continuam a ecoar.",
+    to: "/cronicas",
+    cta: "Ler cronicas",
+  },
+  {
+    title: "Jogar",
+    description: "Leve a criatura para a mesa, cruze com a sessao e transforme a leitura em encontro.",
+    to: "/jogar",
+    cta: "Abrir sessao",
+  },
+] as const;
+
+const archiveCategoryDescriptions: Record<EncyclopediaCategory, string> = {
+  personagens: "Perfis, linhagens e nomes que sustentam as cronicas e os conflitos do continente.",
+  monstros: "Criaturas, ameacas e registros de caca cruzados com atlas, fraquezas e sessao.",
+  locais: "Ruinas, cidades, fronteiras e passagens que ancoram a geografia do arquivo.",
+  faccoes: "Ordens, cultos e interesses em choque, mantidos sob o mesmo selo editorial.",
+  historia: "Capitulos, acontecimentos e ecos de eras antigas organizados para leitura continua.",
+};
+
+function useActiveUniverseSection(items: SectionNavItem[]) {
+  const [activeId, setActiveId] = useState(items[0]?.id ?? "");
+
+  useEffect(() => {
+    if (!items.some((item) => item.id === activeId)) {
+      setActiveId(items[0]?.id ?? "");
+    }
+  }, [activeId, items]);
+
+  useEffect(() => {
+    const sectionElements = items
+      .map((item) => document.getElementById(item.id))
+      .filter((element): element is HTMLElement => Boolean(element));
+
+    if (sectionElements.length === 0 || typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort(
+            (left, right) =>
+              right.intersectionRatio - left.intersectionRatio ||
+              left.boundingClientRect.top - right.boundingClientRect.top,
+          );
+
+        if (visibleEntries[0]) {
+          setActiveId(visibleEntries[0].target.id);
+        }
+      },
+      {
+        rootMargin: "-18% 0px -58% 0px",
+        threshold: [0.16, 0.32, 0.5],
+      },
+    );
+
+    sectionElements.forEach((sectionElement) => observer.observe(sectionElement));
+
+    return () => observer.disconnect();
+  }, [items]);
+
+  return { activeId, setActiveId };
+}
+
+function UniverseSectionNav({ label, items }: { label: string; items: SectionNavItem[] }) {
+  const { activeId, setActiveId } = useActiveUniverseSection(items);
+
+  return (
+    <nav aria-label={label} className="dark-lore-scrollspy">
+      <div className="flex items-center gap-2 overflow-x-auto">
+        {items.map((item) => (
+          <a
+            key={item.id}
+            href={`#${item.id}`}
+            aria-current={activeId === item.id ? "location" : undefined}
+            onClick={() => setActiveId(item.id)}
+            className={cn("dark-lore-chip", activeId === item.id && "is-active")}
+          >
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function formatPreviewList(values: string[], limit = 2) {
+  if (values.length <= limit) {
+    return values.join(", ");
+  }
+
+  return `${values.slice(0, limit).join(", ")} +${values.length - limit}`;
+}
+
+function renderPublicationParagraph(paragraph: string, mentions: UniversePublicationMention[]) {
+  const orderedMentions = [...mentions].sort((left, right) => right.label.length - left.label.length);
+
+  if (orderedMentions.length === 0) {
+    return paragraph;
+  }
+
+  const mentionByLabel = new Map(orderedMentions.map((mention) => [mention.label.toLowerCase(), mention]));
+  const pattern = new RegExp(orderedMentions.map((mention) => escapeRegExp(mention.label)).join("|"), "gi");
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+
+  for (const match of paragraph.matchAll(pattern)) {
+    const start = match.index ?? 0;
+    const value = match[0];
+
+    if (start > lastIndex) {
+      nodes.push(<Fragment key={`text-${lastIndex}`}>{paragraph.slice(lastIndex, start)}</Fragment>);
+    }
+
+    const mention = mentionByLabel.get(value.toLowerCase());
+
+    if (mention) {
+      nodes.push(
+        <Link
+          key={`${mention.slug}-${start}`}
+          to={`/universo/${mention.slug}`}
+          className="font-medium text-primary transition-colors hover:text-primary/80"
+        >
+          {value}
+        </Link>,
+      );
+    } else {
+      nodes.push(<Fragment key={`match-${start}`}>{value}</Fragment>);
+    }
+
+    lastIndex = start + value.length;
+  }
+
+  if (lastIndex < paragraph.length) {
+    nodes.push(<Fragment key={`tail-${lastIndex}`}>{paragraph.slice(lastIndex)}</Fragment>);
+  }
+
+  return nodes;
+}
 
 function EncyclopediaImage({
   entry,
@@ -115,97 +310,6 @@ function EncyclopediaImage({
   );
 }
 
-function EntryArtworkPreview({
-  entry,
-  frameClassName,
-  imageClassName,
-  buttonLabel = "Tela cheia",
-}: {
-  entry: EncyclopediaEntry;
-  frameClassName?: string;
-  imageClassName?: string;
-  buttonLabel?: string;
-}) {
-  const bestiaryMeta = getWitcherBestiaryMetadata(entry.slug);
-
-  return (
-    <Dialog>
-      <div
-        className={cn(
-          "ornate-frame group relative overflow-hidden rounded-none border border-border/70 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.14),transparent_42%),linear-gradient(180deg,hsl(var(--background-strong)),hsl(var(--card)))]",
-          frameClassName,
-        )}
-      >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,transparent_60%,hsl(var(--background-strong)/0.72))]" />
-        <EncyclopediaImage
-          entry={entry}
-          className={cn("relative h-full w-full", imageClassName)}
-        />
-        <DialogTrigger asChild>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="absolute right-3 top-3 z-10 border border-border/70 bg-background/78 text-foreground shadow-sm backdrop-blur-sm"
-          >
-            <Maximize2 className="mr-2 h-3.5 w-3.5" />
-            {buttonLabel}
-          </Button>
-        </DialogTrigger>
-      </div>
-
-      <DialogContent className="max-w-[min(96vw,1380px)] border-border/70 bg-background/96 p-4 sm:p-6">
-        <DialogHeader className="pr-12">
-          <DialogTitle>{entry.title}</DialogTitle>
-          <DialogDescription>{entry.subtitle}</DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="ornate-frame overflow-hidden rounded-none border border-border/70 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.12),transparent_44%),linear-gradient(180deg,hsl(var(--background-strong)),hsl(var(--card)))]">
-            <EncyclopediaImage
-              entry={entry}
-              className="max-h-[78vh] w-full object-contain p-4 md:p-6"
-            />
-          </div>
-
-          <div className="info-panel space-y-4 p-4">
-            <p className="text-sm leading-7 text-foreground/90">{entry.summary}</p>
-
-            <div className="grid gap-3">
-              {entry.stats.slice(0, 4).map((stat) => (
-                <DataSection
-                  key={`${entry.slug}-${stat.label}-fullscreen`}
-                  label={stat.label}
-                  value={stat.value}
-                  variant="quiet"
-                />
-              ))}
-            </div>
-
-            {bestiaryMeta ? (
-              <div className="field-note space-y-2 p-4">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-primary/80">
-                  Dossie de caca
-                </p>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Fraquezas: {bestiaryMeta.weaknesses.join(", ")}.
-                </p>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Regioes: {bestiaryMeta.regions.join(", ")}.
-                </p>
-                {entry.vtt ? (
-                  <Button asChild className="mt-2 w-full">
-                    <Link to={`/mesa?spawn=${entry.slug}`}>Levar criatura para a mesa</Link>
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function TimelineRail({
   title,
   events,
@@ -214,18 +318,11 @@ function TimelineRail({
   events: EncyclopediaTimelineEvent[];
 }) {
   return (
-    <Card variant="panel">
-      <CardContent className="space-y-4 p-6">
-        <div className="flex items-center gap-3">
-          <div className="icon-slot h-11 w-11">
-            <Clock3 className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-heading text-lg text-foreground">{title}</h3>
-            <p className="text-sm text-muted-foreground">
-              Marco historico para navegar pelo universo.
-            </p>
-          </div>
+    <div className="dark-lore-archive-card dark-lore-archive-card-compact">
+      <div className="space-y-5 p-6 md:p-7">
+        <div>
+          <p className="dark-lore-section-kicker">{title}</p>
+          <h2 className="dark-lore-section-title mt-3 text-left">Linha do tempo</h2>
         </div>
 
         <div className="space-y-4">
@@ -233,409 +330,250 @@ function TimelineRail({
             <div key={`${event.period}-${event.title}`} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <div className="h-3.5 w-3.5 border border-primary/40 bg-primary/90" />
-                {index < events.length - 1 && (
-                  <div className="mt-2 h-full w-px bg-primary/30" />
-                )}
+                {index < events.length - 1 ? <div className="mt-2 h-full w-px bg-primary/28" /> : null}
               </div>
               <div className="pb-4">
-                <p className="font-heading text-xs uppercase tracking-[0.2em] text-primary/80">
-                  {event.period}
-                </p>
-                <h4 className="mt-1 font-heading text-base text-foreground">
+                <p className="dark-lore-card-meta">{event.period}</p>
+                <h3 className="dark-lore-card-title mt-2 text-[clamp(1.5rem,2vw,1.95rem)]">
                   {event.title}
-                </h4>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  {event.description}
-                </p>
+                </h3>
+                <p className="dark-lore-card-copy mt-2">{event.description}</p>
               </div>
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
-function EncyclopediaEntryCard({ entry }: { entry: EncyclopediaEntry }) {
+function UniverseAtlasActionButton({
+  to,
+  label,
+  icon: Icon,
+  variant = "primary",
+}: {
+  to: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  variant?: "primary" | "secondary";
+}) {
+  return (
+    <Link
+      to={to}
+      className={cn(
+        "dark-lore-button dark-lore-button-small dark-lore-atlas-action-button",
+        variant === "secondary" && "dark-lore-atlas-action-button-secondary",
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      <span>{label}</span>
+    </Link>
+  );
+}
+
+function EncyclopediaEntryCard({
+  entry,
+  detailBase,
+}: {
+  entry: EncyclopediaEntry;
+  detailBase: "/universo" | "/bestiario";
+}) {
   const Icon = categoryIcons[entry.category];
-  const vttReady = getVttReadyEntries().some((candidate) => candidate.slug === entry.slug);
   const bestiaryMeta = getWitcherBestiaryMetadata(entry.slug);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
-        <Card variant="panel" className="h-full overflow-hidden transition-colors hover:border-primary/30">
-          <CardContent className="flex h-full flex-col gap-5 p-0">
-          <EntryArtworkPreview
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={revealViewport}
+      transition={{ duration: 0.55, ease: "easeOut" }}
+      className="dark-lore-hover-surface"
+    >
+      <Link to={`${detailBase}/${entry.slug}`} className="dark-lore-entry-card">
+        <div className="dark-lore-entry-card-media">
+          <EncyclopediaImage
             entry={entry}
-            frameClassName="h-56"
-            imageClassName={cn(
-              "transition-transform duration-300 group-hover:scale-[1.015]",
-              entry.category === "monstros" ? "object-contain p-4" : "object-cover",
+            className={cn(
+              "dark-lore-hover-image h-full w-full transition duration-500 group-hover:scale-[1.03]",
+              entry.category === "monstros"
+                ? "dark-lore-monster-thumb object-contain p-4"
+                : "object-cover",
             )}
-            buttonLabel="Ampliar"
           />
-          <div className="flex h-full flex-col gap-4 p-6">
-            <div className="flex items-center justify-between gap-3">
-              <Badge variant="outline" className="border-primary/30 text-primary">
-                {encyclopediaCategories[entry.category].label}
-              </Badge>
-              <div className="flex items-center gap-2">
-                {vttReady ? (
-                  <Badge variant="secondary" className="bg-secondary/80 text-foreground">
-                    Mesa pronta
-                  </Badge>
-                ) : null}
-                <Icon className="h-5 w-5 text-primary/70" />
-              </div>
-            </div>
+        </div>
 
-            <div className="space-y-2">
-              <h3 className="font-heading text-xl text-foreground">{entry.title}</h3>
-              <p className="text-sm leading-6 text-muted-foreground">{entry.subtitle}</p>
-            </div>
-
-            <p className="text-sm leading-6 text-foreground/90">{entry.summary}</p>
-
-            {bestiaryMeta ? (
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary" className="bg-background/70 text-foreground">
-                  {bestiaryMeta.type}
-                </Badge>
-                <Badge variant="outline" className="border-primary/30 text-primary">
-                  Perigo {bestiaryMeta.dangerLevel}/5
-                </Badge>
-                <Badge variant="secondary" className="bg-background/70 text-foreground">
-                  {bestiaryMeta.regions[0] ?? "Regiao desconhecida"}
-                </Badge>
-              </div>
-            ) : null}
-
-            <div className="flex flex-wrap gap-2">
-              {entry.internalLinks.slice(0, 3).map((slug) => {
-                const linkedEntry = getEncyclopediaEntry(slug);
-
-                if (!linkedEntry) {
-                  return null;
-                }
-
-                return (
-                  <Badge key={slug} variant="secondary" className="bg-secondary/70">
-                    {linkedEntry.title}
-                  </Badge>
-                );
-              })}
-            </div>
-
-            <div className="mt-auto flex gap-2 pt-2">
-              {entry.category === "monstros" && entry.vtt ? (
-                <Button asChild variant="outline" className="flex-1">
-                  <Link to={`/mesa?spawn=${entry.slug}`}>Levar para a mesa</Link>
-                </Button>
-              ) : null}
-              <Button asChild className={entry.category === "monstros" && entry.vtt ? "flex-1" : "w-full"}>
-                <Link to={`/universo/${entry.slug}`}>Abrir verbete</Link>
-              </Button>
-            </div>
+        <div className="space-y-4 p-5 md:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <Badge variant="outline" className="border-primary/30 text-primary">
+              {encyclopediaCategories[entry.category].label}
+            </Badge>
+            <Icon className="h-4 w-4 text-primary/78" />
           </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+
+          <div className="space-y-2">
+            <h3 className="dark-lore-card-title text-[clamp(1.6rem,2vw,2.2rem)]">{entry.title}</h3>
+            <p className="dark-lore-card-copy">{entry.summary}</p>
+          </div>
+
+          {bestiaryMeta ? (
+            <p className="dark-lore-card-meta">
+              {bestiaryMeta.type} - Perigo {bestiaryMeta.dangerLevel}/5
+            </p>
+          ) : (
+            <p className="dark-lore-card-meta">{entry.subtitle}</p>
+          )}
+        </div>
+      </Link>
+    </motion.article>
   );
 }
 
-function getShowcaseTone(index: number) {
-  const tones = [
-    "from-primary/18 via-primary/8 to-transparent",
-    "from-destructive/18 via-destructive/8 to-transparent",
-    "from-info/18 via-info/8 to-transparent",
-    "from-warning/18 via-warning/8 to-transparent",
-  ];
+function BestiaryEntryCard({ entry }: { entry: EncyclopediaEntry }) {
+  const bestiaryMeta = getWitcherBestiaryMetadata(entry.slug);
 
-  return tones[index % tones.length];
-}
-
-function getShowcaseLabel(entry: EncyclopediaEntry) {
-  if (entry.category === "personagens") {
-    return "Dons e marcas";
-  }
-
-  if (entry.category === "monstros") {
-    return "Ameaca tatica";
-  }
-
-  if (entry.category === "locais") {
-    return "Camadas do lugar";
-  }
-
-  if (entry.category === "faccoes") {
-    return "Vetores de poder";
-  }
-
-  return "Fragmentos da cronica";
-}
-
-function EntryShowcase({ entry }: { entry: EncyclopediaEntry }) {
-  const panels = entry.stats.map((stat, index) => ({
-    id: `${entry.slug}-${stat.label}`,
-    label: stat.label,
-    value: stat.value,
-    description:
-      entry.narrative[index % entry.narrative.length]?.body ?? entry.summary,
-    heading:
-      entry.narrative[index % entry.narrative.length]?.heading ?? entry.subtitle,
-    tone: getShowcaseTone(index),
-  }));
-
-  if (panels.length === 0) {
-    return null;
+  if (!bestiaryMeta) {
+    return <EncyclopediaEntryCard entry={entry} detailBase="/bestiario" />;
   }
 
   return (
-    <Card variant="panel" className="overflow-hidden">
-      <CardContent className="space-y-6 p-6 md:p-8">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-              {getShowcaseLabel(entry)}
-            </p>
-            <h2 className="mt-2 font-heading text-2xl text-foreground">
-              Painel interativo do verbete
-            </h2>
-          </div>
-          <Sparkles className="h-5 w-5 text-primary" />
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={revealViewport}
+      transition={{ duration: 0.55, ease: "easeOut" }}
+      className="dark-lore-hover-surface"
+    >
+      <Link to={`/bestiario/${entry.slug}`} className="dark-lore-entry-card dark-lore-bestiary-entry-card">
+        <div className="dark-lore-entry-card-media dark-lore-bestiary-entry-media">
+          <EncyclopediaImage
+            entry={entry}
+            className="dark-lore-hover-image dark-lore-monster-thumb h-full w-full object-contain p-5 transition duration-500 group-hover:scale-[1.03]"
+          />
         </div>
 
-        <Tabs defaultValue={panels[0].id} className="space-y-5">
-          <TabsList className="grid h-auto w-full gap-2 md:grid-cols-4">
-            {panels.map((panel) => (
-              <TabsTrigger
-                key={panel.id}
-                value={panel.id}
-                className="font-heading uppercase tracking-[0.16em]"
-              >
-                {panel.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <div className="space-y-4 p-5 md:p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="border-primary/30 text-primary">
+              {bestiaryMeta.type}
+            </Badge>
+            <Badge variant="secondary">Perigo {bestiaryMeta.dangerLevel}/5</Badge>
+          </div>
 
-          {panels.map((panel, index) => (
-            <TabsContent key={panel.id} value={panel.id} className="mt-0">
-              <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="tool-stage-frame relative min-h-[280px] border-primary/18 bg-background/70"
-                >
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${panel.tone}`}
-                  />
-                  <motion.div
-                    className="absolute -left-12 top-10 h-40 w-40 rotate-12 bg-primary/16 blur-3xl"
-                    animate={{ x: [0, 24, -12, 0], y: [0, -18, 12, 0] }}
-                    transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  <motion.div
-                    className="absolute bottom-0 right-0 h-44 w-44 -rotate-6 bg-destructive/14 blur-3xl"
-                    animate={{ x: [0, -18, 14, 0], y: [0, 16, -14, 0] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  <div className="relative flex h-full flex-col justify-between p-6">
-                    <div className="space-y-3">
-                      <Badge variant="outline" className="border-primary/30 text-primary">
-                        Sequencia {index + 1}
-                      </Badge>
-                      <div>
-                        <p className="font-heading text-sm uppercase tracking-[0.2em] text-primary/78">
-                          {panel.label}
-                        </p>
-                        <h3 className="mt-3 font-display text-3xl text-gold-gradient">
-                          {panel.value}
-                        </h3>
-                      </div>
-                    </div>
+          <div className="space-y-2">
+            <h3 className="dark-lore-card-title text-[clamp(1.7rem,2.1vw,2.25rem)]">{entry.title}</h3>
+            <p className="dark-lore-card-copy">{entry.summary}</p>
+          </div>
 
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {entry.stats.slice(0, 4).map((stat) => (
-                        <div
-                          key={`${panel.id}-${stat.label}`}
-                          className="metric-panel px-3 py-2"
-                        >
-                          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                            {stat.label}
-                          </p>
-                          <p className="mt-1 text-sm text-foreground">{stat.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
+          <div className="dark-lore-bestiary-card-facts">
+            <div className="dark-lore-inline-metric">
+              <span className="dark-lore-card-meta">Fraquezas</span>
+              <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.9)]">
+                {formatPreviewList(bestiaryMeta.weaknesses)}
+              </span>
+            </div>
+            <div className="dark-lore-inline-metric">
+              <span className="dark-lore-card-meta">Regioes</span>
+              <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.9)]">
+                {formatPreviewList(bestiaryMeta.regions)}
+              </span>
+            </div>
+          </div>
 
-                <div className="info-panel space-y-4 p-6">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-                      Leitura narrativa
-                    </p>
-                    <h3 className="mt-2 font-heading text-2xl text-foreground">
-                      {panel.heading}
-                    </h3>
-                  </div>
-                  <p className="text-base leading-8 text-foreground/90">
-                    {panel.description}
-                  </p>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <DataSection
-                      label="Linha do tempo"
-                      value={`${entry.timeline.length} marcos`}
-                      variant="quiet"
-                    />
-                    <DataSection
-                      label="Ligacoes"
-                      value={`${entry.internalLinks.length} conexoes`}
-                      variant="quiet"
-                    />
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </CardContent>
-    </Card>
+          <p className="dark-lore-card-meta">Abrir dossie de criatura</p>
+        </div>
+      </Link>
+    </motion.article>
   );
 }
 
-function RelationshipMap({
-  entry,
-  linkedEntries,
-}: {
-  entry: EncyclopediaEntry;
-  linkedEntries: EncyclopediaEntry[];
-}) {
-  if (linkedEntries.length === 0) {
-    return null;
-  }
-
-  const orbitRadius = linkedEntries.length === 1 ? 0 : 34;
-
+function UniversePublicationCard({ publication }: { publication: UniversePublication }) {
   return (
-    <Card variant="panel" className="overflow-hidden">
-      <CardContent className="space-y-5 p-6 md:p-8">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">
-              Conexoes de lore
-            </p>
-            <h2 className="mt-2 font-heading text-2xl text-foreground">
-              Mapa de relacionamentos
-            </h2>
-          </div>
-          <Network className="h-5 w-5 text-primary" />
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={revealViewport}
+      transition={{ duration: 0.55, ease: "easeOut" }}
+      className="dark-lore-hover-surface"
+    >
+      <Link to={`/universo/${publication.slug}`} className="dark-lore-entry-card">
+        <div className="dark-lore-entry-card-media">
+          <img
+            src={publication.image}
+            alt={publication.title}
+            className="dark-lore-hover-image h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          />
         </div>
 
-        <div className="tool-stage-frame relative min-h-[420px] bg-background/55">
-          <svg
-            className="pointer-events-none absolute inset-0 h-full w-full"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-          >
-            {linkedEntries.map((linkedEntry, index) => {
-              const angle = (Math.PI * 2 * index) / linkedEntries.length - Math.PI / 2;
-              const x = linkedEntries.length === 1 ? 50 : 50 + Math.cos(angle) * orbitRadius;
-              const y = linkedEntries.length === 1 ? 18 : 50 + Math.sin(angle) * orbitRadius;
-
-              return (
-                <line
-                  key={`line-${linkedEntry.slug}`}
-                  x1="50"
-                  y1="50"
-                  x2={x}
-                  y2={y}
-                  stroke="hsl(var(--primary) / 0.32)"
-                  strokeWidth="0.55"
-                />
-              );
-            })}
-          </svg>
-
-          <div className="absolute inset-0">
-            <motion.div
-              className="absolute left-1/2 top-1/2 w-[220px] -translate-x-1/2 -translate-y-1/2"
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <div className="info-panel border-primary/25 bg-background/88 p-5 text-center">
-                <Badge variant="outline" className="border-primary/30 text-primary">
-                  Centro narrativo
-                </Badge>
-                <p className="mt-3 font-display text-2xl text-gold-gradient">
-                  {entry.title}
-                </p>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  {entry.subtitle}
-                </p>
-              </div>
-            </motion.div>
-
-            {linkedEntries.map((linkedEntry, index) => {
-              const angle = (Math.PI * 2 * index) / linkedEntries.length - Math.PI / 2;
-              const x = linkedEntries.length === 1 ? 50 : 50 + Math.cos(angle) * orbitRadius;
-              const y = linkedEntries.length === 1 ? 18 : 50 + Math.sin(angle) * orbitRadius;
-
-              return (
-                <motion.div
-                  key={linkedEntry.slug}
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="absolute w-[180px] -translate-x-1/2 -translate-y-1/2"
-                  style={{ left: `${x}%`, top: `${y}%` }}
-                >
-                  <Link
-                    to={`/universo/${linkedEntry.slug}`}
-                    className="tool-list-item block bg-background/84 p-4 transition-colors hover:border-primary/30"
-                  >
-                    <p className="font-heading text-base text-foreground">
-                      {linkedEntry.title}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {linkedEntry.subtitle}
-                    </p>
-                  </Link>
-                </motion.div>
-              );
-            })}
+        <div className="space-y-4 p-5 md:p-6">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline" className="border-primary/30 text-primary">
+              {publication.chapterLabel}
+            </Badge>
+            <Badge variant="secondary">{publication.location}</Badge>
           </div>
+
+          <div className="space-y-2">
+            <h3 className="dark-lore-card-title text-[clamp(1.6rem,2vw,2.2rem)]">{publication.title}</h3>
+            <p className="dark-lore-card-copy">{publication.excerpt}</p>
+          </div>
+
+          <p className="dark-lore-card-meta">Cronica exclusiva</p>
         </div>
-      </CardContent>
-    </Card>
+      </Link>
+    </motion.article>
   );
 }
 
 function UniverseIndex() {
+  const location = useLocation();
+  const bestiaryMode = location.pathname.startsWith("/bestiario");
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState<CategoryFilter>("todas");
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>(() =>
+    bestiaryMode ? "monstros" : "todas",
+  );
   const [monsterType, setMonsterType] = useState("all");
   const [monsterRegion, setMonsterRegion] = useState("all");
   const [monsterDanger, setMonsterDanger] = useState("all");
-  const immersiveEntries = useMemo(
-    () => encyclopediaEntries.map(sanitizeImmersiveEntry),
-    [],
-  );
-  const immersiveTimeline = useMemo(
-    () => sanitizeImmersiveTimeline(globalTimeline),
-    [],
-  );
-  const showMonsterFilters = activeCategory === "monstros";
+  const [heroDrift, setHeroDrift] = useState({ x: 0, y: 0 });
+  const [scrollOffset, setScrollOffset] = useState(0);
+
+  const immersiveEntries = useMemo(() => encyclopediaEntries.map(sanitizeImmersiveEntry), []);
+  const showMonsterFilters = bestiaryMode || activeCategory === "monstros";
   const hasMonsterFilters =
     monsterType !== "all" || monsterRegion !== "all" || monsterDanger !== "all";
   const categories = Object.keys(encyclopediaCategories) as EncyclopediaCategory[];
-  const activeCategoryLabel =
-    activeCategory === "todas"
-      ? "Todas as categorias"
-      : encyclopediaCategories[activeCategory].label;
-  const activeFilterCount = [monsterType, monsterRegion, monsterDanger].filter(
-    (value) => value !== "all",
-  ).length;
+  const detailBase: "/universo" | "/bestiario" = bestiaryMode ? "/bestiario" : "/universo";
+
+  useEffect(() => {
+    if (bestiaryMode) {
+      setActiveCategory("monstros");
+    }
+  }, [bestiaryMode]);
+
+  useEffect(() => {
+    const syncScrollOffset = () => setScrollOffset(window.scrollY);
+    syncScrollOffset();
+    window.addEventListener("scroll", syncScrollOffset, { passive: true });
+    return () => window.removeEventListener("scroll", syncScrollOffset);
+  }, []);
+
+  const filteredPublications = useMemo(() => {
+    if (activeCategory !== "todas" && activeCategory !== "historia") {
+      return [];
+    }
+
+    const term = search.trim().toLowerCase();
+
+    return universePublications.filter((publication) => {
+      if (!term) {
+        return true;
+      }
+
+      const searchable = `${publication.title} ${publication.excerpt} ${publication.location}`.toLowerCase();
+      return searchable.includes(term);
+    });
+  }, [activeCategory, search]);
 
   const filteredEntries = useMemo(
     () =>
@@ -683,667 +621,1146 @@ function UniverseIndex() {
     ],
   );
 
+  const filteredMonsterEntries = useMemo(
+    () => filteredEntries.filter((entry) => entry.category === "monstros"),
+    [filteredEntries],
+  );
+  const activeFilterCount = [monsterType, monsterRegion, monsterDanger].filter(
+    (value) => value !== "all",
+  ).length;
+
+  const featuredMonster =
+    filteredMonsterEntries[0] ??
+    immersiveEntries.find((entry) => entry.category === "monstros") ??
+    immersiveEntries[0];
+  const archiveCategoryCards = useMemo(
+    () =>
+      categories.map((category) => ({
+        category,
+        count: getEntriesByCategory(category).length,
+        description: archiveCategoryDescriptions[category],
+      })),
+    [categories],
+  );
+  const featuredPublications = filteredPublications.slice(0, 3);
+  const archivePublicationList = filteredPublications.slice(3, 7);
+
+  const heroImage = bestiaryMode
+    ? featuredMonster?.image ?? archiveReferenceArt.creature
+    : archiveReferenceArt.wanderer;
+  const heroTitle = bestiaryMode ? "Bestiario do Continente" : "Arquivo do Universo";
+  const heroSubtitle = bestiaryMode
+    ? "Criaturas antigas, entidades sem repouso e rastros de caca preservados em dossies do arquivo."
+    : "Reinos velados, mapas perdidos, cronicas exclusivas e nomes enterrados sob as areias do continente.";
+  const heroPrimaryPath = bestiaryMode ? "/jogar" : "/mapa";
+  const heroPrimaryLabel = bestiaryMode ? "Ler no Arquivo Vivo" : "Abrir Mapa";
+  const heroSecondaryPath = bestiaryMode ? "/mesa" : "/jogar";
+  const heroSecondaryLabel = bestiaryMode ? "Levar para a Mesa" : "Abrir Arquivo Vivo";
+
+  const sectionNavItems = useMemo(() => {
+    if (bestiaryMode) {
+      return [
+        { id: "universo-visao-geral", label: "Arquivo" },
+        { id: "universo-categorias", label: "Filtros" },
+        { id: "universo-verbetes", label: "Criaturas" },
+        { id: "universo-atlas", label: "Destaque" },
+      ] satisfies SectionNavItem[];
+    }
+
+    const items: SectionNavItem[] = [
+      { id: "universo-visao-geral", label: "Limiar" },
+      { id: "universo-categorias", label: "Arquivos" },
+      { id: "universo-atlas", label: "Cartografia" },
+    ];
+
+    if (filteredPublications.length > 0) {
+      items.push({ id: "universo-cronicas", label: "Cronicas" });
+    }
+
+    items.push({ id: "universo-verbetes", label: "Dossies" });
+    return items;
+  }, [bestiaryMode, filteredPublications.length]);
+
+  const archiveHighlights = [
+    {
+      title: "Reinos Perdidos",
+      description: "Rotas, capitais partidas e geografias esquecidas ainda pulsando sob o mapa.",
+      image: archiveReferenceArt.wanderer,
+      path: "/mapa",
+      cta: "Abrir mapa",
+    },
+    {
+      title: "Arquivo Vivo",
+      description: "Capitulos exclusivos, leitura em camadas e um indice continuo do lore do continente.",
+      image: archiveReferenceArt.desk,
+      path: "/jogar",
+      cta: "Abrir arquivo",
+    },
+    {
+      title: "Mitologias Ocultas",
+      description: "Criaturas, faccoes e rumores mantidos vivos entre um dossie e outro.",
+      image: archiveReferenceArt.creature,
+      path: "/bestiario",
+      cta: "Abrir bestiario",
+    },
+  ];
+
+  const archiveFilters = (
+    <div className="dark-lore-filter-stack">
+      <div className="dark-lore-filter-search">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/60" />
+        <Input
+          id="universe-search"
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={
+            bestiaryMode
+              ? "Buscar criatura, entidade ou tipo..."
+              : "Buscar dossie, reino, faccao ou criatura..."
+          }
+          autoComplete="off"
+          className="dark-lore-input pl-10"
+        />
+      </div>
+
+      {!bestiaryMode ? (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveCategory("todas")}
+            className={cn("dark-lore-chip", activeCategory === "todas" && "is-active")}
+          >
+            Todas
+          </button>
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => setActiveCategory(category)}
+              className={cn("dark-lore-chip", activeCategory === category && "is-active")}
+            >
+              {encyclopediaCategories[category].label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {showMonsterFilters ? (
+        <div className="grid gap-3 md:grid-cols-3">
+          <select
+            value={monsterType}
+            onChange={(event) => setMonsterType(event.target.value)}
+            className="dark-lore-native-select"
+          >
+            <option value="all">Todos os tipos</option>
+            {witcherBestiaryTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={monsterRegion}
+            onChange={(event) => setMonsterRegion(event.target.value)}
+            className="dark-lore-native-select"
+          >
+            <option value="all">Todas as regioes</option>
+            {witcherBestiaryRegions.map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={monsterDanger}
+            onChange={(event) => setMonsterDanger(event.target.value)}
+            className="dark-lore-native-select"
+          >
+            <option value="all">Todo perigo</option>
+            <option value="1">Perigo 1</option>
+            <option value="2">Perigo 2</option>
+            <option value="3">Perigo 3</option>
+            <option value="4">Perigo 4</option>
+            <option value="5">Perigo 5</option>
+          </select>
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const featuredAtlasContext = featuredMonster ? getAtlasContextForEntry(featuredMonster) : null;
+
   return (
-    <div className="container py-12 md:py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-12"
+    <div className="mx-auto max-w-[1320px] space-y-10 px-4 py-8 md:px-6 md:py-12">
+      <UniverseSectionNav
+        label={bestiaryMode ? "Navegacao do bestiario" : "Navegacao do universo"}
+        items={sectionNavItems}
+      />
+
+      <section
+        id="universo-visao-geral"
+        className={cn(
+          "dark-lore-page-frame dark-lore-page-hero",
+          bestiaryMode ? "dark-lore-bestiary-hero" : "dark-lore-universe-hero",
+        )}
+        onMouseMove={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const x = (event.clientX - rect.left) / rect.width - 0.5;
+          const y = (event.clientY - rect.top) / rect.height - 0.5;
+          setHeroDrift({ x, y });
+        }}
+        onMouseLeave={() => setHeroDrift({ x: 0, y: 0 })}
       >
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
-          <Card variant="elevated" className="overflow-hidden">
-            <CardContent className="space-y-6 p-6 md:p-8">
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge variant="outline">
-                  <BookMarked className="mr-2 h-3.5 w-3.5" />
-                  Enciclopedia do universo
-                </Badge>
-                <Badge variant="info">{filteredEntries.length} verbetes visiveis</Badge>
+        <motion.img
+          src={heroImage}
+          alt=""
+          aria-hidden="true"
+          className="dark-lore-hero-background"
+          animate={{
+            x: heroDrift.x * 24,
+            y: heroDrift.y * 20 + scrollOffset * -0.08,
+            scale: 1.06,
+          }}
+          transition={{ type: "spring", stiffness: 80, damping: 18 }}
+        />
+        <div className="dark-lore-grain-overlay" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="dark-lore-hero-copy dark-lore-hero-copy-centered"
+        >
+          <p className="dark-lore-section-kicker justify-center">
+            {bestiaryMode ? "Arquivo das criaturas" : "Arquivo do continente"}
+          </p>
+          <h1 className="dark-lore-display-title">{heroTitle}</h1>
+          <p className="dark-lore-hero-text max-w-3xl text-center">{heroSubtitle}</p>
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
+            <Link to={heroPrimaryPath} className="dark-lore-button">
+              {heroPrimaryLabel}
+            </Link>
+            <Link to={heroSecondaryPath} className="dark-lore-button dark-lore-button-ghost">
+              {heroSecondaryLabel}
+            </Link>
+          </div>
+        </motion.div>
+      </section>
+
+      {bestiaryMode ? (
+        <>
+          <section
+            id="universo-categorias"
+            className="dark-lore-anchor-section dark-lore-page-frame px-6 py-8 md:px-8 md:py-10"
+          >
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+              <div className="space-y-4">
+                <p className="dark-lore-section-kicker">Busca ritual</p>
+                <h2 className="dark-lore-section-title text-left">Filtre o arquivo sem perder o fio da caca</h2>
+                <p className="dark-lore-editorial-text">
+                  Primeiro reduza o rastro por tipo, regiao ou nivel de perigo. Depois abra o
+                  dossie da criatura para ler a ficha completa, cruzar o registro com o mapa e
+                  levar a ameaca para a mesa.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="dark-lore-archive-card dark-lore-archive-card-compact">
+                    <p className="dark-lore-card-meta">Criaturas</p>
+                    <h3 className="dark-lore-card-title mt-2 text-[clamp(1.5rem,2vw,1.95rem)]">
+                      {filteredMonsterEntries.length}
+                    </h3>
+                  </div>
+                  <div className="dark-lore-archive-card dark-lore-archive-card-compact">
+                    <p className="dark-lore-card-meta">Filtros ativos</p>
+                    <h3 className="dark-lore-card-title mt-2 text-[clamp(1.5rem,2vw,1.95rem)]">
+                      {activeFilterCount}
+                    </h3>
+                  </div>
+                  <div className="dark-lore-archive-card dark-lore-archive-card-compact">
+                    <p className="dark-lore-card-meta">Modo</p>
+                    <h3 className="dark-lore-card-title mt-2 text-[clamp(1.4rem,1.8vw,1.8rem)]">
+                      Dossie vivo
+                    </h3>
+                  </div>
+                </div>
               </div>
 
-              <div className="max-w-4xl space-y-4">
-                <p className="section-kicker">Arquivo imersivo</p>
-                <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                  Personagens, monstros, faccoes e lugares tratados como dossie de campanha.
-                </h1>
-                <p className="text-base leading-8 text-foreground/88">
-                  A enciclopedia agora funciona como arquivo nobre do portal: busca, filtros,
-                  atlas e verbetes foram organizados para leitura imersiva, sem perder a utilidade
-                  em mesa.
+              <div className="dark-lore-archive-card dark-lore-archive-card-compact">
+                <div className="space-y-5 p-6 md:p-7">
+                  <p className="dark-lore-card-meta">Indice de criaturas</p>
+                  {archiveFilters}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="universo-verbetes" className="dark-lore-anchor-section space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div className="space-y-2">
+                <p className="dark-lore-section-kicker">Criaturas catalogadas</p>
+                <h2 className="dark-lore-section-title text-left">O arquivo das criaturas</h2>
+              </div>
+              <p className="max-w-2xl text-sm leading-7 text-[hsl(var(--foreground)/0.74)] md:text-right md:text-base">
+                {filteredMonsterEntries.length} registro{filteredMonsterEntries.length === 1 ? "" : "s"}{" "}
+                encontrado{filteredMonsterEntries.length === 1 ? "" : "s"} para a trilha atual.
+              </p>
+            </div>
+
+            {filteredMonsterEntries.length > 0 ? (
+              <div className="dark-lore-bestiary-grid">
+                {filteredMonsterEntries.map((entry) => (
+                  <BestiaryEntryCard key={entry.slug} entry={entry} />
+                ))}
+              </div>
+            ) : (
+              <div className="dark-lore-page-frame px-6 py-10 text-center md:px-8">
+                <Skull className="mx-auto h-10 w-10 text-primary" />
+                <h2 className="dark-lore-section-title mx-auto mt-4">Nenhuma criatura encontrada</h2>
+                <p className="mx-auto max-w-3xl text-sm leading-8 text-[hsl(var(--foreground)/0.76)] md:text-base">
+                  Ajuste os filtros do arquivo para localizar outra ameaca, tipo ou regiao.
                 </p>
               </div>
+            )}
+          </section>
 
-              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_240px]">
-                <div className="space-y-5">
-                  <div className="relative border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.72))] px-4 py-3">
-                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Buscar por nome, tema ou resumo..."
-                      className="pl-8"
-                    />
+          <section id="universo-atlas" className="dark-lore-anchor-section space-y-6">
+            <div className="grid gap-6 md:grid-cols-3">
+              {bestiaryOrigins.map(({ title, description, icon: Icon }, index) => (
+                <motion.article
+                  key={title}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={revealViewport}
+                  transition={{ duration: 0.45, delay: index * 0.08 }}
+                  className="dark-lore-archive-card dark-lore-archive-card-compact"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="dark-lore-icon-emblem">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="dark-lore-card-title text-[clamp(1.35rem,1.8vw,1.7rem)]">{title}</p>
+                      <p className="dark-lore-card-copy mt-2">{description}</p>
+                    </div>
                   </div>
+                </motion.article>
+              ))}
+            </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant={activeCategory === "todas" ? "default" : "outline"}
-                      onClick={() => {
-                        setActiveCategory("todas");
-                        setMonsterType("all");
-                        setMonsterRegion("all");
-                        setMonsterDanger("all");
-                      }}
-                    >
-                      Todas
-                    </Button>
-                    {categories.map((category) => (
-                      <Button
-                        key={category}
-                        size="sm"
-                        variant={activeCategory === category ? "default" : "outline"}
-                        onClick={() => {
-                          setActiveCategory(category);
-                          if (category !== "monstros") {
-                            setMonsterType("all");
-                            setMonsterRegion("all");
-                            setMonsterDanger("all");
-                          }
-                        }}
-                      >
-                        {encyclopediaCategories[category].label}
-                      </Button>
-                    ))}
+            {featuredMonster ? (
+              <section className="dark-lore-page-frame dark-lore-editorial-grid">
+                <div className="dark-lore-editorial-copy">
+                  <p className="dark-lore-section-kicker">Entrada em destaque</p>
+                  <h2 className="dark-lore-section-title">{featuredMonster.title}</h2>
+                  <p className="dark-lore-editorial-text">{featuredMonster.summary}</p>
+                  {featuredAtlasContext ? (
+                    <p className="dark-lore-card-meta">
+                      {featuredAtlasContext.title} - {featuredAtlasContext.orientationHint}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <Link to={`/bestiario/${featuredMonster.slug}`} className="dark-lore-button">
+                      Ver ficha completa
+                    </Link>
+                    {featuredMonster.vtt ? (
+                      <Link to={`/mesa?spawn=${featuredMonster.slug}`} className="dark-lore-button dark-lore-button-ghost">
+                        Levar para a mesa
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
 
-                <div className="grid gap-3">
-                  <DataSection
-                    label="Categoria ativa"
-                    value={activeCategoryLabel}
-                    variant="quiet"
+                <div className="dark-lore-editorial-figure">
+                  <EncyclopediaImage
+                    entry={featuredMonster}
+                    className="dark-lore-editorial-image object-contain p-6"
                   />
-                  <DataSection
-                    label="Trilha central"
-                    value={CURRENT_PROTAGONISTS.join(" / ")}
-                    variant="quiet"
-                    tone="info"
-                  />
-                  <DataSection
-                    label="Filtros bestiario"
-                    value={showMonsterFilters ? `${activeFilterCount} ativos` : "Indisponiveis"}
-                    variant="quiet"
-                  />
+                  <div className="dark-lore-editorial-glow" />
                 </div>
+              </section>
+            ) : null}
+          </section>
+
+          <ArchivePortalSection
+            kicker="Portais da caca"
+            title="Cruze a criatura com o restante do arquivo"
+            description="O bestiario ganha mais peso quando se abre para mundo, manuscritos, mapa e sessao."
+            items={bestiaryPortals}
+          />
+
+          <section className="dark-lore-cta-band">
+            <p className="dark-lore-cta-line">Cada sombra esconde um nome. Cada nome, uma maldicao.</p>
+            <Link to="/cronicas" className="dark-lore-button">
+              Explorar Cronicas
+            </Link>
+          </section>
+        </>
+      ) : (
+        <>
+          <section id="universo-categorias" className="dark-lore-anchor-section space-y-6">
+            <section className="dark-lore-page-frame dark-lore-editorial-grid">
+              <div className="dark-lore-editorial-copy">
+                <p className="dark-lore-section-kicker">Introducao ao mundo</p>
+                <h2 className="dark-lore-section-title">
+                  Entre as areias, o arquivo ainda respira.
+                </h2>
+                <p className="dark-lore-editorial-text">
+                  O universo do continente mistura reinos esquecidos, capitulos velados, faccoes
+                  em choque e criaturas que seguem atadas a lugares, ruinas e nomes proibidos.
+                </p>
+                <p className="dark-lore-editorial-text">
+                  A leitura foi organizada como estante de arquivo: primeiro o limiar do mundo,
+                  depois a cartografia, os manuscritos e por fim os dossies que sustentam cada
+                  rastro.
+                </p>
+                <Link to="/jogar" className="dark-lore-button">
+                  Abrir Arquivo Vivo
+                </Link>
               </div>
 
-              {showMonsterFilters ? (
-                <div className="grid gap-3 border border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.76))] p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px_auto]">
-                  <div className="space-y-2">
-                    <p className="section-kicker">Tipo</p>
-                    <Select value={monsterType} onValueChange={setMonsterType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todos os tipos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos os tipos</SelectItem>
-                        {witcherBestiaryTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              <div className="dark-lore-editorial-figure">
+                <img
+                  src={archiveReferenceArt.forgotten}
+                  alt=""
+                  aria-hidden="true"
+                  className="dark-lore-editorial-image"
+                />
+                <div className="dark-lore-editorial-glow" />
+              </div>
+            </section>
 
-                  <div className="space-y-2">
-                    <p className="section-kicker">Regiao</p>
-                    <Select value={monsterRegion} onValueChange={setMonsterRegion}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todas as regioes" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todas as regioes</SelectItem>
-                        {witcherBestiaryRegions.map((region) => (
-                          <SelectItem key={region} value={region}>
-                            {region}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="section-kicker">Perigo</p>
-                    <Select value={monsterDanger} onValueChange={setMonsterDanger}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todos" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        {[1, 2, 3, 4, 5].map((danger) => (
-                          <SelectItem key={danger} value={String(danger)}>
-                            {danger}/5
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-end">
-                    <Button
-                      variant="ghost"
-                      className="w-full"
-                      onClick={() => {
-                        setMonsterType("all");
-                        setMonsterRegion("all");
-                        setMonsterDanger("all");
-                      }}
-                    >
-                      Limpar filtros
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4">
-            <Card variant="panel">
-              <CardContent className="space-y-4 p-6">
-                <div>
-                  <p className="section-kicker">Escopo</p>
-                  <h2 className="mt-2 font-heading text-2xl text-foreground">
-                    Leitura do arquivo
+            <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <p className="dark-lore-section-kicker justify-center">Estrutura do arquivo</p>
+                  <h2 className="dark-lore-section-title mx-auto">
+                    Cinco trilhas sustentam a leitura do continente
                   </h2>
                 </div>
 
-                <DataSection
-                  label="Entradas totais"
-                  value={immersiveEntries.length}
-                  variant="quiet"
-                />
-                <DataSection
-                  label="Categorias"
-                  value={categories.length}
-                  variant="quiet"
-                />
-                <DataSection
-                  label="Tom"
-                  value="Bestiario, politica, lugares e memoria"
-                  variant="quiet"
-                  tone="info"
-                />
-              </CardContent>
-            </Card>
+                <div className="dark-lore-codex-grid">
+                  {archiveCategoryCards.map(({ category, count, description }, index) => {
+                    const Icon = categoryIcons[category];
 
-            <DataSection
-              label="Pista"
-              value="Use a busca para localizar criatura, local ou faccao antes de abrir o verbete."
-              icon={<Sparkles className="h-4 w-4" />}
-              tone="info"
-            />
-          </div>
-        </section>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          {categories.map((category) => {
-            const Icon = categoryIcons[category];
-            const active = activeCategory === category;
-
-            return (
-              <button
-                key={category}
-                type="button"
-                onClick={() => {
-                  setActiveCategory(category);
-                  if (category !== "monstros") {
-                    setMonsterType("all");
-                    setMonsterRegion("all");
-                    setMonsterDanger("all");
-                  }
-                }}
-                className={cn(
-                  "border p-5 text-left transition-[border-color,background-color,transform] duration-200 hover:-translate-y-px",
-                  active
-                    ? "border-[hsl(var(--brand)/0.22)] bg-[linear-gradient(180deg,hsl(var(--brand)/0.12),hsl(var(--surface-base)/0.94))]"
-                    : "border-[hsl(var(--outline-variant)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.72))] hover:border-[hsl(var(--brand)/0.16)]",
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center border border-[hsl(var(--brand)/0.16)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.84),hsl(var(--surface-base)/0.96))] text-primary">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="font-heading text-lg text-foreground">
-                      {encyclopediaCategories[category].label}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {getEntriesByCategory(category).length} verbetes
-                    </p>
-                  </div>
+                    return (
+                      <motion.article
+                        key={category}
+                        initial={{ opacity: 0, y: 18 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={revealViewport}
+                        transition={{ duration: 0.45, delay: index * 0.05 }}
+                        className="dark-lore-archive-card dark-lore-archive-card-compact"
+                      >
+                        <Link
+                          to={category === "monstros" ? "/bestiario" : "/universo#universo-verbetes"}
+                          className="dark-lore-codex-card"
+                        >
+                          <div className="dark-lore-icon-emblem">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="space-y-3">
+                            <p className="dark-lore-card-meta">
+                              {String(count).padStart(2, "0")} registros
+                            </p>
+                            <h3 className="dark-lore-card-title text-[clamp(1.35rem,1.8vw,1.72rem)]">
+                              {encyclopediaCategories[category].label}
+                            </h3>
+                            <p className="dark-lore-card-copy">{description}</p>
+                          </div>
+                        </Link>
+                      </motion.article>
+                    );
+                  })}
                 </div>
-                <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                  {encyclopediaCategories[category].description}
-                </p>
-              </button>
-            );
-          })}
-        </div>
+              </div>
+            </section>
+          </section>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <ContinentMap />
-          <TimelineRail title="Linha do tempo geral" events={immersiveTimeline} />
-        </div>
+          <section id="universo-atlas" className="dark-lore-anchor-section space-y-6">
+            <div className="text-center">
+              <p className="dark-lore-section-kicker justify-center">Cartografia</p>
+              <h2 className="dark-lore-section-title mx-auto">Rotas, reinos e arquivos arcanos</h2>
+            </div>
 
-        {filteredEntries.length > 0 ? (
-          <div className="grid gap-6 xl:grid-cols-3">
-            {filteredEntries.map((entry) => (
-              <EncyclopediaEntryCard key={entry.slug} entry={entry} />
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(21rem,0.92fr)]">
+              <div className="dark-lore-map-wrapper">
+                <ContinentMap compact />
+              </div>
+
+              <div className="grid auto-rows-fr gap-4 md:grid-cols-3 xl:grid-cols-1">
+                {archiveHighlights.map((highlight, index) => (
+                  <motion.article
+                    key={highlight.title}
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={revealViewport}
+                    transition={{ duration: 0.45, delay: index * 0.08 }}
+                    className="dark-lore-feature-card"
+                  >
+                    <div className="dark-lore-feature-image-wrap">
+                      <img src={highlight.image} alt="" aria-hidden="true" className="dark-lore-feature-image" />
+                    </div>
+                    <div className="dark-lore-feature-body">
+                      <h3 className="dark-lore-card-title text-[clamp(1.5rem,1.8vw,1.95rem)]">
+                        {highlight.title}
+                      </h3>
+                      <p className="dark-lore-card-copy">{highlight.description}</p>
+                      <Link to={highlight.path} className="dark-lore-button dark-lore-button-small">
+                        {highlight.cta}
+                      </Link>
+                    </div>
+                  </motion.article>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {filteredPublications.length > 0 ? (
+            <section id="universo-cronicas" className="dark-lore-anchor-section space-y-6">
+              <div className="text-center">
+                <p className="dark-lore-section-kicker justify-center">Leitura exclusiva</p>
+                <h2 className="dark-lore-section-title mx-auto">Manuscritos velados</h2>
+              </div>
+
+              <div className="dark-lore-feature-grid">
+                {featuredPublications.map((publication) => (
+                  <UniversePublicationCard key={publication.slug} publication={publication} />
+                ))}
+              </div>
+
+              {archivePublicationList.length > 0 ? (
+                <div className="dark-lore-list-grid">
+                  {archivePublicationList.map((publication, index) => (
+                    <motion.article
+                      key={publication.slug}
+                      initial={{ opacity: 0, y: 16 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ duration: 0.45, delay: index * 0.05 }}
+                      className="dark-lore-archive-card"
+                    >
+                      <p className="dark-lore-card-meta">
+                        {publication.chapterLabel} - {publication.location}
+                      </p>
+                      <h3 className="dark-lore-card-title text-[clamp(1.5rem,2vw,2rem)]">
+                        {publication.title}
+                      </h3>
+                      <p className="dark-lore-card-copy">{publication.excerpt}</p>
+                      <Link
+                        to={`/universo/${publication.slug}`}
+                        className="dark-lore-button dark-lore-button-small"
+                      >
+                        Ler manuscrito
+                      </Link>
+                    </motion.article>
+                  ))}
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          <section id="universo-verbetes" className="dark-lore-anchor-section space-y-6">
+            <div className="text-center">
+              <p className="dark-lore-section-kicker justify-center">Dossies do continente</p>
+              <h2 className="dark-lore-section-title mx-auto">Arquivos arcanos</h2>
+            </div>
+
+            <div className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+              {archiveFilters}
+            </div>
+
+            <div className="dark-lore-feature-grid">
+              {filteredEntries.slice(0, 9).map((entry) => (
+                <EncyclopediaEntryCard key={entry.slug} entry={entry} detailBase={detailBase} />
+              ))}
+            </div>
+          </section>
+
+          <ArchivePortalSection
+            kicker="Portais do continente"
+            title="Continue a leitura por outras portas do arquivo"
+            description="O universo nao termina no verbete. Cada trilha pode descer ao bestiario, aos manuscritos, ao atlas ou a sessao."
+            items={universePortals}
+          />
+
+        <section className="dark-lore-cta-band">
+          <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>
+          <Link to="/jogar" className="dark-lore-button">
+            Abrir Arquivo Vivo
+          </Link>
+        </section>
+        </>
+      )}
+    </div>
+  );
+}
+
+function UniversePublicationPage({ publication }: { publication: UniversePublication }) {
+  const linkedEntries = publication.mentions
+    .map((mention) => getEncyclopediaEntry(mention.slug))
+    .filter((entry): entry is EncyclopediaEntry => Boolean(entry))
+    .map(sanitizeImmersiveEntry);
+  const [heroDrift, setHeroDrift] = useState({ x: 0, y: 0 });
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const sectionNavItems = useMemo(
+    () =>
+      [
+        { id: "universo-visao-geral", label: "Abertura" },
+        { id: "universo-corpo", label: "Leitura" },
+        { id: "universo-relacoes", label: "Mencoes" },
+      ] satisfies SectionNavItem[],
+    [],
+  );
+
+  useEffect(() => {
+    const syncScrollOffset = () => setScrollOffset(window.scrollY);
+    syncScrollOffset();
+    window.addEventListener("scroll", syncScrollOffset, { passive: true });
+    return () => window.removeEventListener("scroll", syncScrollOffset);
+  }, []);
+
+  return (
+    <div className="mx-auto max-w-[1200px] space-y-10 px-4 py-8 md:px-6 md:py-12">
+      <UniverseSectionNav label="Navegacao da cronica" items={sectionNavItems} />
+
+      <section
+        id="universo-visao-geral"
+        className="dark-lore-page-frame dark-lore-page-hero dark-lore-chronicles-hero"
+        onMouseMove={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const x = (event.clientX - rect.left) / rect.width - 0.5;
+          const y = (event.clientY - rect.top) / rect.height - 0.5;
+          setHeroDrift({ x, y });
+        }}
+        onMouseLeave={() => setHeroDrift({ x: 0, y: 0 })}
+      >
+        <motion.img
+          src={publication.image}
+          alt=""
+          aria-hidden="true"
+          className="dark-lore-hero-background"
+          animate={{
+            x: heroDrift.x * 20,
+            y: heroDrift.y * 16 + scrollOffset * -0.06,
+            scale: 1.06,
+          }}
+          transition={{ type: "spring", stiffness: 80, damping: 18 }}
+        />
+        <div className="dark-lore-grain-overlay" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
+
+        <div className="dark-lore-hero-copy">
+          <Link to="/universo" className="dark-lore-chip is-muted">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar ao Universo
+          </Link>
+          <p className="dark-lore-section-kicker">{publication.chapterLabel}</p>
+          <h1 className="dark-lore-display-title">{publication.title}</h1>
+          <p className="dark-lore-hero-text max-w-3xl">{publication.excerpt}</p>
+        </div>
+      </section>
+
+      <section id="universo-corpo" className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+        <div className="space-y-6">
+          <div>
+            <p className="dark-lore-section-kicker">Leitura do manuscrito</p>
+            <h2 className="dark-lore-section-title mt-3 text-left">{publication.heading}</h2>
+          </div>
+
+          <div className="dark-lore-reading-flow space-y-6">
+            {publication.paragraphs.map((paragraph, index) => (
+              <p key={`${publication.slug}-${index}`} className="dark-lore-reading-paragraph">
+                {renderPublicationParagraph(paragraph, publication.mentions)}
+              </p>
             ))}
           </div>
-        ) : (
-          <Card variant="panel">
-            <CardContent className="space-y-3 p-8 text-center">
-              <Skull className="mx-auto h-10 w-10 text-primary" />
-              <h2 className="font-heading text-2xl text-foreground">
-                Nenhum verbete encontrado
-              </h2>
-              <p className="mx-auto max-w-2xl text-sm leading-6 text-muted-foreground">
-                Ajuste os filtros do bestiario ou refine a busca para encontrar outra criatura,
-                regiao ou cronica.
-              </p>
-              {showMonsterFilters ? (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setMonsterType("all");
-                    setMonsterRegion("all");
-                    setMonsterDanger("all");
-                    setSearch("");
-                  }}
-                >
-                  Limpar busca e filtros
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
-        )}
-      </motion.div>
+        </div>
+      </section>
+
+      {linkedEntries.length > 0 ? (
+        <section id="universo-relacoes" className="space-y-6">
+          <div className="text-center">
+            <p className="dark-lore-section-kicker justify-center">Mencoes conectadas</p>
+            <h2 className="dark-lore-section-title mx-auto">Personagens e nomes citados</h2>
+          </div>
+
+          <div className="dark-lore-feature-grid">
+            {linkedEntries.map((entry) => (
+              <EncyclopediaEntryCard key={entry.slug} entry={entry} detailBase="/universo" />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="dark-lore-cta-band">
+        <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>
+        <Link to="/bestiario" className="dark-lore-button">
+          Abrir Bestiario
+        </Link>
+      </section>
     </div>
   );
 }
 
 function UniverseEntryPage({ entry }: { entry: EncyclopediaEntry }) {
+  const location = useLocation();
+  const bestiaryMode = location.pathname.startsWith("/bestiario");
+  const indexPath = bestiaryMode ? "/bestiario" : "/universo";
   const linkedEntries = getLinkedEntries(entry).map(sanitizeImmersiveEntry);
-  const categoryEntries = getEntriesByCategory(entry.category)
+  const sameCategoryEntries = getEntriesByCategory(entry.category)
     .filter((relatedEntry) => relatedEntry.slug !== entry.slug)
+    .slice(0, 4)
     .map(sanitizeImmersiveEntry);
-  const Icon = categoryIcons[entry.category];
   const bestiaryMeta = getWitcherBestiaryMetadata(entry.slug);
   const atlasContext = getAtlasContextForEntry(entry);
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
-  const [heroImage, setHeroImage] = useState(entry.image);
+  const [heroDrift, setHeroDrift] = useState({ x: 0, y: 0 });
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const bestiaryHeadline = bestiaryMeta
+    ? `${bestiaryMeta.type} - ameaca ${bestiaryMeta.dangerLevel}/5`
+    : entry.subtitle;
+  const sectionNavItems = useMemo(
+    () =>
+      [
+        { id: "universo-visao-geral", label: "Abertura" },
+        { id: "universo-detalhes", label: "Narrativa" },
+        { id: "universo-cronologia", label: "Cronologia" },
+        { id: "universo-relacoes", label: "Relacoes" },
+      ] satisfies SectionNavItem[],
+    [],
+  );
 
   useEffect(() => {
-    setHeroImage(entry.image);
-  }, [entry.image]);
+    const syncScrollOffset = () => setScrollOffset(window.scrollY);
+    syncScrollOffset();
+    window.addEventListener("scroll", syncScrollOffset, { passive: true });
+    return () => window.removeEventListener("scroll", syncScrollOffset);
+  }, []);
 
   return (
-    <div className="container py-12 md:py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-10 md:space-y-12"
+    <div className="mx-auto max-w-[1320px] space-y-10 px-4 py-8 md:px-6 md:py-12">
+      <UniverseSectionNav
+        label={bestiaryMode ? "Navegacao do verbete de criatura" : "Navegacao do verbete"}
+        items={sectionNavItems}
+      />
+
+      <section
+        id="universo-visao-geral"
+        className={cn(
+          "dark-lore-anchor-section dark-lore-page-frame dark-lore-page-hero",
+          bestiaryMode ? "dark-lore-bestiary-hero dark-lore-bestiary-detail-hero" : "dark-lore-universe-hero",
+        )}
+        onMouseMove={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const x = (event.clientX - rect.left) / rect.width - 0.5;
+          const y = (event.clientY - rect.top) / rect.height - 0.5;
+          setHeroDrift({ x, y });
+        }}
+        onMouseLeave={() => setHeroDrift({ x: 0, y: 0 })}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button asChild variant="ghost" className="pl-0 text-primary">
-            <Link to="/universo">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar para a enciclopedia
-            </Link>
-          </Button>
+        {bestiaryMode ? (
+          <>
+            <div className="dark-lore-grain-overlay dark-lore-bestiary-overlay" />
+            <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+            <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
 
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">{encyclopediaCategories[entry.category].label}</Badge>
-            {entry.vtt ? <Badge variant="secondary">Pronto para VTT</Badge> : null}
-            {bestiaryMeta ? <Badge variant="info">Perigo {bestiaryMeta.dangerLevel}/5</Badge> : null}
-          </div>
-        </div>
+            <div className="dark-lore-bestiary-layout">
+              <motion.div
+                animate={{
+                  x: heroDrift.x * 16,
+                  y: heroDrift.y * 12 + scrollOffset * -0.04,
+                  scale: 1.04,
+                }}
+                transition={{ type: "spring", stiffness: 82, damping: 18 }}
+                className="dark-lore-bestiary-showcase"
+              >
+                <div className="dark-lore-bestiary-portrait-shell">
+                  <div className="dark-lore-bestiary-portrait-glow" />
+                  <EncyclopediaImage
+                    entry={entry}
+                    className="dark-lore-bestiary-portrait object-contain p-6 md:p-10"
+                  />
+                </div>
+              </motion.div>
 
-        <section
-          className="ornate-frame relative min-h-[72vh] overflow-hidden border border-[hsl(var(--outline-variant)/0.18)]"
-          onMouseMove={(event) => {
-            const rect = event.currentTarget.getBoundingClientRect();
-            const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
-            const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+              <div className="dark-lore-hero-copy dark-lore-bestiary-copy">
+                <Link to={indexPath} className="dark-lore-chip is-muted w-fit">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Voltar ao arquivo
+                </Link>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="border-primary/30 text-primary">
+                    {encyclopediaCategories[entry.category].label}
+                  </Badge>
+                  {bestiaryMeta ? (
+                    <Badge variant="secondary">
+                      {bestiaryMeta.type} - Perigo {bestiaryMeta.dangerLevel}/5
+                    </Badge>
+                  ) : null}
+                </div>
+                <h1 className="dark-lore-display-title dark-lore-bestiary-title">{entry.title}</h1>
+                <p className="dark-lore-hero-text max-w-2xl">{bestiaryHeadline}</p>
+                <p className="dark-lore-card-copy max-w-3xl">{entry.summary}</p>
+                <p className="max-w-2xl text-sm leading-7 text-[hsl(var(--foreground)/0.72)] md:text-base">
+                  Abra o dossie abaixo para ler o registro completo, consultar o atlas e levar a
+                  criatura para a sessao sem perder a trilha do arquivo.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3 dark-lore-bestiary-stat-grid">
+                  {entry.stats.slice(0, 3).map((stat) => (
+                    <div key={`${entry.slug}-${stat.label}`} className="dark-lore-hero-stat">
+                      <p className="dark-lore-card-meta">{stat.label}</p>
+                      <p className="dark-lore-card-copy mt-2 text-[hsl(var(--foreground)/0.92)]">
+                        {stat.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <motion.div
+              animate={{
+                x: heroDrift.x * 22,
+                y: heroDrift.y * 18 + scrollOffset * -0.06,
+                scale: 1.05,
+              }}
+              transition={{ type: "spring", stiffness: 80, damping: 18 }}
+              className="absolute inset-0"
+            >
+              <EncyclopediaImage
+                entry={entry}
+                className="dark-lore-hero-background object-contain p-8 md:p-12"
+              />
+            </motion.div>
+            <div className="dark-lore-grain-overlay" />
+            <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+            <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
 
-            setParallax({ x: offsetX, y: offsetY });
-          }}
-          onMouseLeave={() => setParallax({ x: 0, y: 0 })}
-        >
-          <motion.img
-            src={heroImage}
-            alt={entry.imageAlt}
-            className="absolute inset-0 h-full w-full object-cover"
-            animate={{
-              x: parallax.x * 26,
-              y: parallax.y * 20,
-              scale: 1.08,
-            }}
-            transition={{ type: "spring", stiffness: 70, damping: 18 }}
-            referrerPolicy="no-referrer"
-            onError={() => {
-              const fallbackImage = categoryFallbackImages[entry.category];
-              if (heroImage !== fallbackImage) {
-                setHeroImage(fallbackImage);
-              }
-            }}
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--background)/0.14),hsl(var(--background)/0.38)_28%,hsl(var(--background-strong)/0.9)_72%,hsl(var(--background-strong))_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.18),transparent_26%),radial-gradient(circle_at_84%_24%,hsl(var(--info)/0.16),transparent_18%),radial-gradient(circle_at_bottom_right,hsl(var(--destructive)/0.16),transparent_26%)]" />
-
-          <div className="relative grid min-h-[72vh] items-end gap-6 p-6 md:p-8 xl:grid-cols-[minmax(0,1.15fr)_380px] xl:p-12">
-            <div className="max-w-3xl space-y-6">
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge variant="outline">
+            <div className="dark-lore-hero-copy">
+              <Link to={indexPath} className="dark-lore-chip is-muted">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar ao arquivo
+              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="border-primary/30 text-primary">
                   {encyclopediaCategories[entry.category].label}
                 </Badge>
-                <Icon className="h-5 w-5 text-primary/70" />
-                <Badge variant="secondary">Verbete imersivo</Badge>
+                {bestiaryMeta ? (
+                  <Badge variant="secondary">
+                    {bestiaryMeta.type} - Perigo {bestiaryMeta.dangerLevel}/5
+                  </Badge>
+                ) : null}
               </div>
-
-              <div>
-                <p className="section-kicker">Dossie imersivo</p>
-                <h1 className="mt-3 font-display text-5xl leading-[0.95] text-gold-gradient md:text-6xl">
-                  {entry.title}
-                </h1>
-                <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
-                  {entry.subtitle}
-                </p>
-              </div>
-
-              <p className="max-w-2xl text-base leading-8 text-foreground/92">
-                {entry.summary}
-              </p>
-
+              <h1 className="dark-lore-display-title">{entry.title}</h1>
+              <p className="dark-lore-hero-text max-w-3xl">{entry.subtitle}</p>
               <div className="grid gap-3 sm:grid-cols-3">
                 {entry.stats.slice(0, 3).map((stat) => (
-                  <div
-                    key={`${entry.slug}-${stat.label}-hero`}
-                    className="border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.44),hsl(var(--background-strong)/0.74))] p-4 backdrop-blur-sm"
-                  >
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      {stat.label}
+                  <div key={`${entry.slug}-${stat.label}`} className="dark-lore-hero-stat">
+                    <p className="dark-lore-card-meta">{stat.label}</p>
+                    <p className="dark-lore-card-copy mt-2 text-[hsl(var(--foreground)/0.92)]">
+                      {stat.value}
                     </p>
-                    <p className="mt-3 font-heading text-xl text-foreground">{stat.value}</p>
                   </div>
                 ))}
               </div>
             </div>
+          </>
+        )}
+      </section>
 
-            <div className="space-y-4 border border-[hsl(var(--outline-variant)/0.18)] bg-[linear-gradient(180deg,hsl(var(--surface-strong)/0.74),hsl(var(--background-strong)/0.88))] p-5 shadow-elevated backdrop-blur-sm">
-              <div className="space-y-4">
+      <section
+        id="universo-detalhes"
+        className="dark-lore-anchor-section dark-lore-page-frame px-6 py-8 md:px-8 md:py-10"
+      >
+        {bestiaryMode && bestiaryMeta ? (
+          <div className="dark-lore-bestiary-detail-grid">
+            <article className="dark-lore-archive-card dark-lore-archive-card-compact">
+              <div className="space-y-6 p-6 md:p-8">
                 <div>
-                  <p className="section-kicker">Leitura rapida</p>
-                  <h2 className="mt-2 font-heading text-2xl text-foreground">
-                    Leitura rapida
-                  </h2>
+                  <p className="dark-lore-section-kicker">Registro narrativo</p>
+                  <h2 className="dark-lore-section-title mt-3 text-left">Leitura da criatura</h2>
                 </div>
-                <div className="grid gap-3">
-                  {entry.stats.slice(0, 4).map((stat) => (
-                    <DataSection
-                      key={stat.label}
-                      label={stat.label}
-                      value={stat.value}
-                      variant="quiet"
-                    />
+
+                <p className="dark-lore-reading-lead">{entry.summary}</p>
+
+                <div className="dark-lore-reading-flow space-y-8">
+                  {entry.narrative.map((block, index) => (
+                    <motion.section
+                      key={`${entry.slug}-${block.heading}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={revealViewport}
+                      transition={{ duration: 0.45, delay: index * 0.04 }}
+                      className="dark-lore-bestiary-chapter"
+                    >
+                      <p className="dark-lore-card-meta">Registro {String(index + 1).padStart(2, "0")}</p>
+                      <h3 className="dark-lore-card-title mt-3 text-[clamp(1.65rem,2vw,2.1rem)]">{block.heading}</h3>
+                      <p className="dark-lore-reading-paragraph mt-3">{block.body}</p>
+                    </motion.section>
                   ))}
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                  <DataSection
-                    label="Linha do tempo"
-                    value={`${entry.timeline.length} marcos`}
-                    variant="quiet"
+              </div>
+            </article>
+
+            <aside className="space-y-6">
+              <div className="dark-lore-archive-card dark-lore-archive-card-compact">
+                <div className="space-y-5 p-6 md:p-7">
+                  <div>
+                    <p className="dark-lore-section-kicker">Dossie rapido</p>
+                    <h2 className="dark-lore-section-title mt-3 text-left">Leitura de campo</h2>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="dark-lore-inline-metric">
+                      <span className="dark-lore-card-meta">Tipo</span>
+                      <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.92)]">
+                        {bestiaryMeta.type}
+                      </span>
+                    </div>
+                    <div className="dark-lore-inline-metric">
+                      <span className="dark-lore-card-meta">Perigo</span>
+                      <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.92)]">
+                        {bestiaryMeta.dangerLevel}/5
+                      </span>
+                    </div>
+                    <div className="dark-lore-inline-metric">
+                      <span className="dark-lore-card-meta">Fraquezas</span>
+                      <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.92)]">
+                        {bestiaryMeta.weaknesses.join(", ")}
+                      </span>
+                    </div>
+                    <div className="dark-lore-inline-metric">
+                      <span className="dark-lore-card-meta">Regioes</span>
+                      <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.92)]">
+                        {bestiaryMeta.regions.join(", ")}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 pt-1">
+                    {atlasContext ? (
+                      <UniverseAtlasActionButton
+                        to={atlasContext.actions[0]?.href ?? atlasContext.href}
+                        label="Abrir atlas completo"
+                        icon={MapPin}
+                      />
+                    ) : null}
+                    {entry.vtt ? (
+                      <UniverseAtlasActionButton
+                        to={`/mesa?spawn=${entry.slug}`}
+                        label="Levar para a mesa"
+                        icon={Skull}
+                        variant="secondary"
+                      />
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              <div className="dark-lore-archive-card dark-lore-archive-card-compact">
+                <div className="space-y-4 p-6 md:p-7">
+                  <p className="dark-lore-section-kicker">Marcas do registro</p>
+                  <div className="grid gap-3">
+                    {entry.stats.slice(0, 4).map((stat) => (
+                      <div key={`${entry.slug}-${stat.label}`} className="dark-lore-inline-metric">
+                        <span className="dark-lore-card-meta">{stat.label}</span>
+                        <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.92)]">
+                          {stat.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div>
+              <p className="dark-lore-section-kicker">Leitura narrativa</p>
+              <h2 className="dark-lore-section-title mt-3 text-left">Corpo do verbete</h2>
+            </div>
+
+            <div className="space-y-5">
+              {entry.narrative.map((block, index) => (
+                <motion.article
+                  key={`${entry.slug}-${block.heading}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={revealViewport}
+                  transition={{ duration: 0.45, delay: index * 0.04 }}
+                  className="dark-lore-archive-card dark-lore-archive-card-horizontal"
+                >
+                  <div className="dark-lore-paper-index">{String(index + 1).padStart(2, "0")}</div>
+                  <div className="space-y-3">
+                    <h3 className="dark-lore-card-title text-[clamp(1.65rem,2vw,2.1rem)]">{block.heading}</h3>
+                    <p className="dark-lore-card-copy">{block.body}</p>
+                  </div>
+                </motion.article>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section
+        id="universo-cronologia"
+        className="dark-lore-anchor-section grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]"
+      >
+        <TimelineRail title="Rastro temporal" events={entry.timeline} />
+
+        <div className="space-y-6">
+          {atlasContext ? (
+            <div className="dark-lore-archive-card dark-lore-archive-card-compact">
+              <div className="space-y-4 p-6 md:p-7">
+                <p className="dark-lore-section-kicker">{atlasContext.eyebrow}</p>
+                <h2 className="dark-lore-section-title mt-3 text-left">{atlasContext.title}</h2>
+                <p className="dark-lore-card-copy">{atlasContext.description}</p>
+                <div className="grid gap-3">
+                  {atlasContext.metrics.slice(0, 3).map((metric) => (
+                    <div key={metric.label} className="dark-lore-inline-metric">
+                      <span className="dark-lore-card-meta">{metric.label}</span>
+                      <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.92)]">{metric.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <UniverseAtlasActionButton
+                    to={atlasContext.actions[0]?.href ?? atlasContext.href}
+                    label="Abrir atlas completo"
+                    icon={MapPin}
                   />
-                  <DataSection
-                    label="Conexoes"
-                    value={`${linkedEntries.length} elos`}
-                    variant="quiet"
+                  <UniverseAtlasActionButton
+                    to={atlasContext.actions[1]?.href ?? "/universo"}
+                    label="Cruzar com o universo"
+                    icon={BookMarked}
+                    variant="secondary"
                   />
                 </div>
-                {bestiaryMeta ? (
-                  <>
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                      <DataSection label="Tipo" value={bestiaryMeta.type} variant="quiet" />
-                      <DataSection
-                        label="Nivel de perigo"
-                        value={`${bestiaryMeta.dangerLevel}/5`}
-                        variant="quiet"
-                      />
-                    </div>
-                    <Button asChild className="w-full">
-                      <Link to={`/mesa?spawn=${entry.slug}`}>Levar criatura para a mesa</Link>
-                    </Button>
-                  </>
+              </div>
+            </div>
+          ) : null}
+
+          {bestiaryMode ? null : bestiaryMeta ? (
+            <div className="dark-lore-archive-card dark-lore-archive-card-compact">
+              <div className="space-y-4 p-6 md:p-7">
+                <p className="dark-lore-section-kicker">Dossie de caca</p>
+                <h2 className="dark-lore-section-title mt-3 text-left">Leitura de campo</h2>
+                <div className="grid gap-3">
+                  <div className="dark-lore-inline-metric">
+                    <span className="dark-lore-card-meta">Fraquezas</span>
+                    <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.92)]">
+                      {bestiaryMeta.weaknesses.join(", ")}
+                    </span>
+                  </div>
+                  <div className="dark-lore-inline-metric">
+                    <span className="dark-lore-card-meta">Regioes</span>
+                    <span className="dark-lore-card-copy text-[hsl(var(--foreground)/0.92)]">
+                      {bestiaryMeta.regions.join(", ")}
+                    </span>
+                  </div>
+                </div>
+                {entry.vtt ? (
+                  <Link to={`/mesa?spawn=${entry.slug}`} className="dark-lore-button">
+                    Levar para a Mesa
+                  </Link>
                 ) : null}
               </div>
             </div>
-          </div>
-        </section>
+          ) : null}
+        </div>
+      </section>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
-          <Card variant="panel" className="overflow-hidden">
-            <CardContent className="grid gap-6 p-6 md:p-8 lg:grid-cols-[minmax(0,1.15fr)_320px]">
-              <EntryArtworkPreview
-                entry={entry}
-                frameClassName="min-h-[320px] md:min-h-[420px]"
-                imageClassName="object-contain p-5 md:p-8"
-                buttonLabel="Ver em tela cheia"
-              />
-
-              <div className="space-y-4 border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-5">
-                <div>
-                  <p className="section-kicker">Quadro da arte</p>
-                  <h2 className="mt-2 font-heading text-2xl text-foreground">
-                    Leitura clara da arte
-                  </h2>
-                </div>
-
-                <p className="text-sm leading-7 text-muted-foreground">
-                  A ilustracao fica em quadro proprio, sem cortes agressivos, para facilitar a
-                  leitura da criatura, do personagem ou do local antes de abrir em tela cheia.
-                </p>
-
-                <div className="grid gap-3">
-                  <DataSection
-                    label="Categoria"
-                    value={encyclopediaCategories[entry.category].label}
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Imagem"
-                    value={entry.imageAlt}
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Modo"
-                    value={
-                      entry.category === "monstros" ? "Enquadramento completo" : "Painel ampliado"
-                    }
-                    variant="quiet"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card variant="panel">
-            <CardContent className="space-y-4 p-6">
-              <div>
-                  <p className="section-kicker">Notas de campo</p>
-                <h2 className="mt-2 font-heading text-2xl text-foreground">
-                  Notas de leitura
-                </h2>
-              </div>
-
-              <DataSection
-                label="Conexoes"
-                value={`${linkedEntries.length} elos diretos`}
-                variant="quiet"
-              />
-              <DataSection
-                label="Categoria"
-                value={encyclopediaCategories[entry.category].label}
-                variant="quiet"
-              />
-              {bestiaryMeta ? (
-                <DataSection
-                  label="Caca em campo"
-                  value={`Perigo ${bestiaryMeta.dangerLevel}/5`}
-                  variant="quiet"
-                  tone="warn"
-                >
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Tipo {bestiaryMeta.type.toLowerCase()}. Use a arte em tela cheia para ler
-                    silhueta, volume e postura antes da cena.
-                  </p>
-                </DataSection>
-              ) : (
-                <DataSection
-                  label="Uso"
-                  value="Leitura de lore e referencia narrativa"
-                  variant="quiet"
-                  tone="info"
-                />
-              )}
-            </CardContent>
-          </Card>
+      <section id="universo-relacoes" className="dark-lore-anchor-section space-y-6">
+        <div className="text-center">
+          <p className="dark-lore-section-kicker justify-center">Relacoes</p>
+          <h2 className="dark-lore-section-title mx-auto">Lacos, nomes e rastros vizinhos</h2>
         </div>
 
-        <EntryShowcase entry={entry} />
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="space-y-6">
-            <Card variant="panel">
-              <CardContent className="space-y-6 p-6 md:p-8">
-                <div>
-                  <p className="section-kicker">Leitura narrativa</p>
-                  <h2 className="mt-2 font-display text-4xl text-brand-gradient">
-                    Corpo principal do verbete
-                  </h2>
-                </div>
-
-                {entry.narrative.map((block, index) => (
-                  <section
-                    key={block.heading}
-                    className="grid gap-4 border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-6 md:grid-cols-[92px_minmax(0,1fr)]"
-                  >
-                    <div className="paper-strip h-fit p-4 text-center">
-                      <p className="text-[10px] uppercase tracking-[0.22em]">Capitulo</p>
-                      <p className="mt-2 font-display text-3xl">
-                        {String(index + 1).padStart(2, "0")}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="section-kicker">Arquivo</p>
-                      <h2 className="mt-2 font-heading text-2xl text-foreground">
-                        {block.heading}
-                      </h2>
-                      <p className="mt-4 text-base leading-8 text-foreground/90">
-                        {block.body}
-                      </p>
-                    </div>
-                  </section>
-                ))}
-              </CardContent>
-            </Card>
-
-            <RelationshipMap entry={entry} linkedEntries={linkedEntries} />
+        {linkedEntries.length > 0 ? (
+          <div className="dark-lore-feature-grid">
+            {linkedEntries.map((linkedEntry) => (
+              <EncyclopediaEntryCard key={linkedEntry.slug} entry={linkedEntry} detailBase={indexPath} />
+            ))}
           </div>
+        ) : null}
 
-          <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
-            {atlasContext ? (
-              <PortalContextPanel
-                eyebrow="Ver no atlas"
-                title={atlasContext.title}
-                description="Este verbete agora aponta para uma leitura geografica concreta, aproximando lore, deslocamento e preparacao de sessao."
-                image={atlasContext.image}
-                metrics={atlasContext.metrics.slice(0, 3)}
-                actions={atlasContext.actions}
-                related={atlasContext.related}
-                relatedLabel="Entradas vizinhas desta rota"
-              />
-            ) : null}
-
-            <TimelineRail title="Linha do tempo desta pagina" events={entry.timeline} />
-
-            <Card variant="panel">
-              <CardContent className="space-y-4 p-6">
-                <div>
-                  <p className="section-kicker">Verbetes relacionados</p>
-                  <h3 className="font-heading text-lg text-foreground">
-                    Mais em {encyclopediaCategories[entry.category].label}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Outros verbetes da mesma categoria.
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  {categoryEntries.map((relatedEntry) => (
-                    <Link
-                      key={relatedEntry.slug}
-                      to={`/universo/${relatedEntry.slug}`}
-                      className="block border border-[hsl(var(--outline-variant)/0.14)] bg-[linear-gradient(180deg,hsl(var(--surface-base)/0.42),hsl(var(--background-strong)/0.74))] p-4 transition-colors hover:border-[hsl(var(--brand)/0.18)]"
-                    >
-                      <p className="font-heading text-sm text-foreground">
-                        {relatedEntry.title}
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {relatedEntry.subtitle}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+        {sameCategoryEntries.length > 0 ? (
+          <div className="dark-lore-feature-grid">
+            {sameCategoryEntries.map((relatedEntry) => (
+              <EncyclopediaEntryCard key={relatedEntry.slug} entry={relatedEntry} detailBase={indexPath} />
+            ))}
           </div>
-        </div>
-      </motion.div>
+        ) : null}
+      </section>
     </div>
   );
 }
 
 export default function UniversePage() {
   usePortalShellMode("editorial", "ambient");
+  const location = useLocation();
   const { entrySlug } = useParams();
+  const bestiaryMode = location.pathname.startsWith("/bestiario");
 
   if (!entrySlug) {
     return <UniverseIndex />;
+  }
+
+  if (bestiaryMode) {
+    const bestiaryEntry = getEncyclopediaEntry(entrySlug);
+
+    if (!bestiaryEntry) {
+      return (
+        <div className="mx-auto max-w-[900px] px-4 py-16 md:px-6">
+          <div className="dark-lore-page-frame px-6 py-10 text-center md:px-8">
+            <BookMarked className="mx-auto h-10 w-10 text-primary" />
+            <h1 className="dark-lore-section-title mx-auto mt-4">Criatura nao encontrada</h1>
+            <p className="mx-auto max-w-2xl text-sm leading-8 text-[hsl(var(--foreground)/0.76)] md:text-base">
+              Este registro nao existe ou ainda nao foi gravado no arquivo das criaturas.
+            </p>
+            <div className="flex justify-center pt-4">
+              <Link to="/bestiario" className="dark-lore-button">
+                Voltar ao Bestiario
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return <UniverseEntryPage entry={sanitizeImmersiveEntry(bestiaryEntry)} />;
+  }
+
+  const publication = getUniversePublication(entrySlug);
+
+  if (publication) {
+    return <UniversePublicationPage publication={publication} />;
   }
 
   const entry = getEncyclopediaEntry(entrySlug);
 
   if (!entry) {
     return (
-      <div className="container py-24">
-        <Card variant="panel" className="mx-auto max-w-2xl">
-          <CardContent className="space-y-5 p-8 text-center">
-            <BookMarked className="mx-auto h-10 w-10 text-primary" />
-            <h1 className="font-display text-3xl text-gold-gradient">
-              Verbete nao encontrado
-            </h1>
-            <p className="text-muted-foreground">
-              Este registro nao existe ou ainda nao foi catalogado pela enciclopedia.
-            </p>
-            <Button asChild>
-              <Link to="/universo">Voltar para a enciclopedia</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="mx-auto max-w-[900px] px-4 py-16 md:px-6">
+        <div className="dark-lore-page-frame px-6 py-10 text-center md:px-8">
+          <BookMarked className="mx-auto h-10 w-10 text-primary" />
+          <h1 className="dark-lore-section-title mx-auto mt-4">Registro nao encontrado</h1>
+          <p className="mx-auto max-w-2xl text-sm leading-8 text-[hsl(var(--foreground)/0.76)] md:text-base">
+            Este manuscrito nao existe ou ainda nao foi catalogado no arquivo do continente.
+          </p>
+          <div className="flex justify-center pt-4">
+            <Link to="/universo" className="dark-lore-button">
+              Voltar ao Universo
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

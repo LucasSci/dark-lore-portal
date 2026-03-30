@@ -19,7 +19,7 @@ export default function RegionMapPage() {
         ...atlasContext,
         title: regionalMapId ? "Mapa regional em alta" : atlasContext.title,
         description: regionalMapId
-          ? "Esta rota agora abre diretamente a carta regional em alta resolucao, para evitar o borrado do mundi ao aproximar."
+          ? "Esta rota abre a carta regional em alta resolucao, preservando estradas, marcos e detalhes do territorio."
           : "Esta camada mostra as sub-regioes, estradas, rios e assentamentos do territorio em foco.",
       }}
       headerActions={
