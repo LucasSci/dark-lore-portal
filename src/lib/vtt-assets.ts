@@ -1,11 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
+import { LOCAL_SESSION_ID } from "@/lib/local-identities";
+import { isLooseRecord, type LooseSupabaseClient } from "@/lib/loose-supabase";
+import { generateSecureShortId } from "@/lib/utils";
 import type { AssetManifest } from "@/lib/virtual-tabletop";
 
-type UntypedSupabaseClient = typeof supabase & {
-  from: (table: string) => any;
-};
-
-const db = supabase as UntypedSupabaseClient;
+const db = supabase as typeof supabase & LooseSupabaseClient;
 
 function sanitizeFileName(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9.-]+/g, "-");
@@ -21,7 +20,7 @@ export function createAssetManifestDraft(file: {
   name: string;
   type: string;
 }): AssetManifest {
-  const assetId = `asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const assetId = `asset-${generateSecureShortId()}`;
   const safeName = sanitizeFileName(file.name);
 
   return {
@@ -128,6 +127,15 @@ export async function uploadBattlemapAsset(options: {
   manifest.processingStatus = "ready";
   manifest.pageCount = 1;
 
+  if (options.sessionId === LOCAL_SESSION_ID) {
+    return {
+      assetId: null,
+      assetUrl: URL.createObjectURL(options.file),
+      manifest,
+      persisted: false,
+    };
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -177,8 +185,9 @@ export async function uploadBattlemapAsset(options: {
     })
     .select("*")
     .single();
+  const assetRowRecord = isLooseRecord(assetRow) ? assetRow : null;
 
-  if (assetError || !assetRow?.id) {
+  if (assetError || !assetRowRecord?.id) {
     return {
       assetId: null,
       assetUrl: resolveBattlemapPublicUrl(storagePath) ?? URL.createObjectURL(options.file),
@@ -188,7 +197,7 @@ export async function uploadBattlemapAsset(options: {
   }
 
   return {
-    assetId: String(assetRow.id),
+    assetId: String(assetRowRecord.id),
     assetUrl: resolveBattlemapPublicUrl(storagePath) ?? URL.createObjectURL(options.file),
     manifest,
     persisted: true,

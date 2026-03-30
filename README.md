@@ -1,126 +1,51 @@
-# Welcome to your Lovable project
+# Arquivo do Continente
 
-## Project info
+Portal dark fantasy de Areias de Zerrikania, reunindo universo, bestiario, cronicas, atlas, mesa e o Oraculo de Luna.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
+## Stack
 
 - Vite
-- TypeScript
 - React
-- shadcn-ui
+- TypeScript
 - Tailwind CSS
+- Radix UI
+- Framer Motion
+- Supabase
+- Gemini Live para o oraculo
 
-## How can I deploy this project?
+## Scripts
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```bash
+npm install
+npm run dev
+npm run build
+npm run preview
+npm test
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Estrutura principal
 
-Yes, you can!
+- `src/pages`: rotas do portal
+- `src/components`: shell, UI e modulos de produto
+- `src/oracle-luna`: experiencia standalone do oraculo
+- `src/lib`: conteudo, estado e integracoes
+- `public/reference`: assets visuais e referencias importadas
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Variaveis de ambiente
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Crie um `.env` com as chaves necessarias para os recursos ao vivo:
 
-## Loja digital com Stripe
+```env
+VITE_GEMINI_API_KEY=
+VITE_GEMINI_LIVE_MODEL=gemini-3.1-flash-live-preview
+VITE_GEMINI_LIVE_VOICE=Zephyr
+```
 
-O projeto agora inclui uma loja digital integrada com:
+## Build mobile
 
-- catalogo de produtos digitais
-- checkout Stripe
-- confirmacao de compra por webhook
-- download automatico apos pagamento
-- biblioteca do usuario
+O projeto usa Capacitor com `dist` como `webDir`. Depois do build web:
 
-### Banco e storage
-
-A migration `supabase/migrations/20260312170500_storefront.sql` cria:
-
-- `digital_products`
-- `store_orders`
-- bucket privado `digital-products`
-
-Envie para o bucket os arquivos usados no catalogo, respeitando os `file_path` gravados na tabela `digital_products`.
-
-### Edge Functions
-
-As funcoes usadas pela loja sao:
-
-- `storefront-data`
-- `create-store-checkout`
-- `confirm-store-purchase`
-- `create-download-link`
-- `stripe-store-webhook`
-
-No `supabase/config.toml`, a funcao `stripe-store-webhook` esta configurada com `verify_jwt = false`.
-
-### Secrets necessarios
-
-Configure estes secrets no Supabase Functions:
-
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `SITE_URL`
-
-### Webhook Stripe
-
-Cadastre no Stripe um webhook apontando para:
-
-`https://<seu-projeto>.supabase.co/functions/v1/stripe-store-webhook`
-
-Eventos recomendados:
-
-- `checkout.session.completed`
-- `checkout.session.async_payment_succeeded`
-- `checkout.session.async_payment_failed`
+```bash
+npm run build
+npx cap sync
+```

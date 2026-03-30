@@ -27,6 +27,12 @@ const witcherRasterCRS = L.extend({}, L.CRS.Simple, {
   transformation: new L.Transformation(1, 0, 1, 0),
 });
 
+type TileLayerWithCreateTile = L.TileLayer & {
+  createTile: (coords: L.Coords, done: L.DoneCallback) => HTMLElement;
+};
+
+const baseTileFactory = (L.TileLayer.prototype as unknown as TileLayerWithCreateTile).createTile;
+
 interface RegionalTileAtlasProps {
   initialMapId?: MapGenieWitcherMapId;
   immersive?: boolean;
@@ -62,7 +68,7 @@ export default function RegionalTileAtlas({
     );
   }, [maps, query]);
 
-  const activeMap = getMapGenieWitcherMap(activeMapId);
+  const activeMap = useMemo(() => getMapGenieWitcherMap(activeMapId), [activeMapId]);
   const hasTiles = activeMap.kind === "tiles" && Boolean(activeMap.tileFolder);
   const overlayMaxZoom = Math.min(activeMap.maxZoom, activeMap.imageNativeZoom ?? activeMap.maxZoom);
   const debugTiles = useMemo(() => {
@@ -142,8 +148,9 @@ export default function RegionalTileAtlas({
       const tileLayer = L.tileLayer(getLocalWitcherTileUrl(activeMap.id), tileLayerOptions);
       // Some hosted previews inject aggressive global styles like `img { width: 100% !important; height: auto !important; }`.
       // Enforce Leaflet's expected tile box sizing on each tile element to prevent "striped" rendering.
-      (tileLayer as any).createTile = function createTileWithFixedSize(coords: any, done: any) {
-        const tile = (L.TileLayer.prototype as any).createTile.call(this, coords, done) as HTMLImageElement;
+      const fixedTileLayer = tileLayer as TileLayerWithCreateTile;
+      fixedTileLayer.createTile = function createTileWithFixedSize(coords, done) {
+        const tile = baseTileFactory.call(this, coords, done) as HTMLImageElement;
         if (tile?.style) {
           tile.style.setProperty("width", `${LEAFLET_TILE_SIZE_PX}px`, "important");
           tile.style.setProperty("height", `${LEAFLET_TILE_SIZE_PX}px`, "important");
@@ -170,14 +177,14 @@ export default function RegionalTileAtlas({
           });
         };
 
-        tileLayer.on("tileloadstart", (event: any) => {
-          const { z, x, y } = event?.coords ?? {};
+        tileLayer.on("tileloadstart", (event: L.TileEvent) => {
+          const { z, x, y } = event.coords;
           pushEvent(`loadstart z${z} x${x} y${y}`);
         });
 
-        tileLayer.on("tileload", (event: any) => {
-          const { z, x, y } = event?.coords ?? {};
-          const tile = event?.tile as HTMLElement | undefined;
+        tileLayer.on("tileload", (event: L.TileEvent) => {
+          const { z, x, y } = event.coords;
+          const tile = event.tile;
           const rect = tile?.getBoundingClientRect();
 
           if (
@@ -188,22 +195,21 @@ export default function RegionalTileAtlas({
             pushEvent(
               `SIZE MISMATCH ${Math.round(rect.width)}x${Math.round(rect.height)} z${z} x${x} y${y}`,
             );
-            // eslint-disable-next-line no-console
             console.warn("[atlas tiles] tile size mismatch", {
               mapId: activeMap.id,
               z,
               x,
               y,
               rect,
-              style: (tile as any)?.style?.cssText,
+              style: tile.style.cssText,
             });
           } else {
             pushEvent(`load z${z} x${x} y${y}`);
           }
         });
 
-        tileLayer.on("tileerror", (event: any) => {
-          const { z, x, y } = event?.coords ?? {};
+        tileLayer.on("tileerror", (event: L.TileErrorEvent) => {
+          const { z, x, y } = event.coords;
           pushEvent(`ERROR z${z} x${x} y${y}`);
         });
       }
@@ -251,7 +257,7 @@ export default function RegionalTileAtlas({
       map.remove();
       mapRef.current = null;
     };
-  }, [activeMapId, debugTiles]);
+  }, [activeMap, debugTiles, hasTiles, overlayMaxZoom]);
 
   return (
     <div className={cn("grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]", className)}>
