@@ -5,11 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function generateSecureId() {
+export function generateSecureId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
 
+  // Fallback for non-secure contexts (HTTP) or older environments
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
     const random = Math.floor(Math.random() * 16);
     const value = char === "x" ? random : (random & 0x3) | 0x8;
@@ -17,21 +18,20 @@ export function generateSecureId() {
   });
 }
 
-export function generateSecureShortId(prefix?: string) {
-  let randomHex = "";
+export function generateSecureShortId(): string {
+  const timestamp = Date.now().toString(36);
+
   if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
     const array = new Uint8Array(5);
     crypto.getRandomValues(array);
-    randomHex = Array.from(array)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("")
+    const randomHex = Array.from(array)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
       .slice(0, 8);
-  } else {
-    randomHex = Math.random().toString(36).slice(2, 10);
+    return `${timestamp}-${randomHex}`;
   }
 
-  const timestamp = Date.now().toString(36);
-  const core = `${timestamp}-${randomHex}`;
-
-  return prefix ? `${prefix}-${core}` : core;
+  // Fallback for non-secure contexts
+  const fallbackRandom = Math.random().toString(36).slice(2, 10);
+  return `${timestamp}-${fallbackRandom}`;
 }

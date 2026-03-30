@@ -56,7 +56,7 @@ function RouteMetaController() {
     const title = buildDocumentTitle(entry?.title ?? archiveBrand.title);
     const description =
       entry?.description ??
-      "Arquivo do Continente reúne dossiês, bestiário, crônicas, cartografia e sessão em torno de Areias de Zerrikania.";
+      "Arquivo do Continente reune dossies, bestiario, cronicas, cartografia e sessao em torno de Areias de Zerrikania.";
 
     document.title = title;
     upsertMetaTag('meta[name="description"]', { name: "description", content: description });
