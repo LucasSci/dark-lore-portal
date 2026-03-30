@@ -1,7 +1,8 @@
 export const archiveBrand = {
   title: "Arquivo do Continente",
   subtitle: "Areias de Zerrikania",
-  heroLine: "Um arquivo vivo de criaturas, reinos esquecidos e relatos que jamais deveriam ter sido despertados.",
+  heroLine:
+    "Bestiarios, cronicas, cartas do atlas e registros de sessao reunidos sob o mesmo arquivo.",
 };
 
 export const archiveReferenceArt = {

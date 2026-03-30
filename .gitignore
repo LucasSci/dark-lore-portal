@@ -30,3 +30,4 @@ vendor_lib/
 *.njsproj
 *.sln
 *.sw?
+.vercel

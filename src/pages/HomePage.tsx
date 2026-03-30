@@ -1,6 +1,8 @@
+import { BookMarked, Compass, ScrollText, Skull, Swords } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import { encyclopediaEntries } from "@/lib/encyclopedia";
 import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
@@ -9,26 +11,86 @@ import { getWitcherBestiaryMetadata } from "@/lib/witcher-bestiary";
 const featureCards = [
   {
     title: "Universo",
-    description: "Rastros de reinos, linhagens partidas e historias soterradas pelas areias do continente.",
+    description: "Reinos esquecidos, linhagens partidas e nomes soterrados sob o mesmo arquivo.",
     path: "/universo",
     image: archiveReferenceArt.wanderer,
     cta: "Explorar Universo",
   },
   {
     title: "Bestiario",
-    description: "Criaturas antigas, entidades abandonadas e dossies de caca preservados no arquivo.",
+    description: "Criaturas antigas, entidades sem repouso e dossies de caca preservados no escuro.",
     path: "/bestiario",
     image: archiveReferenceArt.creature,
     cta: "Abrir Bestiario",
   },
   {
     title: "Cronicas",
-    description: "Manuscritos velados, contratos, memorias de estrada e testemunhos que voltaram a respirar.",
+    description: "Relatos de sessao, contratos velados e manuscritos que continuaram a respirar.",
     path: "/cronicas",
     image: archiveReferenceArt.desk,
     cta: "Explorar Cronicas",
   },
-];
+] as const;
+
+const archiveIndexCards = [
+  {
+    icon: BookMarked,
+    title: "Universo",
+    description: "Origem, eras, faccoes, ruinas e dossies que sustentam a leitura do continente.",
+    path: "/universo",
+  },
+  {
+    icon: Skull,
+    title: "Bestiario",
+    description: "Monstros, reliquias vivas e ameacas catalogadas com fraquezas, regioes e risco.",
+    path: "/bestiario",
+  },
+  {
+    icon: ScrollText,
+    title: "Cronicas",
+    description: "Capitulos exclusivos, memoria de estrada e registros de sessao preservados no arquivo.",
+    path: "/cronicas",
+  },
+  {
+    icon: Compass,
+    title: "Mapa",
+    description: "Rotas, fronteiras, locais e leituras em camadas conectadas aos verbetes do portal.",
+    path: "/mapa",
+  },
+  {
+    icon: Swords,
+    title: "Jogar",
+    description: "Hub de sessao com mesa, oraculo e caminhos de leitura viva para continuar a campanha.",
+    path: "/jogar",
+  },
+] as const;
+
+const homeArchivePortals = [
+  {
+    title: "Universo",
+    description: "Leia eras, faccoes, locais e personagens antes de descer para o restante do arquivo.",
+    to: "/universo",
+    cta: "Abrir universo",
+  },
+  {
+    title: "Bestiario",
+    description: "Cruze criaturas, fraquezas, regioes e niveis de perigo num unico indice de caca.",
+    to: "/bestiario",
+    cta: "Abrir bestiario",
+  },
+  {
+    title: "Cronicas",
+    description: "Entre nos manuscritos de sessao, contratos e registros que mantem a campanha viva.",
+    to: "/cronicas",
+    cta: "Ler cronicas",
+  },
+  {
+    title: "Mapa",
+    description: "Abra o continente por camadas e ligue rotas, dossies e a mesa sem romper a leitura.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+] as const;
 
 const bestiaryPreview = encyclopediaEntries
   .filter((entry) => entry.category === "monstros")
@@ -65,11 +127,77 @@ export default function HomePage() {
             <Link to="/universo" className="dark-lore-button">
               Explorar Universo
             </Link>
-            <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
-              Abrir Arquivo Vivo
+            <Link to="/bestiario" className="dark-lore-button dark-lore-button-ghost">
+              Abrir Bestiario
             </Link>
           </div>
         </motion.div>
+      </section>
+
+      <section className="dark-lore-page-frame dark-lore-editorial-grid">
+        <div className="dark-lore-editorial-copy">
+          <p className="dark-lore-section-kicker">Sobre o portal</p>
+          <h2 className="dark-lore-section-title">
+            Um arquivo unico para ler o continente com calma, peso e continuidade.
+          </h2>
+          <p className="dark-lore-editorial-text">
+            O portal reune universo, bestiario, cronicas, cartografia e sessao sob a mesma
+            linguagem de leitura. Cada rota abre um tipo de registro, mas todas pertencem ao mesmo
+            arquivo.
+          </p>
+          <p className="dark-lore-editorial-text">
+            Em vez de telas isoladas, a travessia foi organizada como estante viva: primeiro voce
+            entende o mundo, depois cruza as criaturas, desce aos manuscritos e por fim leva tudo
+            para a mesa.
+          </p>
+          <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
+            Abrir a camara de sessao
+          </Link>
+        </div>
+
+        <div className="dark-lore-editorial-figure">
+          <img
+            src={archiveReferenceArt.desk}
+            alt=""
+            aria-hidden="true"
+            className="dark-lore-editorial-image"
+          />
+          <div className="dark-lore-editorial-glow" />
+        </div>
+      </section>
+
+      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+        <div className="space-y-6">
+          <div className="text-center">
+            <p className="dark-lore-section-kicker justify-center">Indice do arquivo</p>
+            <h2 className="dark-lore-section-title mx-auto">O que permanece acessivel no limiar</h2>
+          </div>
+
+          <div className="dark-lore-codex-grid">
+            {archiveIndexCards.map(({ icon: Icon, title, description, path }, index) => (
+              <motion.article
+                key={title}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.45, delay: index * 0.05 }}
+                className="dark-lore-archive-card dark-lore-archive-card-compact"
+              >
+                <Link to={path} className="dark-lore-codex-card">
+                  <div className="dark-lore-icon-emblem">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="dark-lore-card-title text-[clamp(1.35rem,1.8vw,1.7rem)]">
+                      {title}
+                    </h3>
+                    <p className="dark-lore-card-copy">{description}</p>
+                  </div>
+                </Link>
+              </motion.article>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="dark-lore-feature-grid">
@@ -96,39 +224,10 @@ export default function HomePage() {
         ))}
       </section>
 
-      <section className="dark-lore-page-frame dark-lore-editorial-grid">
-        <div className="dark-lore-editorial-copy">
-          <p className="dark-lore-section-kicker">O Chamado</p>
-          <h2 className="dark-lore-section-title">O arquivo desperta antes da leitura.</h2>
-          <p className="dark-lore-editorial-text">
-            Entre pedra escurecida, brasa fria e paginas marcadas por poeira, repousa um arquivo
-            de nomes proibidos. Ali, criaturas recebem contorno, ruinas recuperam memoria e
-            cronicas de estrada retornam como se nunca tivessem sido encerradas.
-          </p>
-          <p className="dark-lore-editorial-text">
-            O portal agora funciona como o arquivo vivo de Areias de Zerrikania: universo,
-            bestiario, cronicas, cartografia e leitura ritual partilham o mesmo limiar.
-          </p>
-          <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
-            Abrir o arquivo vivo
-          </Link>
-        </div>
-
-        <div className="dark-lore-editorial-figure">
-          <img
-            src={archiveReferenceArt.forgotten}
-            alt=""
-            aria-hidden="true"
-            className="dark-lore-editorial-image"
-          />
-          <div className="dark-lore-editorial-glow" />
-        </div>
-      </section>
-
       <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
         <div className="space-y-6">
           <div className="text-center">
-            <p className="dark-lore-section-kicker justify-center">Dossies do bestiario</p>
+            <p className="dark-lore-section-kicker justify-center">Criaturas em vigilia</p>
             <h2 className="dark-lore-section-title mx-auto">Quatro presencas ja despertas</h2>
           </div>
 
@@ -154,7 +253,7 @@ export default function HomePage() {
                     </h3>
                     <p className="dark-lore-card-meta">
                       {metadata?.type ?? "Entidade"}
-                      {metadata ? ` · Perigo ${metadata.dangerLevel}/5` : ""}
+                      {metadata ? ` - Perigo ${metadata.dangerLevel}/5` : ""}
                     </p>
                     <p className="dark-lore-card-copy">{entry.summary}</p>
                     <Link
@@ -171,10 +270,17 @@ export default function HomePage() {
         </div>
       </section>
 
+      <ArchivePortalSection
+        kicker="Explore o arquivo"
+        title="Quatro portas para continuar a leitura"
+        description="O portal inteiro foi organizado como uma estante coerente: mundo, criaturas, manuscritos e atlas se abrem sob a mesma voz editorial."
+        items={homeArchivePortals}
+      />
+
       <section className="dark-lore-cta-band">
-        <p className="dark-lore-cta-line">As paginas ainda respiram.</p>
+        <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>
         <Link to="/jogar" className="dark-lore-button">
-          Entrar no Arquivo
+          Entrar no Portal
         </Link>
       </section>
     </div>

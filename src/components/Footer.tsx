@@ -1,15 +1,11 @@
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Youtube } from "lucide-react";
 import { archiveBrand } from "@/lib/archive-reference";
+import { getFooterEntries } from "@/lib/route-manifest";
 
-const footerLinks = [
-  { label: "Universo", path: "/universo" },
-  { label: "Bestiario", path: "/bestiario" },
-  { label: "Cronicas", path: "/cronicas" },
-  { label: "Jogar", path: "/jogar" },
-  { label: "Mapa", path: "/mapa" },
-  { label: "Contato", path: "/contato" },
-];
+const footerLinks = getFooterEntries().map(({ label, path }) => ({
+  label,
+  path,
+}));
 
 export default function Footer() {
   return (
@@ -22,8 +18,8 @@ export default function Footer() {
               {archiveBrand.title}
             </h2>
             <p className="mx-auto max-w-2xl text-sm leading-7 text-[hsl(var(--foreground)/0.78)] md:text-base">
-              {archiveBrand.subtitle} reune dossies, cronicas, mapas e nomes proibidos em um
-              unico arquivo respirando como um mundo vivo.
+              {archiveBrand.subtitle} reune dossies, cronicas, cartas do atlas e entradas de
+              sessao sob o mesmo selo.
             </p>
           </div>
 
@@ -35,21 +31,9 @@ export default function Footer() {
             ))}
           </div>
 
-          <div className="flex items-center justify-center gap-3">
-            <Link to="/contato" className="dark-lore-social-link" aria-label="Contato">
-              <Twitter className="h-4 w-4" />
-            </Link>
-            <Link to="/cronicas" className="dark-lore-social-link" aria-label="Cronicas">
-              <Youtube className="h-4 w-4" />
-            </Link>
-            <Link to="/universo" className="dark-lore-social-link" aria-label="Universo">
-              <Facebook className="h-4 w-4" />
-            </Link>
-          </div>
-
           <div className="space-y-2 text-center text-xs tracking-[0.14em] text-[hsl(var(--foreground)/0.54)]">
             <p>(c) 2026 {archiveBrand.title}</p>
-            <p>Arquivo vivo de universo, bestiario, cronicas, cartografia e jogo ritual.</p>
+            <p>Universo, bestiario, cronicas, cartografia e sessao em torno de Areias de Zerrikania.</p>
           </div>
         </div>
       </div>

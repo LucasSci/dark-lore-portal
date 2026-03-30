@@ -34,6 +34,7 @@ const mapSignals = [
 export default function ContinentMap({ compact = true }: ContinentMapProps) {
   const atlasPreviewRef = useRef<HTMLDivElement | null>(null);
   const [shouldLoadAtlas, setShouldLoadAtlas] = useState(false);
+  const isCompactPreview = compact;
 
   useEffect(() => {
     if (shouldLoadAtlas) {
@@ -74,21 +75,29 @@ export default function ContinentMap({ compact = true }: ContinentMapProps) {
   );
 
   return (
-    <section className="space-y-6">
-      <div className="continent-map-shell space-y-6 p-6 md:p-8">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-3xl space-y-4">
+    <section className={cn("space-y-6", isCompactPreview && "space-y-4")}>
+      <div className={cn("continent-map-shell space-y-6 p-6 md:p-8", isCompactPreview && "space-y-4 p-5 md:p-6")}>
+        <div className={cn("flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between", isCompactPreview && "gap-4")}>
+          <div className={cn("max-w-3xl space-y-4", isCompactPreview && "space-y-3")}>
             <Badge variant="outline" className="border-primary/25 bg-background/30 text-primary">
               <Compass className="mr-2 h-3.5 w-3.5" />
               Cartografia do continente
             </Badge>
-            <div className="space-y-3">
-              <h2 className="font-display text-4xl leading-[0.94] text-brand-gradient md:text-5xl">
-                A carta do continente abre as rotas, fronteiras e descidas para cada camada do mundo.
+            <div className={cn("space-y-3", isCompactPreview && "space-y-2")}>
+              <h2
+                className={cn(
+                  "font-display leading-[0.94] text-brand-gradient",
+                  isCompactPreview ? "text-3xl md:text-4xl" : "text-4xl md:text-5xl",
+                )}
+              >
+                {isCompactPreview
+                  ? "A carta do continente abre as rotas do arquivo."
+                  : "A carta do continente abre as rotas, fronteiras e descidas para cada camada do mundo."}
               </h2>
-              <p className="max-w-[66ch] text-base leading-8 text-foreground/78">
-                Primeiro vem a geografia ampla; depois, as regioes, estradas, locais e battlemaps
-                se revelam sem quebrar o fio da travessia.
+              <p className={cn("max-w-[66ch] text-foreground/78", isCompactPreview ? "text-sm leading-7" : "text-base leading-8")}>
+                {isCompactPreview
+                  ? "Leitura ampla do mundi, com acesso rapido ao atlas completo e aos dossies ligados ao mapa."
+                  : "Primeiro vem a geografia ampla; depois, as regioes, estradas, locais e battlemaps se revelam sem quebrar o fio da travessia."}
               </p>
             </div>
           </div>
@@ -103,7 +112,7 @@ export default function ContinentMap({ compact = true }: ContinentMapProps) {
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className={cn("grid gap-3 md:grid-cols-3", isCompactPreview && "md:grid-cols-3")}>
           {mapSignals.map(({ icon: Icon, label, value }) => (
             <div key={label} className="continent-map-stat">
               <div className="icon-slot h-10 w-10 shrink-0">

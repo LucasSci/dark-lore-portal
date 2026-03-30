@@ -1,6 +1,7 @@
 import { BookMarked, Map, ScrollText, Sparkles, Sword } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
 
@@ -52,11 +53,38 @@ const supportRoutes = [
   },
 ] as const;
 
+const sessionPortals = [
+  {
+    title: "Mesa",
+    description: "Abra o palco tatico, mova tokens, organize visibilidade e conduza a cena ao vivo.",
+    to: "/mesa",
+    cta: "Abrir mesa",
+  },
+  {
+    title: "Oraculo",
+    description: "Converse com Luna, leia registros do arquivo e mantenha o fio da campanha.",
+    to: "/oraculo",
+    cta: "Abrir Luna",
+  },
+  {
+    title: "Cronicas",
+    description: "Volte aos manuscritos quando a sessao pedir contexto, memoria ou pressagio.",
+    to: "/cronicas",
+    cta: "Ler manuscritos",
+  },
+  {
+    title: "Mapa",
+    description: "Cruze o jogo com o atlas para levar regioes, rotas e locais para a mesa.",
+    to: "/mapa",
+    cta: "Abrir atlas",
+  },
+] as const;
+
 export default function PlayPage() {
   usePortalShellMode("editorial", "ambient");
 
   return (
-    <div className="container max-w-[1480px] space-y-10 py-10 md:space-y-12 md:py-14">
+    <div className="mx-auto max-w-[1480px] space-y-10 px-4 py-8 md:space-y-12 md:px-6 md:py-12">
       <section className="dark-lore-page-frame overflow-hidden">
         <div className="dark-lore-page-hero dark-lore-contact-hero relative">
           <img
@@ -72,8 +100,8 @@ export default function PlayPage() {
             <span className="dark-lore-section-kicker">Camara de sessao</span>
             <h1 className="dark-lore-section-title max-w-[12ch]">Jogar sem romper o arquivo.</h1>
             <p className="dark-lore-hero-text max-w-[62ch] text-base md:text-lg">
-              O nucleo de jogo volta a reunir mesa, oraculo, ficha e comando. A sessao acontece
-              aqui, e o oraculo entra como uma camada viva do mesmo ritual, nao como substituicao.
+              A sessao parte deste nucleo. Mesa, oraculo, ficha e painel do mestre entram como
+              ferramentas do mesmo jogo, sem disputar o centro da campanha.
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -160,8 +188,15 @@ export default function PlayPage() {
         </div>
       </section>
 
+      <ArchivePortalSection
+        kicker="Portais de sessao"
+        title="Quatro entradas para sustentar o jogo"
+        description="A camara de sessao se abre melhor quando mesa, oraculo, cronicas e mapa continuam ligados ao mesmo arquivo."
+        items={sessionPortals}
+      />
+
       <section className="dark-lore-cta-band">
-        <p className="dark-lore-section-kicker">Arquivo vivo</p>
+        <p className="dark-lore-section-kicker">Sessao em curso</p>
         <h2 className="dark-lore-cta-line">A sessao permanece aberta.</h2>
         <p className="dark-lore-hero-text text-center">
           Entre pela mesa quando for hora de jogar. Abra o oraculo quando o arquivo precisar

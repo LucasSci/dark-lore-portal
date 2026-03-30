@@ -1,7 +1,0 @@
-{
-  "name": "Areias de Zerrikânia: Arquivo do Continente",
-  "description": "Um portal de lore atmosférico onde você expande o Arquivo do Continente através da voz.",
-  "requestFramePermissions": [
-    "microphone"
-  ]
-}

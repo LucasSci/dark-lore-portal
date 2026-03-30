@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { Compass, MapPinned, Route, ScrollText, Smartphone } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import MapGenieWitcherAtlas from "@/components/world/MapGenieWitcherAtlas";
 import { archiveReferenceArt } from "@/lib/archive-reference";
 import { buildAtlasContextModel, toPortalAtlasFocusState } from "@/lib/atlas-context";
@@ -26,6 +27,33 @@ const atlasHighlights = [
   },
 ] as const;
 
+const mapPortals = [
+  {
+    title: "Universo",
+    description: "Cruze a cartografia com verbetes, faccoes e registros ligados a cada regiao.",
+    to: "/universo",
+    cta: "Abrir universo",
+  },
+  {
+    title: "Bestiario",
+    description: "Veja quais criaturas pertencem a cada trilha, ruina ou fronteira do continente.",
+    to: "/bestiario",
+    cta: "Abrir bestiario",
+  },
+  {
+    title: "Cronicas",
+    description: "Leve o atlas para os manuscritos e recupere o contexto dos caminhos ja percorridos.",
+    to: "/cronicas",
+    cta: "Ler cronicas",
+  },
+  {
+    title: "Jogar",
+    description: "Abra a sessao com o atlas como suporte para rota, cena, deslocamento e encontro.",
+    to: "/jogar",
+    cta: "Voltar ao jogo",
+  },
+] as const;
+
 export default function MapaPage() {
   usePortalShellMode("editorial", "ambient");
 
@@ -37,7 +65,7 @@ export default function MapaPage() {
   }, [atlasContext]);
 
   return (
-    <div className="container max-w-[1580px] space-y-10 py-10 md:space-y-12 md:py-14">
+    <div className="mx-auto max-w-[1580px] space-y-10 px-4 py-8 md:space-y-12 md:px-6 md:py-12">
       <section className="dark-lore-page-frame overflow-hidden">
         <div className="dark-lore-page-hero dark-lore-contact-hero relative">
           <img
@@ -145,8 +173,8 @@ export default function MapaPage() {
                   O continente conhecido
                 </h2>
                 <p className="dark-lore-card-copy max-w-[70ch] text-sm">
-                  O motor do atlas continua intacto. A mudanca aqui e de moldura, leitura e
-                  hierarquia visual, para que o mapa respire como parte do mesmo arquivo.
+                  Abra o mappa mundi, desca por regioes e carregue a leitura ate a mesa sem perder
+                  o fio entre cartografia, dossies e campanha.
                 </p>
               </div>
 
@@ -216,12 +244,19 @@ export default function MapaPage() {
         </aside>
       </section>
 
+      <ArchivePortalSection
+        kicker="Portais do atlas"
+        title="O mapa se abre melhor quando cruza o restante do arquivo"
+        description="As rotas do continente nao vivem sozinhas. Cada camada pode levar a dossies, criaturas, manuscritos e a propria sessao."
+        items={mapPortals}
+      />
+
       <section className="dark-lore-cta-band">
         <p className="dark-lore-section-kicker">Travessia</p>
         <h2 className="dark-lore-cta-line">Toda rota pede contexto.</h2>
         <p className="dark-lore-hero-text text-center">
-          O mapa agora fala a mesma lingua do arquivo, sem perder o atlas, os filtros e a leitura
-          por camadas que ja sustentavam a exploracao.
+          O atlas conserva suas camadas, filtros e cartas regionais, agora ligados ao mesmo ritmo
+          de leitura do restante do arquivo.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <Link to="/universo" className="dark-lore-button">
