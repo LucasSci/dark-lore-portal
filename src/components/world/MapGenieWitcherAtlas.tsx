@@ -598,7 +598,7 @@ export default function MapGenieWitcherAtlas({
 
         if (layers.includes("roads")) {
           subRegion.roads.forEach((road) => {
-            L.polyline(road.points.map(projectCoordinate).map(toLeafletPoint), {
+            L.polyline(road.points.map(p => toLeafletPoint(projectCoordinate(p))), {
               color: "#d6b15f",
               weight: zoomStage === "region" ? 1.4 : 2,
               opacity: 0.72,
@@ -610,7 +610,7 @@ export default function MapGenieWitcherAtlas({
 
         if (layers.includes("rivers")) {
           subRegion.rivers.forEach((river) => {
-            L.polyline(river.points.map(projectCoordinate).map(toLeafletPoint), {
+            L.polyline(river.points.map(p => toLeafletPoint(projectCoordinate(p))), {
               color: "#38bdf8",
               weight: 2,
               opacity: 0.8,
@@ -622,7 +622,7 @@ export default function MapGenieWitcherAtlas({
 
         if (layers.includes("forests")) {
           subRegion.forests.forEach((forest) => {
-            L.polygon(forest.points.map(projectCoordinate).map(toLeafletPoint), {
+            L.polygon(forest.points.map(p => toLeafletPoint(projectCoordinate(p))), {
               color: "#16a34a",
               weight: 1,
               fillColor: "#16a34a",
@@ -691,7 +691,7 @@ export default function MapGenieWitcherAtlas({
     }
 
     if (routePlan) {
-      L.polyline(routePlan.path.map(projectCoordinate).map(toLeafletPoint), {
+      L.polyline(routePlan.path.map(p => toLeafletPoint(projectCoordinate(p))), {
         color: routePlan.risk === "high" ? "#ef4444" : routePlan.risk === "moderate" ? "#f59e0b" : "#16a34a",
         weight: 3,
         opacity: 0.92,
