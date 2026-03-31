@@ -1,18 +1,18 @@
-# Copy Bible — Arquivo do Continente
+# Copy Bible - Arquivo do Continente
 
-## Marca pública
+## Marca publica
 - Nome principal: `Arquivo do Continente`
 - Selo: `Areias de Zerrikania`
 
 ## Tom
 - Denso, claro e contido.
 - Ficcional quando o texto fala do mundo.
-- Objetivo quando o texto orienta uma ação.
-- Nunca explicar a interface como produto de showcase.
+- Objetivo quando o texto orienta uma acao.
+- Nunca explicar a interface como showcase, template ou experimento.
 
 ## Papeis permitidos para a copy
-- Lore diegético
-- Orientação de uso
+- Lore diegetico
+- Orientacao de uso
 - CTA curto e direto
 
 ## O que evitar
@@ -23,11 +23,11 @@
 - `Dark Lore Portal`
 - `portal AAA`
 - `arquivo vivo cinematografico`
-- `peça de palco`
-- `carta entra como peça de cena`
-- qualquer frase que descreva o layout em vez do mundo ou da ação
+- `peca de palco`
+- `carta entra como peca de cena`
+- qualquer frase que descreva o layout em vez do mundo ou da acao
 
-## Vocabulário canônico
+## Vocabulario canonico
 - `arquivo`
 - `dossie`
 - `verbete`
@@ -52,11 +52,12 @@
   - `ver demo`
 
 ## Placeholders
-- Devem orientar a tarefa sem soar genéricos.
-- Exemplos bons:
+- Devem orientar a tarefa sem soar genericos.
+- Bons exemplos:
   - `Buscar criatura, local ou battlemap`
   - `Notas do encontro`
   - `Enviar mensagem para a mesa`
+  - `Ler registro ou fazer pergunta ao oraculo`
 
 ## Regra final
-- Se uma frase pode ser lida como descrição de mockup, ela deve ser reescrita.
+- Se uma frase pode ser lida como descricao de mockup, ela deve ser reescrita.

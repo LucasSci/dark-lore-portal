@@ -48,7 +48,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { EncyclopediaEntry } from "@/lib/encyclopedia";
 import { parseDiceNotation, rollDice } from "@/lib/rpg-utils";
 import {
   readImageDimensions,
@@ -113,19 +112,18 @@ import { ensureMesaSession } from "@/lib/sheets/persistence";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { LOCAL_SESSION_ID } from "@/lib/local-identities";
+import {
+  type TabletopLoreCompendium,
+  type TabletopSpawnEntry,
+  type TabletopSpawnGroup,
+} from "@/lib/tabletop-lore";
 
 const VttPixiStage = lazy(() => import("@/components/rpg/VttPixiStage"));
 
 type LeftTool = "select" | "move" | "fog" | "measure" | "wall" | "light";
 type RightTab = "chat" | "tokens" | "initiative" | "codex" | "npc" | "map";
-type VttLoreThreat = EncyclopediaEntry & {
-  vtt: NonNullable<EncyclopediaEntry["vtt"]>;
-};
-type CodexGroup = {
-  category: string;
-  label: string;
-  entries: VttLoreThreat[];
-};
+type VttLoreThreat = TabletopSpawnEntry;
+type CodexGroup = TabletopSpawnGroup;
 
 function SidePanelCard({
   title,
@@ -221,24 +219,6 @@ function ToolRailButton({
   );
 }
 
-function buildCodexGroups(
-  entries: VttLoreThreat[],
-  labels: Record<string, { label?: string }>,
-): CodexGroup[] {
-  const grouped = entries.reduce<Record<string, VttLoreThreat[]>>((accumulator, entry) => {
-    const key = entry.category;
-    accumulator[key] ??= [];
-    accumulator[key].push(entry);
-    return accumulator;
-  }, {});
-
-  return Object.entries(grouped).map(([category, groupEntries]) => ({
-    category,
-    label: labels[category]?.label ?? "Arquivo",
-    entries: [...groupEntries].sort((left, right) => left.title.localeCompare(right.title, "pt-BR")),
-  }));
-}
-
 function MesaStageFallback() {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-background-strong">
@@ -267,6 +247,7 @@ export default function MesaPage() {
   const [rightTab, setRightTab] = useState<RightTab>("chat");
   const [loreThreats, setLoreThreats] = useState<VttLoreThreat[]>([]);
   const [codexGroups, setCodexGroups] = useState<CodexGroup[]>([]);
+  const [tabletopLore, setTabletopLore] = useState<TabletopLoreCompendium | null>(null);
   const [codexLoading, setCodexLoading] = useState(false);
   const [newPageName, setNewPageName] = useState("");
   const [newPageRegion, setNewPageRegion] = useState("");
@@ -284,7 +265,7 @@ export default function MesaPage() {
   });
   const sceneRef = useRef(scene);
   const presenceRef = useRef(scene.presence);
-  const codexLoadRef = useRef<Promise<VttLoreThreat[]> | null>(null);
+  const codexLoadRef = useRef<Promise<TabletopLoreCompendium> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handledSpawnSlugRef = useRef<string | null>(null);
   const handledAtlasBattlemapRef = useRef<string | null>(null);
@@ -435,19 +416,20 @@ export default function MesaPage() {
     { id: "map", icon: <ImagePlus className="h-4 w-4" />, label: "Mapa" },
   ];
 
-  const loadCodexThreats = useCallback(async () => {
+  const loadCodexCompendium = useCallback(async () => {
     if (codexLoadRef.current) {
       return codexLoadRef.current;
     }
 
     setCodexLoading(true);
 
-    const nextPromise = import("@/lib/encyclopedia")
-      .then(({ encyclopediaCategories, getVttReadyEntries }) => {
-        const entries = getVttReadyEntries() as VttLoreThreat[];
-        setLoreThreats(entries);
-        setCodexGroups(buildCodexGroups(entries, encyclopediaCategories as Record<string, { label?: string }>));
-        return entries;
+    const nextPromise = import("@/lib/tabletop-lore")
+      .then(({ getTabletopLoreCompendium: loadTabletopLoreCompendium }) => {
+        const compendium = loadTabletopLoreCompendium();
+        setTabletopLore(compendium);
+        setLoreThreats(compendium.spawnEntries);
+        setCodexGroups(compendium.spawnGroups);
+        return compendium;
       })
       .catch((error) => {
         codexLoadRef.current = null;
@@ -463,10 +445,10 @@ export default function MesaPage() {
 
   const getLoreThreatBySlug = useCallback(
     async (entrySlug: string) => {
-      const entries = loreThreats.length ? loreThreats : await loadCodexThreats();
+      const entries = loreThreats.length ? loreThreats : (await loadCodexCompendium()).spawnEntries;
       return entries.find((candidate) => candidate.slug === entrySlug) ?? null;
     },
-    [loadCodexThreats, loreThreats],
+    [loadCodexCompendium, loreThreats],
   );
 
   const handleRightTabChange = useCallback(
@@ -475,17 +457,17 @@ export default function MesaPage() {
       setRightTab(nextTab);
 
       if (nextTab === "codex") {
-        void loadCodexThreats();
+        void loadCodexCompendium();
       }
     },
-    [loadCodexThreats],
+    [loadCodexCompendium],
   );
 
   useEffect(() => {
     if (rightTab === "codex") {
-      void loadCodexThreats();
+      void loadCodexCompendium();
     }
-  }, [loadCodexThreats, rightTab]);
+  }, [loadCodexCompendium, rightTab]);
 
   const appendChatMessage = useCallback(async (author: string, text: string, tone: ChatTone) => {
     await mutateScene(
@@ -1635,6 +1617,162 @@ export default function MesaPage() {
                         Nao foi possivel abrir o arquivo agora. Tente novamente em instantes.
                       </p>
                     </div>
+                  ) : null}
+
+                  {tabletopLore?.sessionSeeds.length ? (
+                    <SidePanelCard
+                      title="Sementes de sessao"
+                      description="Dossie, manuscrito, atlas e battlemap conectados para iniciar a cena sem preparar tudo do zero."
+                    >
+                      <div className="space-y-3">
+                        {tabletopLore.sessionSeeds.map((seed) => (
+                          <div key={seed.slug} className="tool-list-item space-y-3 px-3 py-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium text-foreground">{seed.title}</p>
+                                <p className="text-xs uppercase tracking-[0.16em] text-primary/78">
+                                  {seed.tags.join(" - ")}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-xs leading-6 text-foreground/78">{seed.summary}</p>
+                            <div className="flex flex-wrap gap-2">
+                              <Button asChild size="sm" variant="ghost" className="h-7 text-[11px]">
+                                <Link to={seed.dossierHref}>Dossie</Link>
+                              </Button>
+                              <Button asChild size="sm" variant="ghost" className="h-7 text-[11px]">
+                                <Link to={seed.chronicleHref}>Manuscrito</Link>
+                              </Button>
+                              <Button asChild size="sm" variant="ghost" className="h-7 text-[11px]">
+                                <Link to={seed.atlasHref}>Atlas</Link>
+                              </Button>
+                              {seed.battlemapHref ? (
+                                <Button asChild size="sm" className="h-7 text-[11px]">
+                                  <Link to={seed.battlemapHref}>Battlemap</Link>
+                                </Button>
+                              ) : null}
+                              {seed.quickSpawnHref ? (
+                                <Button asChild size="sm" className="h-7 text-[11px]">
+                                  <Link to={seed.quickSpawnHref}>Ameaca</Link>
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </SidePanelCard>
+                  ) : null}
+
+                  {tabletopLore?.dossiers.length ? (
+                    <SidePanelCard
+                      title="Dossies do arquivo"
+                      description="Perfis e entidades que a sessao pode consultar sem perder o ritmo da cena."
+                    >
+                      <div className="space-y-3">
+                        {tabletopLore.dossiers.map((dossier) => (
+                          <div key={dossier.slug} className="tool-list-item space-y-2 px-3 py-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-medium text-foreground">{dossier.title}</p>
+                                <p className="text-[11px] uppercase tracking-[0.16em] text-primary/78">
+                                  {dossier.categoryLabel}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-xs leading-6 text-foreground/78">{dossier.summary}</p>
+                            <div className="flex flex-wrap gap-2">
+                              <Button asChild size="sm" variant="ghost" className="h-7 text-[11px]">
+                                <Link to={dossier.href}>Abrir</Link>
+                              </Button>
+                              {dossier.atlasHref ? (
+                                <Button asChild size="sm" variant="ghost" className="h-7 text-[11px]">
+                                  <Link to={dossier.atlasHref}>Cruzar atlas</Link>
+                                </Button>
+                              ) : null}
+                              {dossier.quickSpawnHref ? (
+                                <Button asChild size="sm" className="h-7 text-[11px]">
+                                  <Link to={dossier.quickSpawnHref}>Trazer para mesa</Link>
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </SidePanelCard>
+                  ) : null}
+
+                  {tabletopLore?.chronicles.length ? (
+                    <SidePanelCard
+                      title="Manuscritos em foco"
+                      description="Capitulos canônicos para reler pressagios, passagens e revelacoes em meio a sessao."
+                    >
+                      <div className="space-y-3">
+                        {tabletopLore.chronicles.map((chronicle) => (
+                          <div key={chronicle.slug} className="tool-list-item space-y-2 px-3 py-3">
+                            <div className="space-y-1">
+                              <p className="text-sm font-medium text-foreground">{chronicle.title}</p>
+                              <p className="text-[11px] uppercase tracking-[0.16em] text-primary/78">
+                                {chronicle.chapterLabel} - {chronicle.location}
+                              </p>
+                            </div>
+                            <p className="text-xs leading-6 text-foreground/78">{chronicle.excerpt}</p>
+                            <div className="flex flex-wrap gap-2">
+                              <Button asChild size="sm" variant="ghost" className="h-7 text-[11px]">
+                                <Link to={chronicle.href}>Ler manuscrito</Link>
+                              </Button>
+                              {chronicle.mentionLinks.slice(0, 2).map((mention) => (
+                                <Button
+                                  key={`${chronicle.slug}-${mention.href}`}
+                                  asChild
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-[11px]"
+                                >
+                                  <Link to={mention.href}>{mention.label}</Link>
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </SidePanelCard>
+                  ) : null}
+
+                  {tabletopLore?.atlasReferences.length ? (
+                    <SidePanelCard
+                      title="Rotas do atlas"
+                      description="Abra regioes e locais diretamente do codex ou carregue um battlemap ligado ao mundo."
+                    >
+                      <div className="space-y-3">
+                        {tabletopLore.atlasReferences.map((reference) => (
+                          <div key={reference.title} className="tool-list-item space-y-2 px-3 py-3">
+                            <p className="text-sm font-medium text-foreground">{reference.title}</p>
+                            <p className="text-xs leading-6 text-foreground/78">{reference.description}</p>
+                            <div className="flex flex-wrap gap-1">
+                              {reference.metrics.map((metric) => (
+                                <Badge
+                                  key={`${reference.title}-${metric}`}
+                                  variant="outline"
+                                  className="border-border/40 text-[10px] uppercase tracking-[0.14em]"
+                                >
+                                  {metric}
+                                </Badge>
+                              ))}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Button asChild size="sm" variant="ghost" className="h-7 text-[11px]">
+                                <Link to={reference.href}>Abrir atlas</Link>
+                              </Button>
+                              {reference.battlemapHref ? (
+                                <Button asChild size="sm" className="h-7 text-[11px]">
+                                  <Link to={reference.battlemapHref}>Carregar battlemap</Link>
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </SidePanelCard>
                   ) : null}
 
                   {codexGroups.map((group) => (

@@ -91,6 +91,7 @@ function AppRoutes() {
             <Route path="/" element={<HomePage />} />
             <Route path="/campanha" element={<CampaignPage />} />
             <Route path="/cronicas" element={<CampaignPage />} />
+            <Route path="/cronicas/:entrySlug" element={<UniversePage />} />
             <Route path="/jogar" element={<PlayPage />} />
             <Route path="/jogar/oraculo" element={<OraclePage />} />
             <Route path="/oraculo" element={<OraclePage />} />

@@ -89,6 +89,16 @@ export const routeManifest: RouteManifestEntry[] = [
     ...defaultEditorial,
   },
   {
+    path: "/cronicas/:entrySlug",
+    label: "Cronicas",
+    title: "Manuscrito",
+    description:
+      "Leitura integral de um manuscrito do arquivo, com mencoes conectadas e trilha editorial continua.",
+    visibility: "public",
+    navGroup: "none",
+    ...defaultEditorial,
+  },
+  {
     path: "/campanha",
     label: "Campanha",
     title: "Campanha",

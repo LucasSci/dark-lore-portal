@@ -11,23 +11,23 @@
   :root {
     color-scheme: dark;
 
-    --background: 22 14% 6%;
-    --background-strong: 20 16% 4%;
-    --foreground: 42 38% 92%;
+    --background: 24 8% 7%;
+    --background-strong: 24 9% 5%;
+    --foreground: 38 27% 88%;
 
-    --card: 22 18% 8%;
-    --card-foreground: 42 38% 92%;
+    --card: 24 12% 9%;
+    --card-foreground: 38 27% 88%;
 
-    --popover: 22 18% 7%;
-    --popover-foreground: 42 38% 92%;
+    --popover: 24 12% 8%;
+    --popover-foreground: 38 27% 88%;
 
-    --brand: 41 61% 76%;
+    --brand: 39 49% 57%;
     --brand-foreground: 18 24% 8%;
     --primary: var(--brand);
     --primary-foreground: var(--brand-foreground);
 
-    --secondary: 24 12% 14%;
-    --secondary-foreground: 41 24% 92%;
+    --secondary: 24 10% 13%;
+    --secondary-foreground: 38 22% 86%;
 
     --accent: 359 79% 41%;
     --accent-foreground: 12 100% 92%;
@@ -35,32 +35,36 @@
     --destructive: 3 74% 30%;
     --destructive-foreground: 12 100% 88%;
 
-    --warning: 41 64% 62%;
+    --warning: 40 82% 70%;
     --warning-foreground: 18 24% 8%;
     --info: 193 27% 66%;
     --info-foreground: 22 20% 10%;
     --success: 145 19% 44%;
     --success-foreground: 38 33% 96%;
 
-    --muted: 22 12% 12%;
-    --muted-foreground: 39 16% 68%;
+    --muted: 24 10% 12%;
+    --muted-foreground: 37 14% 66%;
 
-    --border: 34 24% 24%;
-    --input: 24 16% 14%;
-    --ring: 41 61% 76%;
+    --border: 31 18% 21%;
+    --input: 24 12% 13%;
+    --ring: 39 49% 57%;
 
     --status-good: 145 32% 60%;
     --status-warn: 39 84% 64%;
     --status-bad: 8 90% 74%;
     --status-info: 194 58% 75%;
 
-    --surface-base: 24 18% 8%;
-    --surface-raised: 28 16% 11%;
-    --surface-strong: 31 18% 16%;
+    --surface-base: 24 12% 9%;
+    --surface-raised: 26 13% 11%;
+    --surface-strong: 28 14% 15%;
     --surface-ink: 18 24% 4%;
-    --parchment: 38 32% 74%;
-    --outline-variant: 34 24% 24%;
-    --surface-tint: 41 61% 76%;
+    --parchment: 37 24% 82%;
+    --outline-variant: 31 18% 21%;
+    --surface-tint: 39 49% 57%;
+    --antique-gold: 39 49% 57%;
+    --soft-amber: 40 82% 70%;
+    --parchment-soft: 38 27% 88%;
+    --muted-bronze: 31 18% 21%;
 
     --radius: 0px;
 
@@ -85,13 +89,13 @@
     --witcher-banner-concert: url("/reference/witcher/images/banner-concert.jpg");
     --witcher-banner-redkit: url("/reference/witcher/images/banner-redkit.jpg");
 
-    --gradient-brand: linear-gradient(135deg, hsl(45 92% 84%), hsl(var(--brand)) 42%, hsl(35 52% 44%) 100%);
+    --gradient-brand: linear-gradient(180deg, hsl(var(--soft-amber)), hsl(var(--antique-gold)) 48%, hsl(34 47% 34%) 100%);
     --gradient-surface: linear-gradient(180deg, hsl(var(--surface-raised) / 0.98), hsl(var(--surface-base) / 0.96) 48%, hsl(var(--background-strong) / 0.98));
     --gradient-page:
-      radial-gradient(circle at 50% -8%, hsl(var(--brand) / 0.2), transparent 26%),
-      radial-gradient(circle at 16% 16%, hsl(40 46% 18% / 0.2), transparent 22%),
-      radial-gradient(circle at 84% 14%, hsl(32 42% 14% / 0.16), transparent 24%),
-      linear-gradient(180deg, hsl(18 22% 4%) 0%, hsl(22 18% 5%) 18%, hsl(23 18% 6%) 42%, hsl(var(--background-strong)) 100%);
+      radial-gradient(circle at 50% -8%, hsl(var(--brand) / 0.16), transparent 26%),
+      radial-gradient(circle at 16% 16%, hsl(37 40% 14% / 0.18), transparent 22%),
+      radial-gradient(circle at 84% 14%, hsl(27 34% 12% / 0.14), transparent 24%),
+      linear-gradient(180deg, hsl(24 12% 5%) 0%, hsl(24 10% 6%) 18%, hsl(24 10% 7%) 42%, hsl(var(--background-strong)) 100%);
     --gradient-hero: linear-gradient(180deg, hsl(var(--background) / 0.06) 0%, hsl(var(--background) / 0.46) 18%, hsl(var(--background-strong) / 0.9) 70%, hsl(var(--background-strong)) 100%);
     --gradient-warning: linear-gradient(135deg, hsl(var(--destructive-foreground) / 0.94), hsl(var(--destructive)) 42%, hsl(2 73% 18%) 100%);
     --gradient-metal: linear-gradient(180deg, hsl(var(--surface-strong) / 0.96), hsl(var(--surface-raised) / 0.94) 42%, hsl(var(--surface-base) / 0.98) 100%);
@@ -118,8 +122,8 @@
     --component-progress-bad: var(--status-bad);
 
     --gold: var(--brand);
-    --gold-light: 47 100% 82%;
-    --gold-dark: 44 63% 44%;
+    --gold-light: 40 82% 70%;
+    --gold-dark: 34 47% 34%;
     --blood: var(--destructive);
     --blood-light: var(--status-bad);
     --mystic: var(--info);
@@ -140,8 +144,8 @@
     --sidebar-primary-foreground: var(--brand-foreground);
     --sidebar-accent: 24 13% 16%;
     --sidebar-accent-foreground: 39 29% 90%;
-    --sidebar-border: 40 18% 25%;
-    --sidebar-ring: 44 86% 63%;
+    --sidebar-border: 31 18% 21%;
+    --sidebar-ring: 39 49% 57%;
   }
 
   * {
@@ -172,8 +176,8 @@
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(180deg, hsl(40 34% 12% / 0.16), transparent 22%),
-      radial-gradient(circle at 50% -8%, hsl(var(--brand) / 0.2), transparent 22%),
+      linear-gradient(180deg, hsl(36 28% 10% / 0.14), transparent 22%),
+      radial-gradient(circle at 50% -8%, hsl(var(--brand) / 0.16), transparent 22%),
       var(--witcher-gold-texture-bright),
       radial-gradient(circle at 50% -8%, hsl(var(--brand) / 0.16), transparent 24%),
       radial-gradient(circle at 12% 20%, hsl(38 42% 16% / 0.14), transparent 18%),
@@ -184,7 +188,7 @@
     background-size: auto, 980px, auto, auto, auto, auto, auto, auto;
     background-repeat: no-repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
     mix-blend-mode: soft-light;
-    opacity: 0.18;
+    opacity: 0.15;
     z-index: -2;
   }
 
@@ -195,9 +199,9 @@
     pointer-events: none;
     background:
       linear-gradient(90deg, hsl(18 20% 4% / 0.72), transparent 18%, transparent 82%, hsl(18 20% 4% / 0.72)),
-      linear-gradient(180deg, hsl(23 18% 7% / 0.54), transparent 18%, transparent 82%, hsl(18 18% 4% / 0.62)),
-      radial-gradient(circle at top, hsl(var(--brand) / 0.06), transparent 34%),
-      radial-gradient(circle at center, transparent 0%, transparent 34%, hsl(20 18% 4% / 0.18) 70%, hsl(20 18% 4% / 0.46) 100%),
+      linear-gradient(180deg, hsl(23 18% 7% / 0.52), transparent 18%, transparent 82%, hsl(18 18% 4% / 0.6)),
+      radial-gradient(circle at top, hsl(var(--brand) / 0.05), transparent 34%),
+      radial-gradient(circle at center, transparent 0%, transparent 34%, hsl(20 18% 4% / 0.16) 70%, hsl(20 18% 4% / 0.42) 100%),
       linear-gradient(180deg, transparent 0, hsl(var(--background) / 0.18) 32%, hsl(var(--background) / 0.58) 100%),
       repeating-linear-gradient(
         180deg,

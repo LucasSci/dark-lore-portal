@@ -32,6 +32,9 @@ export default function ArchivePortalSection({
               {description}
             </p>
           ) : null}
+          <div className="mt-5">
+            <div className="dark-lore-divider" aria-hidden="true" />
+          </div>
         </div>
 
         <div className="dark-lore-archive-portal-grid">

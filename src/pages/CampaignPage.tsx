@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
+import RitualSectionHeading from "@/components/portal/RitualSectionHeading";
 import { archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
 import { useCampaignPublications } from "@/lib/publications";
@@ -83,12 +84,14 @@ export default function CampaignPage() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="dark-lore-hero-copy dark-lore-hero-copy-centered"
         >
+          <span className="dark-lore-portal-sigil" aria-hidden="true" />
           <p className="dark-lore-section-kicker justify-center">Arquivo das cronicas</p>
           <h1 className="dark-lore-display-title">Cronicas Veladas</h1>
           <p className="dark-lore-hero-text max-w-3xl text-center">
             Relatos de sessao, contratos, pressagios e testemunhos que continuaram a respirar
             dentro do arquivo.
           </p>
+          <div className="dark-lore-divider" aria-hidden="true" />
           <div className="flex justify-center pt-2">
             <Link to="#cronicas-arquivo" className="dark-lore-button">
               Abrir manuscritos
@@ -128,10 +131,12 @@ export default function CampaignPage() {
 
       <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
         <div className="space-y-6">
-          <div className="text-center">
-            <p className="dark-lore-section-kicker justify-center">Formas de leitura</p>
-            <h2 className="dark-lore-section-title mx-auto">Tres trilhas para entrar no arquivo</h2>
-          </div>
+          <RitualSectionHeading
+            kicker="Formas de leitura"
+            title="Tres trilhas para entrar no arquivo"
+            description="As cronicas foram organizadas como registros vivos: leitura corrida, rastro ritual e arquivo continuo para reaparecer em campanha."
+            align="center"
+          />
 
           <div className="grid gap-4 md:grid-cols-3">
             {chronicleWays.map(({ icon: Icon, title, description }, index) => (
@@ -160,47 +165,56 @@ export default function CampaignPage() {
         </div>
       </section>
 
-      <section id="cronicas-arquivo" className="dark-lore-feature-grid">
-        {featured.map((publication, index) => (
-          <motion.article
-            key={publication.id}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.28 }}
-            transition={{ duration: 0.55, delay: index * 0.08 }}
-            className="dark-lore-feature-card"
-          >
-            <div className="dark-lore-feature-image-wrap">
-              <img
-                src={archiveGallery[index % archiveGallery.length]}
-                alt=""
-                aria-hidden="true"
-                className="dark-lore-feature-image"
-              />
-            </div>
-            <div className="dark-lore-feature-body">
-              <p className="dark-lore-card-meta">
-                {String(publication.chapterNumber).padStart(2, "0")} - {publication.location}
-              </p>
-              <h2 className="dark-lore-card-title">{publication.title}</h2>
-              <p className="dark-lore-card-copy">{publication.excerpt}</p>
-              <Link to="/jogar" className="dark-lore-button dark-lore-button-small">
-                Ler relato
-              </Link>
-            </div>
-          </motion.article>
-        ))}
+      <section id="cronicas-arquivo" className="space-y-6">
+        <RitualSectionHeading
+          kicker="Manuscritos em destaque"
+          title="Tres entradas para abrir o arquivo"
+          description="Comece pelos registros que melhor sustentam o tom da campanha: um manuscrito central, um rastro de estrada e um eco que pode voltar a mesa."
+          align="center"
+        />
+
+        <div className="dark-lore-feature-grid">
+          {featured.map((publication, index) => (
+            <motion.article
+              key={publication.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.28 }}
+              transition={{ duration: 0.55, delay: index * 0.08 }}
+              className="dark-lore-feature-card"
+            >
+              <div className="dark-lore-feature-image-wrap">
+                <img
+                  src={archiveGallery[index % archiveGallery.length]}
+                  alt=""
+                  aria-hidden="true"
+                  className="dark-lore-feature-image"
+                />
+              </div>
+              <div className="dark-lore-feature-body">
+                <p className="dark-lore-card-meta">
+                  {String(publication.chapterNumber).padStart(2, "0")} - {publication.location}
+                </p>
+                <h2 className="dark-lore-card-title">{publication.title}</h2>
+                <p className="dark-lore-card-copy">{publication.excerpt}</p>
+                <Link to={`/cronicas/${publication.slug}`} className="dark-lore-button dark-lore-button-small">
+                  Ler relato
+                </Link>
+              </div>
+            </motion.article>
+          ))}
+        </div>
       </section>
 
       {archive.length > 0 ? (
         <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
           <div className="space-y-6">
-            <div className="text-center">
-              <p className="dark-lore-section-kicker justify-center">Arquivo continuo</p>
-              <h2 className="dark-lore-section-title mx-auto">
-                Rastros, contratos e rumores preservados
-              </h2>
-            </div>
+            <RitualSectionHeading
+              kicker="Arquivo continuo"
+              title="Rastros, contratos e rumores preservados"
+              description="Quando o manuscrito principal termina, o arquivo continua em relatos menores, ecos de sessao e registros que mantem a campanha respirando."
+              align="center"
+            />
 
             <div className="dark-lore-list-grid">
               {archive.map((publication, index) => (
@@ -219,6 +233,12 @@ export default function CampaignPage() {
                     {publication.title}
                   </h3>
                   <p className="dark-lore-card-copy">{publication.excerpt}</p>
+                  <Link
+                    to={`/cronicas/${publication.slug}`}
+                    className="dark-lore-button dark-lore-button-small"
+                  >
+                    Abrir manuscrito
+                  </Link>
                 </motion.article>
               ))}
             </div>

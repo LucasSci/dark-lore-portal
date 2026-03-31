@@ -73,8 +73,11 @@ export default function Header() {
             </div>
 
             <Link to="/" className="dark-lore-brand">
-              <span className="dark-lore-brand-kicker">{archiveBrand.subtitle}</span>
-              <span className="dark-lore-brand-text">{archiveBrand.title}</span>
+              <span className="dark-lore-portal-sigil" aria-hidden="true" />
+              <span className="flex flex-col">
+                <span className="dark-lore-brand-kicker">{archiveBrand.subtitle}</span>
+                <span className="dark-lore-brand-text">{archiveBrand.title}</span>
+              </span>
             </Link>
 
             <div className="hidden min-w-0 items-center justify-start gap-1 xl:flex">

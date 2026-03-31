@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
+import { getTabletopLoreCompendium } from "@/lib/tabletop-lore";
 
 const sessionMetrics = [
   { label: "Nucleo", value: "Mesa, oraculo e comando" },
@@ -80,6 +81,8 @@ const sessionPortals = [
   },
 ] as const;
 
+const tabletopLoreCompendium = getTabletopLoreCompendium();
+
 export default function PlayPage() {
   usePortalShellMode("editorial", "ambient");
 
@@ -97,12 +100,14 @@ export default function PlayPage() {
           <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
 
           <div className="dark-lore-hero-copy relative z-10 max-w-5xl">
+            <span className="dark-lore-portal-sigil" aria-hidden="true" />
             <span className="dark-lore-section-kicker">Camara de sessao</span>
             <h1 className="dark-lore-section-title max-w-[12ch]">Jogar sem romper o arquivo.</h1>
             <p className="dark-lore-hero-text max-w-[62ch] text-base md:text-lg">
               A sessao parte deste nucleo. Mesa, oraculo, ficha e painel do mestre entram como
               ferramentas do mesmo jogo, sem disputar o centro da campanha.
             </p>
+            <div className="dark-lore-divider" aria-hidden="true" />
 
             <div className="flex flex-wrap gap-3">
               <Link to="/mesa" className="dark-lore-button">
@@ -185,6 +190,58 @@ export default function PlayPage() {
             <img src={archiveReferenceArt.wanderer} alt="" className="dark-lore-editorial-image" />
             <div className="dark-lore-editorial-glow" />
           </figure>
+        </div>
+      </section>
+
+      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+        <div className="space-y-6">
+          <div className="text-center">
+            <span className="dark-lore-section-kicker justify-center">Sementes de sessao</span>
+            <h2 className="dark-lore-section-title mx-auto">Abra a mesa ja encostada no lore.</h2>
+            <p className="mx-auto max-w-3xl text-sm leading-8 text-[hsl(var(--foreground)/0.76)] md:text-base">
+              Cada semente cruza dossie, manuscrito e atlas para evitar que a sessao comece do
+              zero. Entre por uma cena pronta e deixe o arquivo sustentar o resto.
+            </p>
+            <div className="mt-5">
+              <div className="dark-lore-divider" aria-hidden="true" />
+            </div>
+          </div>
+
+          <div className="dark-lore-list-grid">
+            {tabletopLoreCompendium.sessionSeeds.map((seed) => (
+              <article key={seed.slug} className="dark-lore-archive-card dark-lore-archive-card-horizontal">
+                <div className="dark-lore-paper-index">{seed.tags[0]?.slice(0, 2).toUpperCase() ?? "AR"}</div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="dark-lore-card-meta">{seed.tags.join(" - ")}</p>
+                    <h3 className="dark-lore-card-title text-[clamp(1.6rem,2.1vw,2.1rem)]">{seed.title}</h3>
+                    <p className="dark-lore-card-copy">{seed.summary}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Link to={seed.dossierHref} className="dark-lore-button dark-lore-button-small dark-lore-button-ghost">
+                      Abrir dossie
+                    </Link>
+                    <Link to={seed.chronicleHref} className="dark-lore-button dark-lore-button-small dark-lore-button-ghost">
+                      Ler manuscrito
+                    </Link>
+                    <Link to={seed.atlasHref} className="dark-lore-button dark-lore-button-small dark-lore-button-ghost">
+                      Ver no atlas
+                    </Link>
+                    {seed.battlemapHref ? (
+                      <Link to={seed.battlemapHref} className="dark-lore-button dark-lore-button-small">
+                        Carregar battlemap
+                      </Link>
+                    ) : null}
+                    {seed.quickSpawnHref ? (
+                      <Link to={seed.quickSpawnHref} className="dark-lore-button dark-lore-button-small">
+                        Trazer ameaca
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 

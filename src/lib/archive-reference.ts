@@ -21,4 +21,8 @@ export const archiveReferenceArt = {
   cardFrame: "/reference/moldura_de_card.png_202603261340.jpeg",
   cornerOrnament: "/reference/cantos_ornamentais.png_202603261340.jpeg",
   oracleMic: "/reference/areias/oracle-mic.png",
+  portalMark: "/reference/generated/archive-portal-mark.svg",
+  sectionDivider: "/reference/generated/mystic-divider.svg",
+  runeCircle: "/reference/generated/rune-circle.svg",
+  footerRunes: "/reference/generated/footer-runes.svg",
 } as const;

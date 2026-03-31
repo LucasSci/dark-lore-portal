@@ -3,32 +3,38 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
+import PortalDoorCard from "@/components/portal/PortalDoorCard";
+import PortalHeroSection from "@/components/portal/PortalHeroSection";
+import RitualSectionHeading from "@/components/portal/RitualSectionHeading";
 import { encyclopediaEntries } from "@/lib/encyclopedia";
 import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
 import { getWitcherBestiaryMetadata } from "@/lib/witcher-bestiary";
 
-const featureCards = [
+const primaryPortals = [
   {
     title: "Universo",
-    description: "Reinos esquecidos, linhagens partidas e nomes soterrados sob o mesmo arquivo.",
-    path: "/universo",
+    description: "Reinos, linhagens, faccoes e ruinas lidas como um unico corpo de historia.",
+    to: "/universo",
+    cta: "Explorar universo",
     image: archiveReferenceArt.wanderer,
-    cta: "Explorar Universo",
+    icon: BookMarked,
   },
   {
     title: "Bestiario",
-    description: "Criaturas antigas, entidades sem repouso e dossies de caca preservados no escuro.",
-    path: "/bestiario",
+    description: "Criaturas, entidades e presencas sem repouso preservadas em dossies de caca.",
+    to: "/bestiario",
+    cta: "Abrir bestiario",
     image: archiveReferenceArt.creature,
-    cta: "Abrir Bestiario",
+    icon: Skull,
   },
   {
     title: "Cronicas",
-    description: "Relatos de sessao, contratos velados e manuscritos que continuaram a respirar.",
-    path: "/cronicas",
+    description: "Relatos de estrada, contratos e manuscritos que mantem a campanha respirando.",
+    to: "/cronicas",
+    cta: "Ler cronicas",
     image: archiveReferenceArt.desk,
-    cta: "Explorar Cronicas",
+    icon: ScrollText,
   },
 ] as const;
 
@@ -36,142 +42,152 @@ const archiveIndexCards = [
   {
     icon: BookMarked,
     title: "Universo",
-    description: "Origem, eras, faccoes, ruinas e dossies que sustentam a leitura do continente.",
+    description: "Perfis, eras, faccoes e verbetes ligados ao mesmo arquivo.",
     path: "/universo",
   },
   {
     icon: Skull,
     title: "Bestiario",
-    description: "Monstros, reliquias vivas e ameacas catalogadas com fraquezas, regioes e risco.",
+    description: "Fraquezas, habitats, niveis de perigo e notas de encontro.",
     path: "/bestiario",
   },
   {
     icon: ScrollText,
     title: "Cronicas",
-    description: "Capitulos exclusivos, memoria de estrada e registros de sessao preservados no arquivo.",
+    description: "Capitulos, registros de sessao e manuscritos de campanha.",
     path: "/cronicas",
   },
   {
     icon: Compass,
     title: "Mapa",
-    description: "Rotas, fronteiras, locais e leituras em camadas conectadas aos verbetes do portal.",
+    description: "Atlas por camadas, rotas, regioes, locais e travessias.",
     path: "/mapa",
   },
   {
     icon: Swords,
     title: "Jogar",
-    description: "Hub de sessao com mesa, oraculo e caminhos de leitura viva para continuar a campanha.",
+    description: "Hub de sessao com mesa, oraculo e preparo para a proxima cena.",
     path: "/jogar",
   },
 ] as const;
 
-const homeArchivePortals = [
+const archivePortals = [
   {
-    title: "Universo",
-    description: "Leia eras, faccoes, locais e personagens antes de descer para o restante do arquivo.",
-    to: "/universo",
-    cta: "Abrir universo",
-  },
-  {
-    title: "Bestiario",
-    description: "Cruze criaturas, fraquezas, regioes e niveis de perigo num unico indice de caca.",
-    to: "/bestiario",
-    cta: "Abrir bestiario",
-  },
-  {
-    title: "Cronicas",
-    description: "Entre nos manuscritos de sessao, contratos e registros que mantem a campanha viva.",
-    to: "/cronicas",
-    cta: "Ler cronicas",
-  },
-  {
-    title: "Mapa",
-    description: "Abra o continente por camadas e ligue rotas, dossies e a mesa sem romper a leitura.",
+    title: "Abrir o atlas",
+    description: "Cruze cartas regionais, fronteiras e locais do continente sem romper a leitura.",
     to: "/mapa",
-    cta: "Abrir atlas",
+    cta: "Ir para o mapa",
+  },
+  {
+    title: "Entrar na sessao",
+    description: "Acesse a mesa, organize a cena e mantenha dossies e cronicas por perto.",
+    to: "/jogar",
+    cta: "Abrir sessao",
+  },
+  {
+    title: "Consultar o oraculo",
+    description: "Leia registros em voz alta ou mantenha um dialogo continuo com Luna.",
+    to: "/jogar/oraculo",
+    cta: "Despertar Luna",
+  },
+  {
+    title: "Enviar correspondencia",
+    description: "Abra um canal direto com o arquivo para propostas, duvidas e contato.",
+    to: "/contato",
+    cta: "Ir para contato",
   },
 ] as const;
 
 const bestiaryPreview = encyclopediaEntries
   .filter((entry) => entry.category === "monstros")
-  .slice(0, 4);
+  .slice(0, 3);
 
 export default function HomePage() {
   usePortalShellMode("editorial", "ambient");
 
   return (
-    <div className="mx-auto max-w-[1320px] space-y-10 px-4 py-8 md:px-6 md:py-12">
-      <section className="dark-lore-page-frame dark-lore-page-hero dark-lore-home-hero">
-        <img
-          src={archiveReferenceArt.hero}
-          alt=""
-          aria-hidden="true"
-          className="dark-lore-hero-background"
-        />
-        <div className="dark-lore-grain-overlay" />
-        <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
-        <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
+    <div className="mx-auto max-w-[1380px] space-y-10 px-4 py-8 md:px-6 md:py-12">
+      <PortalHeroSection
+        kicker={archiveBrand.subtitle}
+        titleTop="Arquivo do"
+        titleBottom="Continente"
+        tagline="Bestiarios, cartas do atlas, manuscritos e registros de sessao reunidos sob o mesmo selo."
+        backgroundImage={archiveReferenceArt.hero}
+        actions={[
+          { label: "Explorar Universo", to: "/universo" },
+          { label: "Abrir Bestiario", to: "/bestiario", variant: "secondary" },
+          { label: "Entrar na Campanha", to: "/jogar", variant: "secondary" },
+        ]}
+      />
 
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="dark-lore-hero-copy dark-lore-hero-copy-centered"
-        >
-          <p className="dark-lore-section-kicker justify-center">{archiveBrand.subtitle}</p>
-          <h1 className="dark-lore-display-title">{archiveBrand.title}</h1>
-          <p className="dark-lore-hero-text max-w-3xl text-center">
-            {archiveBrand.heroLine}
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            <Link to="/universo" className="dark-lore-button">
-              Explorar Universo
-            </Link>
-            <Link to="/bestiario" className="dark-lore-button dark-lore-button-ghost">
-              Abrir Bestiario
-            </Link>
-          </div>
-        </motion.div>
+      <section className="dark-lore-door-grid">
+        {primaryPortals.map((portal, index) => (
+          <motion.div
+            key={portal.title}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.48, delay: index * 0.06 }}
+          >
+            <PortalDoorCard {...portal} />
+          </motion.div>
+        ))}
       </section>
 
       <section className="dark-lore-page-frame dark-lore-editorial-grid">
-        <div className="dark-lore-editorial-copy">
-          <p className="dark-lore-section-kicker">Sobre o portal</p>
-          <h2 className="dark-lore-section-title">
-            Um arquivo unico para ler o continente com calma, peso e continuidade.
-          </h2>
+        <motion.div
+          initial={{ opacity: 0, x: -24 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{ duration: 0.58, ease: "easeOut" }}
+          className="dark-lore-editorial-copy"
+        >
+          <p className="dark-lore-section-kicker">O chamado</p>
+          <h2 className="dark-lore-section-title">Um portal feito para ler, cruzar e levar o mundo para a mesa.</h2>
           <p className="dark-lore-editorial-text">
-            O portal reune universo, bestiario, cronicas, cartografia e sessao sob a mesma
-            linguagem de leitura. Cada rota abre um tipo de registro, mas todas pertencem ao mesmo
-            arquivo.
+            O Arquivo do Continente organiza lore, criaturas, cronicas e cartas do atlas como
+            partes de uma mesma travessia. Primeiro voce entende o mundo. Depois encontra suas
+            ameacas, abre os registros e leva tudo para a sessao.
           </p>
           <p className="dark-lore-editorial-text">
-            Em vez de telas isoladas, a travessia foi organizada como estante viva: primeiro voce
-            entende o mundo, depois cruza as criaturas, desce aos manuscritos e por fim leva tudo
-            para a mesa.
+            Nada aqui deveria soar como ferramenta isolada. O mapa conversa com os verbetes, o
+            bestiario dialoga com as cronicas, e a sessao continua a leitura sem quebrar o clima.
           </p>
-          <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
-            Abrir a camara de sessao
-          </Link>
-        </div>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Link to="/mapa" className="dark-lore-button">
+              Abrir Atlas Completo
+            </Link>
+            <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
+              Cruzar com a Sessao
+            </Link>
+          </div>
+        </motion.div>
 
-        <div className="dark-lore-editorial-figure">
+        <motion.div
+          initial={{ opacity: 0, x: 24 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{ duration: 0.58, ease: "easeOut", delay: 0.08 }}
+          className="dark-lore-editorial-figure"
+        >
           <img
-            src={archiveReferenceArt.desk}
+            src={archiveReferenceArt.portal}
             alt=""
             aria-hidden="true"
             className="dark-lore-editorial-image"
           />
           <div className="dark-lore-editorial-glow" />
-        </div>
+        </motion.div>
       </section>
 
       <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
         <div className="space-y-6">
-          <div className="text-center">
-            <p className="dark-lore-section-kicker justify-center">Indice do arquivo</p>
-            <h2 className="dark-lore-section-title mx-auto">O que permanece acessivel no limiar</h2>
-          </div>
+          <RitualSectionHeading
+            kicker="Indice do arquivo"
+            title="Cinco portas para continuar a leitura"
+            description="Cada trilha foi reduzida ao essencial: entrar, compreender o contexto e seguir para a proxima camada do continente sem friccao."
+            align="center"
+          />
 
           <div className="dark-lore-codex-grid">
             {archiveIndexCards.map(({ icon: Icon, title, description, path }, index) => (
@@ -179,7 +195,7 @@ export default function HomePage() {
                 key={title}
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.25 }}
+                viewport={{ once: true, amount: 0.24 }}
                 transition={{ duration: 0.45, delay: index * 0.05 }}
                 className="dark-lore-archive-card dark-lore-archive-card-compact"
               >
@@ -188,9 +204,7 @@ export default function HomePage() {
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="space-y-3">
-                    <h3 className="dark-lore-card-title text-[clamp(1.35rem,1.8vw,1.7rem)]">
-                      {title}
-                    </h3>
+                    <h3 className="dark-lore-card-title text-[clamp(1.35rem,1.8vw,1.7rem)]">{title}</h3>
                     <p className="dark-lore-card-copy">{description}</p>
                   </div>
                 </Link>
@@ -200,36 +214,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="dark-lore-feature-grid">
-        {featureCards.map((card, index) => (
-          <motion.article
-            key={card.title}
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.55, delay: index * 0.08 }}
-            className="dark-lore-feature-card"
-          >
-            <div className="dark-lore-feature-image-wrap">
-              <img src={card.image} alt="" aria-hidden="true" className="dark-lore-feature-image" />
-            </div>
-            <div className="dark-lore-feature-body">
-              <h2 className="dark-lore-card-title">{card.title}</h2>
-              <p className="dark-lore-card-copy">{card.description}</p>
-              <Link to={card.path} className="dark-lore-button dark-lore-button-small">
-                {card.cta}
-              </Link>
-            </div>
-          </motion.article>
-        ))}
-      </section>
-
       <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
         <div className="space-y-6">
-          <div className="text-center">
-            <p className="dark-lore-section-kicker justify-center">Criaturas em vigilia</p>
-            <h2 className="dark-lore-section-title mx-auto">Quatro presencas ja despertas</h2>
-          </div>
+          <RitualSectionHeading
+            kicker="Bestiario em vigilia"
+            title="Tres presencas ja catalogadas"
+            description="O arquivo de criaturas continua ligado ao mundo. Cada dossie pode abrir caca, atlas, cronica e sessao a partir do mesmo registro."
+            align="center"
+          />
 
           <div className="dark-lore-bestiary-grid">
             {bestiaryPreview.map((entry, index) => {
@@ -240,26 +232,21 @@ export default function HomePage() {
                   key={entry.slug}
                   initial={{ opacity: 0, y: 18 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.25 }}
-                  transition={{ duration: 0.5, delay: index * 0.06 }}
+                  viewport={{ once: true, amount: 0.24 }}
+                  transition={{ duration: 0.48, delay: index * 0.06 }}
                   className="dark-lore-beast-card"
                 >
                   <div className="dark-lore-beast-image-wrap">
                     <img src={entry.image} alt={entry.imageAlt} className="dark-lore-beast-image" />
                   </div>
                   <div className="dark-lore-beast-body">
-                    <h3 className="dark-lore-card-title text-[clamp(1.55rem,2vw,2rem)]">
-                      {entry.title}
-                    </h3>
+                    <h3 className="dark-lore-card-title text-[clamp(1.55rem,2vw,2rem)]">{entry.title}</h3>
                     <p className="dark-lore-card-meta">
                       {metadata?.type ?? "Entidade"}
-                      {metadata ? ` - Perigo ${metadata.dangerLevel}/5` : ""}
+                      {metadata ? ` - perigo ${metadata.dangerLevel}/5` : ""}
                     </p>
                     <p className="dark-lore-card-copy">{entry.summary}</p>
-                    <Link
-                      to={`/bestiario/${entry.slug}`}
-                      className="dark-lore-button dark-lore-button-small"
-                    >
+                    <Link to={`/bestiario/${entry.slug}`} className="dark-lore-button dark-lore-button-small">
                       Ver ficha
                     </Link>
                   </div>
@@ -271,10 +258,10 @@ export default function HomePage() {
       </section>
 
       <ArchivePortalSection
-        kicker="Explore o arquivo"
-        title="Quatro portas para continuar a leitura"
-        description="O portal inteiro foi organizado como uma estante coerente: mundo, criaturas, manuscritos e atlas se abrem sob a mesma voz editorial."
-        items={homeArchivePortals}
+        kicker="Passagens do arquivo"
+        title="Cada sala leva a outra"
+        description="Atlas, bestiario, cronicas e sessao foram organizados como um unico arquivo. Entre por qualquer porta e o resto do continente se abre em seguida."
+        items={archivePortals}
       />
 
       <section className="dark-lore-cta-band">

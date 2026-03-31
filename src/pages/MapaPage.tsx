@@ -90,6 +90,7 @@ export default function MapaPage() {
             <p className="dark-lore-hero-text max-w-[68ch] text-base md:text-lg">
               {atlasContext.description}
             </p>
+            <div className="dark-lore-divider" aria-hidden="true" />
 
             <div className="flex flex-wrap gap-3">
               <Link to="/universo" className="dark-lore-button">
@@ -98,8 +99,8 @@ export default function MapaPage() {
               <Link to="/mesa" className="dark-lore-button dark-lore-button-ghost">
                 Levar para a mesa
               </Link>
-              <Link to="/campanha" className="dark-lore-button dark-lore-button-ghost">
-                Cruzar campanha
+              <Link to="/cronicas" className="dark-lore-button dark-lore-button-ghost">
+                Cruzar cronicas
               </Link>
             </div>
 

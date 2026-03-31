@@ -1,7 +1,7 @@
 import { Mail, MapPin, MessageSquareMore } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { archiveBrand } from "@/lib/archive-reference";
+import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
 
 const contactPanels = [
@@ -33,13 +33,25 @@ export default function ContactPage() {
   return (
     <div className="mx-auto max-w-[1280px] space-y-10 px-4 py-10 md:px-6 md:py-14">
       <section className="dark-lore-page-frame dark-lore-page-hero dark-lore-contact-hero">
+        <img
+          src={archiveReferenceArt.forgotten}
+          alt=""
+          aria-hidden="true"
+          className="dark-lore-hero-background object-cover opacity-55"
+        />
+        <div className="dark-lore-hero-vignette" />
+        <div className="dark-lore-grain-overlay" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
+        <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
         <div className="dark-lore-hero-copy dark-lore-hero-copy-centered">
+          <span className="dark-lore-portal-sigil" aria-hidden="true" />
           <p className="dark-lore-section-kicker justify-center">{archiveBrand.subtitle}</p>
           <h1 className="dark-lore-display-title">Fale com o Arquivo</h1>
           <p className="dark-lore-hero-text max-w-3xl text-center">
             Toda correspondencia que cruza estas portas passa por Areias de Zerrikania. Se houver
             algo a registrar, este e o limiar.
           </p>
+          <div className="dark-lore-divider" aria-hidden="true" />
         </div>
       </section>
 

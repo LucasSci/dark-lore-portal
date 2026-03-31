@@ -1,0 +1,17 @@
+<svg width="1440" height="160" viewBox="0 0 1440 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="footerGold" x1="0" y1="80" x2="1440" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7A5A26" stop-opacity="0"/>
+      <stop offset="0.2" stop-color="#C9A15A" stop-opacity="0.52"/>
+      <stop offset="0.5" stop-color="#FFCC66" stop-opacity="0.8"/>
+      <stop offset="0.8" stop-color="#C9A15A" stop-opacity="0.52"/>
+      <stop offset="1" stop-color="#7A5A26" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path d="M0 80H560" stroke="url(#footerGold)" stroke-width="1.2"/>
+  <path d="M880 80H1440" stroke="url(#footerGold)" stroke-width="1.2"/>
+  <path d="M680 80L720 48L760 80L720 112L680 80Z" fill="#140E08" stroke="#C9A15A" stroke-width="1.4"/>
+  <circle cx="720" cy="80" r="8" fill="#FFCC66" fill-opacity="0.88"/>
+  <path d="M140 80L168 70V90L140 80Z" fill="#C9A15A" fill-opacity="0.42"/>
+  <path d="M1300 80L1272 70V90L1300 80Z" fill="#C9A15A" fill-opacity="0.42"/>
+</svg>

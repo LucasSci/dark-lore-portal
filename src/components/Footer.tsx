@@ -13,6 +13,9 @@ export default function Footer() {
       <div className="mx-auto max-w-[1480px] px-4 py-14 md:px-6 md:py-16">
         <div className="dark-lore-footer-inner">
           <div className="space-y-4 text-center">
+            <div className="flex justify-center">
+              <span className="dark-lore-portal-sigil" aria-hidden="true" />
+            </div>
             <p className="dark-lore-section-kicker justify-center">O arquivo permanece aberto</p>
             <h2 className="font-display text-4xl text-[hsl(var(--gold-light))] md:text-5xl">
               {archiveBrand.title}
@@ -21,6 +24,7 @@ export default function Footer() {
               {archiveBrand.subtitle} reune dossies, cronicas, cartas do atlas e entradas de
               sessao sob o mesmo selo.
             </p>
+            <div className="dark-lore-divider" aria-hidden="true" />
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 border-y border-[hsl(var(--brand)/0.18)] py-5">
