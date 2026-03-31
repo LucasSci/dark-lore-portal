@@ -15,10 +15,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Newsreader", "serif"],
-        heading: ["Newsreader", "serif"],
-        body: ["Manrope", "sans-serif"],
-        mono: ["IBM Plex Mono", "monospace"],
+        display: ["var(--font-display)", "serif"],
+        heading: ["var(--font-heading)", "serif"],
+        body: ["var(--font-body)", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"],
       },
       spacing: {
         "space-xs": "var(--space-xs)",

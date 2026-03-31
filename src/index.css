@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 @import "./styles/witcher-reference-fonts.css";
 @import "./styles/dark-lore-theme.css";
 @import "./styles/archive-oracle-theme.css";
@@ -77,9 +76,9 @@
     --space-3xl: 48px;
     --layout-gutter: clamp(18px, 4vw, 56px);
 
-    --font-display: "Cinzel", "Beaufort Pro", "Noto Serif", serif;
-    --font-heading: "Cinzel", "Beaufort Pro", "Noto Serif", serif;
-    --font-body: "Inter", "Gill Sans Nova", system-ui, sans-serif;
+    --font-display: "Beaufort Pro", "Noto Serif", Georgia, serif;
+    --font-heading: "Beaufort Pro", "Noto Serif", Georgia, serif;
+    --font-body: "Gill Sans Nova", "Segoe UI", system-ui, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
 
     --witcher-key-visual: url("/reference/witcher/images/key-visual.jpg");

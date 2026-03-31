@@ -27,7 +27,16 @@ export default function PortalDoorCard({
     >
       <Link to={to} className="dark-lore-door-card-link">
         <div className="dark-lore-door-media">
-          {image ? <img src={image} alt="" aria-hidden="true" className="dark-lore-door-image" /> : null}
+          {image ? (
+            <img
+              src={image}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+              className="dark-lore-door-image"
+            />
+          ) : null}
           <div className="dark-lore-door-overlay" />
           <div className="dark-lore-door-icon-ring" aria-label={title}>
             <Icon className="h-4 w-4" />

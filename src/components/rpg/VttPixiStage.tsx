@@ -381,7 +381,6 @@ export default function VttPixiStage({
     onSelectToken,
     onTravelEdge,
     onCellClick,
-    onTravelEdge,
     page,
     boardMode,
   ]);

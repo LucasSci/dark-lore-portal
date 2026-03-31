@@ -6,12 +6,12 @@ export const archiveBrand = {
 };
 
 export const archiveReferenceArt = {
-  hero: "/reference/Dark_fantasy_archive_202603261340.jpeg",
-  portal: "/reference/Dark_Lore_Portal_202603261340.jpeg",
-  creature: "/reference/Creature_archive_chamber_202603261340.jpeg",
-  wanderer: "/reference/Lone_wanderer_in_202603261340.jpeg",
-  desk: "/reference/Occult_desk_with_202603261340.jpeg",
-  forgotten: "/reference/dark_fantasy_forgotten_202603261340.jpeg",
+  hero: "/reference/optimized/archive-hero.jpg",
+  portal: "/reference/optimized/portal-scene.jpg",
+  creature: "/reference/optimized/creature-chamber.jpg",
+  wanderer: "/reference/optimized/wanderer-scene.jpg",
+  desk: "/reference/optimized/occult-desk.jpg",
+  forgotten: "/reference/optimized/forgotten-scene.jpg",
   embers: "/reference/Ember_particles_glowing_202603261340.jpeg",
   smoke: "/reference/Soft_dark_smoke_202603261340.jpeg",
   parchment: "/reference/Parchment_texture_with_202603261340.jpeg",

@@ -28,7 +28,14 @@ export default function PortalHeroSection({
 }: PortalHeroSectionProps) {
   return (
     <section className="dark-lore-page-frame dark-lore-page-hero dark-lore-home-hero">
-      <img src={backgroundImage} alt="" aria-hidden="true" className="dark-lore-hero-background" />
+      <img
+        src={backgroundImage}
+        alt=""
+        aria-hidden="true"
+        fetchPriority="high"
+        decoding="async"
+        className="dark-lore-hero-background"
+      />
       <div className="dark-lore-hero-vignette" />
       <div className="dark-lore-grain-overlay" />
       <HeroEmbers />

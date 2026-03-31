@@ -37,6 +37,8 @@ export default function ContactPage() {
           src={archiveReferenceArt.forgotten}
           alt=""
           aria-hidden="true"
+          fetchPriority="high"
+          decoding="async"
           className="dark-lore-hero-background object-cover opacity-55"
         />
         <div className="dark-lore-hero-vignette" />

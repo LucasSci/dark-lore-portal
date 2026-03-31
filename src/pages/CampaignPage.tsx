@@ -72,6 +72,8 @@ export default function CampaignPage() {
           src={archiveReferenceArt.desk}
           alt=""
           aria-hidden="true"
+          fetchPriority="high"
+          decoding="async"
           className="dark-lore-hero-background object-cover opacity-55"
         />
         <div className="dark-lore-grain-overlay" />
@@ -123,6 +125,8 @@ export default function CampaignPage() {
             src={archiveReferenceArt.forgotten}
             alt=""
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
             className="dark-lore-editorial-image"
           />
           <div className="dark-lore-editorial-glow" />
@@ -188,6 +192,8 @@ export default function CampaignPage() {
                   src={archiveGallery[index % archiveGallery.length]}
                   alt=""
                   aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
                   className="dark-lore-feature-image"
                 />
               </div>

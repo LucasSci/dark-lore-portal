@@ -93,6 +93,9 @@ export default function PlayPage() {
           <img
             src={archiveReferenceArt.hero}
             alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            decoding="async"
             className="dark-lore-hero-background object-[center_38%]"
           />
           <div className="dark-lore-grain-overlay" />
@@ -187,7 +190,14 @@ export default function PlayPage() {
           </div>
 
           <figure className="dark-lore-editorial-figure">
-            <img src={archiveReferenceArt.wanderer} alt="" className="dark-lore-editorial-image" />
+            <img
+              src={archiveReferenceArt.wanderer}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+              className="dark-lore-editorial-image"
+            />
             <div className="dark-lore-editorial-glow" />
           </figure>
         </div>

@@ -174,6 +174,8 @@ export default function HomePage() {
             src={archiveReferenceArt.portal}
             alt=""
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
             className="dark-lore-editorial-image"
           />
           <div className="dark-lore-editorial-glow" />
@@ -237,7 +239,13 @@ export default function HomePage() {
                   className="dark-lore-beast-card"
                 >
                   <div className="dark-lore-beast-image-wrap">
-                    <img src={entry.image} alt={entry.imageAlt} className="dark-lore-beast-image" />
+                    <img
+                      src={entry.image}
+                      alt={entry.imageAlt}
+                      loading="lazy"
+                      decoding="async"
+                      className="dark-lore-beast-image"
+                    />
                   </div>
                   <div className="dark-lore-beast-body">
                     <h3 className="dark-lore-card-title text-[clamp(1.55rem,2vw,2rem)]">{entry.title}</h3>
