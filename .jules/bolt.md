@@ -9,3 +9,7 @@
 ## 2025-05-18 - AABB Filtering and Typed Arrays for Dynamic Lighting Raycasting
 **Learning:** During 2D raycasting (e.g. `computeVisibilityPolygon`), processing every single map wall during the hot intersection loop results in a massive GC overhead due to `Set` iterations, nested point coordinate lookups, and the volume of vector operations. Simply allocating a new `{x, y}` point for each ray direction and checking distance can significantly lag the canvas rendering.
 **Action:** Unroll vector math objects (`{x, y}`) into primitive numbers, inline simple vector math (like Cramer's rule for segment intersection), replace `Set` iterations with pre-allocated typed arrays (like `Float64Array`) for angles/walls, and importantly, utilize an AABB check to entirely filter out distant walls (excluding the map boundary walls) from the loop.
+
+## 2024-04-01 - Chained Array Maps in Polygon Rendering
+**Learning:** Chaining `.map().map()` on large coordinate arrays for rendering map polygons (like Leaflet paths) creates intermediate arrays that must be garbage collected, introducing jank during rapid zoom/pan operations. Projecting entire polygons point-by-point just to calculate their bounding box is also an O(n) waste when projecting the bounds directly is O(1).
+**Action:** Combine multiple array vector transformations into a single `.map()` pass. Always compute bounds on the unprojected source data first, then project the corners of the bounding box, rather than projecting all vertices.
