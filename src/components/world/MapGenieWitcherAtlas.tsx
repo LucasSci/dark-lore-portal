@@ -510,7 +510,7 @@ export default function MapGenieWitcherAtlas({
     const targetBounds = selectedLocation
       ? projectBounds(buildRectAround(selectedLocation.coordinates, 90, 90))
       : selectedSubRegion
-        ? getPolygonBounds(selectedSubRegion.polygonCoordinates.map(projectCoordinate))
+        ? projectBounds(getPolygonBounds(selectedSubRegion.polygonCoordinates))
         : selectedRegion
           ? projection.targetBounds
           : projection.targetBounds;
@@ -555,9 +555,9 @@ export default function MapGenieWitcherAtlas({
 
     visibleRegions.forEach((region, index) => {
       const hue = [208, 255, 34, 7][index % 4];
-      const projectedRegionPolygon = region.polygonCoordinates.map(projectCoordinate);
 
-      L.polygon(projectedRegionPolygon.map(toLeafletPoint), {
+      // ⚡ Bolt: Combine map projections to avoid intermediate array allocation
+      L.polygon(region.polygonCoordinates.map((p) => toLeafletPoint(projectCoordinate(p))), {
         color: `hsla(${hue}, 85%, 72%, 0.92)`,
         weight: 1.4,
         fillColor: `hsla(${hue}, 85%, 48%, 0.22)`,
@@ -568,7 +568,8 @@ export default function MapGenieWitcherAtlas({
         .addTo(groups.regions);
 
       if (zoomStage === "world") {
-        L.marker(toLeafletPoint(getBoundsCenter(getPolygonBounds(projectedRegionPolygon))), {
+        // ⚡ Bolt: AABB projection instead of mapping every point
+        L.marker(toLeafletPoint(getBoundsCenter(projectBounds(getPolygonBounds(region.polygonCoordinates)))), {
           icon: buildIcon(region.name.slice(0, 2), "region"),
         })
           .on("click", () => navigate(buildPath({ regionSlug: region.slug })))
@@ -579,9 +580,9 @@ export default function MapGenieWitcherAtlas({
     if (zoomStage !== "world") {
       visibleSubRegions.forEach((subRegion) => {
         const region = world.regions.find((entry) => entry.id === subRegion.regionId);
-        const projectedSubRegionPolygon = subRegion.polygonCoordinates.map(projectCoordinate);
 
-        L.polygon(projectedSubRegionPolygon.map(toLeafletPoint), {
+        // ⚡ Bolt: Combine map projections to avoid intermediate array allocation
+        L.polygon(subRegion.polygonCoordinates.map((p) => toLeafletPoint(projectCoordinate(p))), {
           color: "#d6b15f",
           weight: 1,
           fillColor: "#0b1018",
