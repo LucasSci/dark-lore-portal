@@ -6,3 +6,7 @@
 **Vulnerability:** The AI-generated visual environment (`appCode`) for Oracle Luna was rendered in an `iframe` that had both `allow-scripts` and `allow-same-origin` in its `sandbox` attribute. This permitted the dynamic, potentially untrusted AI HTML to interact with the main application's origin, posing a serious Cross-Site Scripting (XSS) risk.
 **Learning:** Using `allow-same-origin` inside an iframe that renders user or AI-generated content breaks the isolation boundary, allowing the iframe script to traverse the DOM (`window.parent`), read cookies, and access `localStorage`.
 **Prevention:** Never use `allow-same-origin` alongside `allow-scripts` in a sandboxed iframe intended for untrusted content. Let the iframe be isolated into an opaque origin.
+## 2024-05-20 - Avoid Date.now() for unique identifiers
+**Vulnerability:** Several RPG components (CombatTracker, GameMasterPanel, publications) used `Date.now().toString()` or `${Date.now()}` to generate unique IDs for new entities, publications, and combatants.
+**Learning:** `Date.now()` is highly predictable and can generate duplicate IDs if multiple entities are created within the same millisecond (e.g., during rapid UI interactions, bulk creation, or automated testing). This causes React rendering bugs (duplicate keys) and potential ID collision vulnerabilities.
+**Prevention:** Always use the centralized `generateSecureId()` utility for ID generation in React state and store objects, ensuring uniqueness and security.

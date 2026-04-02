@@ -12,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 
+import { generateSecureId } from "@/lib/utils";
 import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,7 @@ interface Combatant {
 }
 
 interface LogEntry {
-  id: number;
+  id: string;
   round: number;
   actor: string;
   type: "start" | "round" | "attack" | "heal" | "defeat" | "end";
@@ -81,7 +82,7 @@ export default function CombatTracker() {
   ) => {
     setBattleLog((previous) => [
       {
-        id: Date.now() + previous.length,
+        id: generateSecureId(),
         round: roundOverride,
         actor,
         type,
@@ -102,7 +103,7 @@ export default function CombatTracker() {
     const nextCombatants = sortCombatants([
       ...combatants,
       {
-        id: `npc-${Date.now()}`,
+        id: `npc-${generateSecureId()}`,
         name: safeName,
         initiative,
         hpCurrent: npcHp,

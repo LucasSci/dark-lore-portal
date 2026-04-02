@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { generateSecureId } from "@/lib/utils";
 import {
   useCampaignPublications,
   type CampaignPublication,
@@ -97,7 +98,7 @@ export default function GameMasterPanel() {
       return;
     }
 
-    const nextNpc = { ...newNpc, id: `npc-${Date.now()}` };
+    const nextNpc = { ...newNpc, id: `npc-${generateSecureId()}` };
     setNpcs((previous) => [...previous, nextNpc]);
     setNewNpc({ name: "", hp: 20, ac: 12, notes: "" });
     toast.success("NPC adicionado ao painel.");
