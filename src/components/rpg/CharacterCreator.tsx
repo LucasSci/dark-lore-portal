@@ -129,6 +129,7 @@ export default function CharacterCreator({ onSave }: Props) {
                     ? "border-border/70 bg-[linear-gradient(180deg,hsl(var(--surface-raised)/0.84),hsl(var(--surface-base)/0.9))] text-foreground"
                     : "border-border/60 bg-transparent text-muted-foreground"
               }`}
+              aria-current={active ? "step" : undefined}
             >
               {wizardStep.label}
             </button>
