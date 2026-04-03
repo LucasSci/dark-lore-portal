@@ -57,25 +57,12 @@ export function computeVisibilityPolygon(
     maxY = oy + maxRadius;
   }
 
-  // Add bounding box walls unconditionally to the end so they are never filtered
-  const allWalls: Segment[] = [
-    ...walls,
-    { a: { x: 0, y: 0 }, b: { x: bounds.width, y: 0 } },
-    { a: { x: bounds.width, y: 0 }, b: { x: bounds.width, y: bounds.height } },
-    { a: { x: bounds.width, y: bounds.height }, b: { x: 0, y: bounds.height } },
-    { a: { x: 0, y: bounds.height }, b: { x: 0, y: 0 } },
-  ];
-
   // ⚡ Bolt: Filter active walls and pre-extract coordinates to avoid object lookups
+  // Avoid allocating a new `allWalls` array with the spread operator on every raycast to reduce GC overhead.
   const activeWalls: Segment[] = [];
-  for (let i = 0; i < allWalls.length; i++) {
-    const w = allWalls[i];
 
-    // Unconditionally include the 4 boundary walls (the last 4 in the array)
-    if (i >= allWalls.length - 4) {
-      activeWalls.push(w);
-      continue;
-    }
+  for (let i = 0; i < walls.length; i++) {
+    const w = walls[i];
 
     // AABB check
     if (maxRadius !== undefined) {
@@ -90,6 +77,12 @@ export function computeVisibilityPolygon(
     }
     activeWalls.push(w);
   }
+
+  // Unconditionally include the 4 boundary walls at the end so they are never filtered out
+  activeWalls.push({ a: { x: 0, y: 0 }, b: { x: bounds.width, y: 0 } });
+  activeWalls.push({ a: { x: bounds.width, y: 0 }, b: { x: bounds.width, y: bounds.height } });
+  activeWalls.push({ a: { x: bounds.width, y: bounds.height }, b: { x: 0, y: bounds.height } });
+  activeWalls.push({ a: { x: 0, y: bounds.height }, b: { x: 0, y: 0 } });
 
   const activeWallsCount = activeWalls.length;
 
