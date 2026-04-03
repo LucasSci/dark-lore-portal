@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { BookMarked, Dices, ScrollText, WandSparkles } from "lucide-react";
 import { toast } from "sonner";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 import CharacterSheet from "@/components/rpg/CharacterSheet";
 import DiceRoller from "@/components/rpg/DiceRoller";
@@ -22,8 +22,9 @@ import type { WitcherInventoryItem, WitcherSpellDefinition } from "@/lib/witcher
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function FichaPage() {
+  const { sheetId } = useParams();
   const [searchParams] = useSearchParams();
-  const requestedCharacterId = searchParams.get("character");
+  const requestedCharacterId = sheetId ?? searchParams.get("character");
   const bundleQuery = useQuery({
     queryKey: ["character-bundle", requestedCharacterId ?? "latest"],
     queryFn: () => loadCharacterBundle(requestedCharacterId),

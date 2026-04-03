@@ -2,6 +2,10 @@
 
 Portal dark fantasy de Areias de Zerrikania, reunindo universo, bestiario, cronicas, atlas, mesa e o Oraculo de Luna.
 
+## Licenca
+
+Este repositório agora segue **GPL v3** para acomodar a adaptacao direta de partes do sistema `TheWitcherTRPG-main`. Veja [docs/gpl-attribution.md](docs/gpl-attribution.md) para os detalhes de origem.
+
 ## Stack
 
 - Vite
@@ -12,12 +16,14 @@ Portal dark fantasy de Areias de Zerrikania, reunindo universo, bestiario, croni
 - Framer Motion
 - Supabase
 - Gemini Live para o oraculo
+- Socket.io dedicado para a mesa multiplayer
 
 ## Scripts
 
 ```bash
 npm install
 npm run dev
+npm run dev:realtime
 npm run build
 npm run preview
 npm test
@@ -39,6 +45,7 @@ Crie um `.env` com as chaves necessarias para os recursos ao vivo:
 VITE_GEMINI_API_KEY=
 VITE_GEMINI_LIVE_MODEL=gemini-3.1-flash-live-preview
 VITE_GEMINI_LIVE_VOICE=Zephyr
+VITE_TABLETOP_SOCKET_URL=http://localhost:4010
 ```
 
 ## Build mobile

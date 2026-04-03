@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Castle,
@@ -69,7 +69,6 @@ import {
   persistSceneEventLog,
   persistSceneObjects,
   persistSceneSnapshot,
-  useVttRealtime,
 } from "@/lib/vtt-realtime";
 import {
   addSceneNpc,
@@ -117,6 +116,14 @@ import {
   type SceneModel,
 } from "@/lib/virtual-tabletop";
 import { ensureMesaSession } from "@/lib/sheets/persistence";
+import {
+  buildSceneNarration,
+  getWitcherCampaignById,
+  getWitcherScenesForCampaign,
+  getWitcherSceneSeed,
+  WitcherCampaignBrief,
+  useSocketTabletopRealtime,
+} from "@/features/witcher-system";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { LOCAL_SESSION_ID } from "@/lib/local-identities";
@@ -304,6 +311,13 @@ function MesaStageFallback() {
 
 export default function MesaPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { campaignId: campaignRouteId, sceneId: sceneRouteId } = useParams();
+  const activeCampaign = useMemo(() => getWitcherCampaignById(campaignRouteId), [campaignRouteId]);
+  const campaignScenes = useMemo(() => getWitcherScenesForCampaign(campaignRouteId), [campaignRouteId]);
+  const activeSceneSeed = useMemo(
+    () => getWitcherSceneSeed(sceneRouteId ?? activeCampaign.defaultSceneId),
+    [activeCampaign.defaultSceneId, sceneRouteId],
+  );
   const [scene, setScene] = useState<SceneModel>(() => createSceneModel());
   const [sessionReady, setSessionReady] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
@@ -358,14 +372,48 @@ export default function MesaPage() {
     let cancelled = false;
 
     void (async () => {
-      const session = await ensureMesaSession();
-      const nextSessionId = session?.id ?? LOCAL_SESSION_ID;
+      const session = await ensureMesaSession(campaignRouteId ?? null);
+      const nextSessionId = campaignRouteId ?? session?.id ?? LOCAL_SESSION_ID;
       let loadedScene = (await loadSceneSnapshot(nextSessionId)) ?? createSceneModel(nextSessionId);
 
       if (isLegacySeedScene(loadedScene)) {
         loadedScene = createSceneModel(nextSessionId);
         await persistSceneSnapshot(loadedScene);
       }
+
+      const sceneNarration = buildSceneNarration(activeSceneSeed);
+      loadedScene = {
+        ...loadedScene,
+        activePageId: loadedScene.pages[0]?.id ?? loadedScene.activePageId,
+        pages: loadedScene.pages.map((page, index) =>
+          index === 0
+            ? {
+                ...page,
+                name: activeSceneSeed.name,
+                region: activeSceneSeed.region,
+              }
+            : page,
+        ),
+        chatMessages:
+          loadedScene.chatMessages.length > 0
+            ? loadedScene.chatMessages
+            : [
+                {
+                  id: `chat-${Date.now()}-system`,
+                  author: "Sistema",
+                  tone: "system",
+                  text: sceneNarration.system,
+                  time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+                },
+                {
+                  id: `chat-${Date.now()}-narrador`,
+                  author: activeCampaign.gmLabel,
+                  tone: "party",
+                  text: sceneNarration.narrator,
+                  time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+                },
+              ],
+      };
 
       if (!session && nextSessionId === LOCAL_SESSION_ID) {
         if (!cancelled) {
@@ -394,10 +442,11 @@ export default function MesaPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeCampaign.gmLabel, activeSceneSeed, campaignRouteId]);
 
-  const { presence, broadcastScene, broadcastSceneEvent } = useVttRealtime({
+  const { presence, broadcastScene, broadcastSceneEvent } = useSocketTabletopRealtime({
     sessionId: scene.sessionId,
+    sceneId: sceneRouteId ?? activeCampaign.defaultSceneId,
     displayName: "Narrador",
     role: "gm",
     onRemoteScene: (remoteScene) => {
@@ -1275,8 +1324,9 @@ export default function MesaPage() {
       {/* Center: canvas area */}
       <div className="relative flex-1 flex flex-col overflow-hidden">
         {/* Top bar inside canvas */}
-        <div className="flex h-10 items-center justify-between border-b border-border/40 bg-surface-raised/80 px-2 sm:px-3">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="border-b border-border/40 bg-surface-raised/80">
+          <div className="flex h-10 items-center justify-between px-2 sm:px-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Mobile back button */}
             <Link
               to="/jogar"
@@ -1289,6 +1339,9 @@ export default function MesaPage() {
             <span className="truncate font-heading text-xs uppercase tracking-[0.2em] text-primary/80">
               {activePage?.name ?? "Pagina"}
             </span>
+            <Badge variant="outline" className="hidden border-border/40 text-[10px] text-foreground/78 md:inline-flex">
+              {activeCampaign.title}
+            </Badge>
             <Badge variant="outline" className="hidden border-primary/30 text-[10px] text-primary lg:inline-flex">
               Witcher TRPG
             </Badge>
@@ -1312,7 +1365,7 @@ export default function MesaPage() {
             {activeTurn && (
               <Badge variant="info" className="text-[10px]">
                 <Sword className="mr-1 h-3 w-3" />
-                <span className="hidden sm:inline">{activeTurn.name} —</span> R{scene.initiative.round}
+                <span className="hidden sm:inline">{activeTurn.name} -</span> R{scene.initiative.round}
               </Badge>
             )}
             {/* Mobile panel toggle */}
@@ -1324,6 +1377,28 @@ export default function MesaPage() {
             >
               <MessageSquare className="h-4 w-4" />
             </button>
+            </div>
+          </div>
+
+          <div className="hidden items-center justify-between gap-4 border-t border-border/30 px-3 py-2 md:flex">
+            <div className="min-w-0 space-y-1">
+              <p className="truncate text-[11px] uppercase tracking-[0.18em] text-primary/76">
+                {activeCampaign.stageLabel} · {activeSceneSeed.name}
+              </p>
+              <p className="truncate text-xs leading-5 text-foreground/70">{activeSceneSeed.briefing}</p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {activeCampaign.players.map((player) => (
+                <Badge
+                  key={player.id}
+                  variant="outline"
+                  className="border-border/40 text-[10px] uppercase tracking-[0.12em] text-foreground/76"
+                >
+                  {player.name}
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1705,6 +1780,13 @@ export default function MesaPage() {
             <TabsContent value="codex" className="mt-0 flex-1 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="space-y-5 px-4 py-4 pr-5">
+                  <WitcherCampaignBrief
+                    campaign={activeCampaign}
+                    activeScene={activeSceneSeed}
+                    scenes={campaignScenes}
+                    compact
+                  />
+
                   <SidePanelCard
                     title="Sistema do Continente"
                     description="Referencia rapida do jogo importado para a mesa: profissoes, sinais, impacto e criticos."

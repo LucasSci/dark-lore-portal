@@ -32,7 +32,7 @@ interface PersistedCharacterRecord {
 
 const STORAGE_KEY = "dark-lore-sheet-character-bundles";
 const LATEST_CHARACTER_KEY = "dark-lore-sheet-latest-character-id";
-const MESA_SESSION_KEY = "dark-lore-mesa-session";
+const MESA_SESSION_KEY_PREFIX = "dark-lore-mesa-session";
 
 function canUseStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -229,12 +229,18 @@ export async function persistCharacterBundle(
   return bundle;
 }
 
-export async function ensureMesaSession(): Promise<GameSessionRow | null> {
+function mesaSessionStorageKey(campaignId?: string | null) {
+  return `${MESA_SESSION_KEY_PREFIX}:${campaignId ?? LOCAL_SESSION_ID}`;
+}
+
+export async function ensureMesaSession(campaignId?: string | null): Promise<GameSessionRow | null> {
   if (!canUseStorage()) {
     return null;
   }
 
-  const raw = window.localStorage.getItem(MESA_SESSION_KEY);
+  const sessionId = campaignId ?? LOCAL_SESSION_ID;
+  const storageKey = mesaSessionStorageKey(sessionId);
+  const raw = window.localStorage.getItem(storageKey);
 
   if (raw) {
     try {
@@ -246,9 +252,11 @@ export async function ensureMesaSession(): Promise<GameSessionRow | null> {
 
   const now = new Date().toISOString();
   const session: GameSessionRow = {
-    id: LOCAL_SESSION_ID,
-    name: "Mesa local",
-    description: "Sessao persistida localmente para manter a mesa ativa neste navegador.",
+    id: sessionId,
+    name: campaignId ? `Campanha ${campaignId}` : "Mesa local",
+    description: campaignId
+      ? "Sessao local em torno de uma campanha nomeada, pronta para migrar ao realtime dedicado."
+      : "Sessao persistida localmente para manter a mesa ativa neste navegador.",
     created_at: now,
     updated_at: now,
     current_round: 1,
@@ -257,6 +265,6 @@ export async function ensureMesaSession(): Promise<GameSessionRow | null> {
     max_players: 6,
   };
 
-  window.localStorage.setItem(MESA_SESSION_KEY, JSON.stringify(session));
+  window.localStorage.setItem(storageKey, JSON.stringify(session));
   return session;
 }

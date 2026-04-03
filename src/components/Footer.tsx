@@ -1,45 +1,31 @@
+import { Flame } from "lucide-react";
 import { Link } from "react-router-dom";
+
 import { archiveBrand } from "@/lib/archive-reference";
 import { getFooterEntries } from "@/lib/route-manifest";
 
-const footerLinks = getFooterEntries().map(({ label, path }) => ({
-  label,
-  path,
-}));
+const footerLinks = getFooterEntries();
 
 export default function Footer() {
   return (
-    <footer className="dark-lore-footer safe-bottom">
-      <div className="mx-auto max-w-[1480px] px-4 py-14 md:px-6 md:py-16">
-        <div className="dark-lore-footer-inner">
-          <div className="space-y-4 text-center">
-            <div className="flex justify-center">
-              <span className="dark-lore-portal-sigil" aria-hidden="true" />
-            </div>
-            <p className="dark-lore-section-kicker justify-center">O arquivo permanece aberto</p>
-            <h2 className="font-display text-4xl text-[hsl(var(--gold-light))] md:text-5xl">
-              {archiveBrand.title}
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm leading-7 text-[hsl(var(--foreground)/0.78)] md:text-base">
-              {archiveBrand.subtitle} reune dossies, cronicas, cartas do atlas e entradas de
-              sessao sob o mesmo selo.
-            </p>
-            <div className="dark-lore-divider" aria-hidden="true" />
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 border-y border-[hsl(var(--brand)/0.18)] py-5">
-            {footerLinks.map((link) => (
-              <Link key={link.path} to={link.path} className="dark-lore-footer-link">
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="space-y-2 text-center text-xs tracking-[0.14em] text-[hsl(var(--foreground)/0.54)]">
-            <p>(c) 2026 {archiveBrand.title}</p>
-            <p>Universo, bestiario, cronicas, cartografia e sessao em torno de Areias de Zerrikania.</p>
-          </div>
+    <footer className="relative z-10 border-t border-[rgba(201,161,90,0.18)] bg-black py-12 safe-bottom">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(201,161,90,0.08),transparent_55%)]" />
+      <div className="relative mx-auto flex max-w-[1440px] flex-col items-center gap-8 px-6 text-center">
+        <Flame className="h-7 w-7 text-[rgba(255,204,102,0.45)]" />
+        <div className="flex flex-wrap justify-center gap-6">
+          {footerLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className="font-heading text-xs uppercase tracking-[0.24em] text-[rgba(227,218,203,0.56)] transition-colors hover:text-[#ffcc66]"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
+        <p className="text-xs tracking-[0.18em] text-[rgba(227,218,203,0.34)]">
+          (c) 2026 {archiveBrand.title}. O arquivo permanece aberto.
+        </p>
       </div>
     </footer>
   );

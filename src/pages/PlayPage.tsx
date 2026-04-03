@@ -5,6 +5,12 @@ import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
 import { getTabletopLoreCompendium } from "@/lib/tabletop-lore";
+import {
+  DEFAULT_WITCHER_CAMPAIGN_ID,
+  getWitcherSceneSeed,
+  WitcherCampaignBrief,
+  WITCHER_CAMPAIGNS,
+} from "@/features/witcher-system";
 
 const sessionMetrics = [
   { label: "Nucleo", value: "Mesa, oraculo e comando" },
@@ -16,7 +22,7 @@ const moduleCards = [
   {
     title: "Mesa de sessao",
     description: "Abra o palco tatico, organize tokens, luzes, nevoa e fluxo de combate.",
-    path: "/mesa",
+    path: `/mesa/${DEFAULT_WITCHER_CAMPAIGN_ID}`,
     cta: "Abrir mesa",
     icon: Map,
   },
@@ -58,7 +64,7 @@ const sessionPortals = [
   {
     title: "Mesa",
     description: "Abra o palco tatico, mova tokens, organize visibilidade e conduza a cena ao vivo.",
-    to: "/mesa",
+    to: `/mesa/${DEFAULT_WITCHER_CAMPAIGN_ID}`,
     cta: "Abrir mesa",
   },
   {
@@ -82,6 +88,7 @@ const sessionPortals = [
 ] as const;
 
 const tabletopLoreCompendium = getTabletopLoreCompendium();
+const witcherCampaigns = WITCHER_CAMPAIGNS;
 
 export default function PlayPage() {
   usePortalShellMode("editorial", "ambient");
@@ -113,7 +120,7 @@ export default function PlayPage() {
             <div className="dark-lore-divider" aria-hidden="true" />
 
             <div className="flex flex-wrap gap-3">
-              <Link to="/mesa" className="dark-lore-button">
+              <Link to={`/mesa/${DEFAULT_WITCHER_CAMPAIGN_ID}`} className="dark-lore-button">
                 Abrir mesa de sessao
               </Link>
               <Link to="/oraculo" className="dark-lore-button dark-lore-button-ghost">
@@ -160,6 +167,29 @@ export default function PlayPage() {
             </article>
           </Link>
         ))}
+      </section>
+
+      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
+        <div className="space-y-6">
+          <div className="text-center">
+            <span className="dark-lore-section-kicker justify-center">Campanhas prontas</span>
+            <h2 className="dark-lore-section-title mx-auto">Entradas diretas para mesas Witcher.</h2>
+            <p className="mx-auto max-w-3xl text-sm leading-8 text-[hsl(var(--foreground)/0.76)] md:text-base">
+              Cada campanha ja nasce com rota de sessao, grupo base e elo com cronicas, atlas e oraculo.
+            </p>
+          </div>
+
+          <div className="dark-lore-list-grid">
+            {witcherCampaigns.map((campaign) => (
+              <WitcherCampaignBrief
+                key={campaign.id}
+                campaign={campaign}
+                activeScene={getWitcherSceneSeed(campaign.defaultSceneId)}
+                scenes={campaign.sceneIds.map((sceneId) => getWitcherSceneSeed(sceneId))}
+              />
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="dark-lore-page-frame overflow-hidden">
@@ -270,7 +300,7 @@ export default function PlayPage() {
           responder.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
-          <Link to="/mesa" className="dark-lore-button">
+          <Link to={`/mesa/${DEFAULT_WITCHER_CAMPAIGN_ID}`} className="dark-lore-button">
             Ir para a mesa
           </Link>
           <Link to="/oraculo" className="dark-lore-button dark-lore-button-ghost">

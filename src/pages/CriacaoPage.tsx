@@ -20,7 +20,7 @@ export default function CriacaoPage() {
         ? `${bundle.character.name} criado e salvo no grimorio da conta.`
         : `${bundle.character.name} criado com fallback local.`,
     );
-    navigate(`/ficha?character=${bundle.character.id}`);
+    navigate(`/ficha/${bundle.character.id}`);
   };
 
   return (

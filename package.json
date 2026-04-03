@@ -1,10 +1,12 @@
 {
   "name": "arquivo-do-continente",
+  "license": "GPL-3.0-or-later",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:realtime": "node services/tabletop-realtime/server.mjs",
     "serve:dist": "node scripts/serve-dist.mjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
@@ -70,6 +72,7 @@
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.30.1",
     "recharts": "^2.15.4",
+    "socket.io-client": "^4.8.3",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",

@@ -97,12 +97,15 @@ function AppRoutes() {
             <Route path="/oraculo" element={<OraclePage />} />
             <Route path="/luna" element={<OraclePage />} />
             <Route path="/mesa" element={<MesaPage />} />
+            <Route path="/mesa/:campaignId" element={<MesaPage />} />
+            <Route path="/mesa/:campaignId/:sceneId" element={<MesaPage />} />
             <Route path="/mapa" element={<MapaPage />} />
             <Route path="/mapa/regional/:mapId" element={<RegionalAtlasPage />} />
             <Route path="/mapa/:regionSlug/:subRegionSlug/:locationSlug" element={<LocationMapPage />} />
             <Route path="/mapa/:regionSlug/:subRegionSlug" element={<SubRegionMapPage />} />
             <Route path="/mapa/:regionSlug" element={<RegionMapPage />} />
             <Route path="/ficha" element={<FichaPage />} />
+            <Route path="/ficha/:sheetId" element={<FichaPage />} />
             <Route path="/criacao" element={<CriacaoPage />} />
             <Route path="/mestre" element={<MestrePage />} />
             <Route path="/universo" element={<UniversePage />} />
