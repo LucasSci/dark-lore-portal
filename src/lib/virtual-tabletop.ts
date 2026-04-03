@@ -592,104 +592,104 @@ export function createSeedTokens(): TabletopToken[] {
   return [
     {
       id: makeEntityId(),
-      name: "Thorin",
-      shortName: "TH",
+      name: "Aedan da Vibora",
+      shortName: "AV",
       team: "party",
-      role: "Tanque",
+      role: "Bruxo",
       x: 1,
       y: 3,
-      hp: 42,
-      hpMax: 52,
-      ac: 18,
-      initiativeBonus: 1,
+      hp: 40,
+      hpMax: 40,
+      ac: 16,
+      initiativeBonus: 10,
       color:
         "linear-gradient(145deg, rgba(246, 214, 138, 0.96), rgba(131, 89, 27, 0.96))",
-      note: "Segura a linha de frente e protege o altar.",
+      note: "Cacador de contrato. Prata, aco e sinais basicos prontos para a trilha.",
       controlledBy: "party",
     },
     {
       id: makeEntityId(),
-      name: "Elara",
-      shortName: "EL",
+      name: "Lys de Venger",
+      shortName: "LV",
       team: "party",
-      role: "Controle",
+      role: "Maga",
       x: 2,
       y: 2,
-      hp: 22,
-      hpMax: 22,
-      ac: 13,
-      initiativeBonus: 4,
+      hp: 28,
+      hpMax: 28,
+      ac: 14,
+      initiativeBonus: 8,
       color:
         "linear-gradient(145deg, rgba(157, 123, 255, 0.94), rgba(74, 43, 158, 0.96))",
-      note: "Canaliza magia ritual e limpa a neblina.",
+      note: "Conjuradora de apoio. Fecha rotas com runas e abre a ofensiva arcana.",
       controlledBy: "party",
     },
     {
       id: makeEntityId(),
-      name: "Grimshaw",
-      shortName: "GR",
+      name: "Iorveth Rian",
+      shortName: "IR",
       team: "party",
-      role: "Suporte",
+      role: "Medico",
       x: 1,
       y: 4,
-      hp: 31,
-      hpMax: 34,
-      ac: 16,
-      initiativeBonus: 0,
+      hp: 30,
+      hpMax: 30,
+      ac: 13,
+      initiativeBonus: 6,
       color:
         "linear-gradient(145deg, rgba(105, 199, 167, 0.94), rgba(24, 97, 77, 0.96))",
-      note: "Mantem a moral da equipe e cura ferimentos.",
+      note: "Bolsa medica, reagentes e leitura de ferimentos em pleno combate.",
       controlledBy: "party",
     },
     {
       id: makeEntityId(),
-      name: "Sentinela Sombria",
-      shortName: "SS",
+      name: "Nekker Alfa",
+      shortName: "NA",
       team: "npc",
-      role: "Guarda",
+      role: "Monstro",
       x: 8,
       y: 3,
-      hp: 24,
-      hpMax: 24,
-      ac: 14,
-      initiativeBonus: 2,
+      hp: 26,
+      hpMax: 26,
+      ac: 13,
+      initiativeBonus: 8,
       color:
         "linear-gradient(145deg, rgba(255, 128, 96, 0.96), rgba(135, 29, 29, 0.96))",
-      note: "Patrulha o corredor e avanca quando a porta runica abre.",
+      note: "Lidera a matilha e entra primeiro para quebrar a linha.",
       controlledBy: "gm",
     },
     {
       id: makeEntityId(),
-      name: "Ghoul da Cripta",
-      shortName: "GC",
+      name: "Nekker de Toca",
+      shortName: "NT",
       team: "npc",
       role: "Emboscada",
       x: 9,
       y: 2,
-      hp: 16,
-      hpMax: 16,
-      ac: 12,
-      initiativeBonus: 3,
+      hp: 18,
+      hpMax: 18,
+      ac: 11,
+      initiativeBonus: 7,
       color:
         "linear-gradient(145deg, rgba(205, 93, 73, 0.96), rgba(90, 19, 27, 0.96))",
-      note: "Ataca alvos isolados na retaguarda.",
+      note: "Pressiona alvos isolados e tenta fechar a rota de fuga.",
       controlledBy: "gm",
     },
     {
       id: makeEntityId(),
-      name: "Ghoul da Cripta",
-      shortName: "GB",
+      name: "Nekker de Toca",
+      shortName: "NB",
       team: "npc",
       role: "Emboscada",
       x: 9,
       y: 4,
-      hp: 16,
-      hpMax: 16,
-      ac: 12,
-      initiativeBonus: 3,
+      hp: 18,
+      hpMax: 18,
+      ac: 11,
+      initiativeBonus: 7,
       color:
         "linear-gradient(145deg, rgba(205, 93, 73, 0.96), rgba(90, 19, 27, 0.96))",
-      note: "Protege o flanco do altar e fecha rotas de fuga.",
+      note: "Fecha flanco e protege a investida do alfa.",
       controlledBy: "gm",
     },
   ];
@@ -713,8 +713,8 @@ export function getNextOpenPosition(
   return { x: 0, y: 0 };
 }
 
-function rollD20(random: () => number = Math.random) {
-  return Math.floor(random() * 20) + 1;
+function rollD10(random: () => number = Math.random) {
+  return Math.floor(random() * 10) + 1;
 }
 
 export function createInitiativeOrder(
@@ -728,7 +728,7 @@ export function createInitiativeOrder(
       name: token.name,
       team: token.team,
       bonus: token.initiativeBonus,
-      total: rollD20(random) + token.initiativeBonus,
+      total: rollD10(random) + token.initiativeBonus,
     }))
     .sort((left, right) => {
       if (right.total !== left.total) {
@@ -778,14 +778,14 @@ export function createInitialChat(): ChatMessage[] {
       id: makeId("chat"),
       author: "Sistema",
       tone: "system",
-      text: "Mesa da Cripta de Velkyn pronta. Jogadores podem mover tokens, rolar dados e falar no chat.",
+      text: "Mesa do Continente pronta. Testes e combate usam o fluxo do Witcher TRPG em d10.",
       time: stampTime(),
     },
     {
       id: makeId("chat"),
       author: "Narrador",
       tone: "party",
-      text: "A porta do santuario se abriu. A neblina cobre o corredor alem do altar.",
+      text: "O contrato abriu na estrada velha. Pegadas de nekker cortam a lama em direcao as ruinas.",
       time: stampTime(),
     },
   ];
@@ -843,10 +843,34 @@ export function createScenePage(
 
 function createSeedPage(sessionId: string): VttPage {
   return {
-    ...createScenePage(sessionId, "Cripta de Velkyn", {
-      region: "Velkyn",
+    ...createScenePage(sessionId, "Contrato na Velha Estrada", {
+      region: "Kaedwen",
     }),
   };
+}
+
+export function isLegacySeedScene(scene: SceneModel) {
+  const tokenNames = getSceneTokens(scene)
+    .map((token) => token.payload.name)
+    .sort();
+  const legacyNames = new Set([
+    "Elara",
+    "Ghoul da Cripta",
+    "Grimshaw",
+    "Sentinela Sombria",
+    "Thorin",
+  ]);
+  const hasLegacyName = tokenNames.some((name) => legacyNames.has(name));
+  const hasLegacyIntro = scene.chatMessages.some(
+    (message) =>
+      message.text.includes("Mesa da Cripta de Velkyn pronta") ||
+      message.text.includes("A porta do santuario se abriu"),
+  );
+
+  return (
+    scene.pages.length === 1 &&
+    (scene.pages[0]?.name === "Cripta de Velkyn" || hasLegacyIntro || hasLegacyName)
+  );
 }
 
 export function createTokenObject(token: TabletopToken, pageId: string): VttTokenObject {

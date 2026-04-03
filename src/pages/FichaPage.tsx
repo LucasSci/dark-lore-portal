@@ -18,6 +18,7 @@ import {
   persistCharacterBundle,
 } from "@/lib/sheets/persistence";
 import { useCharacterSheetRuntime } from "@/lib/sheets/runtime";
+import type { WitcherInventoryItem, WitcherSpellDefinition } from "@/lib/witcher-trpg-system";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function FichaPage() {
@@ -62,62 +63,44 @@ export default function FichaPage() {
     };
   }, [activeBundle?.character, activeBundle?.sheetDefinitionId, sheetRuntime.store]);
 
-  const handleImportItem = async (item: {
-    id: string;
-    name: string;
-    description: string | null;
-    item_type: string;
-    rarity: string;
-    weight: number;
-    value: number;
-    damage: string | null;
-    armor_bonus: number | null;
-    effect: string | null;
-  }) => {
+  const handleImportItem = async (item: WitcherInventoryItem) => {
     await sheetRuntime.importCompendiumData(NOIR_CHRONICLE_SHEET.bindings.inventory, {
       id: item.id,
       kind: "inventory",
       values: {
         name: item.name,
         description: item.description ?? "",
-        item_type: item.item_type,
+        item_type: item.category,
         rarity: item.rarity,
         weight: item.weight,
         value: item.value,
         damage: item.damage ?? "",
-        armor_bonus: item.armor_bonus ?? 0,
+        armor_bonus: item.stoppingPower ?? 0,
+        stopping_power: item.stoppingPower ?? 0,
         effect: item.effect ?? "",
+        hands: item.hands ?? "",
         equipped: false,
       },
     });
     toast.success(`${item.name} vinculado ao inventario.`);
   };
 
-  const handleImportSpell = async (spell: {
-    id: string;
-    name: string;
-    description: string | null;
-    school: string;
-    level: number;
-    casting_time: string;
-    range: string;
-    duration: string;
-    damage: string | null;
-    mp_cost: number;
-  }) => {
+  const handleImportSpell = async (spell: WitcherSpellDefinition) => {
     await sheetRuntime.importCompendiumData(NOIR_CHRONICLE_SHEET.bindings.spellbook, {
       id: spell.id,
       kind: "spellbook",
       values: {
         name: spell.name,
         description: spell.description ?? "",
-        school: spell.school,
-        level: spell.level,
-        casting_time: spell.casting_time,
+        school: spell.tradition,
+        level: 1,
+        casting_time: spell.difficulty,
         range: spell.range,
         duration: spell.duration,
         damage: spell.damage ?? "",
-        mp_cost: spell.mp_cost,
+        mp_cost: spell.vigorCost,
+        tradition: spell.tradition,
+        difficulty: spell.difficulty,
       },
     });
     toast.success(`${spell.name} vinculada ao grimorio.`);
@@ -151,7 +134,7 @@ export default function FichaPage() {
                 <div className="max-w-3xl space-y-4">
                 <p className="section-kicker">Ficha narrativa</p>
                   <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    Ficha, grimorio e inventario organizados como um unico dossier jogavel.
+                    Ficha, grimorio e inventario organizados como um unico dossie jogavel.
                   </h1>
                   <p className="text-base leading-8 text-foreground/88">
                     A pagina foi reestruturada para destacar a ficha principal, separar ferramentas
@@ -202,9 +185,9 @@ export default function FichaPage() {
                     variant="quiet"
                   />
                   <DataSection
-                    label="Classe"
+                    label="Profissao"
                     value={String(
-                      sheetRuntime.store.values.class ?? activeBundle?.character.class ?? "guerreiro",
+                      sheetRuntime.store.values.class ?? activeBundle?.character.class ?? "witcher",
                     )}
                     variant="quiet"
                   />
@@ -282,7 +265,7 @@ export default function FichaPage() {
             </TabsTrigger>
             <TabsTrigger value="magias">
               <WandSparkles className="mr-2 h-4 w-4" />
-              Magias
+              Sinais e ritos
             </TabsTrigger>
           </TabsList>
           <TabsContent value="dados" className="mt-0">

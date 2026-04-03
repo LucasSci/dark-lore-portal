@@ -1,24 +1,27 @@
-import type { Database } from "@/integrations/supabase/types";
 import {
   ATTRIBUTES,
-  calculateAC,
+  calculateAttributeBudget,
+  calculateDefense,
+  calculateFocus,
   calculateHP,
-  calculateMP,
-  CLASSES,
+  calculateInitiative,
+  calculateLeap,
+  calculateRecovery,
+  calculateResolve,
+  calculateRun,
+  calculateStamina,
+  calculateStun,
+  calculateVigor,
+  calculateWoundThreshold,
+  calculateEncumbrance,
   getModifier,
   xpForLevel,
   type AttributeKey,
-  type CharacterClass,
-  type CharacterRace,
 } from "@/lib/rpg-utils";
-import {
-  createNoirChronicleInitialValues,
-  NOIR_CHRONICLE_DEFAULTS,
-} from "@/lib/sheets/noir-chronicle-sheet";
+import { NOIR_CHRONICLE_DEFAULTS, createNoirChronicleInitialValues } from "@/lib/sheets/noir-chronicle-sheet";
 import type {
   AttributeStore,
   CharacterSheetDraft,
-  DerivedBinding,
   RepeatingRow,
   SheetDefinition,
   SheetEngineState,
@@ -27,14 +30,13 @@ import type {
   SheetScalarValue,
   SheetStepValidation,
 } from "@/lib/sheets/types";
-
-type CharacterRow = Database["public"]["Tables"]["characters"]["Row"];
+import type { CharacterRecord } from "@/lib/rpg-ui";
 
 function nowIso() {
   return new Date().toISOString();
 }
 
-function numericValue(value: SheetScalarValue, fallback: number = 0) {
+function numericValue(value: SheetScalarValue, fallback = 0) {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
@@ -50,7 +52,7 @@ function numericValue(value: SheetScalarValue, fallback: number = 0) {
   return fallback;
 }
 
-function stringValue(value: SheetScalarValue, fallback: string = "") {
+function stringValue(value: SheetScalarValue, fallback = "") {
   if (typeof value === "string") {
     return value;
   }
@@ -67,20 +69,26 @@ function getField(definition: SheetDefinition, binding: string) {
 }
 
 function buildDraftFromValues(values: Record<string, SheetScalarValue>): CharacterSheetDraft {
-  const attributes = ATTRIBUTES.reduce<Record<AttributeKey, number>>((accumulator, attribute) => {
-    accumulator[attribute.key] = numericValue(values[attribute.key], NOIR_CHRONICLE_DEFAULTS.attributes[attribute.key]);
+  const attributes = ATTRIBUTES.reduce<Record<string, number>>((accumulator, attribute) => {
+    accumulator[attribute.key] = numericValue(
+      values[attribute.key],
+      numericValue(NOIR_CHRONICLE_DEFAULTS.attributes[attribute.key], 5),
+    );
     return accumulator;
-  }, {} as Record<AttributeKey, number>);
+  }, {});
 
   return {
     name: stringValue(values.name, NOIR_CHRONICLE_DEFAULTS.name),
-    race: stringValue(values.race, NOIR_CHRONICLE_DEFAULTS.race) as CharacterRace,
-    class: stringValue(values.class, NOIR_CHRONICLE_DEFAULTS.class) as CharacterClass,
+    race: stringValue(values.race, NOIR_CHRONICLE_DEFAULTS.race),
+    class: stringValue(values.class, NOIR_CHRONICLE_DEFAULTS.class),
     level: Math.max(1, numericValue(values.level, NOIR_CHRONICLE_DEFAULTS.level)),
     experience: Math.max(0, numericValue(values.experience, NOIR_CHRONICLE_DEFAULTS.experience)),
     gold: Math.max(0, numericValue(values.gold, NOIR_CHRONICLE_DEFAULTS.gold)),
     speed: Math.max(0, numericValue(values.speed, NOIR_CHRONICLE_DEFAULTS.speed)),
+    homeland: stringValue(values.homeland, String(NOIR_CHRONICLE_DEFAULTS.homeland ?? "Temeria")),
+    school: stringValue(values.school, String(NOIR_CHRONICLE_DEFAULTS.school ?? "Lobo")),
     background: stringValue(values.background, NOIR_CHRONICLE_DEFAULTS.background),
+    lifepath: stringValue(values.lifepath, String(NOIR_CHRONICLE_DEFAULTS.lifepath ?? "")),
     appearance: stringValue(values.appearance, NOIR_CHRONICLE_DEFAULTS.appearance),
     attributes,
   };
@@ -98,16 +106,11 @@ function clampNumberForField(field: SheetFieldDefinition | undefined, value: She
   return Math.max(min, Math.min(max, parsed));
 }
 
-function getPrimaryMod(characterClass: CharacterClass, attributes: Record<AttributeKey, number>) {
-  const selectedClass = CLASSES.find((entry) => entry.value === characterClass);
-  const primaryAttribute = (selectedClass?.primaryAttr ?? "inteligencia") as AttributeKey;
-  return getModifier(attributes[primaryAttribute] ?? 10);
-}
-
-function getEquippedArmorBonus(repeaters: Record<string, RepeatingRow[]>) {
+function getEquippedStoppingPower(repeaters: Record<string, RepeatingRow[]>) {
   return (repeaters.inventory ?? []).reduce((sum, row) => {
     const equipped = row.values.equipped === true;
-    return sum + (equipped ? numericValue(row.values.armor_bonus, 0) : 0);
+    const stoppingPower = numericValue(row.values.stopping_power, 0) || numericValue(row.values.armor_bonus, 0);
+    return sum + (equipped ? stoppingPower : 0);
   }, 0);
 }
 
@@ -117,43 +120,78 @@ export function runDerivedValues(
   repeaters: Record<string, RepeatingRow[]>,
 ) {
   const draft = buildDraftFromValues(values);
+  const attributes = draft.attributes as Record<AttributeKey, number>;
   const derived: Record<string, SheetScalarValue> = {};
-  const armorBonus = getEquippedArmorBonus(repeaters);
-  const conMod = getModifier(draft.attributes.constituicao);
-  const dexMod = getModifier(draft.attributes.destreza);
-  const primaryMod = getPrimaryMod(draft.class, draft.attributes);
+  const stoppingPower = getEquippedStoppingPower(repeaters);
+  const hpMax = calculateHP(attributes.body);
+  const staMax = calculateStamina(attributes.body);
+  const resolveMax = calculateResolve(attributes.will, attributes.int);
+  const focusMax = calculateFocus(attributes.will, attributes.int);
+  const vigorMax = calculateVigor(draft.class);
+  const defense = calculateDefense(attributes.ref, attributes.dex) + stoppingPower;
+  const initiative = calculateInitiative(attributes.ref);
+  const run = calculateRun(attributes.spd);
+  const leap = calculateLeap(attributes.spd);
+  const enc = calculateEncumbrance(attributes.body);
+  const rec = calculateRecovery(attributes.body, attributes.will);
+  const woundThreshold = calculateWoundThreshold(attributes.body, attributes.will);
+  const stun = calculateStun(attributes.body, attributes.will);
 
   for (const field of definition.derivedFields) {
     switch (field.compute) {
-      case "hit-points": {
-        const hpMax = calculateHP(draft.class, conMod, draft.level);
+      case "hp":
         derived.hp_max = hpMax;
         derived.hp_current = Math.min(numericValue(values.hp_current, hpMax), hpMax);
         break;
-      }
-      case "mana-points": {
-        const mpMax = calculateMP(draft.class, primaryMod);
-        derived.mp_max = mpMax;
-        derived.mp_current = Math.min(numericValue(values.mp_current, mpMax), mpMax);
+      case "sta":
+        derived.sta_max = staMax;
+        derived.sta_current = Math.min(numericValue(values.sta_current, staMax), staMax);
         break;
-      }
-      case "armor-class":
-        derived.armor_class = calculateAC(dexMod, armorBonus);
+      case "resolve":
+        derived.resolve_max = resolveMax;
+        derived.resolve_current = Math.min(numericValue(values.resolve_current, resolveMax), resolveMax);
+        break;
+      case "focus":
+        derived.focus_max = focusMax;
+        derived.focus_current = Math.min(numericValue(values.focus_current, focusMax), focusMax);
+        break;
+      case "vigor":
+        derived.vigor_max = vigorMax;
+        derived.vigor_current = Math.min(numericValue(values.vigor_current, vigorMax), vigorMax);
+        break;
+      case "defense":
+        derived.armor_class = defense;
         break;
       case "initiative":
-        derived.initiative_bonus = dexMod;
+        derived.initiative_bonus = initiative;
+        break;
+      case "run":
+        derived.run = run;
+        break;
+      case "leap":
+        derived.leap = leap;
+        break;
+      case "enc":
+        derived.enc = enc;
+        break;
+      case "rec":
+        derived.rec = rec;
+        break;
+      case "wound-threshold":
+        derived.wound_threshold = woundThreshold;
+        break;
+      case "stun":
+        derived.stun = stun;
         break;
       case "xp-next":
-        derived.xp_next = xpForLevel(draft.level);
+        derived.xp_next = xpForLevel(draft.level + 1);
         break;
       case "point-budget":
-        derived.point_budget_used = ATTRIBUTES.reduce((sum, attribute) => {
-          return sum + Math.max(0, draft.attributes[attribute.key] - 8);
-        }, 0);
+        derived.point_budget_used = calculateAttributeBudget(attributes);
         break;
       case "attribute-modifier":
         if (field.attributeKey) {
-          derived[field.binding] = getModifier(draft.attributes[field.attributeKey]);
+          derived[field.binding] = getModifier(attributes[field.attributeKey as AttributeKey] ?? 5);
         }
         break;
       default:
@@ -161,7 +199,7 @@ export function runDerivedValues(
     }
   }
 
-  return derived as Record<DerivedBinding, SheetScalarValue>;
+  return derived;
 }
 
 export function createAttributeStore(
@@ -261,8 +299,8 @@ export function validateWizardStep(
   if (stepId === "attributes") {
     const pointsUsed = numericValue(store.derived.point_budget_used, 0);
 
-    if (pointsUsed > 27) {
-      errors.attributes = "O point-buy excedeu o limite de 27 pontos.";
+    if (pointsUsed > 60) {
+      errors.attributes = "Os atributos iniciais nao podem passar de 60 pontos.";
     }
   }
 
@@ -277,7 +315,8 @@ export function buildCharacterDraftFromStore(store: AttributeStore): CharacterSh
   return buildDraftFromValues(store.values);
 }
 
-export function buildAttributeValuesFromCharacterRow(character: CharacterRow) {
+export function buildAttributeValuesFromCharacterRow(character: CharacterRecord) {
+  const homelandLine = character.background?.split("\n\n")[0] ?? "";
   return {
     name: character.name,
     race: character.race,
@@ -286,22 +325,28 @@ export function buildAttributeValuesFromCharacterRow(character: CharacterRow) {
     experience: character.experience,
     gold: character.gold,
     speed: character.speed,
+    homeland: homelandLine.includes("Temeria") ? "Temeria" : "Temeria",
+    school: character.class === "witcher" ? "Lobo" : "Lobo",
     background: character.background ?? "",
+    lifepath: "",
     appearance: character.appearance ?? "",
-    forca: character.forca,
-    destreza: character.destreza,
-    constituicao: character.constituicao,
-    inteligencia: character.inteligencia,
-    sabedoria: character.sabedoria,
-    carisma: character.carisma,
+    int: Math.max(2, character.inteligencia),
+    ref: Math.max(2, character.destreza),
+    dex: Math.max(2, character.destreza),
+    body: Math.max(2, character.constituicao),
+    spd: Math.max(2, Math.floor(character.speed / 3) || 5),
+    emp: Math.max(2, character.carisma),
+    cra: 5,
+    will: Math.max(2, character.sabedoria),
+    luck: 5,
     hp_current: character.hp_current,
-    mp_current: character.mp_current,
+    focus_current: character.mp_current,
   } satisfies Record<string, SheetScalarValue>;
 }
 
 export function buildSheetStateFromCharacter(
   definition: SheetDefinition,
-  character: CharacterRow,
+  character: CharacterRecord,
 ): SheetEngineState {
   return {
     definition,

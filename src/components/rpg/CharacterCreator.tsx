@@ -1,14 +1,26 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Shuffle, UserPlus } from "lucide-react";
+import { BookOpenText, Compass, Shuffle, Sparkles, Swords, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { NOIR_CHRONICLE_SHEET } from "@/lib/sheets/noir-chronicle-sheet";
 import { useCharacterSheetRuntime } from "@/lib/sheets/runtime";
 import { buildCharacterDraftFromStore } from "@/lib/sheets/engine";
-import { ATTRIBUTES, CLASSES, formatModifier, getModifier, RACES, rollDice, type AttributeKey } from "@/lib/rpg-utils";
+import {
+  ATTRIBUTES,
+  CLASSES,
+  HOMELANDS,
+  RACES,
+  WITCHER_LIFEPATH_PROMPTS,
+  WITCHER_SCHOOLS_LIST,
+  createRandomWitcherAttributes,
+  createRandomWitcherBackground,
+  formatModifier,
+  type AttributeKey,
+} from "@/lib/rpg-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DataSection } from "@/components/ui/data-section";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -21,6 +33,9 @@ export interface CharacterData {
   attributes: Record<AttributeKey, number>;
   background: string;
   appearance: string;
+  homeland?: string;
+  school?: string;
+  lifepath?: string;
   level?: number;
   experience?: number;
   gold?: number;
@@ -31,6 +46,12 @@ interface Props {
   onSave?: (data: CharacterData) => void;
 }
 
+function formatFavoredAttributes(attributes: AttributeKey[]) {
+  return ATTRIBUTES.filter((attribute) => attributes.includes(attribute.key))
+    .map((attribute) => attribute.abbr)
+    .join(" • ");
+}
+
 export default function CharacterCreator({ onSave }: Props) {
   const steps = NOIR_CHRONICLE_SHEET.wizardSteps;
   const [step, setStep] = useState(0);
@@ -39,37 +60,54 @@ export default function CharacterCreator({ onSave }: Props) {
   });
 
   const draft = buildCharacterDraftFromStore(store);
-  const selectedClass = CLASSES.find((item) => item.value === draft.class);
+  const selectedRace = useMemo(
+    () => RACES.find((item) => item.value === draft.race) ?? RACES[0],
+    [draft.race],
+  );
+  const selectedProfession = useMemo(
+    () => CLASSES.find((item) => item.value === draft.class) ?? CLASSES[0],
+    [draft.class],
+  );
   const pointsUsed = Number(store.derived.point_budget_used ?? 0);
-  const pointBudget = 27;
+  const pointBudget = 60;
   const hp = Number(store.derived.hp_max ?? 0);
-  const mp = Number(store.derived.mp_max ?? 0);
-  const ac = Number(store.derived.armor_class ?? 0);
+  const stamina = Number(store.derived.sta_max ?? 0);
+  const resolve = Number(store.derived.resolve_max ?? 0);
+  const focus = Number(store.derived.focus_max ?? 0);
+  const vigor = Number(store.derived.vigor_max ?? 0);
+  const defense = Number(store.derived.armor_class ?? 0);
+  const run = Number(store.derived.run ?? 0);
+  const leap = Number(store.derived.leap ?? 0);
   const currentValidation = validation[steps[step]?.id];
 
   const updateAttribute = async (key: string, value: string | number) => {
     await setAttribute(key, value);
   };
 
-  const setAttr = async (key: AttributeKey, delta: number) => {
-    const currentValue = draft.attributes[key];
-    const nextValue = currentValue + delta;
-
-    await setAttribute(key, nextValue);
-  };
-
   const randomizeAttributes = async () => {
-    const roll4d6 = () => {
-      const { results } = rollDice(6, 4);
-      return results
-        .sort((left, right) => right - left)
-        .slice(0, 3)
-        .reduce((sum, value) => sum + value, 0);
-    };
+    const randomSpread = createRandomWitcherAttributes();
 
     for (const attribute of ATTRIBUTES) {
-      await setAttribute(attribute.key, roll4d6());
+      await setAttribute(attribute.key, randomSpread[attribute.key]);
     }
+  };
+
+  const randomizeHistory = async () => {
+    const prompt = WITCHER_LIFEPATH_PROMPTS[Math.floor(Math.random() * WITCHER_LIFEPATH_PROMPTS.length)];
+
+    await setAttribute("lifepath", `${prompt.title}: ${prompt.detail}`);
+    if (!String(store.values.background ?? "").trim()) {
+      await setAttribute("background", createRandomWitcherBackground());
+    }
+  };
+
+  const adjustAttribute = async (key: AttributeKey, delta: number) => {
+    const currentValue = draft.attributes[key];
+    const nextValue = Math.max(2, Math.min(10, currentValue + delta));
+    if (nextValue === currentValue) {
+      return;
+    }
+    await setAttribute(key, nextValue);
   };
 
   const moveToStep = async (nextStep: number) => {
@@ -81,7 +119,7 @@ export default function CharacterCreator({ onSave }: Props) {
     const result = await validateStep(steps[step].id);
 
     if (!result.valid) {
-      toast.error(Object.values(result.errors)[0] ?? "Preencha os campos obrigatorios.");
+      toast.error(Object.values(result.errors)[0] ?? "Preencha os campos desta etapa antes de seguir.");
       return;
     }
 
@@ -89,10 +127,11 @@ export default function CharacterCreator({ onSave }: Props) {
   };
 
   const handleSave = async () => {
-    const result = await validateStep(steps[step].id);
+    const validations = await Promise.all(steps.map((wizardStep) => validateStep(wizardStep.id)));
+    const firstError = validations.find((result) => !result.valid);
 
-    if (!result.valid) {
-      toast.error(Object.values(result.errors)[0] ?? "Finalize a etapa atual antes de salvar.");
+    if (firstError) {
+      toast.error(Object.values(firstError.errors)[0] ?? "A ficha ainda possui campos pendentes.");
       return;
     }
 
@@ -103,6 +142,9 @@ export default function CharacterCreator({ onSave }: Props) {
       attributes: draft.attributes,
       background: draft.background,
       appearance: draft.appearance,
+      homeland: draft.homeland,
+      school: draft.school,
+      lifepath: draft.lifepath,
       level: draft.level,
       experience: draft.experience,
       gold: draft.gold,
@@ -111,7 +153,7 @@ export default function CharacterCreator({ onSave }: Props) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8">
       <div className="grid gap-2 sm:grid-cols-5">
         {steps.map((wizardStep, index) => {
           const active = index === step;
@@ -136,87 +178,166 @@ export default function CharacterCreator({ onSave }: Props) {
         })}
       </div>
 
-      <div className="info-panel flex items-center justify-between gap-3 px-4 py-3">
+      <div className="info-panel flex flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div>
           <p className="font-heading text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            Engine da ficha
+            Motor de ficha
           </p>
           <p className="text-sm text-foreground">
-            {workerReady ? "Worker ativo para derivacoes e validacoes." : "Fallback local ativo enquanto o worker inicializa."}
+            {workerReady ? "Derivacoes Witcher prontas em tempo real." : "Fallback local ativo enquanto o worker inicializa."}
           </p>
         </div>
-        <Progress value={((step + 1) / steps.length) * 100} tone="info" className="h-2 w-32" />
+        <Progress value={((step + 1) / steps.length) * 100} tone="info" className="h-2 w-40" />
       </div>
 
       <motion.div key={step} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
         {step === 0 ? (
-          <Card variant="panel">
-            <CardContent className="space-y-4 p-6">
-              <div className="space-y-2">
-                <Label>Nome do personagem</Label>
-                <Input
-                  value={draft.name}
-                  onChange={(event) => void updateAttribute("name", event.target.value)}
-                  placeholder="Ex: Thorin Escudo de Ferro"
-                />
-              </div>
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <Card variant="panel">
+              <CardContent className="space-y-5 p-6">
+                <div className="space-y-2">
+                  <Label>Nome do personagem</Label>
+                  <Input
+                    value={draft.name}
+                    onChange={(event) => void updateAttribute("name", event.target.value)}
+                    placeholder="Ex: Vael de Vizima"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label>Aparencia em uma frase</Label>
-                <Textarea
-                  value={draft.appearance}
-                  onChange={(event) => void updateAttribute("appearance", event.target.value)}
-                  placeholder="Ex: Armadura escura, capa de viagem e um olhar que mede todas as saidas."
-                  className="min-h-[110px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
+                <div className="space-y-2">
+                  <Label>Terra natal</Label>
+                  <div className="grid gap-2 md:grid-cols-3">
+                    {HOMELANDS.map((homeland) => (
+                      <button
+                        key={homeland}
+                        type="button"
+                        onClick={() => void updateAttribute("homeland", homeland)}
+                        className={`border px-3 py-3 text-left text-sm transition-colors ${
+                          draft.homeland === homeland
+                            ? "border-primary/35 bg-primary/10 text-primary"
+                            : "border-border bg-card-gradient text-foreground/82 hover:border-primary/20"
+                        }`}
+                      >
+                        {homeland}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Aparencia</Label>
+                  <Textarea
+                    value={draft.appearance}
+                    onChange={(event) => void updateAttribute("appearance", event.target.value)}
+                    placeholder="Cicatrizes finas, manto gasto de estrada e um medalhao que nunca para de vibrar."
+                    className="min-h-[120px]"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card variant="elevated">
+              <CardContent className="space-y-4 p-6">
+                <div>
+                  <p className="section-kicker">Leitura do arquivo</p>
+                  <h3 className="mt-2 font-heading text-2xl text-gold-gradient">Identidade</h3>
+                </div>
+                <p className="text-sm leading-7 text-foreground/84">
+                  Comece pelo nome, pela origem e pela silhueta do personagem. O resto da ficha vai
+                  herdar esse tom narrativo.
+                </p>
+                <DataSection label="Terra natal" value={draft.homeland || "Temeria"} variant="quiet" icon={<Compass className="h-4 w-4" />} />
+                <DataSection label="Nome de arquivo" value={draft.name || "Viajante sem nome"} variant="quiet" icon={<BookOpenText className="h-4 w-4" />} />
+              </CardContent>
+            </Card>
+          </div>
         ) : null}
 
         {step === 1 ? (
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {RACES.map((race) => (
               <motion.button
                 key={race.value}
                 type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.01, y: -2 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => void updateAttribute("race", race.value)}
-                className={`border p-4 text-left transition-colors ${
+                className={`border p-5 text-left transition-colors ${
                   draft.race === race.value
                     ? "border-primary/35 bg-primary/10 shadow-brand"
                     : "border-border bg-card-gradient hover:border-primary/25"
                 }`}
               >
-                <h4 className="font-heading text-sm text-foreground">{race.label}</h4>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{race.desc}</p>
+                <p className="section-kicker">{race.socialStanding}</p>
+                <h4 className="mt-2 font-heading text-lg text-foreground">{race.label}</h4>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{race.desc}</p>
+                <p className="mt-4 text-xs uppercase tracking-[0.16em] text-primary/78">{race.trait}</p>
               </motion.button>
             ))}
           </div>
         ) : null}
 
         {step === 2 ? (
-          <div className="grid gap-3 md:grid-cols-3">
-            {CLASSES.map((characterClass) => (
-              <motion.button
-                key={characterClass.value}
-                type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => void updateAttribute("class", characterClass.value)}
-                className={`border p-4 text-left transition-colors ${
-                  draft.class === characterClass.value
-                    ? "border-primary/35 bg-primary/10 shadow-brand"
-                    : "border-border bg-card-gradient hover:border-primary/25"
-                }`}
-              >
-                <h4 className="font-heading text-sm text-foreground">{characterClass.label}</h4>
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  HP d{characterClass.hitDie} | MP base {characterClass.mpBase}
-                </p>
-              </motion.button>
-            ))}
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="grid gap-3 md:grid-cols-2">
+              {CLASSES.map((profession) => (
+                <motion.button
+                  key={profession.value}
+                  type="button"
+                  whileHover={{ scale: 1.01, y: -2 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => void updateAttribute("class", profession.value)}
+                  className={`border p-5 text-left transition-colors ${
+                    draft.class === profession.value
+                      ? "border-primary/35 bg-primary/10 shadow-brand"
+                      : "border-border bg-card-gradient hover:border-primary/25"
+                  }`}
+                >
+                  <p className="section-kicker">{profession.role}</p>
+                  <h4 className="mt-2 font-heading text-lg text-foreground">{profession.label}</h4>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{profession.desc}</p>
+                  <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.16em] text-primary/78">
+                    <span>Vigor {profession.vigor}</span>
+                    <span>{profession.definingSkill}</span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+
+            <Card variant="elevated">
+              <CardContent className="space-y-4 p-6">
+                <div>
+                  <p className="section-kicker">Trilha escolhida</p>
+                  <h3 className="mt-2 font-heading text-2xl text-gold-gradient">{selectedProfession.label}</h3>
+                </div>
+                <p className="text-sm leading-7 text-foreground/84">{selectedProfession.desc}</p>
+                <DataSection
+                  label="Atributos favorecidos"
+                  value={formatFavoredAttributes(selectedProfession.favoredAttributes)}
+                  variant="quiet"
+                  icon={<Swords className="h-4 w-4" />}
+                />
+                <div className="space-y-2">
+                  <Label>Escola ou ordem</Label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {WITCHER_SCHOOLS_LIST.map((school) => (
+                      <button
+                        key={school}
+                        type="button"
+                        onClick={() => void updateAttribute("school", school)}
+                        className={`border px-3 py-3 text-left text-sm transition-colors ${
+                          draft.school === school
+                            ? "border-primary/35 bg-primary/10 text-primary"
+                            : "border-border bg-card-gradient text-foreground/82 hover:border-primary/20"
+                        }`}
+                      >
+                        {school}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ) : null}
 
@@ -229,44 +350,41 @@ export default function CharacterCreator({ onSave }: Props) {
                     Pontos usados: {pointsUsed}/{pointBudget}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Sistema point-buy com orcamento limitado e validacao por etapa.
+                    Os nove atributos devem permanecer entre 2 e 10, com limite total de 60.
                   </p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => void randomizeAttributes()}>
                   <Shuffle className="mr-2 h-4 w-4" />
-                  4d6 drop lowest
+                  Distribuir aleatoriamente
                 </Button>
               </div>
 
               <Progress
                 value={(pointsUsed / pointBudget) * 100}
-                tone={pointsUsed > pointBudget * 0.7 ? "warn" : "good"}
+                tone={pointsUsed > pointBudget * 0.9 ? "warn" : "good"}
                 className="h-2"
               />
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
                 {ATTRIBUTES.map((attribute) => {
                   const value = draft.attributes[attribute.key];
-                  const modifier = getModifier(value);
+                  const modifier = Number(store.derived[`modifier.${attribute.key}` as const] ?? 0);
 
                   return (
-                    <div
-                      key={attribute.key}
-                      className="info-panel p-4 text-center"
-                    >
+                    <div key={attribute.key} className="info-panel p-4 text-center">
                       <p className="font-heading text-[11px] uppercase tracking-[0.18em] text-primary/80">
                         {attribute.abbr}
                       </p>
                       <h4 className="mt-2 font-heading text-sm text-foreground">{attribute.label}</h4>
+                      <p className="mt-2 text-xs leading-6 text-muted-foreground">{attribute.description}</p>
 
-                      <div className="mt-3 flex items-center justify-center gap-2">
+                      <div className="mt-4 flex items-center justify-center gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => void setAttr(attribute.key, -1)}
+                          onClick={() => void adjustAttribute(attribute.key, -1)}
                           aria-label={`Diminuir ${attribute.label}`}
                           className="h-8 w-8 p-0"
-                          title={`Diminuir ${attribute.label}`}
                         >
                           -
                         </Button>
@@ -274,10 +392,9 @@ export default function CharacterCreator({ onSave }: Props) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => void setAttr(attribute.key, 1)}
+                          onClick={() => void adjustAttribute(attribute.key, 1)}
                           aria-label={`Aumentar ${attribute.label}`}
                           className="h-8 w-8 p-0"
-                          title={`Aumentar ${attribute.label}`}
                         >
                           +
                         </Button>
@@ -297,24 +414,34 @@ export default function CharacterCreator({ onSave }: Props) {
         {step === 4 ? (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <Card variant="panel">
-              <CardContent className="space-y-4 p-6">
+              <CardContent className="space-y-5 p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <Label>Caminho de vida</Label>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Registre o evento, trauma ou juramento que empurrou o personagem para a estrada.
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => void randomizeHistory()}>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Gerar gancho
+                  </Button>
+                </div>
+
+                <Textarea
+                  value={draft.lifepath ?? ""}
+                  onChange={(event) => void updateAttribute("lifepath", event.target.value)}
+                  placeholder="Ex: O massacre de uma caravana nilfgaardiana deixou uma testemunha viva e um contrato inacabado."
+                  className="min-h-[130px]"
+                />
+
                 <div className="space-y-2">
-                  <Label>Historia de fundo</Label>
+                  <Label>Historico do arquivo</Label>
                   <Textarea
                     value={draft.background}
                     onChange={(event) => void updateAttribute("background", event.target.value)}
-                    placeholder="Conte a historia, o juramento ou o fracasso que trouxe este personagem ate aqui."
+                    placeholder="Cronicas, contatos, dividas e rumores que cercam o personagem."
                     className="min-h-[140px]"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Detalhes adicionais</Label>
-                  <Textarea
-                    value={draft.appearance}
-                    onChange={(event) => void updateAttribute("appearance", event.target.value)}
-                    placeholder="Marcas, postura, tracos e linguagem corporal."
-                    className="min-h-[110px]"
                   />
                 </div>
               </CardContent>
@@ -324,31 +451,29 @@ export default function CharacterCreator({ onSave }: Props) {
               <CardContent className="space-y-4 p-6">
                 <h3 className="font-heading text-lg text-gold-gradient">Resumo derivado</h3>
 
-                <div className="grid gap-2 text-sm">
+                <div className="grid gap-3 text-sm">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Nome</span>
-                    <span className="text-right text-foreground">{draft.name || "Aventureiro sem nome"}</span>
+                    <span className="text-right text-foreground">{draft.name || "Viajante sem nome"}</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Raca</span>
-                    <span className="text-right text-foreground">{RACES.find((race) => race.value === draft.race)?.label}</span>
+                    <span className="text-right text-foreground">{selectedRace.label}</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Classe</span>
-                    <span className="text-right text-foreground">{selectedClass?.label}</span>
+                    <span className="text-muted-foreground">Profissao</span>
+                    <span className="text-right text-foreground">{selectedProfession.label}</span>
                   </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">HP</span>
-                    <span className="text-right text-status-bad">{hp}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">MP</span>
-                    <span className="text-right text-info">{mp}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">CA</span>
-                    <span className="text-right text-foreground">{ac}</span>
-                  </div>
+                </div>
+
+                <div className="grid gap-3">
+                  <DataSection label="Vida" value={hp} variant="quiet" />
+                  <DataSection label="Estamina" value={stamina} variant="quiet" />
+                  <DataSection label="Determinacao" value={resolve} variant="quiet" />
+                  <DataSection label="Foco" value={focus} variant="quiet" />
+                  <DataSection label="Vigor" value={vigor} variant="quiet" />
+                  <DataSection label="Defesa" value={defense} variant="quiet" />
+                  <DataSection label="Corrida / Salto" value={`${run} / ${leap}`} variant="quiet" />
                 </div>
               </CardContent>
             </Card>
@@ -363,11 +488,7 @@ export default function CharacterCreator({ onSave }: Props) {
       ) : null}
 
       <div className="flex justify-between">
-        <Button
-          variant="outline"
-          onClick={() => void moveToStep(Math.max(0, step - 1))}
-          disabled={step === 0}
-        >
+        <Button variant="outline" onClick={() => void moveToStep(Math.max(0, step - 1))} disabled={step === 0}>
           Anterior
         </Button>
 

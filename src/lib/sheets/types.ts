@@ -1,30 +1,8 @@
-import type { AttributeKey, CharacterClass, CharacterRace } from "@/lib/rpg-utils";
-
 export type SheetScalarValue = string | number | boolean | null;
 export type SheetSectionKind = "identity" | "resources" | "combat" | "attributes" | "narrative" | "attachments";
 export type SheetFieldType = "text" | "textarea" | "number" | "select";
-export type SheetBinding =
-  | "name"
-  | "race"
-  | "class"
-  | "level"
-  | "experience"
-  | "gold"
-  | "speed"
-  | "background"
-  | "appearance"
-  | AttributeKey;
-
-export type DerivedBinding =
-  | "hp_max"
-  | "hp_current"
-  | "mp_max"
-  | "mp_current"
-  | "armor_class"
-  | "initiative_bonus"
-  | "xp_next"
-  | "point_budget_used"
-  | `modifier.${AttributeKey}`;
+export type SheetBinding = string;
+export type DerivedBinding = string;
 
 export interface SheetOption {
   label: string;
@@ -77,8 +55,8 @@ export interface DerivedFieldDefinition {
   label: string;
   binding: DerivedBinding;
   dependencies: Array<SheetBinding | DerivedBinding>;
-  compute: "hit-points" | "mana-points" | "armor-class" | "initiative" | "xp-next" | "point-budget" | "attribute-modifier";
-  attributeKey?: AttributeKey;
+  compute: string;
+  attributeKey?: string;
 }
 
 export interface WizardStepDefinition {
@@ -135,15 +113,18 @@ export interface SheetStepValidation {
 
 export interface CharacterSheetDraft {
   name: string;
-  race: CharacterRace;
-  class: CharacterClass;
+  race: string;
+  class: string;
   level: number;
   experience: number;
   gold: number;
   speed: number;
   background: string;
   appearance: string;
-  attributes: Record<AttributeKey, number>;
+  homeland?: string;
+  school?: string;
+  lifepath?: string;
+  attributes: Record<string, number>;
 }
 
 export interface SheetImportPayload {

@@ -48,7 +48,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { parseDiceNotation, rollDice } from "@/lib/rpg-utils";
+import {
+  CLASSES,
+  SPELLS,
+  WITCHER_HIT_LOCATION_TABLE,
+  WITCHER_SIMPLE_CRITICAL_TABLE,
+  parseDiceNotation,
+  rollDice,
+} from "@/lib/rpg-utils";
 import {
   readImageDimensions,
   recommendBattlemapGrid,
@@ -86,6 +93,7 @@ import {
   recordSceneRoll,
   getSceneTokens,
   getSelectedToken,
+  isLegacySeedScene,
   revealEntireSceneFog,
   revealSceneFogAround,
   removeSceneConnection,
@@ -124,6 +132,67 @@ type LeftTool = "select" | "move" | "fog" | "measure" | "wall" | "light";
 type RightTab = "chat" | "tokens" | "initiative" | "codex" | "npc" | "map";
 type VttLoreThreat = TabletopSpawnEntry;
 type CodexGroup = TabletopSpawnGroup;
+
+type WitcherNpcPreset = {
+  label: string;
+  role: string;
+  hp: number;
+  ac: number;
+  initiativeBonus: number;
+  notes: string;
+};
+
+const WITCHER_NPC_PRESETS: WitcherNpcPreset[] = [
+  {
+    label: "Bruxo errante",
+    role: "Bruxo",
+    hp: 40,
+    ac: 16,
+    initiativeBonus: 10,
+    notes: "Espada de aco, prata e sinais basicos. Entra como cacador de contrato.",
+  },
+  {
+    label: "Bandido veterano",
+    role: "Homem de armas",
+    hp: 24,
+    ac: 13,
+    initiativeBonus: 6,
+    notes: "Infantaria leve com escudo, brutalidade curta e moral instavel.",
+  },
+  {
+    label: "Nekker de toca",
+    role: "Monstro",
+    hp: 18,
+    ac: 11,
+    initiativeBonus: 7,
+    notes: "Ataca em bando, pressiona flanco e cai rapido para dano concentrado.",
+  },
+  {
+    label: "Aparicao faminta",
+    role: "Maldicao",
+    hp: 28,
+    ac: 14,
+    initiativeBonus: 8,
+    notes: "Responde a prata, Yrden e leitura de vestigios do local assombrado.",
+  },
+];
+
+const WITCHER_QUICK_NOTES = [
+  "Ataques e defesas usam d10 somado a atributos e pericias.",
+  "Impacto localizado muda o multiplicador de dano e o risco da cena.",
+  "Criticos simples aceleram fraturas, sangramento e perda de mobilidade.",
+];
+
+function createNpcDraft(preset: WitcherNpcPreset = WITCHER_NPC_PRESETS[0]) {
+  return {
+    name: "",
+    hp: preset.hp,
+    ac: preset.ac,
+    initiativeBonus: preset.initiativeBonus,
+    role: preset.role,
+    notes: preset.notes,
+  };
+}
 
 function SidePanelCard({
   title,
@@ -183,14 +252,14 @@ function ChatInput({ onSend }: { onSend: (text: string) => Promise<void> }) {
  * Isolating the dice input state prevents full-page re-renders on keystrokes.
  */
 function DiceInput({ onRoll }: { onRoll: (notation: string) => Promise<void> }) {
-  const [draft, setDraft] = useState("1d20");
+  const [draft, setDraft] = useState("1d10");
 
   return (
     <div className="mb-1 flex gap-2">
       <Input
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
-        placeholder="2d6+3"
+        placeholder="1d10+8"
         className="h-10 bg-background/60 text-sm"
         onKeyDown={(e) => e.key === "Enter" && void onRoll(draft)}
       />
@@ -244,7 +313,7 @@ export default function MesaPage() {
   const [mapGridSize, setMapGridSize] = useState(72);
   const [battlemapUploading, setBattlemapUploading] = useState(false);
   const [rightOpen, setRightOpen] = useState(true);
-  const [rightTab, setRightTab] = useState<RightTab>("chat");
+  const [rightTab, setRightTab] = useState<RightTab>("codex");
   const [loreThreats, setLoreThreats] = useState<VttLoreThreat[]>([]);
   const [codexGroups, setCodexGroups] = useState<CodexGroup[]>([]);
   const [tabletopLore, setTabletopLore] = useState<TabletopLoreCompendium | null>(null);
@@ -256,13 +325,7 @@ export default function MesaPage() {
   const [connectionLabel, setConnectionLabel] = useState("");
   const [connectionSpawnX, setConnectionSpawnX] = useState(0);
   const [connectionSpawnY, setConnectionSpawnY] = useState(0);
-  const [npcDraft, setNpcDraft] = useState({
-    name: "",
-    hp: 18,
-    ac: 13,
-    initiativeBonus: 1,
-    notes: "",
-  });
+  const [npcDraft, setNpcDraft] = useState(() => createNpcDraft());
   const sceneRef = useRef(scene);
   const presenceRef = useRef(scene.presence);
   const codexLoadRef = useRef<Promise<TabletopLoreCompendium> | null>(null);
@@ -297,7 +360,12 @@ export default function MesaPage() {
     void (async () => {
       const session = await ensureMesaSession();
       const nextSessionId = session?.id ?? LOCAL_SESSION_ID;
-      const loadedScene = (await loadSceneSnapshot(nextSessionId)) ?? createSceneModel(nextSessionId);
+      let loadedScene = (await loadSceneSnapshot(nextSessionId)) ?? createSceneModel(nextSessionId);
+
+      if (isLegacySeedScene(loadedScene)) {
+        loadedScene = createSceneModel(nextSessionId);
+        await persistSceneSnapshot(loadedScene);
+      }
 
       if (!session && nextSessionId === LOCAL_SESSION_ID) {
         if (!cancelled) {
@@ -412,9 +480,14 @@ export default function MesaPage() {
     { id: "tokens", icon: <Ghost className="h-4 w-4" />, label: "Tokens" },
     { id: "initiative", icon: <Sword className="h-4 w-4" />, label: "Iniciativa" },
     { id: "codex", icon: <Sparkles className="h-4 w-4" />, label: "Codex" },
-    { id: "npc", icon: <Shield className="h-4 w-4" />, label: "NPCs" },
+    { id: "npc", icon: <Shield className="h-4 w-4" />, label: "Ameacas" },
     { id: "map", icon: <ImagePlus className="h-4 w-4" />, label: "Mapa" },
   ];
+  const witcherProfessions = useMemo(() => CLASSES.slice(0, 6), []);
+  const witcherSigns = useMemo(
+    () => SPELLS.filter((spell) => spell.tradition === "sinal").slice(0, 5),
+    [],
+  );
 
   const loadCodexCompendium = useCallback(async () => {
     if (codexLoadRef.current) {
@@ -1069,7 +1142,7 @@ export default function MesaPage() {
         },
       },
     );
-    setNpcDraft({ name: "", hp: 18, ac: 13, initiativeBonus: 1, notes: "" });
+    setNpcDraft(createNpcDraft());
     const tok = nextScene.objects.find((o) => o.id === nextScene.selectedObjectId);
     if (tok?.objectType === "token") {
       await appendChatMessage("Sistema", `${tok.payload.name} em ${getPositionLabel(tok.position.x, tok.position.y)}.`, "npc");
@@ -1216,6 +1289,9 @@ export default function MesaPage() {
             <span className="truncate font-heading text-xs uppercase tracking-[0.2em] text-primary/80">
               {activePage?.name ?? "Pagina"}
             </span>
+            <Badge variant="outline" className="hidden border-primary/30 text-[10px] text-primary lg:inline-flex">
+              Witcher TRPG
+            </Badge>
             <Badge variant="outline" className="hidden border-border/40 text-[10px] sm:inline-flex">
               Rev {scene.revision}
             </Badge>
@@ -1328,11 +1404,11 @@ export default function MesaPage() {
               </p>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="text-[10px] text-muted-foreground sm:text-xs">HP</span>
+              <span className="text-[10px] text-muted-foreground sm:text-xs">VIT</span>
               <span className="font-heading text-xs text-foreground sm:text-sm">
                 {selectedToken.payload.hp}/{selectedToken.payload.hpMax}
               </span>
-              <span className="text-[10px] text-muted-foreground sm:text-xs">CA</span>
+              <span className="text-[10px] text-muted-foreground sm:text-xs">DEF</span>
               <span className="font-heading text-xs text-foreground sm:text-sm">{selectedToken.payload.ac}</span>
               <div className="ml-1 flex items-center gap-0.5 sm:ml-2 sm:gap-1">
                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => void adjustHp(selectedToken.id, -5)} title="Remover 5 HP" aria-label="Remover 5 HP">
@@ -1535,7 +1611,7 @@ export default function MesaPage() {
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-foreground">{token.payload.name}</p>
                           <p className="text-xs leading-5 text-muted-foreground">
-                            HP {token.payload.hp}/{token.payload.hpMax} · CA {token.payload.ac}
+                            VIT {token.payload.hp}/{token.payload.hpMax} · DEF {token.payload.ac} · {token.payload.role}
                           </p>
                         </div>
                         {token.payload.hp <= 0 && <Skull className="h-3.5 w-3.5 text-destructive" />}
@@ -1562,6 +1638,34 @@ export default function MesaPage() {
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="space-y-2 px-4 py-4 pr-5">
+                    <SidePanelCard
+                      title="Ritmo de combate"
+                      description="A mesa agora usa a leitura do sistema do Continente: pressao em d10, defesa visivel e consequencias rapidas."
+                    >
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="metric-panel px-3 py-2">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Dado</p>
+                            <p className="mt-1 text-sm text-foreground">1d10</p>
+                          </div>
+                          <div className="metric-panel px-3 py-2">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Defesa</p>
+                            <p className="mt-1 text-sm text-foreground">REF + DES/2</p>
+                          </div>
+                          <div className="metric-panel px-3 py-2">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Impacto</p>
+                            <p className="mt-1 text-sm text-foreground">Localizado</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {WITCHER_QUICK_NOTES.map((note) => (
+                            <p key={note} className="text-xs leading-6 text-foreground/78">
+                              {note}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    </SidePanelCard>
                     {scene.initiative.entries.length === 0 ? (
                       <p className="tool-empty-state px-4 py-4 text-center text-sm text-muted-foreground">
                         Nenhuma iniciativa rolada.
@@ -1601,6 +1705,78 @@ export default function MesaPage() {
             <TabsContent value="codex" className="mt-0 flex-1 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="space-y-5 px-4 py-4 pr-5">
+                  <SidePanelCard
+                    title="Sistema do Continente"
+                    description="Referencia rapida do jogo importado para a mesa: profissoes, sinais, impacto e criticos."
+                  >
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="metric-panel px-3 py-2">
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Racas</p>
+                          <p className="mt-1 text-sm text-foreground">4</p>
+                        </div>
+                        <div className="metric-panel px-3 py-2">
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Profissoes</p>
+                          <p className="mt-1 text-sm text-foreground">{CLASSES.length}</p>
+                        </div>
+                        <div className="metric-panel px-3 py-2">
+                          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Sinais</p>
+                          <p className="mt-1 text-sm text-foreground">{witcherSigns.length}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-[11px] uppercase tracking-[0.2em] text-primary/78">Profissoes em foco</p>
+                        <div className="grid gap-2">
+                          {witcherProfessions.map((profession) => (
+                            <div key={profession.value} className="tool-list-item px-3 py-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-sm font-medium text-foreground">{profession.label}</p>
+                                <Badge variant="outline" className="border-border/40 text-[10px]">
+                                  Vigor {profession.vigor}
+                                </Badge>
+                              </div>
+                              <p className="mt-1 text-xs leading-6 text-foreground/78">{profession.role}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-[11px] uppercase tracking-[0.2em] text-primary/78">Sinais de bruxo</p>
+                        <div className="flex flex-wrap gap-2">
+                          {witcherSigns.map((spell) => (
+                            <Badge key={spell.id} variant="outline" className="border-primary/25 text-[10px] uppercase tracking-[0.14em]">
+                              {spell.name} · vigor {spell.vigorCost}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 lg:grid-cols-2">
+                        <div className="tool-stage-frame space-y-2 px-3 py-3">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-primary/78">Tabela de impacto</p>
+                          {WITCHER_HIT_LOCATION_TABLE.slice(0, 6).map((location, index) => (
+                            <div key={`${location.label}-${index}`} className="flex items-center justify-between gap-2 text-xs text-foreground/80">
+                              <span>{location.label}</span>
+                              <span>pen {location.attackPenalty} · x{location.damageMultiplier}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="tool-stage-frame space-y-2 px-3 py-3">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-primary/78">Criticos simples</p>
+                          {WITCHER_SIMPLE_CRITICAL_TABLE.slice(0, 4).map((critical) => (
+                            <div key={critical.title} className="space-y-1 text-xs text-foreground/80">
+                              <p className="font-medium text-foreground">
+                                {critical.title} ({critical.range[0]}-{critical.range[1]})
+                              </p>
+                              <p className="leading-5">{critical.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </SidePanelCard>
                   {codexLoading && codexGroups.length === 0 ? (
                     <div className="info-panel p-4">
                       <p className="font-heading text-base text-foreground">Carregando codex...</p>
@@ -1805,7 +1981,7 @@ export default function MesaPage() {
                                 {entry.title}
                               </p>
                               <Badge variant="outline" className="border-border/40 text-[10px]">
-                                HP {entry.vtt.hp}
+                                VIT {entry.vtt.hp} · DEF {entry.vtt.ac}
                               </Badge>
                             </div>
                             <p className="mt-1 text-xs leading-5 text-muted-foreground line-clamp-2">
@@ -1843,25 +2019,83 @@ export default function MesaPage() {
               <div className="flex flex-col h-full">
                 <ScrollArea className="flex-1">
                   <div className="space-y-3 px-4 py-4 pr-5">
+                    <SidePanelCard
+                      title="Elenco de ameacas"
+                      description="Monte um inimigo ou aliado no padrao do Witcher TRPG e solte-o direto na area ativa."
+                    >
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          {WITCHER_NPC_PRESETS.map((preset) => (
+                            <Button
+                              key={preset.label}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-[11px]"
+                              onClick={() => setNpcDraft((current) => ({
+                                ...createNpcDraft(preset),
+                                name: current.name,
+                              }))}
+                            >
+                              {preset.label}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="metric-panel px-3 py-2">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">VIT</p>
+                            <p className="mt-1 text-sm text-foreground">{npcDraft.hp}</p>
+                          </div>
+                          <div className="metric-panel px-3 py-2">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">DEF</p>
+                            <p className="mt-1 text-sm text-foreground">{npcDraft.ac}</p>
+                          </div>
+                          <div className="metric-panel px-3 py-2">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">INI</p>
+                            <p className="mt-1 text-sm text-foreground">{npcDraft.initiativeBonus}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </SidePanelCard>
                     <Input
                       value={npcDraft.name}
                       onChange={(e) => setNpcDraft((c) => ({ ...c, name: e.target.value }))}
-                      placeholder="Nome do NPC"
+                      placeholder="Nome da ameaca ou aliado"
                       className="h-10 text-sm"
                     />
+                    <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                      <span>Perfil</span>
+                      <Select
+                        value={npcDraft.role}
+                        onValueChange={(value) => setNpcDraft((current) => ({ ...current, role: value }))}
+                      >
+                        <SelectTrigger className="h-10 text-sm">
+                          <SelectValue placeholder="Escolha um perfil" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CLASSES.map((profession) => (
+                            <SelectItem key={profession.value} value={profession.label}>
+                              {profession.label}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="Monstro">Monstro</SelectItem>
+                          <SelectItem value="Maldicao">Maldicao</SelectItem>
+                          <SelectItem value="Aparicao">Aparicao</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </label>
                     <div className="grid grid-cols-3 gap-1.5">
                       <Input
                         type="number"
                         value={npcDraft.hp}
                         onChange={(e) => setNpcDraft((c) => ({ ...c, hp: Number(e.target.value) }))}
-                        placeholder="HP"
+                        placeholder="VIT"
                         className="h-8 text-xs"
                       />
                       <Input
                         type="number"
                         value={npcDraft.ac}
                         onChange={(e) => setNpcDraft((c) => ({ ...c, ac: Number(e.target.value) }))}
-                        placeholder="CA"
+                        placeholder="DEF"
                         className="h-8 text-xs"
                       />
                       <Input
@@ -1875,7 +2109,7 @@ export default function MesaPage() {
                     <Textarea
                       value={npcDraft.notes}
                       onChange={(e) => setNpcDraft((c) => ({ ...c, notes: e.target.value }))}
-                      placeholder="Notas e comportamento"
+                      placeholder="Equipamento, fraquezas, sinais, comportamento ou gatilhos da cena"
                       className="min-h-[112px] text-sm"
                     />
                     <Button className="h-10 w-full text-sm" onClick={() => void createNpc()}>

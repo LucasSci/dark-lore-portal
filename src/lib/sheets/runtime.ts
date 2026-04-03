@@ -6,8 +6,7 @@ import {
   buildCharacterDraftFromStore,
   createAttributeStore,
 } from "@/lib/sheets/engine";
-import { generateSecureShortId } from "@/lib/utils";
-import type { Database } from "@/integrations/supabase/types";
+import type { CharacterRecord } from "@/lib/rpg-ui";
 import type {
   AttributeStore,
   CharacterSheetDraft,
@@ -18,8 +17,6 @@ import type {
   SheetScalarValue,
   SheetStepValidation,
 } from "@/lib/sheets/types";
-
-type CharacterRow = Database["public"]["Tables"]["characters"]["Row"];
 
 let workerSingleton: Worker | null = null;
 const pendingRequests = new Map<
@@ -88,7 +85,7 @@ async function dispatchWorker(message: Omit<SheetEngineRequest, "requestId">) {
 
 interface UseCharacterSheetRuntimeOptions {
   definition: SheetDefinition;
-  character?: CharacterRow | null;
+  character?: CharacterRecord | null;
   initialValues?: Record<string, SheetScalarValue>;
   initialStore?: AttributeStore | null;
 }

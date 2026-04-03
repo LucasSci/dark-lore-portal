@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { rollDice } from "@/lib/rpg-utils";
+import { getHitLocation, getSimpleCritical, rollDice, rollDiceFormula } from "@/lib/rpg-utils";
 import { getResourceTone } from "@/lib/rpg-ui";
 
 interface Combatant {
@@ -29,7 +29,10 @@ interface Combatant {
   initiative: number;
   hpCurrent: number;
   hpMax: number;
-  ac: number;
+  defense: number;
+  attack: number;
+  damage: string;
+  weapon: string;
   isNpc: boolean;
   conditions: string[];
 }
@@ -38,7 +41,7 @@ interface LogEntry {
   id: number;
   round: number;
   actor: string;
-  type: "start" | "round" | "attack" | "heal" | "defeat" | "end";
+  type: "start" | "round" | "attack" | "recover" | "defeat" | "end";
   description: string;
 }
 
@@ -47,7 +50,7 @@ function sortCombatants(list: Combatant[]) {
 }
 
 function getLogVariant(type: LogEntry["type"]) {
-  if (type === "heal") {
+  if (type === "recover") {
     return "success";
   }
 
@@ -70,15 +73,12 @@ export default function CombatTracker() {
   const [battleLog, setBattleLog] = useState<LogEntry[]>([]);
   const [npcName, setNpcName] = useState("");
   const [npcHp, setNpcHp] = useState(20);
-  const [npcAc, setNpcAc] = useState(12);
+  const [npcDefense, setNpcDefense] = useState(12);
+  const [npcAttack, setNpcAttack] = useState(8);
+  const [npcDamage, setNpcDamage] = useState("2d6+2");
   const [confirmStopOpen, setConfirmStopOpen] = useState(false);
 
-  const addLog = (
-    actor: string,
-    type: LogEntry["type"],
-    description: string,
-    roundOverride = round,
-  ) => {
+  const addLog = (actor: string, type: LogEntry["type"], description: string, roundOverride = round) => {
     setBattleLog((previous) => [
       {
         id: Date.now() + previous.length,
@@ -98,7 +98,7 @@ export default function CombatTracker() {
       return;
     }
 
-    const initiative = rollDice(20).total;
+    const initiative = rollDice(10).total + npcAttack;
     const nextCombatants = sortCombatants([
       ...combatants,
       {
@@ -107,7 +107,10 @@ export default function CombatTracker() {
         initiative,
         hpCurrent: npcHp,
         hpMax: npcHp,
-        ac: npcAc,
+        defense: npcDefense,
+        attack: npcAttack,
+        damage: npcDamage,
+        weapon: "Garras",
         isNpc: true,
         conditions: [],
       },
@@ -121,64 +124,82 @@ export default function CombatTracker() {
     const party: Combatant[] = [
       {
         id: "hero-1",
-        name: "Thorin Vale",
-        initiative: rollDice(20).total + 2,
-        hpCurrent: 45,
-        hpMax: 45,
-        ac: 18,
+        name: "Vael de Vizima",
+        initiative: rollDice(10).total + 14,
+        hpCurrent: 40,
+        hpMax: 40,
+        defense: 16,
+        attack: 14,
+        damage: "3d6+2",
+        weapon: "Espada de aco",
         isNpc: false,
-        conditions: ["Linha de frente"],
+        conditions: ["Medalhao vibrando"],
       },
       {
         id: "hero-2",
-        name: "Elara Morn",
-        initiative: rollDice(20).total + 3,
-        hpCurrent: 24,
-        hpMax: 24,
-        ac: 13,
+        name: "Nimue da Torre",
+        initiative: rollDice(10).total + 11,
+        hpCurrent: 28,
+        hpMax: 28,
+        defense: 13,
+        attack: 11,
+        damage: "2d6",
+        weapon: "Raio de Tempestade",
         isNpc: false,
-        conditions: ["Canalizando"],
+        conditions: ["Foco arcano"],
       },
       {
         id: "hero-3",
-        name: "Grimshaw Reed",
-        initiative: rollDice(20).total + 1,
-        hpCurrent: 33,
-        hpMax: 33,
-        ac: 16,
+        name: "Saskia de Ellander",
+        initiative: rollDice(10).total + 10,
+        hpCurrent: 34,
+        hpMax: 34,
+        defense: 14,
+        attack: 10,
+        damage: "2d6+1",
+        weapon: "Lanca curta",
         isNpc: false,
-        conditions: [],
+        conditions: ["Linha de frente"],
       },
     ];
 
     const enemies: Combatant[] = [
       {
         id: "enemy-1",
-        name: "Goblin Leader",
-        initiative: rollDice(20).total + 3,
+        name: "Necrifago alfa",
+        initiative: rollDice(10).total + 10,
         hpCurrent: 36,
         hpMax: 36,
-        ac: 15,
+        defense: 13,
+        attack: 10,
+        damage: "3d6",
+        weapon: "Garras",
         isNpc: true,
-        conditions: ["Tatico"],
+        conditions: ["Cheiro de cripta"],
       },
       {
         id: "enemy-2",
-        name: "Goblin Raider",
-        initiative: rollDice(20).total + 2,
-        hpCurrent: 15,
-        hpMax: 15,
-        ac: 13,
+        name: "Afogador",
+        initiative: rollDice(10).total + 8,
+        hpCurrent: 18,
+        hpMax: 18,
+        defense: 11,
+        attack: 8,
+        damage: "2d6+1",
+        weapon: "Mordida",
         isNpc: true,
         conditions: [],
       },
       {
         id: "enemy-3",
-        name: "Goblin Raider",
-        initiative: rollDice(20).total + 2,
-        hpCurrent: 15,
-        hpMax: 15,
-        ac: 13,
+        name: "Afogador",
+        initiative: rollDice(10).total + 8,
+        hpCurrent: 18,
+        hpMax: 18,
+        defense: 11,
+        attack: 8,
+        damage: "2d6+1",
+        weapon: "Mordida",
         isNpc: true,
         conditions: [],
       },
@@ -190,7 +211,7 @@ export default function CombatTracker() {
     setRound(1);
     setCurrentTurn(0);
     setBattleLog([]);
-    addLog("Sistema", "start", "Encontro iniciado.", 1);
+    addLog("Sistema", "start", "Encontro Witcher iniciado.", 1);
   };
 
   const startCombat = () => {
@@ -213,7 +234,7 @@ export default function CombatTracker() {
       addLog(
         "Sistema",
         "end",
-        alive[0] ? `${alive[0].name} venceu o confronto.` : "O confronto terminou sem sobreviventes.",
+        alive[0] ? `${alive[0].name} permaneceu de pe ao fim do confronto.` : "O confronto terminou sem sobreviventes.",
       );
       return;
     }
@@ -253,23 +274,31 @@ export default function CombatTracker() {
       return;
     }
 
-    const attackRoll = rollDice(20).total;
-    const hit = attackRoll >= target.ac;
+    const rawAttack = rollDice(10).total;
+    const attackTotal = rawAttack + attacker.attack;
+    const hit = attackTotal >= target.defense;
 
     if (!hit) {
       addLog(
         attacker.name,
         "attack",
-        `${attacker.name} falhou contra ${target.name} com ${attackRoll} contra CA ${target.ac}.`,
+        `${attacker.name} errou ${target.name}: ${attackTotal} contra defesa ${target.defense}.`,
       );
       advanceCombat(combatants);
       return;
     }
 
-    const damage = rollDice(8).total;
+    const damageRoll = rollDiceFormula(attacker.damage);
+    const location = getHitLocation(rollDice(10).total);
+    const critical = rawAttack === 10 ? getSimpleCritical(rollDice(10).total) : null;
+    const totalDamage = Math.max(
+      1,
+      Math.ceil(damageRoll.total * (location?.damageMultiplier ?? 1)) + (critical ? 2 : 0),
+    );
+
     const nextCombatants = combatants.map((combatant) =>
       combatant.id === targetId
-        ? { ...combatant, hpCurrent: Math.max(0, combatant.hpCurrent - damage) }
+        ? { ...combatant, hpCurrent: Math.max(0, combatant.hpCurrent - totalDamage) }
         : combatant,
     );
 
@@ -277,27 +306,28 @@ export default function CombatTracker() {
     addLog(
       attacker.name,
       "attack",
-      `${attacker.name} acertou ${target.name} com ${attackRoll} e causou ${damage} de dano.`,
+      `${attacker.name} acertou ${target.name} com ${attacker.weapon} (${attackTotal}). Local: ${
+        location?.label ?? "torso"
+      }. Dano: ${totalDamage}.${critical ? ` Critico: ${critical.title}.` : ""}`,
     );
 
-    if (target.hpCurrent - damage <= 0) {
+    if (target.hpCurrent - totalDamage <= 0) {
       addLog("Sistema", "defeat", `${target.name} caiu em combate.`);
     }
 
     advanceCombat(nextCombatants);
   };
 
-  const heal = (targetId: string) => {
+  const recover = () => {
     const actor = combatants[currentTurn];
-    const target = combatants.find((combatant) => combatant.id === targetId);
 
-    if (!actor || !target || target.hpCurrent <= 0) {
+    if (!actor || actor.hpCurrent <= 0) {
       return;
     }
 
-    const restored = rollDice(8).total + 3;
+    const restored = rollDiceFormula("1d6+2").total;
     const nextCombatants = combatants.map((combatant) =>
-      combatant.id === targetId
+      combatant.id === actor.id
         ? {
             ...combatant,
             hpCurrent: Math.min(combatant.hpMax, combatant.hpCurrent + restored),
@@ -306,7 +336,7 @@ export default function CombatTracker() {
     );
 
     setCombatants(nextCombatants);
-    addLog(actor.name, "heal", `${actor.name} restaurou ${restored} HP para ${target.name}.`);
+    addLog(actor.name, "recover", `${actor.name} recompôs o fôlego e recuperou ${restored} pontos de vida.`);
     advanceCombat(nextCombatants);
   };
 
@@ -320,14 +350,14 @@ export default function CombatTracker() {
         <CardHeader className="gap-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="icon-slot h-12 w-12 text-primary">
                   <Swords className="h-5 w-5" />
                 </div>
                 <div>
                   <CardTitle className="text-2xl">Controle de combate</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Iniciativa automatica, HP semantico, log de rodada e acoes de ataque ou cura.
+                    Ordem de iniciativa em d10, local de impacto e registro rapido do confronto.
                   </p>
                 </div>
               </div>
@@ -347,7 +377,7 @@ export default function CombatTracker() {
           <Sparkles />
           <AlertTitle>Preparacao de encontro</AlertTitle>
           <AlertDescription>
-            Carregue um confronto salvo ou cadastre NPCs antes de iniciar a ordem de iniciativa.
+            Cadastre criaturas rapidamente ou carregue um confronto de exemplo para iniciar a mesa.
           </AlertDescription>
         </Alert>
       ) : (
@@ -364,46 +394,24 @@ export default function CombatTracker() {
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
           <Card variant="panel">
             <CardContent className="space-y-4 p-6">
-              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_110px_110px_auto]">
-                <Input
-                  placeholder="Nome do NPC"
-                  value={npcName}
-                  onChange={(event) => setNpcName(event.target.value)}
-                />
-                <Input
-                  type="number"
-                  placeholder="HP"
-                  value={npcHp}
-                  onChange={(event) => setNpcHp(Number(event.target.value))}
-                />
-                <Input
-                  type="number"
-                  placeholder="CA"
-                  value={npcAc}
-                  onChange={(event) => setNpcAc(Number(event.target.value))}
-                />
-                <Button onClick={addNpc}>Adicionar NPC</Button>
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_92px_92px_92px_120px_auto]">
+                <Input placeholder="Nome da criatura" value={npcName} onChange={(event) => setNpcName(event.target.value)} />
+                <Input type="number" placeholder="HP" value={npcHp} onChange={(event) => setNpcHp(Number(event.target.value))} />
+                <Input type="number" placeholder="DEF" value={npcDefense} onChange={(event) => setNpcDefense(Number(event.target.value))} />
+                <Input type="number" placeholder="ATAQ" value={npcAttack} onChange={(event) => setNpcAttack(Number(event.target.value))} />
+                <Input placeholder="2d6+2" value={npcDamage} onChange={(event) => setNpcDamage(event.target.value)} />
+                <Button onClick={addNpc}>Adicionar</Button>
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
-                <DataSection
-                  label="Fila atual"
-                  value={combatants.length}
-                  icon={<Users className="h-4 w-4" />}
-                  variant="quiet"
-                />
+                <DataSection label="Fila atual" value={combatants.length} icon={<Users className="h-4 w-4" />} variant="quiet" />
                 <DataSection
                   label="Prontos para iniciar"
                   value={combatants.length >= 2 ? "Sim" : "Nao"}
                   tone={combatants.length >= 2 ? "good" : "warn"}
                   variant="quiet"
                 />
-                <DataSection
-                  label="Modo"
-                  value="Narrativo"
-                  icon={<Sparkles className="h-4 w-4" />}
-                  variant="quiet"
-                />
+                <DataSection label="Modo" value="Witcher TRPG" icon={<Sparkles className="h-4 w-4" />} variant="quiet" />
               </div>
             </CardContent>
           </Card>
@@ -413,15 +421,11 @@ export default function CombatTracker() {
               <Button variant="secondary" className="w-full" onClick={addSampleEncounter}>
                 Carregar encontro salvo
               </Button>
-              <Button
-                className="w-full"
-                onClick={startCombat}
-                disabled={combatants.length < 2}
-              >
+              <Button className="w-full" onClick={startCombat} disabled={combatants.length < 2}>
                 Iniciar combate
               </Button>
               <p className="text-sm leading-6 text-muted-foreground">
-                O sistema ordena a iniciativa automaticamente e sinaliza HP em bom estado, alerta ou zona critica.
+                Os ataques usam d10, a defesa substitui a CA e o log registra locais de impacto.
               </p>
             </CardContent>
           </Card>
@@ -432,7 +436,7 @@ export default function CombatTracker() {
             <div className="flex flex-wrap items-center gap-3">
               <Badge variant="info">Rodada {round}</Badge>
               <Badge variant={currentCombatant?.isNpc ? "danger" : "success"}>
-                {currentCombatant?.isNpc ? "NPC ativo" : "Jogador ativo"}
+                {currentCombatant?.isNpc ? "Criatura ativa" : "Personagem ativo"}
               </Badge>
               <span className="text-sm text-muted-foreground">
                 {currentCombatant?.name ?? "Sem combatente"} esta com a vez.
@@ -465,26 +469,11 @@ export default function CombatTracker() {
             const isCurrent = combatActive && index === currentTurn;
             const isDefeated = combatant.hpCurrent <= 0;
             const enemyTargets = combatants.filter(
-              (target) =>
-                target.id !== combatant.id &&
-                target.hpCurrent > 0 &&
-                target.isNpc !== combatant.isNpc,
-            );
-            const allyTargets = combatants.filter(
-              (target) =>
-                target.id !== combatant.id &&
-                target.hpCurrent > 0 &&
-                target.hpCurrent < target.hpMax &&
-                target.isNpc === combatant.isNpc,
+              (target) => target.id !== combatant.id && target.hpCurrent > 0 && target.isNpc !== combatant.isNpc,
             );
 
             return (
-              <motion.div
-                key={combatant.id}
-                layout
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
+              <motion.div key={combatant.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
                 <Card variant={isCurrent ? "elevated" : isDefeated ? "outline" : "panel"}>
                   <CardContent className="space-y-4 p-5">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -502,29 +491,17 @@ export default function CombatTracker() {
                         <div>
                           <h3 className="font-heading text-xl text-foreground">{combatant.name}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {combatant.conditions.length > 0
-                              ? combatant.conditions.join(" | ")
-                              : "Sem condicoes registradas."}
+                            {combatant.weapon} • {combatant.conditions.length > 0 ? combatant.conditions.join(" | ") : "Sem condicoes registradas."}
                           </p>
                         </div>
                       </div>
 
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <DataSection
-                          label="Vida"
-                          value={`${combatant.hpCurrent} / ${combatant.hpMax}`}
-                          icon={<Heart className="h-4 w-4" />}
-                          tone={hpTone}
-                          variant="quiet"
-                        >
+                      <div className="grid gap-3 sm:grid-cols-4">
+                        <DataSection label="Vida" value={`${combatant.hpCurrent} / ${combatant.hpMax}`} icon={<Heart className="h-4 w-4" />} tone={hpTone} variant="quiet">
                           <Progress value={hpPercent} tone={hpTone} />
                         </DataSection>
-                        <DataSection
-                          label="Armadura"
-                          value={`CA ${combatant.ac}`}
-                          icon={<Shield className="h-4 w-4" />}
-                          variant="quiet"
-                        />
+                        <DataSection label="Defesa" value={combatant.defense} icon={<Shield className="h-4 w-4" />} variant="quiet" />
+                        <DataSection label="Ataque" value={`+${combatant.attack}`} icon={<Zap className="h-4 w-4" />} variant="quiet" />
                         <DataSection
                           label="Estado"
                           value={isDefeated ? "Fora de combate" : isCurrent ? "Agindo agora" : "Aguardando"}
@@ -545,25 +522,13 @@ export default function CombatTracker() {
                         >
                           <div className="flex flex-wrap gap-2">
                             {enemyTargets.map((target) => (
-                              <Button
-                                key={target.id}
-                                size="sm"
-                                variant="danger"
-                                onClick={() => attack(target.id)}
-                              >
+                              <Button key={target.id} size="sm" variant="danger" onClick={() => attack(target.id)}>
                                 Atacar {target.name}
                               </Button>
                             ))}
-                            {allyTargets.map((target) => (
-                              <Button
-                                key={`heal-${target.id}`}
-                                size="sm"
-                                variant="success"
-                                onClick={() => heal(target.id)}
-                              >
-                                Curar {target.name}
-                              </Button>
-                            ))}
+                            <Button size="sm" variant="success" onClick={recover}>
+                              Recuperar folego
+                            </Button>
                             <Button size="sm" variant="outline" onClick={nextTurn}>
                               Passar vez
                             </Button>

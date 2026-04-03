@@ -48,22 +48,29 @@ describe("ui system", () => {
     const character = buildCharacterFromCreator({
       name: "Aveline",
       race: "humano",
-      class: "clerigo",
+      class: "witcher",
       attributes: {
-        forca: 10,
-        destreza: 12,
-        constituicao: 14,
-        inteligencia: 11,
-        sabedoria: 16,
-        carisma: 13,
+        int: 7,
+        ref: 8,
+        dex: 7,
+        body: 8,
+        spd: 7,
+        emp: 5,
+        cra: 6,
+        will: 7,
+        luck: 5,
       },
       background: "Curadora itinerante.",
       appearance: "Capuz cinza e bastao curto.",
+      homeland: "Temeria",
+      school: "Lobo",
+      lifepath: "Testemunhou um contrato que terminou em cinzas.",
     });
 
     expect(character.name).toBe("Aveline");
     expect(character.hp_current).toBe(character.hp_max);
     expect(character.mp_current).toBe(character.mp_max);
+    expect(character.class).toBe("witcher");
     expect(character.user_id).toBe(LOCAL_USER_ID);
   });
 

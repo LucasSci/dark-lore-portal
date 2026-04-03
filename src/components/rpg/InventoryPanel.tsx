@@ -1,74 +1,49 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { FlaskConical, Package, ScrollText, Shield, Sword } from "lucide-react";
+import { Bomb, FlaskConical, Hammer, Package, Shield, Sword } from "lucide-react";
 
+import { WITCHER_INVENTORY, type WitcherInventoryItem } from "@/lib/witcher-trpg-system";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 
-const typeIcons: Record<string, React.ReactNode> = {
+const typeIcons: Record<WitcherInventoryItem["category"], ReactNode> = {
   arma: <Sword className="h-4 w-4" />,
   armadura: <Shield className="h-4 w-4" />,
-  pocao: <FlaskConical className="h-4 w-4" />,
-  pergaminho: <ScrollText className="h-4 w-4" />,
+  alquimico: <FlaskConical className="h-4 w-4" />,
+  ferramenta: <Hammer className="h-4 w-4" />,
+  bomba: <Bomb className="h-4 w-4" />,
   material: <Package className="h-4 w-4" />,
-  miscelanea: <Package className="h-4 w-4" />,
 };
 
-const typeLabels: Record<string, string> = {
+const typeLabels: Record<WitcherInventoryItem["category"], string> = {
   arma: "Armas",
   armadura: "Armaduras",
-  pocao: "Pocoes",
-  pergaminho: "Pergaminhos",
+  alquimico: "Alquimicos",
+  ferramenta: "Ferramentas",
+  bomba: "Bombas",
   material: "Materiais",
-  miscelanea: "Miscelanea",
 };
 
-const rarityVariants: Record<string, "outline" | "secondary" | "info" | "warning" | "danger"> = {
+const rarityVariants: Record<WitcherInventoryItem["rarity"], "outline" | "secondary" | "info" | "warning"> = {
   comum: "outline",
   incomum: "secondary",
   raro: "info",
   epico: "warning",
-  lendario: "danger",
 };
 
-interface Item {
-  id: string;
-  name: string;
-  description: string | null;
-  item_type: string;
-  rarity: string;
-  weight: number;
-  value: number;
-  damage: string | null;
-  armor_bonus: number | null;
-  effect: string | null;
-}
-
 interface Props {
-  onImportItem?: (item: Item) => void;
+  onImportItem?: (item: WitcherInventoryItem) => void;
 }
 
 export default function InventoryPanel({ onImportItem }: Props) {
-  const [items, setItems] = useState<Item[]>([]);
-  const [filterType, setFilterType] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Item | null>(null);
+  const [filterType, setFilterType] = useState<WitcherInventoryItem["category"] | null>(null);
+  const [selected, setSelected] = useState<WitcherInventoryItem | null>(null);
 
-  useEffect(() => {
-    supabase
-      .from("items")
-      .select("*")
-      .order("rarity")
-      .order("name")
-      .then(({ data }) => {
-        if (data) {
-          setItems(data);
-        }
-      });
-  }, []);
-
-  const filteredItems = filterType ? items.filter((item) => item.item_type === filterType) : items;
+  const filteredItems = useMemo(
+    () => (filterType ? WITCHER_INVENTORY.filter((item) => item.category === filterType) : WITCHER_INVENTORY),
+    [filterType],
+  );
 
   return (
     <div className="space-y-4">
@@ -87,7 +62,7 @@ export default function InventoryPanel({ onImportItem }: Props) {
           <button
             key={key}
             type="button"
-            onClick={() => setFilterType(key)}
+            onClick={() => setFilterType(key as WitcherInventoryItem["category"])}
             className={`border px-3 py-1 text-[11px] uppercase tracking-[0.18em] transition-colors ${
               filterType === key ? "border-primary/35 bg-primary/10 text-primary" : "border-border/70 text-muted-foreground"
             }`}
@@ -113,28 +88,29 @@ export default function InventoryPanel({ onImportItem }: Props) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
                     <div className="icon-slot h-9 w-9 text-primary">
-                      {typeIcons[item.item_type] ?? <Package className="h-4 w-4" />}
+                      {typeIcons[item.category]}
                     </div>
                     <div>
                       <h4 className="font-heading text-sm text-foreground">{item.name}</h4>
-                      <p className="mt-1 text-xs text-muted-foreground">{typeLabels[item.item_type] ?? "Item"}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{typeLabels[item.category]}</p>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <Badge variant={rarityVariants[item.rarity] ?? "outline"}>{item.rarity}</Badge>
-                    <p className="mt-2 text-xs text-muted-foreground">{item.value} ouro</p>
+                    <Badge variant={rarityVariants[item.rarity]}>{item.rarity}</Badge>
+                    <p className="mt-2 text-xs text-muted-foreground">{item.value} coroas</p>
                   </div>
                 </div>
 
                 {selected?.id === item.id ? (
                   <div className="space-y-3 border-t border-border/70 pt-3 text-sm text-muted-foreground">
-                    <p>{item.description ?? "Sem descricao adicional."}</p>
+                    <p>{item.description}</p>
                     <div className="grid gap-2 sm:grid-cols-2">
                       {item.damage ? <p>Dano: {item.damage}</p> : null}
-                      {item.armor_bonus ? <p>Bonus de CA: +{item.armor_bonus}</p> : null}
+                      {item.stoppingPower > 0 ? <p>Protecao: {item.stoppingPower}</p> : null}
                       {item.effect ? <p>Efeito: {item.effect}</p> : null}
                       <p>Peso: {item.weight} kg</p>
+                      {item.hands ? <p>Empunhadura: {item.hands}</p> : null}
                     </div>
                     {onImportItem ? (
                       <Button
