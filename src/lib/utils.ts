@@ -10,7 +10,18 @@ export function generateSecureId(): string {
     return crypto.randomUUID();
   }
 
-  // Fallback for non-secure contexts (HTTP) or older environments
+  // Fallback using getRandomValues if randomUUID is not available but crypto is
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+      const randomValues = new Uint8Array(1);
+      crypto.getRandomValues(randomValues);
+      const random = randomValues[0] % 16;
+      const value = char === "x" ? random : (random & 0x3) | 0x8;
+      return value.toString(16);
+    });
+  }
+
+  // Fallback for completely non-secure contexts (HTTP) or older environments
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
     const random = Math.floor(Math.random() * 16);
     const value = char === "x" ? random : (random & 0x3) | 0x8;
