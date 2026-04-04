@@ -359,6 +359,7 @@ export default function VttPixiStage({
     wallHash: string;
     polygon: Array<{ x: number; y: number }>;
   }>>(new Map());
+  const wallsSignatureRef = useRef<string | null>(null);
 
   useEffect(() => {
     pageRef.current = page;
@@ -1407,7 +1408,7 @@ export default function VttPixiStage({
       const currentWallsSignature = page.wallSegments.map((w) => `${w.id}:${w.x1},${w.y1},${w.x2},${w.y2}`).join("|");
 
       if (wallsSignatureRef.current !== currentWallsSignature) {
-        visibilityCacheRef.current.clear();
+        visionCacheRef.current.clear();
         wallsSignatureRef.current = currentWallsSignature;
       }
 

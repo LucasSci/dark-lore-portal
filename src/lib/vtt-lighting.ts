@@ -98,6 +98,8 @@ export function computeVisibilityPolygon(
   const angles = new Float64Array(activeWallsCount * 6);
   let angleCount = 0;
 
+  // ⚡ Bolt: Unroll wall coordinates into pre-allocated flat TypedArrays instead of referencing
+  // the object multiple times in the inner O(N^2) hot loop raycasting phase.
   const wallAx = new Float64Array(activeWallsCount);
   const wallAy = new Float64Array(activeWallsCount);
   const wallDx = new Float64Array(activeWallsCount);
@@ -106,17 +108,22 @@ export function computeVisibilityPolygon(
   for (let i = 0; i < activeWallsCount; i++) {
     const wall = activeWalls[i];
 
-    wallAx[i] = wall.a.x;
-    wallAy[i] = wall.a.y;
-    wallDx[i] = wall.b.x - wall.a.x;
-    wallDy[i] = wall.b.y - wall.a.y;
+    const ax = wall.a.x;
+    const ay = wall.a.y;
+    const bx = wall.b.x;
+    const by = wall.b.y;
 
-    let angle = Math.atan2(wall.a.y - oy, wall.a.x - ox);
+    wallAx[i] = ax;
+    wallAy[i] = ay;
+    wallDx[i] = bx - ax;
+    wallDy[i] = by - ay;
+
+    let angle = Math.atan2(ay - oy, ax - ox);
     angles[angleCount++] = angle;
     angles[angleCount++] = angle - 0.0001;
     angles[angleCount++] = angle + 0.0001;
 
-    angle = Math.atan2(wall.b.y - oy, wall.b.x - ox);
+    angle = Math.atan2(by - oy, bx - ox);
     angles[angleCount++] = angle;
     angles[angleCount++] = angle - 0.0001;
     angles[angleCount++] = angle + 0.0001;
