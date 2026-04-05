@@ -102,6 +102,8 @@ export function computeVisibilityPolygon(
   const wallAy = new Float64Array(activeWallsCount);
   const wallDx = new Float64Array(activeWallsCount);
   const wallDy = new Float64Array(activeWallsCount);
+  const wallDiffX = new Float64Array(activeWallsCount);
+  const wallDiffY = new Float64Array(activeWallsCount);
 
   for (let i = 0; i < activeWallsCount; i++) {
     const wall = activeWalls[i];
@@ -110,6 +112,8 @@ export function computeVisibilityPolygon(
     wallAy[i] = wall.a.y;
     wallDx[i] = wall.b.x - wall.a.x;
     wallDy[i] = wall.b.y - wall.a.y;
+    wallDiffX[i] = wall.a.x - ox;
+    wallDiffY[i] = wall.a.y - oy;
 
     let angle = Math.atan2(wall.a.y - oy, wall.a.x - ox);
     angles[angleCount++] = angle;
@@ -152,10 +156,9 @@ export function computeVisibilityPolygon(
       // Skip if lines are parallel or collinear
       if (denom > -1e-10 && denom < 1e-10) continue;
 
-      const ax = wallAx[j];
-      const ay = wallAy[j];
-      const diffX = ax - ox;
-      const diffY = ay - oy;
+      // ⚡ Bolt: Use precomputed diffs (Loop Invariant Code Motion)
+      const diffX = wallDiffX[j];
+      const diffY = wallDiffY[j];
 
       const u = (diffX * dirY - diffY * dirX) / denom;
       if (u < 0 || u > 1) continue;
