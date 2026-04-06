@@ -359,6 +359,8 @@ export default function VttPixiStage({
     wallHash: string;
     polygon: Array<{ x: number; y: number }>;
   }>>(new Map());
+  const wallsSignatureRef = useRef<string | null>(null);
+  const wallSegsCacheRef = useRef<Segment[]>([]);
 
   useEffect(() => {
     pageRef.current = page;
@@ -1404,19 +1406,20 @@ export default function VttPixiStage({
     lightingLayer.zIndex = 8; // Between map and fog
 
     if (page.dynamicLighting && (page.lightSources.length > 0 || tokens.some(t => t.payload.team === "party"))) {
-      const currentWallsSignature = page.wallSegments.map((w) => `${w.id}:${w.x1},${w.y1},${w.x2},${w.y2}`).join("|");
+      const currentWallsSignature = `${page.gridSize}|` + page.wallSegments.map((w) => `${w.id}:${w.x1},${w.y1},${w.x2},${w.y2}`).join("|");
 
       if (wallsSignatureRef.current !== currentWallsSignature) {
-        visibilityCacheRef.current.clear();
+        visionCacheRef.current.clear();
         wallsSignatureRef.current = currentWallsSignature;
+        wallSegsCacheRef.current = page.wallSegments.map((w) => ({
+          a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
+          b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
+        }));
       }
 
-      const wallSegs: Segment[] = page.wallSegments.map((w) => ({
-        a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
-        b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
-      }));
+      const wallSegs: Segment[] = wallSegsCacheRef.current;
       // Create a simple hash of walls to invalidate cache if walls change
-      const wallHash = page.wallSegments.map((w) => `${w.x1},${w.y1},${w.x2},${w.y2}`).join('|');
+      const wallHash = currentWallsSignature;
 
       const bounds = { width: boardWidth, height: boardHeight };
 
