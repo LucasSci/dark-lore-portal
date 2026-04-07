@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { Crown, ScrollText, Sword } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import GameMasterPanel from "@/components/rpg/GameMasterPanel";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
 
@@ -38,6 +40,21 @@ export default function MestrePage() {
                   <DataSection label="Eixos" value="Sessao, combate e arquivo" variant="quiet" />
                   <DataSection label="Uso" value="Controle rapido em mesa" variant="quiet" tone="info" />
                   <DataSection label="Saida" value="Campanha viva entre sessoes" variant="quiet" />
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <Button asChild size="sm">
+                    <Link to="/story-engine">
+                      <ScrollText className="h-4 w-4" />
+                      Abrir Story Engine
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/jogar">
+                      <Sword className="h-4 w-4" />
+                      Voltar ao hub
+                    </Link>
+                  </Button>
                 </div>
               </div>
 

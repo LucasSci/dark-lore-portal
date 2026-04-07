@@ -326,6 +326,26 @@ export const routeManifest: RouteManifestEntry[] = [
     noIndex: true,
     ...defaultEditorial,
   },
+  {
+    path: "/story-engine",
+    label: "Story Engine",
+    title: "Story Engine",
+    description: "Workspace interno para transformar texto em elenco, cenas e storyboard ligados a campanha.",
+    visibility: "internal",
+    navGroup: "none",
+    noIndex: true,
+    ...defaultEditorial,
+  },
+  {
+    path: "/story-engine/:projectId",
+    label: "Story Engine",
+    title: "Projeto do Story Engine",
+    description: "Projeto interno do Story Engine com analise, referencias e storyboard de producao.",
+    visibility: "internal",
+    navGroup: "none",
+    noIndex: true,
+    ...defaultEditorial,
+  },
 ];
 
 export function resolveRouteManifest(pathname: string) {

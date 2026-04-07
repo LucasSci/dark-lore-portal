@@ -1,12 +1,12 @@
 import { BookMarked, ScrollText, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import RitualSectionHeading from "@/components/portal/RitualSectionHeading";
 import { archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
-import { useCampaignPublications } from "@/lib/publications";
+import { getCampaignPublicationBySlug, useCampaignPublications } from "@/lib/publications";
 
 const archiveGallery = [
   archiveReferenceArt.desk,
@@ -60,10 +60,99 @@ const chroniclePortals = [
 ] as const;
 
 export default function CampaignPage() {
+  const { entrySlug } = useParams();
   usePortalShellMode("editorial", "ambient");
   const { publishedPublications } = useCampaignPublications();
+  const publication = entrySlug ? getCampaignPublicationBySlug(entrySlug) : null;
   const featured = publishedPublications.slice(0, 3);
   const archive = publishedPublications.slice(3);
+
+  if (entrySlug) {
+    if (!publication) {
+      return (
+        <div className="mx-auto max-w-[960px] px-4 py-10 md:px-6 md:py-14">
+          <section className="dark-lore-page-frame space-y-6 px-6 py-8 md:px-8 md:py-10">
+            <p className="dark-lore-section-kicker">Registro nao encontrado</p>
+            <h1 className="dark-lore-section-title">Este manuscrito nao existe no arquivo.</h1>
+            <p className="dark-lore-editorial-text">
+              O slug informado nao corresponde a uma cronica publicada. Volte ao arquivo para abrir outro manuscrito.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/cronicas" className="dark-lore-button">
+                Voltar as cronicas
+              </Link>
+              <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
+                Ir para a sessao
+              </Link>
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    const paragraphs = publication.body
+      .split(/\n+/)
+      .map((paragraph) => paragraph.trim())
+      .filter(Boolean);
+
+    return (
+      <div className="mx-auto max-w-[1080px] space-y-8 px-4 py-8 md:px-6 md:py-12">
+        <section className="dark-lore-page-frame dark-lore-reading-hero px-6 py-8 md:px-8 md:py-10">
+          <p className="dark-lore-section-kicker">{publication.kind} do arquivo</p>
+          <h1 className="dark-lore-display-title">{publication.title}</h1>
+          <p className="dark-lore-hero-text max-w-3xl">{publication.excerpt}</p>
+          <div className="flex flex-wrap gap-2 pt-2">
+            <span className="dark-lore-card-meta">{publication.location}</span>
+            <span className="dark-lore-card-meta">Capitulo {String(publication.chapterNumber).padStart(2, "0")}</span>
+            <span className="dark-lore-card-meta">{publication.author}</span>
+          </div>
+          <div className="flex flex-wrap gap-3 pt-4">
+            <Link to="/cronicas" className="dark-lore-button">
+              Voltar ao arquivo
+            </Link>
+            <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
+              Levar para a sessao
+            </Link>
+          </div>
+        </section>
+
+        <section className="dark-lore-reading-layout">
+          <article className="dark-lore-page-frame dark-lore-reading-column space-y-6 px-6 py-8 md:px-8 md:py-10">
+            {paragraphs.map((paragraph, index) => (
+              <p key={`${publication.id}-${index}`} className="dark-lore-reading-paragraph">
+                {paragraph}
+              </p>
+            ))}
+          </article>
+
+          <aside className="dark-lore-reading-rail dark-lore-page-frame space-y-4 px-5 py-6">
+            <div className="space-y-2">
+              <p className="dark-lore-section-kicker">Ficha do manuscrito</p>
+              <h2 className="dark-lore-card-title text-[clamp(1.35rem,1.8vw,1.7rem)]">
+                {publication.title}
+              </h2>
+            </div>
+            <div className="space-y-3">
+              <div className="metric-panel px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-primary/74">Origem</p>
+                <p className="mt-2 text-sm leading-7 text-foreground/84">{publication.location}</p>
+              </div>
+              <div className="metric-panel px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-primary/74">Respostas</p>
+                <p className="mt-2 text-sm leading-7 text-foreground/84">{publication.replies}</p>
+              </div>
+              <div className="metric-panel px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-primary/74">Atualizacao</p>
+                <p className="mt-2 text-sm leading-7 text-foreground/84">
+                  {new Date(publication.updatedAt).toLocaleDateString("pt-BR")}
+                </p>
+              </div>
+            </div>
+          </aside>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[1320px] space-y-10 px-4 py-8 md:px-6 md:py-12">

@@ -25,6 +25,7 @@ const RegionalAtlasPage = lazy(() => import("./pages/RegionalAtlasPage"));
 const FichaPage = lazy(() => import("./pages/FichaPage"));
 const CriacaoPage = lazy(() => import("./pages/CriacaoPage"));
 const MestrePage = lazy(() => import("./pages/MestrePage"));
+const StoryEnginePage = lazy(() => import("./pages/StoryEnginePage"));
 const UniversePage = lazy(() => import("./pages/UniversePage"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const StorePage = lazy(() => import("./pages/StorePage"));
@@ -91,7 +92,7 @@ function AppRoutes() {
             <Route path="/" element={<HomePage />} />
             <Route path="/campanha" element={<CampaignPage />} />
             <Route path="/cronicas" element={<CampaignPage />} />
-            <Route path="/cronicas/:entrySlug" element={<UniversePage />} />
+            <Route path="/cronicas/:entrySlug" element={<CampaignPage />} />
             <Route path="/jogar" element={<PlayPage />} />
             <Route path="/jogar/oraculo" element={<OraclePage />} />
             <Route path="/oraculo" element={<OraclePage />} />
@@ -108,6 +109,8 @@ function AppRoutes() {
             <Route path="/ficha/:sheetId" element={<FichaPage />} />
             <Route path="/criacao" element={<CriacaoPage />} />
             <Route path="/mestre" element={<MestrePage />} />
+            <Route path="/story-engine" element={<StoryEnginePage />} />
+            <Route path="/story-engine/:projectId" element={<StoryEnginePage />} />
             <Route path="/universo" element={<UniversePage />} />
             <Route path="/universo/:entrySlug" element={<UniversePage />} />
             <Route path="/bestiario" element={<UniversePage />} />

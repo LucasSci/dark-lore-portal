@@ -121,6 +121,7 @@ import {
   getWitcherCampaignById,
   getWitcherScenesForCampaign,
   getWitcherSceneSeed,
+  WitcherAssetIcon,
   WitcherCampaignBrief,
   useSocketTabletopRealtime,
 } from "@/features/witcher-system";
@@ -292,6 +293,64 @@ function ToolRailButton({
       aria-label={ariaLabel || title}
       {...props}
     />
+  );
+}
+
+function FoundrySidebarTabButton({
+  active = false,
+  title,
+  onClick,
+  children,
+}: {
+  active?: boolean;
+  title: string;
+  onClick?: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className={cn(
+        "flex h-11 w-11 items-center justify-center rounded-sm border text-[hsl(var(--foreground)/0.72)] transition-all",
+        active
+          ? "border-primary/55 bg-[linear-gradient(180deg,rgba(201,161,90,0.26),rgba(90,63,22,0.18))] text-primary shadow-[0_0_18px_rgba(201,161,90,0.14)]"
+          : "border-border/50 bg-[rgba(16,12,10,0.86)] hover:border-primary/40 hover:text-primary",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function FoundryHotbarSlot({
+  label,
+  active = false,
+  title,
+  children,
+}: {
+  label: string;
+  active?: boolean;
+  title?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "relative flex h-12 w-12 items-center justify-center rounded-sm border text-[11px] font-medium transition-all",
+        active
+          ? "border-primary/55 bg-[rgba(201,161,90,0.18)] text-primary"
+          : "border-border/50 bg-[rgba(16,12,10,0.88)] text-foreground/56 hover:border-primary/35 hover:text-foreground/82",
+      )}
+      aria-label={`Slot ${label}`}
+      title={title ?? `Slot ${label}`}
+    >
+      <span className="absolute left-1.5 top-1 text-[10px] uppercase tracking-[0.08em]">{label}</span>
+      <span className="pointer-events-none">{children}</span>
+    </button>
   );
 }
 
@@ -524,13 +583,86 @@ export default function MesaPage() {
   const tokens = useMemo(() => getSceneTokens(scene), [scene]);
   const selectedToken = getSelectedToken(scene);
   const activeTurn = scene.initiative.entries.find((e) => e.tokenId === scene.initiative.activeTurnId);
-  const rightTabs: Array<{ id: RightTab; icon: ReactNode; label: string }> = [
+  const rightTabs: Array<{ id: RightTab; icon: ReactNode; label: string; accent?: ReactNode }> = [
     { id: "chat", icon: <MessageSquare className="h-4 w-4" />, label: "Chat" },
     { id: "tokens", icon: <Ghost className="h-4 w-4" />, label: "Tokens" },
-    { id: "initiative", icon: <Sword className="h-4 w-4" />, label: "Iniciativa" },
-    { id: "codex", icon: <Sparkles className="h-4 w-4" />, label: "Codex" },
-    { id: "npc", icon: <Shield className="h-4 w-4" />, label: "Ameacas" },
-    { id: "map", icon: <ImagePlus className="h-4 w-4" />, label: "Mapa" },
+    {
+      id: "initiative",
+      icon: <WitcherAssetIcon name="adrenaline" className="h-4 w-4 opacity-90" />,
+      label: "Iniciativa",
+      accent: <Sword className="h-3 w-3" />,
+    },
+    {
+      id: "codex",
+      icon: <WitcherAssetIcon name="scrollWitcher" className="h-4 w-4 opacity-90" />,
+      label: "Codex",
+      accent: <Sparkles className="h-3 w-3" />,
+    },
+    {
+      id: "npc",
+      icon: <WitcherAssetIcon name="necrophages" className="h-4 w-4 opacity-90" />,
+      label: "Ameacas",
+      accent: <Shield className="h-3 w-3" />,
+    },
+    {
+      id: "map",
+      icon: <WitcherAssetIcon name="scrollFormulae" className="h-4 w-4 opacity-90" />,
+      label: "Mapa",
+      accent: <ImagePlus className="h-3 w-3" />,
+    },
+  ];
+  const hotbarSlots: Array<{ label: string; title: string; icon: ReactNode; active?: boolean }> = [
+    {
+      label: "1",
+      title: "Quen defensivo",
+      icon: <WitcherAssetIcon name="resolve" className="h-5 w-5 opacity-90" />,
+      active: true,
+    },
+    {
+      label: "2",
+      title: "Igni ofensivo",
+      icon: <WitcherAssetIcon name="adrenaline" className="h-5 w-5 opacity-90" />,
+    },
+    {
+      label: "3",
+      title: "Vigor e folego",
+      icon: <WitcherAssetIcon name="stamina" className="h-5 w-5 opacity-90" />,
+    },
+    {
+      label: "4",
+      title: "Leitura do dossie",
+      icon: <WitcherAssetIcon name="scrollWitcher" className="h-5 w-5 opacity-90" />,
+    },
+    {
+      label: "5",
+      title: "Contrato e formulas",
+      icon: <WitcherAssetIcon name="scrollFormulae" className="h-5 w-5 opacity-90" />,
+    },
+    {
+      label: "6",
+      title: "Necrofagos",
+      icon: <WitcherAssetIcon name="necrophages" className="h-5 w-5 opacity-90" />,
+    },
+    {
+      label: "7",
+      title: "Espectros",
+      icon: <WitcherAssetIcon name="specters" className="h-5 w-5 opacity-90" />,
+    },
+    {
+      label: "8",
+      title: "Reliquias",
+      icon: <WitcherAssetIcon name="relicts" className="h-5 w-5 opacity-90" />,
+    },
+    {
+      label: "9",
+      title: "Vitalidade",
+      icon: <WitcherAssetIcon name="health" className="h-5 w-5 opacity-90" />,
+    },
+    {
+      label: "0",
+      title: "Foco do sinal",
+      icon: <WitcherAssetIcon name="focus" className="h-5 w-5 opacity-90" />,
+    },
   ];
   const witcherProfessions = useMemo(() => CLASSES.slice(0, 6), []);
   const witcherSigns = useMemo(
@@ -1230,96 +1362,159 @@ export default function MesaPage() {
 
   return (
     <div className="fixed inset-0 z-[60] flex bg-background-strong safe-top safe-bottom safe-left safe-right">
-      {/* Left toolbar — horizontal on mobile, vertical on desktop */}
-      <div className="hidden w-12 flex-col items-center border-r border-border/70 bg-surface-raised py-2 sm:flex">
-        <Link
-          to="/jogar"
-          className="tool-rail-button mb-4 h-9 w-9"
-          title="Voltar ao Hub"
-          aria-label="Voltar ao Hub"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
+      {/* Left sidebar inspired by Foundry */}
+      <aside className="hidden w-[15.25rem] flex-col border-r border-border/70 bg-[rgba(13,10,8,0.94)] backdrop-blur-md md:flex">
+        <div className="border-b border-border/50 p-3">
+          <div className="flex items-center gap-2">
+            <Link
+              to="/jogar"
+              className="tool-rail-button h-9 w-9 shrink-0"
+              title="Voltar ao Hub"
+              aria-label="Voltar ao Hub"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <div className="min-w-0 flex-1 rounded-sm border border-primary/25 bg-[rgba(18,13,10,0.88)] px-3 py-2">
+              <p className="truncate text-[10px] uppercase tracking-[0.18em] text-primary/76">
+                {activeCampaign.stageLabel}
+              </p>
+              <p className="truncate text-xs text-foreground/82">{activeSceneSeed.name}</p>
+            </div>
+          </div>
+        </div>
 
-        <div className="w-8 border-t border-border/50 mb-3" />
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="grid grid-cols-2 gap-2 p-3">
+            {toolButtons.map((tool) => (
+              <ToolRailButton
+                key={tool.id}
+                onClick={() => setActiveTool(tool.id)}
+                title={tool.label}
+                active={currentTool === tool.id}
+                className="h-11 w-full"
+              >
+                {tool.icon}
+              </ToolRailButton>
+            ))}
 
-        {toolButtons.map((tool) => (
-          <ToolRailButton
-            key={tool.id}
-            onClick={() => setActiveTool(tool.id)}
-            title={tool.label}
-            active={currentTool === tool.id}
-            className="mb-1"
-          >
-            {tool.icon}
-          </ToolRailButton>
-        ))}
+            <ToolRailButton
+              onClick={() => setShowGrid((v) => !v)}
+              title={showGrid ? "Ocultar grid" : "Mostrar grid"}
+              active={showGrid}
+              className="h-11 w-full"
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </ToolRailButton>
 
-        <div className="w-8 border-t border-border/50 my-3" />
+            <ToolRailButton
+              onClick={() => fileInputRef.current?.click()}
+              title="Importar battlemap"
+              active={Boolean(battlemapUrl)}
+              className="h-11 w-full"
+            >
+              {battlemapUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+            </ToolRailButton>
 
-        <ToolRailButton
-          onClick={() => setShowGrid((v) => !v)}
-          title={showGrid ? "Ocultar grid" : "Mostrar grid"}
-          active={showGrid}
-          className="mb-1"
-        >
-          <Grid3X3 className="h-4 w-4" />
-        </ToolRailButton>
+            <ToolRailButton
+              onClick={() => void mutateScene((c) => toggleDynamicLighting(c))}
+              title={activePage?.dynamicLighting ? "Desativar iluminacao dinamica" : "Ativar iluminacao dinamica"}
+              active={Boolean(activePage?.dynamicLighting)}
+              className={cn(
+                "h-11 w-full",
+                activePage?.dynamicLighting && "border-amber-400/30 bg-amber-500/12 text-amber-300",
+              )}
+            >
+              <Flame className="h-4 w-4" />
+            </ToolRailButton>
 
-        <ToolRailButton
-          onClick={() => fileInputRef.current?.click()}
-          title="Importar battlemap"
-          active={Boolean(battlemapUrl)}
-          className="mb-1"
-        >
-          {battlemapUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-        </ToolRailButton>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(event) => void handleBattlemapImport(event)}
-        />
+            <ToolRailButton
+              onClick={() => void mutateScene((c) => revealEntireSceneFog(c))}
+              title="Revelar todo o mapa"
+              className="h-11 w-full"
+            >
+              <Eye className="h-4 w-4" />
+            </ToolRailButton>
 
-        <div className="flex-1" />
+            <ToolRailButton
+              onClick={() => void mutateScene((c) => restoreSceneFog(c))}
+              title="Restaurar neblina"
+              className="h-11 w-full"
+            >
+              <Layers className="h-4 w-4" />
+            </ToolRailButton>
 
-        <div className="w-8 border-t border-border/50 mb-3" />
+            <ToolRailButton
+              onClick={() => void mutateScene((c) => clearSceneWalls(c))}
+              title="Limpar paredes"
+              className="h-11 w-full"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </ToolRailButton>
+          </div>
 
-        <ToolRailButton
-          onClick={() => void mutateScene((c) => toggleDynamicLighting(c))}
-          title={activePage?.dynamicLighting ? "Desativar iluminação dinâmica" : "Ativar iluminação dinâmica"}
-          active={Boolean(activePage?.dynamicLighting)}
-          className={cn("mb-1", activePage?.dynamicLighting && "border-amber-400/30 bg-amber-500/12 text-amber-300")}
-        >
-          <Flame className="h-4 w-4" />
-        </ToolRailButton>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(event) => void handleBattlemapImport(event)}
+          />
 
-        <ToolRailButton
-          onClick={() => void mutateScene((c) => clearSceneWalls(c))}
-          title="Limpar paredes"
-          className="mb-1"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </ToolRailButton>
+          <div className="mt-auto space-y-3 border-t border-border/50 p-3">
+            <div className="rounded-sm border border-border/50 bg-[rgba(14,11,9,0.92)] p-3">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-primary/76">Scene Navigation</p>
+              <div className="mt-3 space-y-2">
+                {scene.pages.map((page) => (
+                  <button
+                    key={page.id}
+                    type="button"
+                    onClick={() => void mutateScene((current) => ({ ...current, activePageId: page.id }), { broadcast: false, persist: true })}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-sm border px-3 py-2 text-left text-xs transition-colors",
+                      page.id === scene.activePageId
+                        ? "border-primary/45 bg-[rgba(201,161,90,0.12)] text-foreground"
+                        : "border-border/40 bg-[rgba(20,15,12,0.82)] text-foreground/68 hover:border-primary/30 hover:text-foreground/88",
+                    )}
+                  >
+                    <span className="truncate">{page.name}</span>
+                    <span className="text-[10px] uppercase tracking-[0.1em] text-primary/72">
+                      {page.region}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <div className="w-8 border-t border-border/50 mb-3" />
-
-        <ToolRailButton
-          onClick={() => void mutateScene((c) => revealEntireSceneFog(c))}
-          title="Revelar todo o mapa"
-          className="mb-1"
-        >
-          <Eye className="h-4 w-4" />
-        </ToolRailButton>
-        <ToolRailButton
-          onClick={() => void mutateScene((c) => restoreSceneFog(c))}
-          title="Restaurar neblina"
-          className="mb-1"
-        >
-          <Layers className="h-4 w-4" />
-        </ToolRailButton>
-      </div>
+            <div className="rounded-sm border border-border/50 bg-[rgba(14,11,9,0.92)] p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-primary/76">Companhia</p>
+                <span className="text-[10px] uppercase tracking-[0.1em] text-foreground/48">
+                  {scene.presence.length || 1} online
+                </span>
+              </div>
+              <div className="mt-3 space-y-2">
+                {activeCampaign.players.map((player) => (
+                  <div key={player.id} className="flex items-center gap-3 rounded-sm border border-border/40 bg-[rgba(20,15,12,0.82)] px-3 py-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-sm border border-primary/30 bg-[rgba(201,161,90,0.12)] font-heading text-xs text-primary">
+                      {player.name
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs text-foreground">{player.name}</p>
+                      <p className="truncate text-[10px] uppercase tracking-[0.12em] text-foreground/58">
+                        {player.role}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
 
       {/* Center: canvas area */}
       <div className="relative flex-1 flex flex-col overflow-hidden">
@@ -1402,6 +1597,16 @@ export default function MesaPage() {
           </div>
         </div>
 
+        <div className="hidden items-center gap-3 border-b border-primary/15 bg-[linear-gradient(180deg,rgba(33,24,18,0.96),rgba(20,14,10,0.96))] px-4 py-2 text-xs text-foreground/82 lg:flex">
+          <WitcherAssetIcon name="scrollWitcher" className="h-4 w-4 opacity-90" />
+          <p className="truncate">
+            Mesa do Continente ativa. A cena segue a linguagem tática do Foundry, com compêndio Witcher e vínculos diretos com o arquivo do portal.
+          </p>
+          <Badge variant="outline" className="ml-auto border-primary/30 text-[10px] uppercase tracking-[0.14em] text-primary">
+            1024x768 recomendado
+          </Badge>
+        </div>
+
         {/* Canvas */}
         <div className="flex-1 relative">
           {activePage && (
@@ -1461,6 +1666,33 @@ export default function MesaPage() {
               <RefreshCcw className="h-3.5 w-3.5" />
             </ToolRailButton>
           </div>
+
+          <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 hidden -translate-x-1/2 md:flex">
+            <div className="pointer-events-auto flex items-end gap-2 rounded-sm border border-border/55 bg-[rgba(13,10,8,0.9)] px-3 py-2 shadow-[0_20px_36px_rgba(0,0,0,0.42)] backdrop-blur-md">
+              <div className="mr-2 flex h-12 items-center border-r border-border/35 pr-3">
+                <button
+                  type="button"
+                  className="flex h-9 w-9 items-center justify-center rounded-sm border border-border/45 bg-[rgba(16,12,10,0.88)] text-foreground/70 transition-colors hover:border-primary/35 hover:text-primary"
+                  title="Menu principal da mesa"
+                  aria-label="Menu principal da mesa"
+                >
+                  <Layers className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex gap-2">
+                {hotbarSlots.map((slot) => (
+                  <FoundryHotbarSlot
+                    key={slot.label}
+                    label={slot.label}
+                    title={slot.title}
+                    active={slot.active}
+                  >
+                    {slot.icon}
+                  </FoundryHotbarSlot>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Selected token bar at the bottom */}
@@ -1479,11 +1711,11 @@ export default function MesaPage() {
               </p>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="text-[10px] text-muted-foreground sm:text-xs">VIT</span>
+              <WitcherAssetIcon name="health" className="h-4 w-4 opacity-90" />
               <span className="font-heading text-xs text-foreground sm:text-sm">
                 {selectedToken.payload.hp}/{selectedToken.payload.hpMax}
               </span>
-              <span className="text-[10px] text-muted-foreground sm:text-xs">DEF</span>
+              <WitcherAssetIcon name="resolve" className="h-4 w-4 opacity-90" />
               <span className="font-heading text-xs text-foreground sm:text-sm">{selectedToken.payload.ac}</span>
               <div className="ml-1 flex items-center gap-0.5 sm:ml-2 sm:gap-1">
                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => void adjustHp(selectedToken.id, -5)} title="Remover 5 HP" aria-label="Remover 5 HP">
@@ -1555,7 +1787,7 @@ export default function MesaPage() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-hidden px-4 py-4">
             <Tabs value={rightTab} onValueChange={handleRightTabChange} className="flex flex-1 flex-col">
               <TabsList className="grid h-auto w-full grid-cols-3 gap-px rounded-none border-b border-border/40 bg-border/30 p-1">
                 {rightTabs.map((tab) => (
@@ -1571,6 +1803,22 @@ export default function MesaPage() {
                 ))}
               </TabsList>
 
+              <div className="space-y-4 px-1 pt-4">
+                <div className="rounded-sm border border-amber-400/20 bg-[rgba(31,20,14,0.9)] p-4">
+                  <div className="flex items-center gap-2">
+                    <WitcherAssetIcon name="scrollFormulae" className="h-5 w-5 opacity-90" />
+                    <p className="font-heading text-sm text-foreground">Viewport reduzido</p>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-foreground/78">
+                    Esta mesa usa uma shell inspirada no Foundry e fica realmente funcional a partir de 1024x768. Em telas menores, use as abas acima como atalho e volte ao desktop para editar cena, compêndio e combate com conforto.
+                  </p>
+                </div>
+
+                <Button variant="outline" className="h-11 w-full text-sm" onClick={() => setMobilePanel(false)}>
+                  Voltar ao palco
+                </Button>
+              </div>
+
       {/* Reuse same tab content — rendered below for desktop */}
             </Tabs>
           </div>
@@ -1580,17 +1828,17 @@ export default function MesaPage() {
       {/* Right panel — desktop */}
       {rightOpen && (
         <div className="hidden w-[min(26rem,calc(100vw-5rem))] flex-col border-l border-border/70 bg-surface-raised/95 backdrop-blur sm:flex xl:w-[26rem] 2xl:w-[28rem]">
-          <Tabs value={rightTab} onValueChange={handleRightTabChange} className="flex flex-1 flex-col">
-            <TabsList className="grid h-auto w-full grid-cols-3 gap-px rounded-none border-b border-border/40 bg-border/30 p-1">
+          <Tabs value={rightTab} onValueChange={handleRightTabChange} className="flex flex-1 flex-row overflow-hidden">
+            <TabsList className="order-2 flex h-full w-[4.75rem] shrink-0 flex-col gap-2 rounded-none border-l border-border/40 bg-[rgba(12,10,8,0.96)] p-2">
               {rightTabs.map((tab) => (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
                   title={tab.label}
-                  className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-none border border-transparent bg-transparent px-2 py-2 text-[11px] font-medium tracking-[0.14em] text-muted-foreground data-[state=active]:border-primary/40 data-[state=active]:bg-background/70 data-[state=active]:text-foreground"
+                  className="flex h-12 w-12 flex-col items-center justify-center gap-1 rounded-sm border border-border/45 bg-[rgba(16,12,10,0.82)] px-1 py-1 text-[9px] font-medium tracking-[0.12em] text-muted-foreground data-[state=active]:border-primary/45 data-[state=active]:bg-[rgba(201,161,90,0.14)] data-[state=active]:text-primary"
                 >
                   {tab.icon}
-                  <span className="uppercase">{tab.label}</span>
+                  <span className="uppercase leading-none">{tab.label}</span>
                 </TabsTrigger>
               ))}
             </TabsList>

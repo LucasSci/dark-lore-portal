@@ -19,6 +19,7 @@ export interface CampaignPublicationDraft {
 
 export interface CampaignPublication extends CampaignPublicationDraft {
   id: string;
+  slug: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,6 +31,7 @@ let publicationSnapshot: CampaignPublication[] | null = null;
 const seedPublications: CampaignPublication[] = [
   {
     id: "pub-rotas-elarion",
+    slug: "rotas-sob-vigia-em-elarion",
     title: "Rotas sob vigia em Elarion",
     excerpt:
       "As caravanas que cruzam os acessos de Elarion relatam movimentos armados, lanternas apagadas e negociações feitas fora de vista.",
@@ -47,6 +49,7 @@ const seedPublications: CampaignPublication[] = [
   },
   {
     id: "pub-contrato-korath",
+    slug: "contrato-trilha-perdida-no-korath",
     title: "Contrato: trilha perdida no Korath",
     excerpt:
       "Uma trilha de suprimentos desapareceu perto da borda de Korath. O contratante paga em moeda e acesso a mapas velhos.",
@@ -64,6 +67,7 @@ const seedPublications: CampaignPublication[] = [
   },
   {
     id: "pub-rumor-vazhir",
+    slug: "rumor-nas-mesas-de-vaz-hir",
     title: "Rumor nas mesas de Vaz'hir",
     excerpt:
       "Corre a história de que alguém anda comprando reagentes raros em silêncio, sempre na mesma noite e sempre sem escolta visível.",
@@ -85,26 +89,44 @@ function canUseStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
 
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function normalizePublication(publication: CampaignPublication): CampaignPublication {
+  return {
+    ...publication,
+    slug: publication.slug || slugify(publication.title || publication.id),
+  };
+}
+
 function notify() {
   listeners.forEach((listener) => listener());
 }
 
 function readPublications(): CampaignPublication[] {
   if (!canUseStorage()) {
-    return [...seedPublications];
+    return seedPublications.map(normalizePublication);
   }
 
   const raw = window.localStorage.getItem(STORAGE_KEY);
 
   if (!raw) {
-    return [...seedPublications];
+    return seedPublications.map(normalizePublication);
   }
 
   try {
     const parsed = JSON.parse(raw) as CampaignPublication[];
-    return Array.isArray(parsed) ? parsed : [...seedPublications];
+    return Array.isArray(parsed)
+      ? parsed.map(normalizePublication)
+      : seedPublications.map(normalizePublication);
   } catch {
-    return [...seedPublications];
+    return seedPublications.map(normalizePublication);
   }
 }
 
@@ -168,11 +190,13 @@ function persistPublication(
         }),
         ...draft,
         id: draft.id,
+        slug: slugify(draft.title || draft.id),
         updatedAt: now,
       }
     : {
         ...draft,
         id: `publication-${Date.now()}`,
+        slug: slugify(draft.title || `publication-${Date.now()}`),
         createdAt: now,
         updatedAt: now,
       };
@@ -203,4 +227,8 @@ export function useCampaignPublications() {
     upsertPublication: persistPublication,
     deletePublication: removePublication,
   };
+}
+
+export function getCampaignPublicationBySlug(slug: string) {
+  return getSnapshot().find((publication) => publication.slug === slug) ?? null;
 }

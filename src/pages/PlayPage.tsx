@@ -1,4 +1,4 @@
-import { BookMarked, Map, ScrollText, Sparkles, Sword } from "lucide-react";
+import { BookMarked, Clapperboard, Map, ScrollText, Sparkles, Sword } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
@@ -17,6 +17,11 @@ const sessionMetrics = [
   { label: "Ritmo", value: "Preparar, narrar, resolver" },
   { label: "Entrada rapida", value: "Sessao ao vivo em um clique" },
 ] as const;
+
+const defaultWitcherCampaign =
+  WITCHER_CAMPAIGNS.find((campaign) => campaign.id === DEFAULT_WITCHER_CAMPAIGN_ID) ??
+  WITCHER_CAMPAIGNS[0];
+const storyEnginePath = `/story-engine?campaignId=${defaultWitcherCampaign.id}&sceneId=${defaultWitcherCampaign.defaultSceneId}`;
 
 const moduleCards = [
   {
@@ -47,6 +52,13 @@ const moduleCards = [
     cta: "Entrar no painel",
     icon: ScrollText,
   },
+  {
+    title: "Story Engine",
+    description: "Transforme contratos, manuscritos e seeds da campanha em elenco, cenas e storyboard visual.",
+    path: storyEnginePath,
+    cta: "Abrir workspace",
+    icon: Clapperboard,
+  },
 ] as const;
 
 const supportRoutes = [
@@ -57,6 +69,10 @@ const supportRoutes = [
   {
     title: "Seguir cronicas",
     path: "/cronicas",
+  },
+  {
+    title: "Abrir Story Engine",
+    path: storyEnginePath,
   },
 ] as const;
 
