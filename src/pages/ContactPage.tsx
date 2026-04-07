@@ -1,6 +1,7 @@
 import { Mail, MapPin, MessageSquareMore } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { V2MetadataPanel, V2QuoteBlock } from "@/components/portal/v2/PortalV2";
 import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
 
@@ -8,64 +9,55 @@ const contactPanels = [
   {
     icon: Mail,
     title: "Correio do Arquivo",
-    body: "Canal para pedidos de acesso, relatos entregues ao arquivo e correspondencias de campanha.",
+    body: "Pedidos de acesso, relatos entregues ao arquivo e correspondencias de campanha.",
     action: "arquivo@zerrikania.cont",
   },
   {
     icon: MessageSquareMore,
-    title: "Sala de Sessao",
-    body: "Acesso rapido ao nucleo de jogo para mesa, oraculo e acompanhamento da campanha.",
-    action: "Ir para jogar",
+    title: "Suite de sessao",
+    body: "Acesso rapido a mesa, Story Engine, oraculo e acompanhamento da campanha.",
+    action: "Abrir jogar",
     href: "/jogar",
   },
   {
     icon: MapPin,
-    title: "Cartografia e Dossies",
-    body: "Sugestoes de verbetes, monstros e locais podem ser entregues ao arquivo central.",
+    title: "Dossies e cartografia",
+    body: "Sugestoes de verbetes, criaturas ou locais podem ser entregues ao arquivo central.",
     action: "Ver universo",
     href: "/universo",
   },
-];
+] as const;
 
 export default function ContactPage() {
   usePortalShellMode("editorial", "ambient");
 
   return (
-    <div className="mx-auto max-w-[1280px] space-y-10 px-4 py-10 md:px-6 md:py-14">
-      <section className="dark-lore-page-frame dark-lore-page-hero dark-lore-contact-hero">
-        <img
-          src={archiveReferenceArt.forgotten}
-          alt=""
-          aria-hidden="true"
-          fetchPriority="high"
-          decoding="async"
-          className="dark-lore-hero-background object-cover opacity-55"
-        />
-        <div className="dark-lore-hero-vignette" />
-        <div className="dark-lore-grain-overlay" />
-        <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
-        <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
-        <div className="dark-lore-hero-copy dark-lore-hero-copy-centered">
-          <span className="dark-lore-portal-sigil" aria-hidden="true" />
-          <p className="dark-lore-section-kicker justify-center">{archiveBrand.subtitle}</p>
-          <h1 className="dark-lore-display-title">Fale com o Arquivo</h1>
-          <p className="dark-lore-hero-text max-w-3xl text-center">
-            Toda correspondencia que cruza estas portas passa por Areias de Zerrikania. Se houver
-            algo a registrar, este e o limiar.
+    <div className="portal-v2-page">
+      <section className="portal-v2-section relative min-h-[28rem] overflow-hidden">
+        <div className="portal-v2-hero-media">
+          <img src={archiveReferenceArt.forgotten} alt="" aria-hidden="true" fetchPriority="high" decoding="async" />
+        </div>
+        <div className="portal-v2-hero-overlay" />
+        <div className="relative z-[1] flex min-h-[28rem] flex-col justify-end gap-5 p-6 md:p-10">
+          <p className="portal-v2-kicker">{archiveBrand.subtitle}</p>
+          <h1 className="portal-v2-title max-w-[10ch]">Toda correspondencia digna do arquivo comeca aqui.</h1>
+          <p className="portal-v2-body max-w-[44rem]">
+            A V2 trata contato como parte do produto: um ponto de passagem entre leitura,
+            campanha e dossies, e nao uma pagina esquecida fora do universo visual.
           </p>
-          <div className="dark-lore-divider" aria-hidden="true" />
         </div>
       </section>
 
-      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
-        <div className="grid gap-5 md:grid-cols-3">
-          {contactPanels.map(({ icon: Icon, title, body, action, href }) => (
-            <article key={title} className="dark-lore-archive-card">
-              <div className="flex h-11 w-11 items-center justify-center border border-[hsl(var(--brand)/0.22)] bg-[hsl(var(--background)/0.36)] text-primary">
+      <section className="portal-v2-grid-3">
+        {contactPanels.map(({ icon: Icon, title, body, action, href }) => (
+          <article key={title} className="portal-v2-detail-card">
+            <div className="portal-v2-card-body">
+              <p className="portal-v2-card-meta">
                 <Icon className="h-4 w-4" />
-              </div>
-              <h2 className="font-display text-3xl text-[hsl(var(--gold-light))]">{title}</h2>
-              <p className="text-sm leading-7 text-[hsl(var(--foreground)/0.76)]">{body}</p>
+                Contact channel
+              </p>
+              <h2 className="portal-v2-card-title">{title}</h2>
+              <p className="portal-v2-card-copy">{body}</p>
               {href ? (
                 <Link to={href} className="dark-lore-button dark-lore-button-ghost">
                   {action}
@@ -73,8 +65,46 @@ export default function ContactPage() {
               ) : (
                 <span className="dark-lore-contact-inline">{action}</span>
               )}
-            </article>
-          ))}
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="portal-v2-subgrid">
+        <V2MetadataPanel
+          title="Como usar este limiar"
+          rows={[
+            {
+              label: "Para campanha",
+              value: "Abrir suporte de mesa, alinhar preparo visual ou conectar manuscritos a uma sessao ativa.",
+            },
+            {
+              label: "Para lore",
+              value: "Entregar referencias de faccoes, criaturas, locais e ecos que devam entrar no arquivo.",
+            },
+            {
+              label: "Para produto",
+              value: "Sugerir ajustes de UX, novos modulos internos ou integracoes para a suite narrativa.",
+            },
+          ]}
+        />
+
+        <div className="space-y-5">
+          <V2QuoteBlock>
+            "Se uma rota existe no portal, ela precisa soar como parte do mesmo mundo. Contato
+            tambem e worldbuilding."
+          </V2QuoteBlock>
+          <div className="portal-v2-actions">
+            <Link to="/cronicas" className="dark-lore-button dark-lore-button-ghost">
+              Abrir cronicas
+            </Link>
+            <Link to="/mapa" className="dark-lore-button dark-lore-button-ghost">
+              Abrir atlas
+            </Link>
+            <Link to="/jogar" className="dark-lore-button">
+              Entrar na suite
+            </Link>
+          </div>
         </div>
       </section>
     </div>

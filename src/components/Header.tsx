@@ -107,7 +107,7 @@ export default function Header() {
             <Link to="/" className="dark-lore-brand min-w-0 justify-start">
               <Flame className="h-4 w-4 text-[#c9a15a]" />
               <span className="min-w-0">
-                <span className="dark-lore-brand-kicker">Narrative Shell</span>
+                <span className="dark-lore-brand-kicker">Dark Lore Portal V2</span>
                 <span className="dark-lore-brand-text">{archiveBrand.title}</span>
               </span>
             </Link>
@@ -127,10 +127,10 @@ export default function Header() {
           </nav>
 
           <div className="hidden items-center justify-end gap-2 md:flex">
-            <span className="session-topbar-meta">Lore + sessao</span>
+            <span className="session-topbar-meta">Lore + session shell</span>
             <Link to="/jogar" className="session-topbar-cta">
               <Swords className="mr-2 h-3.5 w-3.5" />
-              Entrar na suite
+              Abrir sessao
             </Link>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function Header() {
               to="/jogar"
               className="mt-2 inline-flex w-fit border border-[rgba(201,161,90,0.8)] px-4 py-2 font-heading text-xs uppercase tracking-[0.24em] text-[#c9a15a]"
             >
-              Abrir Arquivo
+              Abrir sessao
             </Link>
           </div>
         </nav>

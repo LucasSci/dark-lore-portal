@@ -2,6 +2,7 @@
 @import "./styles/dark-lore-theme.css";
 @import "./styles/session-shell.css";
 @import "./styles/archive-oracle-theme.css";
+@import "./styles/portal-v2.css";
 
 @tailwind base;
 @tailwind components;
@@ -11,62 +12,62 @@
   :root {
     color-scheme: dark;
 
-    --background: 24 8% 7%;
-    --background-strong: 24 9% 5%;
-    --foreground: 38 27% 88%;
+    --background: 225 29% 6%;
+    --background-strong: 228 38% 4%;
+    --foreground: 40 50% 93%;
 
-    --card: 24 12% 9%;
-    --card-foreground: 38 27% 88%;
+    --card: 222 38% 14%;
+    --card-foreground: 40 50% 93%;
 
-    --popover: 24 12% 8%;
-    --popover-foreground: 38 27% 88%;
+    --popover: 222 35% 12%;
+    --popover-foreground: 40 50% 93%;
 
-    --brand: 39 49% 57%;
-    --brand-foreground: 18 24% 8%;
+    --brand: 39 45% 60%;
+    --brand-foreground: 228 38% 7%;
     --primary: var(--brand);
     --primary-foreground: var(--brand-foreground);
 
-    --secondary: 24 10% 13%;
-    --secondary-foreground: 38 22% 86%;
+    --secondary: 219 27% 18%;
+    --secondary-foreground: 40 42% 90%;
 
-    --accent: 359 79% 41%;
-    --accent-foreground: 12 100% 92%;
+    --accent: 252 89% 63%;
+    --accent-foreground: 40 50% 94%;
 
-    --destructive: 3 74% 30%;
-    --destructive-foreground: 12 100% 88%;
+    --destructive: 356 60% 44%;
+    --destructive-foreground: 40 50% 92%;
 
-    --warning: 40 82% 70%;
-    --warning-foreground: 18 24% 8%;
-    --info: 193 27% 66%;
-    --info-foreground: 22 20% 10%;
-    --success: 145 19% 44%;
+    --warning: 40 54% 68%;
+    --warning-foreground: 228 38% 7%;
+    --info: 199 100% 67%;
+    --info-foreground: 228 38% 7%;
+    --success: 147 28% 46%;
     --success-foreground: 38 33% 96%;
 
-    --muted: 24 10% 12%;
-    --muted-foreground: 37 14% 66%;
+    --muted: 221 25% 16%;
+    --muted-foreground: 40 22% 72%;
 
-    --border: 31 18% 21%;
-    --input: 24 12% 13%;
-    --ring: 39 49% 57%;
+    --border: 221 27% 24%;
+    --input: 221 28% 16%;
+    --ring: 199 100% 67%;
 
-    --status-good: 145 32% 60%;
-    --status-warn: 39 84% 64%;
-    --status-bad: 8 90% 74%;
-    --status-info: 194 58% 75%;
+    --status-good: 147 34% 60%;
+    --status-warn: 41 64% 68%;
+    --status-bad: 356 78% 74%;
+    --status-info: 198 100% 72%;
 
-    --surface-base: 24 12% 9%;
-    --surface-raised: 26 13% 11%;
-    --surface-strong: 28 14% 15%;
-    --surface-ink: 18 24% 4%;
-    --parchment: 37 24% 82%;
-    --outline-variant: 31 18% 21%;
+    --surface-base: 222 38% 14%;
+    --surface-raised: 219 33% 18%;
+    --surface-strong: 218 29% 22%;
+    --surface-ink: 228 38% 7%;
+    --parchment: 40 33% 86%;
+    --outline-variant: 219 24% 26%;
     --surface-tint: 39 49% 57%;
-    --antique-gold: 39 49% 57%;
-    --soft-amber: 40 82% 70%;
-    --parchment-soft: 38 27% 88%;
-    --muted-bronze: 31 18% 21%;
+    --antique-gold: 39 45% 60%;
+    --soft-amber: 41 54% 68%;
+    --parchment-soft: 40 50% 93%;
+    --muted-bronze: 37 45% 38%;
 
-    --radius: 0px;
+    --radius: 16px;
 
     --space-xs: 4px;
     --space-sm: 8px;
@@ -74,13 +75,33 @@
     --space-lg: 16px;
     --space-xl: 24px;
     --space-2xl: 32px;
+    --space-2_5xl: 40px;
     --space-3xl: 48px;
+    --space-4xl: 64px;
+    --space-5xl: 80px;
+    --space-6xl: 96px;
+    --space-7xl: 120px;
     --layout-gutter: clamp(18px, 4vw, 56px);
 
-    --font-display: "Beaufort Pro", "Noto Serif", Georgia, serif;
-    --font-heading: "Beaufort Pro", "Noto Serif", Georgia, serif;
-    --font-body: "Gill Sans Nova", "Segoe UI", system-ui, sans-serif;
+    --font-display: "Beaufort Pro", "Cinzel", "Noto Serif", Georgia, serif;
+    --font-heading: "Beaufort Pro", "Cinzel", "Noto Serif", Georgia, serif;
+    --font-body: "Gill Sans Nova", "Inter", "Segoe UI", system-ui, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
+
+    --v2-obsidian: #090b12;
+    --v2-night: #0d1220;
+    --v2-deep-navy: #121a2a;
+    --v2-blue-shadow: #182338;
+    --v2-arcane-violet: #6c4cf5;
+    --v2-void-purple: #8b5cf6;
+    --v2-moon-cyan: #59c3ff;
+    --v2-spectral-blue: #7bd8ff;
+    --v2-aged-gold: #c8a96a;
+    --v2-soft-gold: #d8bf84;
+    --v2-dark-gold: #8b6a34;
+    --v2-parchment: #e8e0cf;
+    --v2-ivory-dust: #f3ecdd;
+    --v2-muted-sand: #d8cfbe;
 
     --witcher-key-visual: url("/reference/witcher/images/key-visual.jpg");
     --witcher-gold-texture: url("/reference/witcher/images/gold-texture.jpg");
@@ -89,24 +110,24 @@
     --witcher-banner-concert: url("/reference/witcher/images/banner-concert.jpg");
     --witcher-banner-redkit: url("/reference/witcher/images/banner-redkit.jpg");
 
-    --gradient-brand: linear-gradient(180deg, hsl(var(--soft-amber)), hsl(var(--antique-gold)) 48%, hsl(34 47% 34%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(var(--surface-raised) / 0.98), hsl(var(--surface-base) / 0.96) 48%, hsl(var(--background-strong) / 0.98));
+    --gradient-brand: linear-gradient(135deg, #f3ecdd 0%, #d8bf84 18%, #c8a96a 46%, #8b6a34 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(var(--surface-raised) / 0.98), hsl(var(--surface-base) / 0.96) 50%, hsl(var(--background-strong) / 0.98));
     --gradient-page:
-      radial-gradient(circle at 50% -8%, hsl(var(--brand) / 0.16), transparent 26%),
-      radial-gradient(circle at 16% 16%, hsl(37 40% 14% / 0.18), transparent 22%),
-      radial-gradient(circle at 84% 14%, hsl(27 34% 12% / 0.14), transparent 24%),
-      linear-gradient(180deg, hsl(24 12% 5%) 0%, hsl(24 10% 6%) 18%, hsl(24 10% 7%) 42%, hsl(var(--background-strong)) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(var(--background) / 0.06) 0%, hsl(var(--background) / 0.46) 18%, hsl(var(--background-strong) / 0.9) 70%, hsl(var(--background-strong)) 100%);
+      radial-gradient(circle at 18% 10%, rgb(89 195 255 / 0.16), transparent 18%),
+      radial-gradient(circle at 78% 12%, rgb(108 76 245 / 0.18), transparent 24%),
+      radial-gradient(circle at 50% -14%, rgb(216 191 132 / 0.12), transparent 28%),
+      linear-gradient(180deg, #070911 0%, #0b1020 34%, #090b12 100%);
+    --gradient-hero: linear-gradient(180deg, rgb(9 11 18 / 0.08) 0%, rgb(9 11 18 / 0.44) 20%, rgb(9 11 18 / 0.84) 66%, rgb(9 11 18 / 0.96) 100%);
     --gradient-warning: linear-gradient(135deg, hsl(var(--destructive-foreground) / 0.94), hsl(var(--destructive)) 42%, hsl(2 73% 18%) 100%);
-    --gradient-metal: linear-gradient(180deg, hsl(var(--surface-strong) / 0.96), hsl(var(--surface-raised) / 0.94) 42%, hsl(var(--surface-base) / 0.98) 100%);
+    --gradient-metal: linear-gradient(180deg, rgb(24 35 56 / 0.96), rgb(18 26 42 / 0.94) 40%, rgb(13 18 32 / 0.98) 100%);
     --gradient-panel-glow:
-      linear-gradient(135deg, hsl(var(--brand) / 0.09), transparent 24%, transparent 68%, hsl(var(--info) / 0.08)),
-      radial-gradient(circle at top, hsl(var(--foreground) / 0.04), transparent 48%);
+      linear-gradient(135deg, rgb(108 76 245 / 0.12), transparent 24%, transparent 70%, rgb(89 195 255 / 0.12)),
+      radial-gradient(circle at top, rgb(243 236 221 / 0.05), transparent 48%);
 
-    --shadow-glow-brand: 0 0 0 1px hsl(var(--brand) / 0.16), 0 24px 76px hsl(var(--shadow-deep) / 0.54), 0 0 40px hsl(var(--brand) / 0.12);
+    --shadow-glow-brand: 0 0 0 1px rgb(216 191 132 / 0.12), 0 32px 88px rgb(3 6 16 / 0.72), 0 0 36px rgb(89 195 255 / 0.08);
     --shadow-glow-warning: 0 0 0 1px hsl(var(--destructive-foreground) / 0.16), 0 24px 64px hsl(var(--shadow-deep) / 0.48), 0 0 32px hsl(var(--destructive) / 0.14);
-    --shadow-panel: 0 32px 88px hsl(var(--shadow-deep) / 0.68), inset 0 1px 0 hsl(var(--foreground) / 0.05);
-    --shadow-elevated: 0 40px 118px hsl(var(--shadow-deep) / 0.78), inset 0 1px 0 hsl(var(--foreground) / 0.07);
+    --shadow-panel: 0 36px 90px rgb(2 6 16 / 0.74), inset 0 1px 0 rgb(243 236 221 / 0.04);
+    --shadow-elevated: 0 42px 118px rgb(2 6 16 / 0.82), inset 0 1px 0 rgb(243 236 221 / 0.06);
 
     --component-card-bg: var(--card);
     --component-card-border: var(--outline-variant);
@@ -122,14 +143,14 @@
     --component-progress-bad: var(--status-bad);
 
     --gold: var(--brand);
-    --gold-light: 40 82% 70%;
-    --gold-dark: 34 47% 34%;
+    --gold-light: 41 54% 68%;
+    --gold-dark: 37 45% 38%;
     --blood: var(--destructive);
     --blood-light: var(--status-bad);
     --mystic: var(--info);
     --mystic-light: var(--status-info);
-    --ember: var(--warning);
-    --shadow-deep: 20 34% 3%;
+    --ember: 252 89% 63%;
+    --shadow-deep: 228 42% 4%;
 
     --gradient-gold: var(--gradient-brand);
     --gradient-dark: linear-gradient(180deg, hsl(var(--background)), hsl(var(--background-strong)));
@@ -176,19 +197,19 @@
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(180deg, hsl(36 28% 10% / 0.14), transparent 22%),
-      radial-gradient(circle at 50% -8%, hsl(var(--brand) / 0.16), transparent 22%),
+      linear-gradient(180deg, rgb(89 195 255 / 0.08), transparent 18%),
+      radial-gradient(circle at 50% -8%, rgb(216 191 132 / 0.12), transparent 22%),
       var(--witcher-gold-texture-bright),
-      radial-gradient(circle at 50% -8%, hsl(var(--brand) / 0.16), transparent 24%),
-      radial-gradient(circle at 12% 20%, hsl(38 42% 16% / 0.14), transparent 18%),
-      radial-gradient(circle at 76% 18%, hsl(var(--brand) / 0.1), transparent 20%),
-      radial-gradient(circle at 84% 68%, hsl(28 34% 11% / 0.16), transparent 20%),
-      linear-gradient(180deg, transparent, hsl(var(--background-strong) / 0.24));
+      radial-gradient(circle at 50% -8%, rgb(108 76 245 / 0.12), transparent 24%),
+      radial-gradient(circle at 12% 20%, rgb(89 195 255 / 0.12), transparent 18%),
+      radial-gradient(circle at 76% 18%, rgb(216 191 132 / 0.08), transparent 20%),
+      radial-gradient(circle at 84% 68%, rgb(108 76 245 / 0.1), transparent 20%),
+      linear-gradient(180deg, transparent, rgb(9 11 18 / 0.24));
     background-position: center top, center, center, center, center, center, center, center;
     background-size: auto, 980px, auto, auto, auto, auto, auto, auto;
     background-repeat: no-repeat, repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-    mix-blend-mode: soft-light;
-    opacity: 0.15;
+    mix-blend-mode: screen;
+    opacity: 0.12;
     z-index: -2;
   }
 
@@ -198,11 +219,11 @@
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(90deg, hsl(18 20% 4% / 0.72), transparent 18%, transparent 82%, hsl(18 20% 4% / 0.72)),
-      linear-gradient(180deg, hsl(23 18% 7% / 0.52), transparent 18%, transparent 82%, hsl(18 18% 4% / 0.6)),
-      radial-gradient(circle at top, hsl(var(--brand) / 0.05), transparent 34%),
-      radial-gradient(circle at center, transparent 0%, transparent 34%, hsl(20 18% 4% / 0.16) 70%, hsl(20 18% 4% / 0.42) 100%),
-      linear-gradient(180deg, transparent 0, hsl(var(--background) / 0.18) 32%, hsl(var(--background) / 0.58) 100%),
+      linear-gradient(90deg, rgb(7 9 17 / 0.66), transparent 18%, transparent 82%, rgb(7 9 17 / 0.66)),
+      linear-gradient(180deg, rgb(13 18 32 / 0.32), transparent 18%, transparent 82%, rgb(9 11 18 / 0.54)),
+      radial-gradient(circle at top, rgb(89 195 255 / 0.04), transparent 34%),
+      radial-gradient(circle at center, transparent 0%, transparent 34%, rgb(7 9 17 / 0.16) 70%, rgb(7 9 17 / 0.42) 100%),
+      linear-gradient(180deg, transparent 0, rgb(9 11 18 / 0.16) 32%, rgb(9 11 18 / 0.58) 100%),
       repeating-linear-gradient(
         180deg,
         hsl(var(--foreground) / 0.018) 0 1px,

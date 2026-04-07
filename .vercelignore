@@ -1,0 +1,6 @@
+.codex_tmp
+dist
+tmp_*
+.vendor
+vendor_lib
+*.zip
