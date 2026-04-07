@@ -2,6 +2,7 @@ import { BookMarked, Compass, ScrollText, Skull, Swords } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
+import { ModuleCard, PanelCard } from "@/components/product/ProductShell";
 import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
 import PortalDoorCard from "@/components/portal/PortalDoorCard";
 import PortalHeroSection from "@/components/portal/PortalHeroSection";
@@ -98,6 +99,25 @@ const archivePortals = [
   },
 ] as const;
 
+const shellModes = [
+  {
+    title: "Narrative Shell",
+    description:
+      "Universo, bestiario, cronicas e atlas entram como leitura guiada do continente. Menos ruido, mais contexto para a proxima decisao.",
+    to: "/universo",
+    cta: "Explorar arquivo",
+    meta: "Leitura e worldbuilding",
+  },
+  {
+    title: "Session Shell",
+    description:
+      "Jogar, mesa, mestre, ficha e Story Engine formam uma mesma suite operacional para conduzir campanha, combate e apoio visual.",
+    to: "/jogar",
+    cta: "Entrar na suite",
+    meta: "Produto e sessao",
+  },
+] as const;
+
 const bestiaryPreview = encyclopediaEntries
   .filter((entry) => entry.category === "monstros")
   .slice(0, 3);
@@ -133,6 +153,27 @@ export default function HomePage() {
           </motion.div>
         ))}
       </section>
+
+      <PanelCard
+        title="Dois modos, o mesmo portal"
+        description="A renovacao do produto agora separa com clareza a camada de leitura e a camada de sessao, sem quebrar a fantasia sombria do arquivo."
+        className="p-6 md:p-8"
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          {shellModes.map((mode) => (
+            <Link key={mode.title} to={mode.to}>
+              <ModuleCard
+                title={mode.title}
+                description={mode.description}
+                meta={mode.meta}
+                className="h-full"
+              >
+                <span className="session-shell-action">{mode.cta}</span>
+              </ModuleCard>
+            </Link>
+          ))}
+        </div>
+      </PanelCard>
 
       <section className="dark-lore-page-frame dark-lore-editorial-grid">
         <motion.div

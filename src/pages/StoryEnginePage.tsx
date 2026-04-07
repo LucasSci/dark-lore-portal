@@ -20,6 +20,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  ActionStrip,
+  MetricCard,
+  SectionHeader,
+  SidebarModule,
+  StatusBanner,
+} from "@/components/product/ProductShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -572,7 +579,7 @@ export default function StoryEnginePage() {
 
   if (!isBootstrapped || !activeProject) {
     return (
-      <div className="container flex min-h-[60vh] items-center justify-center py-16">
+      <div className="session-page flex min-h-[60vh] items-center justify-center py-16">
         <div className="flex items-center gap-3 border border-[hsl(var(--outline-variant)/0.18)] bg-[hsl(var(--surface-raised)/0.72)] px-5 py-4 text-sm uppercase tracking-[0.22em] text-foreground/64">
           <Loader2 className="h-4 w-4 animate-spin text-brand" />
           Carregando workspace do Story Engine
@@ -582,40 +589,125 @@ export default function StoryEnginePage() {
   }
 
   return (
-    <div className="container py-12 md:py-16">
+    <div className="session-page">
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-8"
+        className="space-y-6"
       >
-        <StoryEngineContextPanel project={activeProject} />
+        <section className="session-shell-hero">
+          <SectionHeader
+            kicker="Production Workspace / Story Engine"
+            title="Do manuscrito para o storyboard sem sair da campanha."
+            description={
+              <>
+                <p>
+                  O Story Engine agora entra como modulo interno da suite: recebe contexto da
+                  campanha, organiza projeto, extrai elenco e gera apoio visual sem parecer uma
+                  ferramenta colada de fora.
+                </p>
+                <p>
+                  O fluxo continua em quatro etapas: ingestao, analise, personagens e producao.
+                </p>
+              </>
+            }
+            aside={
+              <>
+                <span className="session-topbar-meta">{activeProject.style}</span>
+                <span className="session-topbar-meta">
+                  {activeProject.characters.length} personagens
+                </span>
+                <span className="session-topbar-meta">{activeProject.scenes.length} cenas</span>
+              </>
+            }
+          />
 
-        {!hasApiKey ? (
-          <Alert className="border-[hsl(var(--warning)/0.22)] bg-[linear-gradient(180deg,hsl(var(--warning)/0.14),hsl(var(--surface-base)/0.92))]">
-            <AlertCircle className="h-4 w-4 text-warning" />
-            <AlertTitle>Gemini ainda nao esta configurado</AlertTitle>
-            <AlertDescription>
-              Defina <code>VITE_GEMINI_API_KEY</code> no ambiente para habilitar analise e geracao de imagens.
-              A rota continua abrindo normalmente, mas a IA fica indisponivel ate a chave entrar.
-            </AlertDescription>
-          </Alert>
-        ) : null}
+          <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.12fr)_360px]">
+            <div className="space-y-5">
+              <ActionStrip>
+                <Link to="/jogar" className="session-shell-action">
+                  <Clapperboard className="h-4 w-4" />
+                  Voltar ao hub
+                </Link>
+                {linkedCampaign ? (
+                  <Link to={`/mesa/${linkedCampaign.id}`} className="session-shell-action">
+                    <Sparkles className="h-4 w-4" />
+                    Ir para a mesa
+                  </Link>
+                ) : null}
+                <button type="button" className="session-shell-action" onClick={handleExportProject}>
+                  <Download className="h-4 w-4" />
+                  Exportar projeto
+                </button>
+              </ActionStrip>
 
-        {noticeMessage ? (
-          <Alert className="border-[hsl(var(--brand)/0.18)] bg-[linear-gradient(180deg,hsl(var(--brand)/0.12),hsl(var(--surface-base)/0.9))]">
-            <Sparkles className="h-4 w-4 text-brand" />
-            <AlertTitle>Aviso do workspace</AlertTitle>
-            <AlertDescription>{noticeMessage}</AlertDescription>
-          </Alert>
-        ) : null}
+              <div className="grid gap-4 md:grid-cols-3">
+                <MetricCard
+                  label="Projeto ativo"
+                  value={activeProject.title}
+                  detail="Persistencia local com reabertura imediata do ultimo trabalho."
+                />
+                <MetricCard
+                  label="Referencias"
+                  value={activeProject.references.length}
+                  detail="Imagens e atmosferas anexadas ao mesmo projeto."
+                />
+                <MetricCard
+                  label="Artefatos"
+                  value={activeProject.assets.length}
+                  detail="Saidas geradas para personagens, cenas e storyboard."
+                />
+              </div>
 
-        {errorMessage ? (
-          <Alert className="border-[hsl(var(--destructive-foreground)/0.22)] bg-[linear-gradient(180deg,hsl(var(--destructive-foreground)/0.12),hsl(var(--surface-base)/0.92))]">
-            <AlertCircle className="h-4 w-4 text-status-bad" />
-            <AlertTitle>Falha no Story Engine</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        ) : null}
+              {!hasApiKey ? (
+                <StatusBanner title="Gemini ainda nao configurado" tone="warning">
+                  Defina <code>VITE_GEMINI_API_KEY</code> no ambiente para habilitar analise e
+                  geracao de imagens. A rota continua abrindo, mas a IA permanece indisponivel ate
+                  a chave entrar.
+                </StatusBanner>
+              ) : null}
+
+              {noticeMessage ? (
+                <StatusBanner title="Aviso do workspace" tone="info">
+                  {noticeMessage}
+                </StatusBanner>
+              ) : null}
+
+              {errorMessage ? (
+                <StatusBanner title="Falha no Story Engine" tone="danger">
+                  {errorMessage}
+                </StatusBanner>
+              ) : null}
+            </div>
+
+            <div className="session-shell-sidebar">
+              <StoryEngineContextPanel project={activeProject} />
+              <SidebarModule
+                title="Projeto vinculado"
+                description="Contexto de campanha e cena reaproveitado para manter o workspace preso ao jogo."
+              >
+                <div className="session-shell-list">
+                  <div className="session-shell-list-item">
+                    <p className="session-shell-list-item-title">Campanha</p>
+                    <p className="session-shell-list-item-copy">
+                      {linkedCampaign?.title ?? "Sem campanha vinculada"}
+                    </p>
+                  </div>
+                  <div className="session-shell-list-item">
+                    <p className="session-shell-list-item-title">Cena</p>
+                    <p className="session-shell-list-item-copy">
+                      {linkedScene?.name ?? "Sem cena vinculada"}
+                    </p>
+                  </div>
+                  <div className="session-shell-list-item">
+                    <p className="session-shell-list-item-title">Etapa atual</p>
+                    <p className="session-shell-list-item-copy">{step}</p>
+                  </div>
+                </div>
+              </SidebarModule>
+            </div>
+          </div>
+        </section>
 
         <section className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
           <StoryEngineProjectRail

@@ -13,12 +13,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const showFooter = currentRoute?.showFooter ?? !location.pathname.startsWith("/mapa/");
   const isStandaloneRoute = themeMode === "tabletop" || themeMode === "oracle";
   const isAtlasRoute = themeMode === "atlas" && location.pathname.startsWith("/mapa/");
+  const isSessionRoute = themeMode === "session";
 
   if (isStandaloneRoute) {
     return <>{children}</>;
   }
 
   const shellMode = isAtlasRoute ? "atlas" : navigationMode;
+  if (isSessionRoute) {
+    return (
+      <div className="session-shell-layout text-[#e3dacb] selection:bg-[#c9a15a]/28">
+        <a href="#main-content" className="skip-link">
+          Pular para o conteudo principal
+        </a>
+        {showHeader ? <Header /> : null}
+        <main id="main-content" tabIndex={-1} className="session-shell-main">
+          {children}
+        </main>
+        {showFooter ? <Footer /> : null}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0f0d0b] text-[#e3dacb] selection:bg-[#c9a15a]/30">
       <a href="#main-content" className="skip-link">

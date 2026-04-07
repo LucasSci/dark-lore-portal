@@ -3,7 +3,7 @@ import { matchPath } from "react-router-dom";
 import { archiveBrand } from "@/lib/archive-reference";
 
 export type FeatureVisibility = "public" | "internal" | "disabled";
-export type ThemeMode = "editorial" | "atlas" | "oracle" | "tabletop";
+export type ThemeMode = "editorial" | "atlas" | "oracle" | "tabletop" | "session";
 export type NavGroup = "primary-left" | "primary-right" | "footer" | "none";
 
 export interface PageMeta {
@@ -153,7 +153,9 @@ export const routeManifest: RouteManifestEntry[] = [
       "Entre na sessao, abra a mesa, consulte o oraculo e revise fichas a partir do mesmo hub.",
     visibility: "public",
     navGroup: "primary-right",
-    ...defaultEditorial,
+    theme: "session",
+    showHeader: true,
+    showFooter: false,
   },
   {
     path: "/mesa",
@@ -294,7 +296,9 @@ export const routeManifest: RouteManifestEntry[] = [
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
-    ...defaultEditorial,
+    theme: "session",
+    showHeader: true,
+    showFooter: false,
   },
   {
     path: "/ficha",
@@ -304,7 +308,9 @@ export const routeManifest: RouteManifestEntry[] = [
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
-    ...defaultEditorial,
+    theme: "session",
+    showHeader: true,
+    showFooter: false,
   },
   {
     path: "/ficha/:sheetId",
@@ -314,7 +320,9 @@ export const routeManifest: RouteManifestEntry[] = [
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
-    ...defaultEditorial,
+    theme: "session",
+    showHeader: true,
+    showFooter: false,
   },
   {
     path: "/mestre",
@@ -324,7 +332,9 @@ export const routeManifest: RouteManifestEntry[] = [
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
-    ...defaultEditorial,
+    theme: "session",
+    showHeader: true,
+    showFooter: false,
   },
   {
     path: "/story-engine",
@@ -334,7 +344,9 @@ export const routeManifest: RouteManifestEntry[] = [
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
-    ...defaultEditorial,
+    theme: "session",
+    showHeader: true,
+    showFooter: false,
   },
   {
     path: "/story-engine/:projectId",
@@ -344,7 +356,9 @@ export const routeManifest: RouteManifestEntry[] = [
     visibility: "internal",
     navGroup: "none",
     noIndex: true,
-    ...defaultEditorial,
+    theme: "session",
+    showHeader: true,
+    showFooter: false,
   },
 ];
 
