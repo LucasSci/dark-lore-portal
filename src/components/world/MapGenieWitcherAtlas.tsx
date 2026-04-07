@@ -1199,8 +1199,8 @@ export default function MapGenieWitcherAtlas({
             <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">Atlas hierarquico</p>
             <h2 className="font-heading text-xl text-foreground">Exploracao, camadas e rotas</h2>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cidade, regiao ou battlemap..." className="atlas-search-input pl-10" />
+              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cidade, regiao ou battlemap..." aria-label="Buscar cidade, região ou battlemap" className="atlas-search-input pl-10" />
             </div>
           </div>
           <ScrollArea
@@ -1639,13 +1639,13 @@ export default function MapGenieWitcherAtlas({
                   <Input value={battlemapDraft.name} onChange={(event) => setBattlemapDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Nome do battlemap" />
                   <Textarea value={battlemapDraft.description} onChange={(event) => setBattlemapDraft((current) => ({ ...current, description: event.target.value }))} placeholder="Descricao do battlemap" />
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="number" min={32} value={battlemapDraft.gridSize} onChange={(event) => setBattlemapDraft((current) => ({ ...current, gridSize: Number(event.target.value) || 72 }))} placeholder="Grid px" />
-                    <Input type="number" min={0.5} step={0.1} value={battlemapDraft.scale} onChange={(event) => setBattlemapDraft((current) => ({ ...current, scale: Number(event.target.value) || 1.5 }))} placeholder="Escala" />
-                    <Input type="number" min={10} value={battlemapDraft.width} onChange={(event) => setBattlemapDraft((current) => ({ ...current, width: Number(event.target.value) || 44 }))} placeholder="Largura" />
-                    <Input type="number" min={10} value={battlemapDraft.height} onChange={(event) => setBattlemapDraft((current) => ({ ...current, height: Number(event.target.value) || 36 }))} placeholder="Altura" />
+                    <Input type="number" min={32} value={battlemapDraft.gridSize} onChange={(event) => setBattlemapDraft((current) => ({ ...current, gridSize: Number(event.target.value) || 72 }))} placeholder="Grid px" aria-label="Tamanho do grid do battlemap em pixels" />
+                    <Input type="number" min={0.5} step={0.1} value={battlemapDraft.scale} onChange={(event) => setBattlemapDraft((current) => ({ ...current, scale: Number(event.target.value) || 1.5 }))} placeholder="Escala" aria-label="Escala do battlemap em metros por quadrado" />
+                    <Input type="number" min={10} value={battlemapDraft.width} onChange={(event) => setBattlemapDraft((current) => ({ ...current, width: Number(event.target.value) || 44 }))} placeholder="Largura" aria-label="Largura do battlemap em quadrados" />
+                    <Input type="number" min={10} value={battlemapDraft.height} onChange={(event) => setBattlemapDraft((current) => ({ ...current, height: Number(event.target.value) || 36 }))} placeholder="Altura" aria-label="Altura do battlemap em quadrados" />
                   </div>
-                  <Input type="number" min={0} max={360} value={battlemapDraft.rotation} onChange={(event) => setBattlemapDraft((current) => ({ ...current, rotation: Number(event.target.value) || 0 }))} placeholder="Rotacao" />
-                  <input type="file" accept="image/*" className="native-file-input" onChange={(event) => setBattlemapFile(event.target.files?.[0] ?? null)} />
+                  <Input type="number" min={0} max={360} value={battlemapDraft.rotation} onChange={(event) => setBattlemapDraft((current) => ({ ...current, rotation: Number(event.target.value) || 0 }))} placeholder="Rotacao" aria-label="Rotação do battlemap em graus" />
+                  <input type="file" accept="image/*" aria-label="Upload de imagem para o battlemap" className="native-file-input" onChange={(event) => setBattlemapFile(event.target.files?.[0] ?? null)} />
                   <div className="grid gap-2 md:grid-cols-2">
                     <Button className="w-full" onClick={() => void handleCreateBattlemap()}>Criar ou atualizar</Button>
                     <Button variant="outline" className="w-full" onClick={() => setBattlemapPlacementMode((current) => !current)} disabled={!selectedBattlemap && !selectedLocation}>
