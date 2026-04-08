@@ -1,8 +1,6 @@
 import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 import { generateSecureId, generateSecureShortId } from "@/lib/utils";
 
-import { generateSecureId, generateSecureShortId } from "@/lib/utils";
-
 export const BOARD_COLUMNS = 12;
 export const BOARD_ROWS = 8;
 export const DEFAULT_GRID_SIZE = 72;
