@@ -568,7 +568,7 @@ export default function OraculoLunaApp() {
                     srcDoc={appCode}
                     className="h-full w-full border-none"
                     title="Visual do Oráculo"
-                    sandbox="allow-scripts allow-forms allow-popups"
+                    sandbox="allow-scripts" // SECURE: Restrict iframe to prevent XSS from AI-generated content (do not allow forms, popups, or same-origin)
                   />
                 </motion.div>
               </AnimatePresence>

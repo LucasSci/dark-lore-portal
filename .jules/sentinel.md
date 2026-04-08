@@ -6,3 +6,7 @@
 **Vulnerability:** The AI-generated visual environment (`appCode`) for Oracle Luna was rendered in an `iframe` that had both `allow-scripts` and `allow-same-origin` in its `sandbox` attribute. This permitted the dynamic, potentially untrusted AI HTML to interact with the main application's origin, posing a serious Cross-Site Scripting (XSS) risk.
 **Learning:** Using `allow-same-origin` inside an iframe that renders user or AI-generated content breaks the isolation boundary, allowing the iframe script to traverse the DOM (`window.parent`), read cookies, and access `localStorage`.
 **Prevention:** Never use `allow-same-origin` alongside `allow-scripts` in a sandboxed iframe intended for untrusted content. Let the iframe be isolated into an opaque origin.
+## 2025-02-24 - Fix XSS Attack Surface in Untrusted Iframe Sandbox
+**Vulnerability:** The iframe used to render AI-generated HTML in Oracle Luna (`appCode`) used an overly permissive `sandbox="allow-scripts allow-forms allow-popups"` attribute.
+**Learning:** AI-generated HTML is inherently untrusted. Allowing forms or popups in an iframe executing untrusted scripts provides vectors for malicious payloads to phish user data or bypass intended sandbox restrictions, even without `allow-same-origin`.
+**Prevention:** Always restrict the `sandbox` attribute for untrusted content iframes to the absolute minimum necessary (e.g., `allow-scripts` only). Never include `allow-same-origin`, `allow-forms`, or `allow-popups` unless strictly necessary and carefully mitigated.
