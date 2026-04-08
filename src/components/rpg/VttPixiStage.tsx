@@ -349,6 +349,9 @@ export default function VttPixiStage({
   });
   const [viewportSize, setViewportSize] = useState({ width: 960, height: 560 });
 
+  const wallsSignatureRef = useRef<string | null>(null);
+  const wallSegsCacheRef = useRef<Segment[]>([]);
+
   // ⚡ Bolt Optimization: Cache visibility polygons to avoid expensive raycasting on every render
   const visionCacheRef = useRef<Map<string, {
     originX: number;
@@ -1404,19 +1407,21 @@ export default function VttPixiStage({
     lightingLayer.zIndex = 8; // Between map and fog
 
     if (page.dynamicLighting && (page.lightSources.length > 0 || tokens.some(t => t.payload.team === "party"))) {
-      const currentWallsSignature = page.wallSegments.map((w) => `${w.id}:${w.x1},${w.y1},${w.x2},${w.y2}`).join("|");
+      // Include gridSize (gs) in the signature so that wall segments are correctly re-scaled if the grid size changes
+      const currentWallsSignature = `${gs}:` + page.wallSegments.map((w) => `${w.id}:${w.x1},${w.y1},${w.x2},${w.y2}`).join("|");
 
       if (wallsSignatureRef.current !== currentWallsSignature) {
-        visibilityCacheRef.current.clear();
+        visionCacheRef.current.clear();
         wallsSignatureRef.current = currentWallsSignature;
+        wallSegsCacheRef.current = page.wallSegments.map((w) => ({
+          a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
+          b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
+        }));
       }
 
-      const wallSegs: Segment[] = page.wallSegments.map((w) => ({
-        a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
-        b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
-      }));
-      // Create a simple hash of walls to invalidate cache if walls change
-      const wallHash = page.wallSegments.map((w) => `${w.x1},${w.y1},${w.x2},${w.y2}`).join('|');
+      const wallSegs: Segment[] = wallSegsCacheRef.current;
+      // ⚡ Bolt Optimization: Use existing currentWallsSignature instead of mapping again
+      const wallHash = currentWallsSignature;
 
       const bounds = { width: boardWidth, height: boardHeight };
 
