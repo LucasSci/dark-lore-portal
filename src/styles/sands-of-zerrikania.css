@@ -1,0 +1,816 @@
+@layer components {
+  .soz-site-shell {
+    position: relative;
+    min-height: 100vh;
+    color: #f4ecdf;
+    background:
+      radial-gradient(circle at 20% 12%, rgb(201 169 106 / 0.12), transparent 24%),
+      radial-gradient(circle at 80% 10%, rgb(127 31 31 / 0.16), transparent 26%),
+      radial-gradient(circle at 50% 72%, rgb(119 88 53 / 0.18), transparent 30%),
+      linear-gradient(180deg, #07080b 0%, #0b0d12 28%, #090a0d 100%);
+    overflow-x: clip;
+  }
+
+  .soz-site-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, rgb(255 255 255 / 0.02), transparent 18%),
+      repeating-linear-gradient(
+        90deg,
+        rgb(255 255 255 / 0) 0,
+        rgb(255 255 255 / 0) 2px,
+        rgb(255 255 255 / 0.008) 3px,
+        rgb(255 255 255 / 0) 4px
+      );
+    mix-blend-mode: soft-light;
+    opacity: 0.2;
+  }
+
+  .soz-main {
+    position: relative;
+    z-index: 1;
+  }
+
+  .soz-container {
+    width: min(calc(100% - 2.5rem), 1200px);
+    margin-inline: auto;
+  }
+
+  .soz-page {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(4.5rem, 8vw, 6.75rem);
+    padding-bottom: 5rem;
+  }
+
+  .soz-page-section {
+    position: relative;
+  }
+
+  .soz-section-intro {
+    display: grid;
+    gap: 0.9rem;
+    max-width: 48rem;
+    margin-bottom: 2.2rem;
+  }
+
+  .soz-section-intro.is-centered {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .soz-eyebrow,
+  .soz-card-meta,
+  .soz-info-meta,
+  .soz-hero-eyebrow {
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #e0c48b;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .soz-page-title,
+  .soz-section-title,
+  .soz-card-title,
+  .soz-quote,
+  .soz-brand-name {
+    font-family: var(--font-display);
+    color: #f6eedf;
+    text-shadow: 0 10px 34px rgb(0 0 0 / 0.32);
+  }
+
+  .soz-page-title {
+    font-size: clamp(3rem, 8vw, 6.3rem);
+    line-height: 0.92;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .soz-section-title {
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1.02;
+    margin: 0;
+  }
+
+  .soz-card-title {
+    font-size: clamp(1.55rem, 2.4vw, 2.35rem);
+    line-height: 1.02;
+    margin: 0;
+  }
+
+  .soz-copy,
+  .soz-section-copy,
+  .soz-card-copy,
+  .soz-muted {
+    color: #c7b9a0;
+    line-height: 1.8;
+  }
+
+  .soz-hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    isolation: isolate;
+    overflow: hidden;
+    padding-block: 6rem 3.5rem;
+  }
+
+  .soz-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgb(8 9 12 / 0.4), rgb(8 9 12 / 0.74) 60%, rgb(8 9 12 / 0.96) 100%),
+      radial-gradient(circle at 72% 28%, rgb(224 196 139 / 0.16), transparent 18%),
+      radial-gradient(circle at 70% 65%, rgb(127 31 31 / 0.2), transparent 24%);
+    z-index: -1;
+  }
+
+  .soz-hero-image {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+  }
+
+  .soz-hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(0.84) brightness(0.62);
+  }
+
+  .soz-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+    gap: 2.5rem;
+    align-items: end;
+  }
+
+  .soz-hero-copy {
+    max-width: 42rem;
+    display: grid;
+    gap: 1.2rem;
+  }
+
+  .soz-hero-actions,
+  .soz-button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+
+  .soz-button,
+  .soz-button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 3rem;
+    padding: 0.85rem 1.35rem;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      border-color 180ms ease,
+      background 180ms ease;
+  }
+
+  .soz-button:hover,
+  .soz-button-secondary:hover {
+    transform: translateY(-2px);
+  }
+
+  .soz-button {
+    color: #0d0c0b;
+    background: linear-gradient(135deg, #e6c88e, #c8a96a);
+    box-shadow: 0 16px 40px rgb(201 169 106 / 0.24);
+  }
+
+  .soz-button-secondary {
+    color: #f4ecdf;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    background: rgb(255 255 255 / 0.05);
+    backdrop-filter: blur(10px);
+  }
+
+  .soz-inline-link {
+    color: #e7cb94;
+    text-decoration: none;
+  }
+
+  .soz-inline-link:hover {
+    color: #f4ecdf;
+  }
+
+  .soz-hero-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  .soz-stat-card,
+  .soz-panel,
+  .soz-info-card,
+  .soz-timeline-card,
+  .soz-character-card,
+  .soz-detail-panel,
+  .soz-campaign-card,
+  .soz-filter-bar,
+  .soz-prophecy-box,
+  .soz-visual-panel,
+  .soz-cta-panel {
+    background: linear-gradient(180deg, rgb(15 17 24 / 0.74), rgb(11 12 18 / 0.9));
+    border: 1px solid rgb(255 255 255 / 0.07);
+    border-radius: 24px;
+    box-shadow: 0 25px 60px rgb(0 0 0 / 0.42);
+    backdrop-filter: blur(14px);
+  }
+
+  .soz-stat-card {
+    padding: 1rem;
+  }
+
+  .soz-stat-card strong {
+    display: block;
+    color: #e7cb94;
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .soz-hero-side {
+    min-height: 620px;
+    display: flex;
+    align-items: end;
+    justify-content: flex-end;
+  }
+
+  .soz-scene-panel {
+    width: min(100%, 480px);
+    padding: 1.2rem;
+    border-radius: 28px;
+    background: linear-gradient(180deg, rgb(14 16 23 / 0.52), rgb(9 10 15 / 0.94));
+    border: 1px solid rgb(201 169 106 / 0.14);
+    box-shadow: 0 25px 60px rgb(0 0 0 / 0.45);
+    backdrop-filter: blur(14px);
+  }
+
+  .soz-scene-view {
+    position: relative;
+    overflow: hidden;
+    min-height: 560px;
+    border-radius: 22px;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background:
+      linear-gradient(180deg, rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.4)),
+      linear-gradient(180deg, #1f2027 0%, #302115 34%, #533420 52%, #1d1718 72%, #0d0f14 100%);
+  }
+
+  .soz-scene-view img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(0.88) brightness(0.84);
+  }
+
+  .soz-scene-caption {
+    position: absolute;
+    left: 1.2rem;
+    right: 1.2rem;
+    bottom: 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: end;
+    padding-top: 1rem;
+    border-top: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  .soz-scene-caption strong {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-family: var(--font-display);
+    color: #e7cb94;
+  }
+
+  .soz-scene-caption span {
+    color: #c7b9a0;
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+
+  .soz-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.1rem;
+  }
+
+  .soz-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.1rem;
+  }
+
+  .soz-panel,
+  .soz-info-card,
+  .soz-character-card,
+  .soz-detail-panel,
+  .soz-campaign-card,
+  .soz-visual-panel,
+  .soz-cta-panel {
+    padding: 1.5rem;
+  }
+
+  .soz-visual-panel {
+    position: relative;
+    overflow: hidden;
+    min-height: 460px;
+  }
+
+  .soz-visual-panel img,
+  .soz-campaign-image img,
+  .soz-detail-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .soz-visual-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 70% 18%, rgb(255 210 143 / 0.14), transparent 16%),
+      linear-gradient(180deg, rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.58));
+    pointer-events: none;
+  }
+
+  .soz-visual-caption {
+    position: absolute;
+    left: 1.5rem;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 1;
+    padding: 1rem 1.1rem;
+    border-radius: 16px;
+    border: 1px solid rgb(255 255 255 / 0.06);
+    background: rgb(10 10 14 / 0.52);
+    backdrop-filter: blur(12px);
+    color: #c7b9a0;
+    line-height: 1.7;
+  }
+
+  .soz-card-action {
+    margin-top: auto;
+    padding-top: 1rem;
+  }
+
+  .soz-character-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+  }
+
+  .soz-character-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(8 9 12 / 0.02), rgb(8 9 12 / 0.76) 76%, rgb(8 9 12 / 0.94) 100%);
+  }
+
+  .soz-character-image,
+  .soz-campaign-image,
+  .soz-detail-image {
+    position: absolute;
+    inset: 0;
+  }
+
+  .soz-character-image img {
+    filter: saturate(0.82) brightness(0.72);
+  }
+
+  .soz-character-content {
+    position: relative;
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .soz-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .soz-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid rgb(201 169 106 / 0.2);
+    background: rgb(255 255 255 / 0.04);
+    color: #e7cb94;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .soz-quote {
+    font-size: clamp(1.4rem, 3vw, 2.45rem);
+    line-height: 1.5;
+    margin: 0;
+    color: #dcc596;
+    text-align: center;
+  }
+
+  .soz-prophecy-box {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 4vw, 2.6rem);
+    text-align: center;
+    background:
+      linear-gradient(180deg, rgb(8 8 12 / 0.62), rgb(8 8 12 / 0.88)),
+      radial-gradient(circle at 50% 20%, rgb(127 31 31 / 0.22), transparent 26%),
+      linear-gradient(180deg, #140f11 0%, #1b1315 44%, #0c0d12 100%);
+  }
+
+  .soz-sigil {
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 1rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgb(201 169 106 / 0.3);
+    background: radial-gradient(circle, rgb(201 169 106 / 0.1), rgb(255 255 255 / 0.01));
+    color: #c8a96a;
+    box-shadow: inset 0 0 22px rgb(201 169 106 / 0.08);
+  }
+
+  .soz-timeline {
+    position: relative;
+  }
+
+  .soz-timeline-line {
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, rgb(201 169 106 / 0), rgb(201 169 106 / 0.55), rgb(201 169 106 / 0));
+  }
+
+  .soz-timeline-list {
+    display: grid;
+    gap: 1.45rem;
+  }
+
+  .soz-timeline-item {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 1.1rem;
+    align-items: start;
+  }
+
+  .soz-timeline-dot {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgb(201 169 106 / 0.32);
+    background: radial-gradient(circle, rgb(201 169 106 / 0.22), rgb(255 255 255 / 0.02));
+    display: grid;
+    place-items: center;
+    color: #e7cb94;
+    font-weight: 700;
+    z-index: 1;
+  }
+
+  .soz-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    align-items: center;
+    padding: 1rem 1.1rem;
+  }
+
+  .soz-filter-input,
+  .soz-filter-select {
+    min-height: 3rem;
+    border-radius: 999px;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background: rgb(255 255 255 / 0.04);
+    color: #f4ecdf;
+    padding-inline: 1rem;
+  }
+
+  .soz-filter-input {
+    flex: 1 1 260px;
+  }
+
+  .soz-filter-select {
+    min-width: 200px;
+  }
+
+  .soz-detail-grid,
+  .soz-campaign-grid {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
+    gap: 1.2rem;
+    align-items: stretch;
+  }
+
+  .soz-detail-image,
+  .soz-campaign-image {
+    position: relative;
+    overflow: hidden;
+    min-height: 520px;
+    border-radius: 26px;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    box-shadow: 0 25px 60px rgb(0 0 0 / 0.42);
+  }
+
+  .soz-detail-image::after,
+  .soz-campaign-image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.64));
+  }
+
+  .soz-detail-stack {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .soz-campaign-card.is-featured {
+    min-height: 100%;
+  }
+
+  .soz-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: #f4ecdf;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .soz-card-link:hover {
+    color: #e7cb94;
+  }
+
+  .soz-list {
+    display: grid;
+    gap: 0.85rem;
+    margin: 0;
+    padding-left: 1.25rem;
+    color: #c7b9a0;
+    line-height: 1.8;
+  }
+
+  .soz-cta-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    padding: 2rem;
+    background:
+      linear-gradient(135deg, rgb(201 169 106 / 0.12), rgb(10 10 14 / 0.94) 34%),
+      linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.01));
+    border-color: rgb(201 169 106 / 0.16);
+  }
+
+  .soz-nav {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    backdrop-filter: blur(16px);
+    background: linear-gradient(180deg, rgb(7 8 11 / 0.92), rgb(7 8 11 / 0.55));
+    border-bottom: 1px solid rgb(255 255 255 / 0.04);
+  }
+
+  .soz-nav-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.2rem;
+    padding-block: 1rem;
+  }
+
+  .soz-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    color: #f4ecdf;
+    text-decoration: none;
+    min-width: 0;
+  }
+
+  .soz-brand-mark {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgb(201 169 106 / 0.4);
+    border-radius: 50%;
+    color: #c8a96a;
+    background: radial-gradient(circle at 30% 30%, rgb(201 169 106 / 0.18), rgb(255 255 255 / 0.02));
+    box-shadow: inset 0 0 20px rgb(201 169 106 / 0.08);
+  }
+
+  .soz-brand-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+
+  .soz-brand-kicker {
+    color: #b9aa8d;
+    font-size: 0.78rem;
+  }
+
+  .soz-brand-name {
+    font-size: 0.98rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .soz-nav-links {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .soz-nav-link {
+    color: #b9aa8d;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 180ms ease;
+  }
+
+  .soz-nav-link:hover,
+  .soz-nav-link[data-active="true"] {
+    color: #f4ecdf;
+  }
+
+  .soz-nav-cta {
+    color: #0d0c0b;
+    background: linear-gradient(135deg, #e6c88e, #c8a96a);
+    padding: 0.68rem 1rem;
+    border-radius: 999px;
+    font-weight: 700;
+    box-shadow: 0 12px 28px rgb(201 169 106 / 0.22);
+    text-decoration: none;
+  }
+
+  .soz-mobile-toggle {
+    display: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgb(201 169 106 / 0.28);
+    background: rgb(255 255 255 / 0.04);
+    color: #f4ecdf;
+  }
+
+  .soz-mobile-nav {
+    display: none;
+    padding-bottom: 1rem;
+  }
+
+  .soz-mobile-nav.is-open {
+    display: block;
+  }
+
+  .soz-mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 0.5rem;
+  }
+
+  .soz-mobile-nav-links a {
+    color: #c7b9a0;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.78rem;
+  }
+
+  .soz-footer {
+    padding: 2rem 0 3.5rem;
+  }
+
+  .soz-footer-inner {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.25rem;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 1.4rem;
+    border-top: 1px solid rgb(255 255 255 / 0.06);
+    color: #b9aa8d;
+  }
+
+  .soz-footer-links {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .soz-footer-links a {
+    color: #b9aa8d;
+    text-decoration: none;
+  }
+
+  .soz-footer-links a:hover {
+    color: #f4ecdf;
+  }
+
+  .soz-empty {
+    padding: 1.5rem;
+    border-radius: 24px;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background: rgb(255 255 255 / 0.04);
+    color: #c7b9a0;
+  }
+
+  @media (max-width: 1080px) {
+    .soz-hero-grid,
+    .soz-grid-3,
+    .soz-grid-2,
+    .soz-detail-grid,
+    .soz-campaign-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .soz-hero-side {
+      min-height: auto;
+    }
+
+    .soz-scene-panel {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .soz-nav-links,
+    .soz-nav-cta {
+      display: none;
+    }
+
+    .soz-mobile-toggle {
+      display: grid;
+      place-items: center;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .soz-container {
+      width: min(calc(100% - 1.4rem), 1200px);
+    }
+
+    .soz-page-title {
+      font-size: clamp(2.4rem, 13vw, 4rem);
+    }
+
+    .soz-hero-meta {
+      grid-template-columns: 1fr;
+    }
+
+    .soz-hero {
+      padding-block: 6rem 2.5rem;
+      min-height: auto;
+    }
+
+    .soz-scene-view {
+      min-height: 420px;
+    }
+
+    .soz-timeline-line {
+      display: none;
+    }
+
+    .soz-timeline-item {
+      grid-template-columns: 1fr;
+    }
+
+    .soz-cta-panel {
+      padding: 1.5rem;
+    }
+  }
+}

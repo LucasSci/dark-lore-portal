@@ -35,7 +35,7 @@ export default function ContactPage() {
     <div className="portal-v2-page">
       <section className="portal-v2-section relative min-h-[28rem] overflow-hidden">
         <div className="portal-v2-hero-media">
-          <img src={archiveReferenceArt.forgotten} alt="" aria-hidden="true" fetchPriority="high" decoding="async" />
+          <img src={archiveReferenceArt.forgotten} alt="" aria-hidden="true" decoding="async" />
         </div>
         <div className="portal-v2-hero-overlay" />
         <div className="relative z-[1] flex min-h-[28rem] flex-col justify-end gap-5 p-6 md:p-10">

@@ -3,6 +3,7 @@
 @import "./styles/session-shell.css";
 @import "./styles/archive-oracle-theme.css";
 @import "./styles/portal-v2.css";
+@import "./styles/sands-of-zerrikania.css";
 
 @tailwind base;
 @tailwind components;

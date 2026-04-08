@@ -96,7 +96,6 @@ export default function CampaignPage() {
               src={archiveGallery[publication.chapterNumber % archiveGallery.length]}
               alt=""
               aria-hidden="true"
-              fetchPriority="high"
               decoding="async"
             />
           </div>

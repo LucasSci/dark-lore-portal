@@ -32,7 +32,6 @@ export default function PortalHeroSection({
         src={backgroundImage}
         alt=""
         aria-hidden="true"
-        fetchPriority="high"
         decoding="async"
         className="dark-lore-hero-background"
       />
