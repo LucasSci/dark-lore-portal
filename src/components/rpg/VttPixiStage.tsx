@@ -1742,6 +1742,7 @@ export default memo(function VttPixiStage({
                     key={control.edge}
                     type="button"
                     title={control.label}
+                    aria-label={control.label}
                     onClick={() => onExpandMap(control.edge)}
                     className="vtt-expand-controls__button"
                   >
