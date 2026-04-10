@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   Application,
   Assets,
@@ -253,7 +253,7 @@ function camerasDiffer(current: SceneCamera, next: SceneCamera) {
   );
 }
 
-export default function VttPixiStage({
+export default memo(function VttPixiStage({
   page,
   tokens,
   selectedTokenId,
@@ -1742,6 +1742,7 @@ export default function VttPixiStage({
                     key={control.edge}
                     type="button"
                     title={control.label}
+                    aria-label={control.label}
                     onClick={() => onExpandMap(control.edge)}
                     className="vtt-expand-controls__button"
                   >
@@ -1758,4 +1759,4 @@ export default function VttPixiStage({
       })()}
     </div>
   );
-}
+});
