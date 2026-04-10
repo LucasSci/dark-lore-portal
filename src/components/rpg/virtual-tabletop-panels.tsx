@@ -1,4 +1,4 @@
-import { memo, type Dispatch, type SetStateAction } from "react";
+import { memo, useState, type Dispatch, type SetStateAction } from "react";
 import { motion } from "framer-motion";
 import {
   Castle,
@@ -514,26 +514,67 @@ export const VttMapPanel = memo(function VttMapPanel({
   );
 });
 
+function ChatInput({ onSendChat }: { onSendChat: (message: string) => void }) {
+  const [chatDraft, setChatDraft] = useState("");
+
+  const handleSend = () => {
+    if (!chatDraft.trim()) return;
+    onSendChat(chatDraft);
+    setChatDraft("");
+  };
+
+  return (
+    <div className="space-y-2">
+      <Textarea
+        value={chatDraft}
+        onChange={(event) => setChatDraft(event.target.value)}
+        placeholder="Enviar uma mensagem para a mesa..."
+        className="min-h-[90px] bg-background/72 backdrop-blur-md"
+      />
+      <Button onClick={handleSend} className="w-full">
+        <Send className="mr-2 h-4 w-4" />
+        Enviar no chat
+      </Button>
+    </div>
+  );
+}
+
+function DiceInput({
+  diceActorName,
+  onRollNotation,
+}: {
+  diceActorName: string;
+  onRollNotation: (notation: string, actor: string) => void;
+}) {
+  const [diceDraft, setDiceDraft] = useState("1d20+4");
+
+  return (
+    <div className="flex gap-2">
+      <Input
+        value={diceDraft}
+        onChange={(event) => setDiceDraft(event.target.value)}
+        placeholder="Ex.: 2d6+3"
+        className="bg-background/72 backdrop-blur-md"
+      />
+      <motion.div whileTap={{ scale: 0.97 }}>
+        <Button onClick={() => onRollNotation(diceDraft, diceActorName)}>Rolar</Button>
+      </motion.div>
+    </div>
+  );
+}
+
 interface VttSessionPanelProps {
   chatMessages: ChatMessage[];
-  chatDraft: string;
-  setChatDraft: Dispatch<SetStateAction<string>>;
-  diceDraft: string;
-  setDiceDraft: Dispatch<SetStateAction<string>>;
   diceHistory: DiceHistoryEntry[];
   initiativeRound: number;
   activeTurnName: string | null;
   diceActorName: string;
-  onSendChat: () => void;
+  onSendChat: (message: string) => void;
   onRollNotation: (notation: string, actor: string) => void;
 }
 
 export const VttSessionPanel = memo(function VttSessionPanel({
   chatMessages,
-  chatDraft,
-  setChatDraft,
-  diceDraft,
-  setDiceDraft,
   diceHistory,
   initiativeRound,
   activeTurnName,
@@ -581,18 +622,7 @@ export const VttSessionPanel = memo(function VttSessionPanel({
             ))}
           </div>
 
-          <div className="space-y-2">
-            <Textarea
-              value={chatDraft}
-              onChange={(event) => setChatDraft(event.target.value)}
-              placeholder="Enviar uma mensagem para a mesa..."
-              className="min-h-[90px] bg-background/72 backdrop-blur-md"
-            />
-            <Button onClick={onSendChat} className="w-full">
-              <Send className="mr-2 h-4 w-4" />
-              Enviar no chat
-            </Button>
-          </div>
+          <ChatInput onSendChat={onSendChat} />
         </CardContent>
       </Card>
 
@@ -625,17 +655,7 @@ export const VttSessionPanel = memo(function VttSessionPanel({
             ))}
           </div>
 
-          <div className="flex gap-2">
-            <Input
-              value={diceDraft}
-              onChange={(event) => setDiceDraft(event.target.value)}
-              placeholder="Ex.: 2d6+3"
-              className="bg-background/72 backdrop-blur-md"
-            />
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <Button onClick={() => onRollNotation(diceDraft, diceActorName)}>Rolar</Button>
-            </motion.div>
-          </div>
+          <DiceInput diceActorName={diceActorName} onRollNotation={onRollNotation} />
 
           <div className="info-panel space-y-2 p-3 backdrop-blur-md">
             <div className="flex items-center justify-between">

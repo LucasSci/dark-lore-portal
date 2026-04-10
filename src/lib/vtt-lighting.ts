@@ -57,25 +57,12 @@ export function computeVisibilityPolygon(
     maxY = oy + maxRadius;
   }
 
-  // Add bounding box walls unconditionally to the end so they are never filtered
-  const allWalls: Segment[] = [
-    ...walls,
-    { a: { x: 0, y: 0 }, b: { x: bounds.width, y: 0 } },
-    { a: { x: bounds.width, y: 0 }, b: { x: bounds.width, y: bounds.height } },
-    { a: { x: bounds.width, y: bounds.height }, b: { x: 0, y: bounds.height } },
-    { a: { x: 0, y: bounds.height }, b: { x: 0, y: 0 } },
-  ];
-
   // ⚡ Bolt: Filter active walls and pre-extract coordinates to avoid object lookups
+  // Avoid allocating a new `allWalls` array with the spread operator on every raycast to reduce GC overhead.
   const activeWalls: Segment[] = [];
-  for (let i = 0; i < allWalls.length; i++) {
-    const w = allWalls[i];
 
-    // Unconditionally include the 4 boundary walls (the last 4 in the array)
-    if (i >= allWalls.length - 4) {
-      activeWalls.push(w);
-      continue;
-    }
+  for (let i = 0; i < walls.length; i++) {
+    const w = walls[i];
 
     // AABB check
     if (maxRadius !== undefined) {
@@ -91,6 +78,12 @@ export function computeVisibilityPolygon(
     activeWalls.push(w);
   }
 
+  // Unconditionally include the 4 boundary walls at the end so they are never filtered out
+  activeWalls.push({ a: { x: 0, y: 0 }, b: { x: bounds.width, y: 0 } });
+  activeWalls.push({ a: { x: bounds.width, y: 0 }, b: { x: bounds.width, y: bounds.height } });
+  activeWalls.push({ a: { x: bounds.width, y: bounds.height }, b: { x: 0, y: bounds.height } });
+  activeWalls.push({ a: { x: 0, y: bounds.height }, b: { x: 0, y: 0 } });
+
   const activeWallsCount = activeWalls.length;
 
   // ⚡ Bolt: Use Typed Arrays to avoid Garbage Collection (GC) overhead during Set iteration
@@ -98,18 +91,25 @@ export function computeVisibilityPolygon(
   const angles = new Float64Array(activeWallsCount * 6);
   let angleCount = 0;
 
-  const wallAx = new Float64Array(activeWallsCount);
-  const wallAy = new Float64Array(activeWallsCount);
   const wallDx = new Float64Array(activeWallsCount);
   const wallDy = new Float64Array(activeWallsCount);
+  const wallDiffX = new Float64Array(activeWallsCount);
+  const wallDiffY = new Float64Array(activeWallsCount);
+  const wallTNumerator = new Float64Array(activeWallsCount);
 
   for (let i = 0; i < activeWallsCount; i++) {
     const wall = activeWalls[i];
 
-    wallAx[i] = wall.a.x;
-    wallAy[i] = wall.a.y;
-    wallDx[i] = wall.b.x - wall.a.x;
-    wallDy[i] = wall.b.y - wall.a.y;
+    const dx = wall.b.x - wall.a.x;
+    const dy = wall.b.y - wall.a.y;
+    wallDx[i] = dx;
+    wallDy[i] = dy;
+
+    const diffX = wall.a.x - ox;
+    const diffY = wall.a.y - oy;
+    wallDiffX[i] = diffX;
+    wallDiffY[i] = diffY;
+    wallTNumerator[i] = diffX * dy - diffY * dx;
 
     let angle = Math.atan2(wall.a.y - oy, wall.a.x - ox);
     angles[angleCount++] = angle;
@@ -144,6 +144,7 @@ export function computeVisibilityPolygon(
     let closestT = Infinity;
 
     // ⚡ Bolt: Inline ray-segment intersection math (Cramer's rule) for maximum performance
+    // ⚡ Bolt: Loop Invariant Code Motion (LICM) - precomputed diffX, diffY, and t_numerator outside the angle loop
     for (let j = 0; j < activeWallsCount; j++) {
       const dx = wallDx[j];
       const dy = wallDy[j];
@@ -152,15 +153,13 @@ export function computeVisibilityPolygon(
       // Skip if lines are parallel or collinear
       if (denom > -1e-10 && denom < 1e-10) continue;
 
-      const ax = wallAx[j];
-      const ay = wallAy[j];
-      const diffX = ax - ox;
-      const diffY = ay - oy;
+      const diffX = wallDiffX[j];
+      const diffY = wallDiffY[j];
 
       const u = (diffX * dirY - diffY * dirX) / denom;
       if (u < 0 || u > 1) continue;
 
-      const t = (diffX * dy - diffY * dx) / denom;
+      const t = wallTNumerator[j] / denom;
       if (t >= 0 && t < closestT) {
         closestT = t;
       }

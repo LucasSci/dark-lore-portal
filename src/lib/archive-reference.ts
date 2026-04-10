@@ -1,8 +1,8 @@
 export const archiveBrand = {
-  title: "Arquivo do Continente",
-  subtitle: "Areias de Zerrikania",
+  title: "Sands of Zerrikania",
+  subtitle: "Dark fantasy lore portal",
   heroLine:
-    "Bestiarios, cronicas, cartas do atlas e registros de sessao reunidos sob o mesmo arquivo.",
+    "Lore, bestiario, cronologia, campanha e mundo reunidos sob a mesma cronica do deserto.",
 };
 
 export const archiveReferenceArt = {

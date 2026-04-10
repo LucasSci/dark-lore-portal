@@ -8,8 +8,7 @@ import { DEFAULT_WITCHER_CAMPAIGN_ID } from "@/features/witcher-system";
 
 const leftNavItems = getNavigationEntries("primary-left");
 const rightNavItems = getNavigationEntries("primary-right");
-const mobileNavItems = [...leftNavItems, ...rightNavItems];
-const desktopNavItems = [...leftNavItems, ...rightNavItems];
+const publicNavItems = [...leftNavItems, ...rightNavItems];
 const sessionNavItems = [
   { label: "Jogar", path: "/jogar" },
   { label: "Mesa", path: `/mesa/${DEFAULT_WITCHER_CAMPAIGN_ID}` },
@@ -20,20 +19,12 @@ const sessionNavItems = [
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const currentRoute = resolveRouteManifest(location.pathname);
   const isSessionRoute = currentRoute?.theme === "session";
 
   useEffect(() => {
     setMobileOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20 || location.pathname !== "/");
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
   const isActivePath = (path: string) =>
@@ -88,77 +79,56 @@ export default function Header() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 safe-top">
-      <div
-        className="dark-lore-nav-shell mx-auto max-w-[1480px] border-x border-b transition-all duration-300"
-        data-scrolled={scrolled}
-      >
-        <div className="dark-lore-nav-rail">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="tool-rail-button h-10 w-10 text-[#c9a15a] md:hidden"
-              onClick={() => setMobileOpen((value) => !value)}
-              aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
-            >
-              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
+    <header className="soz-nav">
+      <div className="soz-container">
+        <div className="soz-nav-inner">
+          <Link to="/" className="soz-brand">
+            <span className="soz-brand-mark">
+              <Flame className="h-4 w-4" />
+            </span>
+            <span className="soz-brand-copy">
+              <span className="soz-brand-kicker">Universo • Lore • Campanhas</span>
+              <strong className="soz-brand-name">{archiveBrand.title}</strong>
+            </span>
+          </Link>
 
-            <Link to="/" className="dark-lore-brand min-w-0 justify-start">
-              <Flame className="h-4 w-4 text-[#c9a15a]" />
-              <span className="min-w-0">
-                <span className="dark-lore-brand-kicker">Dark Lore Portal V2</span>
-                <span className="dark-lore-brand-text">{archiveBrand.title}</span>
-              </span>
-            </Link>
-          </div>
-
-          <nav className="hidden items-center justify-center gap-1 md:flex">
-            {desktopNavItems.map((item) => (
+          <nav className="soz-nav-links">
+            {publicNavItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 data-active={isActivePath(item.path)}
-                className="dark-lore-nav-link"
+                className="soz-nav-link"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          <div className="hidden items-center justify-end gap-2 md:flex">
-            <span className="session-topbar-meta">Lore + session shell</span>
-            <Link to="/jogar" className="session-topbar-cta">
-              <Swords className="mr-2 h-3.5 w-3.5" />
-              Abrir sessao
-            </Link>
-          </div>
-        </div>
-      </div>
+          <Link to="/campanhas" className="soz-nav-cta">
+            Explorar
+          </Link>
 
-      {mobileOpen ? (
-        <nav className="border-b border-[rgba(201,161,90,0.18)] bg-[rgba(23,20,17,0.98)] px-6 py-6 md:hidden">
-          <div className="flex flex-col gap-4">
-            {mobileNavItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`font-heading text-sm uppercase tracking-[0.24em] ${
-                  isActivePath(item.path) ? "text-[#ffcc66]" : "text-[rgba(227,218,203,0.74)]"
-                }`}
-              >
+          <button
+            type="button"
+            className="soz-mobile-toggle"
+            onClick={() => setMobileOpen((value) => !value)}
+            aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
+          >
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
+
+        <div className={`soz-mobile-nav ${mobileOpen ? "is-open" : ""}`}>
+          <div className="soz-mobile-nav-links">
+            {publicNavItems.map((item) => (
+              <Link key={item.path} to={item.path}>
                 {item.label}
               </Link>
             ))}
-            <Link
-              to="/jogar"
-              className="mt-2 inline-flex w-fit border border-[rgba(201,161,90,0.8)] px-4 py-2 font-heading text-xs uppercase tracking-[0.24em] text-[#c9a15a]"
-            >
-              Abrir sessao
-            </Link>
           </div>
-        </nav>
-      ) : null}
+        </div>
+      </div>
     </header>
   );
 }

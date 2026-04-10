@@ -54,8 +54,6 @@ const loreThreats: VttLoreThreat[] = getVttReadyEntries();
 export default function VirtualTabletop() {
   const [scene, setScene] = useState<SceneModel>(() => createSceneModel());
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>("mapa");
-  const [chatDraft, setChatDraft] = useState("");
-  const [diceDraft, setDiceDraft] = useState("1d20+4");
   const [showGrid, setShowGrid] = useState(true);
   const [gridOpacity, setGridOpacity] = useState(0.3);
   const [battlemapUrl, setBattlemapUrl] = useState<string | null>(null);
@@ -265,14 +263,16 @@ export default function VirtualTabletop() {
     [spawnLoreEntry],
   );
 
-  const sendChat = useCallback(async () => {
-    if (!chatDraft.trim()) {
-      return;
-    }
+  const sendChat = useCallback(
+    async (message: string) => {
+      if (!message.trim()) {
+        return;
+      }
 
-    await appendChatMessage("Narrador", chatDraft.trim(), "party");
-    setChatDraft("");
-  }, [appendChatMessage, chatDraft]);
+      await appendChatMessage("Narrador", message.trim(), "party");
+    },
+    [appendChatMessage],
+  );
 
   const rollNotation = useCallback(
     async (notation: string, actor: string) => {
@@ -572,15 +572,11 @@ export default function VirtualTabletop() {
 
           <VttSessionPanel
             chatMessages={scene.chatMessages}
-            chatDraft={chatDraft}
-            setChatDraft={setChatDraft}
-            diceDraft={diceDraft}
-            setDiceDraft={setDiceDraft}
             diceHistory={scene.diceHistory}
             initiativeRound={scene.initiative.round}
             activeTurnName={activeTurn?.name ?? null}
             diceActorName={diceActorName}
-            onSendChat={() => void sendChat()}
+            onSendChat={(message) => void sendChat(message)}
             onRollNotation={(notation, actor) => void rollNotation(notation, actor)}
           />
         </div>
@@ -654,15 +650,11 @@ export default function VirtualTabletop() {
             <TabsContent value="chat" className="mt-0">
               <VttSessionPanel
                 chatMessages={scene.chatMessages}
-                chatDraft={chatDraft}
-                setChatDraft={setChatDraft}
-                diceDraft={diceDraft}
-                setDiceDraft={setDiceDraft}
                 diceHistory={scene.diceHistory}
                 initiativeRound={scene.initiative.round}
                 activeTurnName={activeTurn?.name ?? null}
                 diceActorName={diceActorName}
-                onSendChat={() => void sendChat()}
+                onSendChat={(message) => void sendChat(message)}
                 onRollNotation={(notation, actor) => void rollNotation(notation, actor)}
               />
             </TabsContent>
