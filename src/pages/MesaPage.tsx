@@ -1736,6 +1736,8 @@ export default function MesaPage() {
               key={tool.id}
               onClick={() => setActiveTool(tool.id)}
               active={currentTool === tool.id}
+              title={tool.label}
+              aria-label={tool.label}
             >
               {tool.icon}
             </ToolRailButton>
@@ -1743,12 +1745,15 @@ export default function MesaPage() {
           <ToolRailButton
             onClick={() => setShowGrid((v) => !v)}
             active={showGrid}
+            title={showGrid ? "Ocultar grid" : "Mostrar grid"}
+            aria-label={showGrid ? "Ocultar grid" : "Mostrar grid"}
           >
             <Grid3X3 className="h-4 w-4" />
           </ToolRailButton>
           <ToolRailButton
             onClick={() => fileInputRef.current?.click()}
             title="Importar battlemap"
+            aria-label="Importar battlemap"
             active={Boolean(battlemapUrl)}
           >
             {battlemapUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
