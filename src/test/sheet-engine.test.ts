@@ -12,35 +12,35 @@ import { NOIR_CHRONICLE_SHEET } from "@/lib/sheets/noir-chronicle-sheet";
 describe("sheet engine", () => {
   it("derives combat stats from the attribute store", () => {
     const store = createAttributeStore(NOIR_CHRONICLE_SHEET, SEED_CHARACTER_ID, {
-      class: "guerreiro",
+      class: "witcher",
       level: 3,
-      constituicao: 16,
-      destreza: 14,
-      inteligencia: 10,
-      sabedoria: 10,
-      carisma: 10,
+      body: 8,
+      ref: 8,
+      dex: 7,
+      int: 7,
+      will: 7,
     });
 
     expect(store.derived.hp_max).toBeGreaterThan(20);
-    expect(store.derived.armor_class).toBe(12);
-    expect(store.derived.initiative_bonus).toBe(2);
+    expect(store.derived.armor_class).toBe(11);
+    expect(store.derived.initiative_bonus).toBe(8);
   });
 
   it("recalculates derived values when an attribute changes", () => {
     const initial = createAttributeStore(NOIR_CHRONICLE_SHEET, SEED_CHARACTER_ID, {
-      class: "mago",
-      inteligencia: 12,
-      destreza: 10,
+      class: "mage",
+      int: 6,
+      will: 5,
     });
 
     const updated = setAttributeValue(
       NOIR_CHRONICLE_SHEET,
       initial,
-      "inteligencia",
-      18,
+      "int",
+      9,
     );
 
-    expect(updated.derived.mp_max).toBeGreaterThan(initial.derived.mp_max as number);
+    expect(updated.derived.focus_max).toBeGreaterThan(initial.derived.focus_max as number);
     expect(updated.revision).toBe(initial.revision + 1);
   });
 
@@ -58,13 +58,13 @@ describe("sheet engine", () => {
       id: "item-sword",
       kind: "inventory",
       values: {
-        name: "Espada longa",
-        armor_bonus: 0,
+        name: "Espada de aco",
+        stopping_power: 0,
         equipped: true,
       },
     });
 
     expect(next.repeaters.inventory).toHaveLength(1);
-    expect(next.repeaters.inventory?.[0]?.values.name).toBe("Espada longa");
+    expect(next.repeaters.inventory?.[0]?.values.name).toBe("Espada de aco");
   });
 });

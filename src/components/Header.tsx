@@ -1,121 +1,132 @@
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Compass, Flame, Menu, Swords, WandSparkles, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { archiveBrand } from "@/lib/archive-reference";
-import { getNavigationEntries } from "@/lib/route-manifest";
 
-const leftNavItems = getNavigationEntries("primary-left").map(({ label, path }) => ({
-  label,
-  path,
-}));
-const rightNavItems = getNavigationEntries("primary-right").map(({ label, path }) => ({
-  label,
-  path,
-}));
-const mobileNavItems = [...leftNavItems, ...rightNavItems];
+import { archiveBrand } from "@/lib/archive-reference";
+import { getNavigationEntries, resolveRouteManifest } from "@/lib/route-manifest";
+import { DEFAULT_WITCHER_CAMPAIGN_ID } from "@/features/witcher-system";
+
+const leftNavItems = getNavigationEntries("primary-left");
+const rightNavItems = getNavigationEntries("primary-right");
+const publicNavItems = [...leftNavItems, ...rightNavItems];
+const sessionNavItems = [
+  { label: "Jogar", path: "/jogar" },
+  { label: "Mesa", path: `/mesa/${DEFAULT_WITCHER_CAMPAIGN_ID}` },
+  { label: "Mestre", path: "/mestre" },
+  { label: "Ficha", path: "/ficha" },
+  { label: "Story Engine", path: "/story-engine" },
+] as const;
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const homeRoute = location.pathname === "/";
+  const currentRoute = resolveRouteManifest(location.pathname);
+  const isSessionRoute = currentRoute?.theme === "session";
 
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  useEffect(() => {
-    const syncScrollState = () => {
-      setScrolled(!homeRoute || window.scrollY > 36);
-    };
-
-    syncScrollState();
-    window.addEventListener("scroll", syncScrollState, { passive: true });
-    window.addEventListener("resize", syncScrollState);
-
-    return () => {
-      window.removeEventListener("scroll", syncScrollState);
-      window.removeEventListener("resize", syncScrollState);
-    };
-  }, [homeRoute]);
-
   const isActivePath = (path: string) =>
-    path === "/"
-      ? location.pathname === "/"
-      : location.pathname === path || location.pathname.startsWith(`${path}/`);
+    path === "/" ? location.pathname === "/" : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  const renderNavLink = (item: { label: string; path: string }) => {
-    const active = isActivePath(item.path);
-
+  if (isSessionRoute) {
     return (
-      <Link
-        key={item.path}
-        to={item.path}
-        data-active={active ? "true" : "false"}
-        className="dark-lore-nav-link"
-      >
-        {item.label}
-      </Link>
-    );
-  };
-
-  return (
-    <header className="fixed inset-x-0 top-0 z-50 px-3 safe-top sm:px-5 lg:px-6">
-      <div className="mx-auto max-w-[1480px] pt-3 md:pt-4">
-        <div
-          className="dark-lore-nav-shell"
-          data-home={homeRoute ? "true" : "false"}
-          data-scrolled={scrolled ? "true" : "false"}
-        >
-          <div className="dark-lore-nav-rail">
-            <div className="hidden min-w-0 items-center justify-end gap-1 xl:flex">
-              {leftNavItems.map(renderNavLink)}
-            </div>
-
-            <Link to="/" className="dark-lore-brand">
-              <span className="dark-lore-portal-sigil" aria-hidden="true" />
-              <span className="flex flex-col">
-                <span className="dark-lore-brand-kicker">{archiveBrand.subtitle}</span>
-                <span className="dark-lore-brand-text">{archiveBrand.title}</span>
+      <header className="fixed inset-x-0 top-0 z-50 safe-top">
+        <div className="session-topbar">
+          <div className="session-topbar-row">
+            <Link to="/jogar" className="session-topbar-brand">
+              <span className="session-topbar-brand-mark">
+                <Flame className="h-4 w-4" />
+              </span>
+              <span className="min-w-0">
+                <span className="session-topbar-kicker">Suite de sessao</span>
+                <span className="session-topbar-title">{archiveBrand.title}</span>
               </span>
             </Link>
 
-            <div className="hidden min-w-0 items-center justify-start gap-1 xl:flex">
-              {rightNavItems.map(renderNavLink)}
-              <Link to="/jogar" className="dark-lore-entry-button">
-                Abrir Arquivo
+            <nav className="session-topbar-nav">
+              {sessionNavItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  data-active={isActivePath(item.path)}
+                  className="session-topbar-link"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="session-topbar-actions">
+              <span className="session-topbar-meta">
+                <Swords className="h-3.5 w-3.5" />
+                Foundry utilitario
+              </span>
+              <Link to="/oraculo" className="session-topbar-link">
+                <WandSparkles className="mr-2 h-3.5 w-3.5" />
+                Oraculo
+              </Link>
+              <Link to="/" className="session-topbar-cta">
+                <Compass className="mr-2 h-3.5 w-3.5" />
+                Voltar ao portal
               </Link>
             </div>
-
-            <button
-              type="button"
-              className="dark-lore-mobile-toggle xl:hidden"
-              onClick={() => setMobileOpen((previous) => !previous)}
-              aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
-            >
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
           </div>
+        </div>
+      </header>
+    );
+  }
 
-          {mobileOpen ? (
-            <nav className="dark-lore-mobile-menu xl:hidden">
-              <div className="grid gap-2">
-                {mobileNavItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    data-active={isActivePath(item.path) ? "true" : "false"}
-                    className="dark-lore-mobile-link"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-                <Link to="/jogar" className="dark-lore-entry-button mt-2 text-center">
-                  Abrir Arquivo
-                </Link>
-              </div>
-            </nav>
-          ) : null}
+  return (
+    <header className="soz-nav">
+      <div className="soz-container">
+        <div className="soz-nav-inner">
+          <Link to="/" className="soz-brand">
+            <span className="soz-brand-mark">
+              <Flame className="h-4 w-4" />
+            </span>
+            <span className="soz-brand-copy">
+              <span className="soz-brand-kicker">Universo • Lore • Campanhas</span>
+              <strong className="soz-brand-name">{archiveBrand.title}</strong>
+            </span>
+          </Link>
+
+          <nav className="soz-nav-links">
+            {publicNavItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                data-active={isActivePath(item.path)}
+                className="soz-nav-link"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <Link to="/campanhas" className="soz-nav-cta">
+            Explorar
+          </Link>
+
+          <button
+            type="button"
+            className="soz-mobile-toggle"
+            onClick={() => setMobileOpen((value) => !value)}
+            aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
+          >
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
+
+        <div className={`soz-mobile-nav ${mobileOpen ? "is-open" : ""}`}>
+          <div className="soz-mobile-nav-links">
+            {publicNavItems.map((item) => (
+              <Link key={item.path} to={item.path}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </header>

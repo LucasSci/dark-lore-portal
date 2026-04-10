@@ -1,0 +1,9 @@
+build
+/.idea/
+generate-release-notes.js
+/node_modules/
+/foundry/
+/.vscode/
+/TheWitcherTRPG.lock
+/jsconfig.json
+/packs

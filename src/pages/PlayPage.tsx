@@ -1,285 +1,291 @@
-import { BookMarked, Map, ScrollText, Sparkles, Sword } from "lucide-react";
+import {
+  BookMarked,
+  Clapperboard,
+  Compass,
+  Map,
+  ScrollText,
+  Sparkles,
+  Sword,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
-import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
-import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
+import {
+  ActionStrip,
+  MetricCard,
+  ModuleCard,
+  PanelCard,
+  SectionHeader,
+  SidebarModule,
+  StatusBanner,
+} from "@/components/product/ProductShell";
+import { archiveBrand } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
 import { getTabletopLoreCompendium } from "@/lib/tabletop-lore";
-
-const sessionMetrics = [
-  { label: "Nucleo", value: "Mesa, oraculo e comando" },
-  { label: "Ritmo", value: "Preparar, narrar, resolver" },
-  { label: "Entrada rapida", value: "Sessao ao vivo em um clique" },
-] as const;
+import {
+  DEFAULT_WITCHER_CAMPAIGN_ID,
+  getWitcherSceneSeed,
+  WITCHER_CAMPAIGNS,
+} from "@/features/witcher-system";
 
 const moduleCards = [
   {
     title: "Mesa de sessao",
-    description: "Abra o palco tatico, organize tokens, luzes, nevoa e fluxo de combate.",
-    path: "/mesa",
-    cta: "Abrir mesa",
+    description: "Abra o palco tatico, organize visao, token, iniciativa e cadencia da cena.",
+    path: `/mesa/${DEFAULT_WITCHER_CAMPAIGN_ID}`,
+    cta: "Entrar na mesa",
     icon: Map,
-  },
-  {
-    title: "Oraculo do arquivo",
-    description: "Abra Luna em pagina completa, com leitura ritual, voz e visoes do arquivo no formato original.",
-    path: "/oraculo",
-    cta: "Abrir Luna",
-    icon: Sparkles,
-  },
-  {
-    title: "Ficha de personagem",
-    description: "Revise atributos, inventario, grimorio e o estado da companhia antes da sessao.",
-    path: "/ficha",
-    cta: "Abrir ficha",
-    icon: BookMarked,
-  },
-  {
-    title: "Painel do mestre",
-    description: "Conduza encontros, acompanhe a sessao e gerencie os movimentos do grupo.",
-    path: "/mestre",
-    cta: "Entrar no painel",
-    icon: ScrollText,
-  },
-] as const;
-
-const supportRoutes = [
-  {
-    title: "Criar personagem",
-    path: "/criacao",
-  },
-  {
-    title: "Seguir cronicas",
-    path: "/cronicas",
-  },
-] as const;
-
-const sessionPortals = [
-  {
-    title: "Mesa",
-    description: "Abra o palco tatico, mova tokens, organize visibilidade e conduza a cena ao vivo.",
-    to: "/mesa",
-    cta: "Abrir mesa",
+    meta: "Playfield protegido",
   },
   {
     title: "Oraculo",
-    description: "Converse com Luna, leia registros do arquivo e mantenha o fio da campanha.",
-    to: "/oraculo",
+    description: "Desca para leitura ritual, consulta em voz alta e resposta contextual da campanha.",
+    path: "/oraculo",
     cta: "Abrir Luna",
+    icon: Sparkles,
+    meta: "Leitura e resposta",
   },
   {
-    title: "Cronicas",
-    description: "Volte aos manuscritos quando a sessao pedir contexto, memoria ou pressagio.",
-    to: "/cronicas",
-    cta: "Ler manuscritos",
+    title: "Ficha",
+    description: "Revise atributos, carga, sinais e o estado da companhia antes da proxima batida.",
+    path: "/ficha",
+    cta: "Abrir ficha",
+    icon: BookMarked,
+    meta: "Dossie jogavel",
   },
   {
-    title: "Mapa",
-    description: "Cruze o jogo com o atlas para levar regioes, rotas e locais para a mesa.",
-    to: "/mapa",
-    cta: "Abrir atlas",
+    title: "Painel do mestre",
+    description: "Controle encontros, ameacas, publicacoes e o fio operacional da sessao.",
+    path: "/mestre",
+    cta: "Ir para o painel",
+    icon: ScrollText,
+    meta: "Comando da campanha",
+  },
+  {
+    title: "Story Engine",
+    description: "Transforme contratos e sementes em elenco, cenas e storyboard visual de apoio.",
+    path: `/story-engine?campaignId=${DEFAULT_WITCHER_CAMPAIGN_ID}&sceneId=estrada-velha`,
+    cta: "Abrir workspace",
+    icon: Clapperboard,
+    meta: "Producao vinculada",
   },
 ] as const;
 
-const tabletopLoreCompendium = getTabletopLoreCompendium();
+const defaultCampaign =
+  WITCHER_CAMPAIGNS.find((campaign) => campaign.id === DEFAULT_WITCHER_CAMPAIGN_ID) ??
+  WITCHER_CAMPAIGNS[0];
+const defaultScene = getWitcherSceneSeed(defaultCampaign.defaultSceneId);
+const loreCompendium = getTabletopLoreCompendium();
 
 export default function PlayPage() {
-  usePortalShellMode("editorial", "ambient");
+  usePortalShellMode("editorial", "interactive");
 
   return (
-    <div className="mx-auto max-w-[1480px] space-y-10 px-4 py-8 md:space-y-12 md:px-6 md:py-12">
-      <section className="dark-lore-page-frame overflow-hidden">
-        <div className="dark-lore-page-hero dark-lore-contact-hero relative">
-          <img
-            src={archiveReferenceArt.hero}
-            alt=""
-            aria-hidden="true"
-            fetchPriority="high"
-            decoding="async"
-            className="dark-lore-hero-background object-[center_38%]"
-          />
-          <div className="dark-lore-grain-overlay" />
-          <div className="dark-lore-candle-glow dark-lore-candle-glow-left" />
-          <div className="dark-lore-candle-glow dark-lore-candle-glow-right" />
+    <div className="session-page space-y-6">
+      <section className="session-shell-hero">
+        <SectionHeader
+          kicker="Session Shell / Jogar"
+          title="O centro operacional do Arquivo."
+          description={
+            <>
+              <p>
+                Mesa, mestre, ficha e Story Engine agora entram no mesmo eixo de produto. Esta
+                camada deixa de ser uma colecao de paginas e passa a operar como suite de sessao.
+              </p>
+              <p>
+                O objetivo aqui e abrir rapido, entender o estado da campanha e saltar para a
+                ferramenta certa sem perder o contexto do mundo.
+              </p>
+            </>
+          }
+          aside={
+            <>
+              <span className="session-topbar-meta">{archiveBrand.title}</span>
+              <span className="session-topbar-meta">{defaultCampaign.stageLabel}</span>
+              <span className="session-topbar-meta">Foundry utilitario</span>
+            </>
+          }
+        />
 
-          <div className="dark-lore-hero-copy relative z-10 max-w-5xl">
-            <span className="dark-lore-portal-sigil" aria-hidden="true" />
-            <span className="dark-lore-section-kicker">Camara de sessao</span>
-            <h1 className="dark-lore-section-title max-w-[12ch]">Jogar sem romper o arquivo.</h1>
-            <p className="dark-lore-hero-text max-w-[62ch] text-base md:text-lg">
-              A sessao parte deste nucleo. Mesa, oraculo, ficha e painel do mestre entram como
-              ferramentas do mesmo jogo, sem disputar o centro da campanha.
-            </p>
-            <div className="dark-lore-divider" aria-hidden="true" />
+        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+          <div className="space-y-5">
+            <ActionStrip>
+              <Link to={`/mesa/${defaultCampaign.id}`} className="session-shell-action">
+                <Map className="h-4 w-4" />
+                Abrir mesa ativa
+              </Link>
+              <Link to="/mestre" className="session-shell-action">
+                <ScrollText className="h-4 w-4" />
+                Painel do mestre
+              </Link>
+              <Link
+                to={`/story-engine?campaignId=${defaultCampaign.id}&sceneId=${defaultCampaign.defaultSceneId}`}
+                className="session-shell-action"
+              >
+                <Clapperboard className="h-4 w-4" />
+                Story Engine
+              </Link>
+              <Link to="/oraculo" className="session-shell-action">
+                <Sparkles className="h-4 w-4" />
+                Oraculo
+              </Link>
+            </ActionStrip>
 
-            <div className="flex flex-wrap gap-3">
-              <Link to="/mesa" className="dark-lore-button">
-                Abrir mesa de sessao
-              </Link>
-              <Link to="/oraculo" className="dark-lore-button dark-lore-button-ghost">
-                Abrir Luna em pagina inteira
-              </Link>
-              <Link to="/jogar/oraculo" className="dark-lore-button dark-lore-button-ghost">
-                Consultar o oraculo
-              </Link>
-              <Link to="/ficha" className="dark-lore-button dark-lore-button-ghost">
-                Revisar fichas
-              </Link>
+            <div className="grid gap-4 md:grid-cols-3">
+              <MetricCard
+                label="Campanha ativa"
+                value={defaultCampaign.title}
+                detail={defaultCampaign.summary}
+              />
+              <MetricCard
+                label="Cena pronta"
+                value={defaultScene.name}
+                detail={defaultScene.briefing}
+              />
+              <MetricCard
+                label="Companhia"
+                value={`${defaultCampaign.players.length} agentes`}
+                detail={defaultCampaign.players.map((player) => player.name).join(" · ")}
+              />
             </div>
 
-            <div className="grid gap-3 pt-2 md:grid-cols-3">
-              {sessionMetrics.map((metric) => (
-                <div key={metric.label} className="dark-lore-inline-metric">
-                  <p className="dark-lore-card-meta">{metric.label}</p>
-                  <p className="mt-2 font-display text-xl text-foreground">{metric.value}</p>
+            <StatusBanner title="Ritmo recomendado" tone="info">
+              Comece pela mesa quando a sessao ja pedir posicionamento. Desca para o Story Engine
+              quando a campanha precisar preparar elenco e quadros. Use o Oraculo para leitura,
+              memoria e reacao em cena.
+            </StatusBanner>
+          </div>
+
+          <div className="session-shell-sidebar">
+            <SidebarModule
+              title="Sessao em curso"
+              description="Estado rapido da entrada principal da campanha."
+            >
+              <div className="session-shell-list">
+                <div className="session-shell-list-item">
+                  <p className="session-shell-list-item-title">Narrador</p>
+                  <p className="session-shell-list-item-copy">{defaultCampaign.gmLabel}</p>
                 </div>
-              ))}
-            </div>
+                <div className="session-shell-list-item">
+                  <p className="session-shell-list-item-title">Atmosfera</p>
+                  <p className="session-shell-list-item-copy">{defaultCampaign.atmosphere}</p>
+                </div>
+                <div className="session-shell-list-item">
+                  <p className="session-shell-list-item-title">Pressao dramatica</p>
+                  <p className="session-shell-list-item-copy">
+                    {defaultScene.threatLabels.join(" · ")}
+                  </p>
+                </div>
+              </div>
+            </SidebarModule>
+
+            <SidebarModule
+              title="Fluxo da suite"
+              description="A mesma linguagem de produto agora conduz preparar, narrar, resolver e registrar."
+            >
+              <div className="session-shell-list">
+                {[
+                  "1. Jogar: escolher campanha e entrar no modulo certo.",
+                  "2. Mesa: posicionar cena, iniciativa e presenca.",
+                  "3. Mestre: controlar ameaças e publicar ecos da sessao.",
+                  "4. Story Engine: preparar apoio visual e storyboard.",
+                ].map((step) => (
+                  <div key={step} className="session-shell-list-item">
+                    <p className="session-shell-list-item-copy">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </SidebarModule>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {moduleCards.map(({ title, description, path, cta, icon: Icon }) => (
-          <Link key={path} to={path} className="dark-lore-hover-surface">
-            <article className="dark-lore-feature-card dark-lore-hover-surface">
-              <div className="dark-lore-feature-body gap-5">
-                <div className="dark-lore-icon-emblem">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="space-y-3">
-                  <p className="dark-lore-card-meta">{archiveBrand.title}</p>
-                  <h2 className="dark-lore-card-title text-3xl">{title}</h2>
-                  <p className="dark-lore-card-copy text-sm">{description}</p>
-                </div>
-                <div className="mt-auto inline-flex items-center gap-2 font-display text-sm text-gold-light">
-                  <Sword className="h-4 w-4" />
-                  {cta}
-                </div>
-              </div>
-            </article>
+      <section className="grid gap-4 xl:grid-cols-5">
+        {moduleCards.map(({ title, description, path, cta, icon: Icon, meta }) => (
+          <Link key={path} to={path}>
+            <ModuleCard
+              title={title}
+              description={description}
+              meta={meta}
+              className="h-full"
+            >
+              <span className="session-shell-action">
+                <Icon className="h-4 w-4" />
+                {cta}
+              </span>
+            </ModuleCard>
           </Link>
         ))}
       </section>
 
-      <section className="dark-lore-page-frame overflow-hidden">
-        <div className="dark-lore-editorial-grid">
-          <div className="dark-lore-editorial-copy">
-            <span className="dark-lore-section-kicker">Fluxo de sessao</span>
-            <h2 className="dark-lore-section-title max-w-[14ch]">Mesa, leitura e resposta no mesmo eixo.</h2>
-            <p className="dark-lore-editorial-text">
-              Abra a mesa quando a sessao pedir espaco tatico. Desca ao oraculo quando a campanha
-              pedir leitura, voz ou visoes. Entre uma cena e outra, a ficha e o painel do mestre
-              sustentam o mesmo fio de jogo.
-            </p>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px]">
+        <PanelCard
+          title="Campanhas prontas para abrir"
+          description="Cada campanha nasce com sua propria rota de mesa, cena padrao e links de suporte para continuar a sessao sem preparo extra."
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
+            {WITCHER_CAMPAIGNS.map((campaign) => {
+              const scene = getWitcherSceneSeed(campaign.defaultSceneId);
 
-            <div className="flex flex-wrap gap-3">
-              {supportRoutes.map((route) => (
-                <Link
-                  key={route.path}
-                  to={route.path}
-                  className="dark-lore-button dark-lore-button-small dark-lore-button-ghost"
-                >
-                  {route.title}
-                </Link>
-              ))}
-              <Link to="/oraculo" className="dark-lore-button dark-lore-button-small">
-                Abrir experiencia completa
-              </Link>
-            </div>
-          </div>
-
-          <figure className="dark-lore-editorial-figure">
-            <img
-              src={archiveReferenceArt.wanderer}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-              className="dark-lore-editorial-image"
-            />
-            <div className="dark-lore-editorial-glow" />
-          </figure>
-        </div>
-      </section>
-
-      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
-        <div className="space-y-6">
-          <div className="text-center">
-            <span className="dark-lore-section-kicker justify-center">Sementes de sessao</span>
-            <h2 className="dark-lore-section-title mx-auto">Abra a mesa ja encostada no lore.</h2>
-            <p className="mx-auto max-w-3xl text-sm leading-8 text-[hsl(var(--foreground)/0.76)] md:text-base">
-              Cada semente cruza dossie, manuscrito e atlas para evitar que a sessao comece do
-              zero. Entre por uma cena pronta e deixe o arquivo sustentar o resto.
-            </p>
-            <div className="mt-5">
-              <div className="dark-lore-divider" aria-hidden="true" />
-            </div>
-          </div>
-
-          <div className="dark-lore-list-grid">
-            {tabletopLoreCompendium.sessionSeeds.map((seed) => (
-              <article key={seed.slug} className="dark-lore-archive-card dark-lore-archive-card-horizontal">
-                <div className="dark-lore-paper-index">{seed.tags[0]?.slice(0, 2).toUpperCase() ?? "AR"}</div>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <p className="dark-lore-card-meta">{seed.tags.join(" - ")}</p>
-                    <h3 className="dark-lore-card-title text-[clamp(1.6rem,2.1vw,2.1rem)]">{seed.title}</h3>
-                    <p className="dark-lore-card-copy">{seed.summary}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Link to={seed.dossierHref} className="dark-lore-button dark-lore-button-small dark-lore-button-ghost">
-                      Abrir dossie
-                    </Link>
-                    <Link to={seed.chronicleHref} className="dark-lore-button dark-lore-button-small dark-lore-button-ghost">
-                      Ler manuscrito
-                    </Link>
-                    <Link to={seed.atlasHref} className="dark-lore-button dark-lore-button-small dark-lore-button-ghost">
-                      Ver no atlas
-                    </Link>
-                    {seed.battlemapHref ? (
-                      <Link to={seed.battlemapHref} className="dark-lore-button dark-lore-button-small">
-                        Carregar battlemap
+              return (
+                <article key={campaign.id} className="tool-list-item p-4">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="session-topbar-meta">{campaign.stageLabel}</span>
+                      <span className="session-topbar-meta">{campaign.players.length} agentes</span>
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="font-display text-2xl text-foreground">{campaign.title}</h3>
+                      <p className="text-sm leading-7 text-foreground/72">{campaign.summary}</p>
+                    </div>
+                    <div className="session-shell-list-item">
+                      <p className="session-shell-list-item-title">Cena padrao</p>
+                      <p className="session-shell-list-item-copy">
+                        {scene.name}. {scene.briefing}
+                      </p>
+                    </div>
+                    <ActionStrip>
+                      <Link to={`/mesa/${campaign.id}`} className="session-shell-action">
+                        <Sword className="h-4 w-4" />
+                        Abrir mesa
                       </Link>
-                    ) : null}
-                    {seed.quickSpawnHref ? (
-                      <Link to={seed.quickSpawnHref} className="dark-lore-button dark-lore-button-small">
-                        Trazer ameaca
+                      <Link
+                        to={`/story-engine?campaignId=${campaign.id}&sceneId=${campaign.defaultSceneId}`}
+                        className="session-shell-action"
+                      >
+                        <Clapperboard className="h-4 w-4" />
+                        Story Engine
                       </Link>
-                    ) : null}
+                    </ActionStrip>
                   </div>
+                </article>
+              );
+            })}
+          </div>
+        </PanelCard>
+
+        <SidebarModule
+          title="Pontes com o arquivo"
+          description="As sementes continuam ligando atlas, manuscrito, dossie e mesa."
+        >
+          <div className="session-shell-list">
+            {loreCompendium.sessionSeeds.slice(0, 4).map((seed) => (
+              <div key={seed.slug} className="session-shell-list-item">
+                <p className="session-shell-list-item-title">{seed.title}</p>
+                <p className="session-shell-list-item-copy">{seed.summary}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Link to={seed.dossierHref} className="session-shell-action">
+                    <Compass className="h-4 w-4" />
+                    Dossie
+                  </Link>
+                  <Link to={seed.chronicleHref} className="session-shell-action">
+                    <ScrollText className="h-4 w-4" />
+                    Manuscrito
+                  </Link>
                 </div>
-              </article>
+              </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <ArchivePortalSection
-        kicker="Portais de sessao"
-        title="Quatro entradas para sustentar o jogo"
-        description="A camara de sessao se abre melhor quando mesa, oraculo, cronicas e mapa continuam ligados ao mesmo arquivo."
-        items={sessionPortals}
-      />
-
-      <section className="dark-lore-cta-band">
-        <p className="dark-lore-section-kicker">Sessao em curso</p>
-        <h2 className="dark-lore-cta-line">A sessao permanece aberta.</h2>
-        <p className="dark-lore-hero-text text-center">
-          Entre pela mesa quando for hora de jogar. Abra o oraculo quando o arquivo precisar
-          responder.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link to="/mesa" className="dark-lore-button">
-            Ir para a mesa
-          </Link>
-          <Link to="/oraculo" className="dark-lore-button dark-lore-button-ghost">
-            Abrir Luna em tela cheia
-          </Link>
-          <Link to="/jogar/oraculo" className="dark-lore-button dark-lore-button-ghost">
-            Abrir oraculo original
-          </Link>
-        </div>
+        </SidebarModule>
       </section>
     </div>
   );

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,7 +14,16 @@ import Layout from "./components/Layout";
 const queryClient = new QueryClient();
 
 const HomePage = lazy(() => import("./pages/HomePage"));
-const CampaignPage = lazy(() => import("./pages/CampaignPage"));
+const WorldPage = lazy(() => import("./pages/WorldPage"));
+const CharactersPage = lazy(() => import("./pages/CharactersPage"));
+const CharacterPage = lazy(() => import("./pages/CharacterPage"));
+const BestiaryPage = lazy(() => import("./pages/BestiaryPage"));
+const CreaturePage = lazy(() => import("./pages/CreaturePage"));
+const ChronologyPage = lazy(() => import("./pages/ChronologyPage"));
+const CampaignsPage = lazy(() => import("./pages/CampaignsPage"));
+const CampaignDetailPage = lazy(() => import("./pages/CampaignDetailPage"));
+const LegacyEntryRedirect = lazy(() => import("./pages/LegacyEntryRedirect"));
+const LegacyChroniclesPage = lazy(() => import("./pages/CampaignPage"));
 const PlayPage = lazy(() => import("./pages/PlayPage"));
 const OraclePage = lazy(() => import("./pages/OraclePage"));
 const MesaPage = lazy(() => import("./pages/MesaPage"));
@@ -25,7 +35,7 @@ const RegionalAtlasPage = lazy(() => import("./pages/RegionalAtlasPage"));
 const FichaPage = lazy(() => import("./pages/FichaPage"));
 const CriacaoPage = lazy(() => import("./pages/CriacaoPage"));
 const MestrePage = lazy(() => import("./pages/MestrePage"));
-const UniversePage = lazy(() => import("./pages/UniversePage"));
+const StoryEnginePage = lazy(() => import("./pages/StoryEnginePage"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const StorePage = lazy(() => import("./pages/StorePage"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
@@ -56,7 +66,7 @@ function RouteMetaController() {
     const title = buildDocumentTitle(entry?.title ?? archiveBrand.title);
     const description =
       entry?.description ??
-      "Arquivo do Continente reune dossies, bestiario, cronicas, cartografia e sessao em torno de Areias de Zerrikania.";
+      "Sands of Zerrikania reune mundo, personagens, bestiario, cronologia e campanhas sob uma mesma cronica dark fantasy.";
 
     document.title = title;
     upsertMetaTag('meta[name="description"]', { name: "description", content: description });
@@ -89,26 +99,41 @@ function AppRoutes() {
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/campanha" element={<CampaignPage />} />
-            <Route path="/cronicas" element={<CampaignPage />} />
-            <Route path="/cronicas/:entrySlug" element={<UniversePage />} />
+            <Route path="/mundo" element={<WorldPage />} />
+            <Route path="/personagens" element={<CharactersPage />} />
+            <Route path="/personagem/:entrySlug" element={<CharacterPage />} />
+            <Route path="/bestiario" element={<BestiaryPage />} />
+            <Route path="/criatura/:entrySlug" element={<CreaturePage />} />
+            <Route path="/cronologia" element={<ChronologyPage />} />
+            <Route path="/campanhas" element={<CampaignsPage />} />
+            <Route path="/campanha/:campaignSlug" element={<CampaignDetailPage />} />
+
+            <Route path="/universo" element={<Navigate to="/mundo" replace />} />
+            <Route path="/universo/:entrySlug" element={<LegacyEntryRedirect />} />
+            <Route path="/bestiario/:entrySlug" element={<CreaturePage />} />
+            <Route path="/campanha" element={<Navigate to="/campanhas" replace />} />
+
+            <Route path="/cronicas" element={<LegacyChroniclesPage />} />
+            <Route path="/cronicas/:entrySlug" element={<LegacyChroniclesPage />} />
+
             <Route path="/jogar" element={<PlayPage />} />
             <Route path="/jogar/oraculo" element={<OraclePage />} />
             <Route path="/oraculo" element={<OraclePage />} />
             <Route path="/luna" element={<OraclePage />} />
             <Route path="/mesa" element={<MesaPage />} />
+            <Route path="/mesa/:campaignId" element={<MesaPage />} />
+            <Route path="/mesa/:campaignId/:sceneId" element={<MesaPage />} />
             <Route path="/mapa" element={<MapaPage />} />
             <Route path="/mapa/regional/:mapId" element={<RegionalAtlasPage />} />
             <Route path="/mapa/:regionSlug/:subRegionSlug/:locationSlug" element={<LocationMapPage />} />
             <Route path="/mapa/:regionSlug/:subRegionSlug" element={<SubRegionMapPage />} />
             <Route path="/mapa/:regionSlug" element={<RegionMapPage />} />
             <Route path="/ficha" element={<FichaPage />} />
+            <Route path="/ficha/:sheetId" element={<FichaPage />} />
             <Route path="/criacao" element={<CriacaoPage />} />
             <Route path="/mestre" element={<MestrePage />} />
-            <Route path="/universo" element={<UniversePage />} />
-            <Route path="/universo/:entrySlug" element={<UniversePage />} />
-            <Route path="/bestiario" element={<UniversePage />} />
-            <Route path="/bestiario/:entrySlug" element={<UniversePage />} />
+            <Route path="/story-engine" element={<StoryEnginePage />} />
+            <Route path="/story-engine/:projectId" element={<StoryEnginePage />} />
             <Route path="/comunidade" element={<CommunityPage />} />
             <Route path="/contato" element={<ContactPage />} />
             <Route path="/loja" element={<StorePage />} />

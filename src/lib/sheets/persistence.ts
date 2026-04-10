@@ -1,6 +1,11 @@
 import type { Database } from "@/integrations/supabase/types";
 import { LOCAL_SESSION_ID, LOCAL_USER_ID } from "@/lib/local-identities";
-import { buildCharacterFromCreator, buildSeedCharacter, type CharacterDraftData } from "@/lib/rpg-ui";
+import {
+  buildCharacterFromCreator,
+  buildSeedCharacter,
+  type CharacterDraftData,
+  type CharacterRecord,
+} from "@/lib/rpg-ui";
 import {
   buildAttributeValuesFromCharacterRow,
   buildCharacterDraftFromStore,
@@ -9,27 +14,25 @@ import {
 import { NOIR_CHRONICLE_SHEET } from "@/lib/sheets/noir-chronicle-sheet";
 import type { AttributeStore } from "@/lib/sheets/types";
 
-type CharacterRow = Database["public"]["Tables"]["characters"]["Row"];
 type GameSessionRow = Database["public"]["Tables"]["game_sessions"]["Row"];
-
 type BundleSource = "local" | "remote" | "seed";
 
 export interface CharacterBundle {
-  character: CharacterRow;
+  character: CharacterRecord;
   store: AttributeStore;
   sheetDefinitionId: string;
   source: BundleSource;
 }
 
 interface PersistedCharacterRecord {
-  character: CharacterRow;
+  character: CharacterRecord;
   store: AttributeStore;
   sheetDefinitionId: string;
 }
 
 const STORAGE_KEY = "dark-lore-sheet-character-bundles";
 const LATEST_CHARACTER_KEY = "dark-lore-sheet-latest-character-id";
-const MESA_SESSION_KEY = "dark-lore-mesa-session";
+const MESA_SESSION_KEY_PREFIX = "dark-lore-mesa-session";
 
 function canUseStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -37,6 +40,23 @@ function canUseStorage() {
 
 function safeNumber(value: unknown, fallback: number) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function isWitcherStore(store: AttributeStore | null | undefined) {
+  return Boolean(store?.values?.int && store?.values?.ref && store?.values?.body);
+}
+
+function migratePersistedStore(character: CharacterRecord, store: AttributeStore | null | undefined) {
+  if (store && isWitcherStore(store)) {
+    return store;
+  }
+
+  return createAttributeStore(
+    NOIR_CHRONICLE_SHEET,
+    character.id,
+    buildAttributeValuesFromCharacterRow(character),
+    store?.repeaters ?? {},
+  );
 }
 
 function readPersistedBundles(): PersistedCharacterRecord[] {
@@ -52,7 +72,12 @@ function readPersistedBundles(): PersistedCharacterRecord[] {
 
   try {
     const parsed = JSON.parse(raw) as PersistedCharacterRecord[];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed)
+      ? parsed.map((record) => ({
+          ...record,
+          store: migratePersistedStore(record.character, record.store),
+        }))
+      : [];
   } catch {
     return [];
   }
@@ -90,13 +115,9 @@ function upsertBundle(record: PersistedCharacterRecord) {
   setLatestCharacterId(record.character.id);
 }
 
-function mergeCharacterWithStore(character: CharacterRow, store: AttributeStore): CharacterRow {
+function mergeCharacterWithStore(character: CharacterRecord, store: AttributeStore): CharacterRecord {
   const draft = buildCharacterDraftFromStore(store);
-  const rebuilt = buildCharacterFromCreator({
-    ...draft,
-    race: draft.race as CharacterDraftData["race"],
-    class: draft.class as CharacterDraftData["class"],
-  });
+  const rebuilt = buildCharacterFromCreator(draft);
 
   return {
     ...character,
@@ -109,10 +130,11 @@ function mergeCharacterWithStore(character: CharacterRow, store: AttributeStore)
     portrait_url: character.portrait_url,
     hp_current: safeNumber(store.derived.hp_current, rebuilt.hp_current),
     hp_max: safeNumber(store.derived.hp_max, rebuilt.hp_max),
-    mp_current: safeNumber(store.derived.mp_current, rebuilt.mp_current),
-    mp_max: safeNumber(store.derived.mp_max, rebuilt.mp_max),
+    mp_current: safeNumber(store.derived.focus_current, rebuilt.mp_current),
+    mp_max: safeNumber(store.derived.focus_max, rebuilt.mp_max),
     armor_class: safeNumber(store.derived.armor_class, rebuilt.armor_class),
     initiative_bonus: safeNumber(store.derived.initiative_bonus, rebuilt.initiative_bonus),
+    speed: safeNumber(store.derived.run, rebuilt.speed),
   };
 }
 
@@ -137,7 +159,13 @@ export async function createCharacterBundle(draft: CharacterDraftData): Promise<
   const store = createAttributeStore(
     NOIR_CHRONICLE_SHEET,
     character.id,
-    buildAttributeValuesFromCharacterRow(character),
+    {
+      ...buildAttributeValuesFromCharacterRow(character),
+      ...draft.attributes,
+      homeland: draft.homeland ?? "Temeria",
+      school: draft.school ?? "Lobo",
+      lifepath: draft.lifepath ?? "",
+    },
   );
   const bundle: CharacterBundle = {
     character,
@@ -167,16 +195,19 @@ export async function loadCharacterBundle(characterId?: string | null): Promise<
     return createSeedBundle();
   }
 
+  const migratedStore = migratePersistedStore(record.character, record.store);
   setLatestCharacterId(record.character.id);
 
   return {
-    ...record,
+    character: record.character,
+    store: migratedStore,
+    sheetDefinitionId: record.sheetDefinitionId || NOIR_CHRONICLE_SHEET.id,
     source: "local",
   };
 }
 
 export async function persistCharacterBundle(
-  character: CharacterRow,
+  character: CharacterRecord,
   store: AttributeStore,
   sheetDefinitionId: string,
   _persistedBy: string,
@@ -198,12 +229,18 @@ export async function persistCharacterBundle(
   return bundle;
 }
 
-export async function ensureMesaSession(): Promise<GameSessionRow | null> {
+function mesaSessionStorageKey(campaignId?: string | null) {
+  return `${MESA_SESSION_KEY_PREFIX}:${campaignId ?? LOCAL_SESSION_ID}`;
+}
+
+export async function ensureMesaSession(campaignId?: string | null): Promise<GameSessionRow | null> {
   if (!canUseStorage()) {
     return null;
   }
 
-  const raw = window.localStorage.getItem(MESA_SESSION_KEY);
+  const sessionId = campaignId ?? LOCAL_SESSION_ID;
+  const storageKey = mesaSessionStorageKey(sessionId);
+  const raw = window.localStorage.getItem(storageKey);
 
   if (raw) {
     try {
@@ -215,9 +252,11 @@ export async function ensureMesaSession(): Promise<GameSessionRow | null> {
 
   const now = new Date().toISOString();
   const session: GameSessionRow = {
-    id: LOCAL_SESSION_ID,
-    name: "Mesa local",
-    description: "Sessao persistida localmente para manter a mesa ativa neste navegador.",
+    id: sessionId,
+    name: campaignId ? `Campanha ${campaignId}` : "Mesa local",
+    description: campaignId
+      ? "Sessao local em torno de uma campanha nomeada, pronta para migrar ao realtime dedicado."
+      : "Sessao persistida localmente para manter a mesa ativa neste navegador.",
     created_at: now,
     updated_at: now,
     current_round: 1,
@@ -226,6 +265,6 @@ export async function ensureMesaSession(): Promise<GameSessionRow | null> {
     max_players: 6,
   };
 
-  window.localStorage.setItem(MESA_SESSION_KEY, JSON.stringify(session));
+  window.localStorage.setItem(storageKey, JSON.stringify(session));
   return session;
 }

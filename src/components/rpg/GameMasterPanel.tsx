@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import {
   Crown,
   Edit3,
@@ -15,9 +14,9 @@ import { toast } from "sonner";
 
 import CombatTracker from "./CombatTracker";
 import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
 import { Input } from "@/components/ui/input";
 import {
@@ -174,22 +173,6 @@ export default function GameMasterPanel() {
 
   return (
     <div className="space-y-6">
-      <Card variant="elevated">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="icon-slot h-12 w-12 text-primary">
-              <Crown className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl">Painel do mestre</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Sessao, combate, edicao de publicacoes e controle de NPCs no mesmo centro de comando.
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
       <Tabs value={tab} onValueChange={(value) => setTab(value as GMTab)} className="space-y-4">
         <TabsList className="grid h-auto w-full grid-cols-4">
           <TabsTrigger value="sessoes" className="font-heading uppercase tracking-[0.18em]">

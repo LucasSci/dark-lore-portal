@@ -1,86 +1,155 @@
 import { motion } from "framer-motion";
-import { Crown, ScrollText, Sword } from "lucide-react";
+import { Crown, ScrollText, Sparkles, Sword } from "lucide-react";
+import { Link } from "react-router-dom";
 
+import {
+  ActionStrip,
+  MetricCard,
+  PanelCard,
+  SectionHeader,
+  SidebarModule,
+  StatusBanner,
+} from "@/components/product/ProductShell";
 import GameMasterPanel from "@/components/rpg/GameMasterPanel";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { DataSection } from "@/components/ui/data-section";
+import { getTabletopLoreCompendium } from "@/lib/tabletop-lore";
+import { usePortalShellMode } from "@/lib/portal-state";
+import { DEFAULT_WITCHER_CAMPAIGN_ID, getWitcherCampaignById } from "@/features/witcher-system";
+
+const activeCampaign = getWitcherCampaignById(DEFAULT_WITCHER_CAMPAIGN_ID);
+const loreCompendium = getTabletopLoreCompendium();
 
 export default function MestrePage() {
+  usePortalShellMode("editorial", "interactive");
+
   return (
-    <div className="container py-12 md:py-16">
+    <div className="session-page">
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-12"
+        className="space-y-6"
       >
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
-          <Card variant="elevated" className="overflow-hidden">
-            <CardContent className="grid gap-8 p-6 md:p-8 xl:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline">Painel do mestre</Badge>
-                  <Badge variant="warning">Sessao, NPCs e publicacoes</Badge>
-                </div>
+        <section className="session-shell-hero">
+          <SectionHeader
+            kicker="Command Deck / Mestre"
+            title="Comando tatico, editorial e logistico da campanha."
+            description={
+              <>
+                <p>
+                  O painel do mestre agora funciona como console real: abrir cena, conduzir
+                  combate, puxar ameacas, registrar publicacoes e disparar preparacao visual sem
+                  saltar entre linguagens diferentes.
+                </p>
+                <p>
+                  Aqui o arquivo nao e uma decoracao. Ele entra como infraestrutura de sessao.
+                </p>
+              </>
+            }
+            aside={
+              <>
+                <span className="session-topbar-meta">{activeCampaign.title}</span>
+                <span className="session-topbar-meta">{activeCampaign.stageLabel}</span>
+                <span className="session-topbar-meta">Mestre ativo</span>
+              </>
+            }
+          />
 
-                <div className="max-w-3xl space-y-4">
-                <p className="section-kicker">Comando do mestre</p>
-                  <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    Sessao, combate, NPCs e publicacoes reunidos no quadro de comando do mestre.
-                  </h1>
-                  <p className="text-base leading-8 text-foreground/88">
-                    O mestre encontra aqui os rastros da campanha, os controles da cena e os
-                    registros que precisam circular para o grupo.
-                  </p>
-                </div>
+          <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px]">
+            <div className="space-y-5">
+              <ActionStrip>
+                <Link to={`/mesa/${activeCampaign.id}`} className="session-shell-action">
+                  <Sword className="h-4 w-4" />
+                  Abrir mesa
+                </Link>
+                <Link
+                  to={`/story-engine?campaignId=${activeCampaign.id}&sceneId=${activeCampaign.defaultSceneId}`}
+                  className="session-shell-action"
+                >
+                  <ScrollText className="h-4 w-4" />
+                  Story Engine
+                </Link>
+                <Link to="/oraculo" className="session-shell-action">
+                  <Sparkles className="h-4 w-4" />
+                  Consultar oraculo
+                </Link>
+              </ActionStrip>
 
-                <div className="grid gap-4 md:grid-cols-3">
-                  <DataSection label="Eixos" value="Sessao, combate e arquivo" variant="quiet" />
-                  <DataSection label="Uso" value="Controle rapido em mesa" variant="quiet" tone="info" />
-                  <DataSection label="Saida" value="Campanha viva entre sessoes" variant="quiet" />
-                </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                <MetricCard
+                  label="Campanha"
+                  value={activeCampaign.title}
+                  detail={activeCampaign.summary}
+                />
+                <MetricCard
+                  label="Companhia"
+                  value={`${activeCampaign.players.length} agentes`}
+                  detail={activeCampaign.players.map((player) => player.role).join(" · ")}
+                />
+                <MetricCard
+                  label="Suporte de lore"
+                  value={`${loreCompendium.sessionSeeds.length} sementes`}
+                  detail="Dossie, cronica e atlas prontos para abrir em apoio ao mestre."
+                />
               </div>
 
-              <Card variant="panel">
-                <CardContent className="space-y-4 p-5">
-                  <div>
-                    <p className="section-kicker">Modulos</p>
-                    <h2 className="mt-2 font-heading text-2xl text-foreground">
-                      Leituras do painel
-                    </h2>
+              <StatusBanner title="Prioridade de uso" tone="warning">
+                Use este painel para controlar o ritmo da campanha e deixar a mesa focada na cena.
+                O palco tatico continua na mesa; o comando e a publicacao ficam aqui.
+              </StatusBanner>
+            </div>
+
+            <div className="session-shell-sidebar">
+              <SidebarModule
+                title="Leituras do comando"
+                description="Os tres eixos que o mestre controla sem sair da mesma shell."
+              >
+                <div className="session-shell-list">
+                  <div className="session-shell-list-item">
+                    <p className="session-shell-list-item-title">Sessao</p>
+                    <p className="session-shell-list-item-copy">
+                      Abrir cena, escolher pressao e empurrar o grupo para a proxima batida.
+                    </p>
                   </div>
+                  <div className="session-shell-list-item">
+                    <p className="session-shell-list-item-title">Combate</p>
+                    <p className="session-shell-list-item-copy">
+                      Acompanhar tracker, ameacas e o pulso do encontro sem cobrir o playfield.
+                    </p>
+                  </div>
+                  <div className="session-shell-list-item">
+                    <p className="session-shell-list-item-title">Publicacao</p>
+                    <p className="session-shell-list-item-copy">
+                      Registrar ecos da campanha e manter o arquivo vivo entre sessoes.
+                    </p>
+                  </div>
+                </div>
+              </SidebarModule>
 
-                  <DataSection
-                    label="Sessao"
-                    value="Pulso da campanha"
-                    icon={<Crown className="h-4 w-4" />}
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Combate"
-                    value="Cena, trackers e pressao"
-                    icon={<Sword className="h-4 w-4" />}
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Publicacoes"
-                    value="Arquivo para jogadores"
-                    icon={<ScrollText className="h-4 w-4" />}
-                    variant="quiet"
-                    tone="warn"
-                  />
-                </CardContent>
-              </Card>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4">
-            <DataSection label="Papel" value="Direcao narrativa e controle tatico" tone="info" />
-            <DataSection label="Tom" value="Comando de campanha em estilo editorial" />
+              <SidebarModule
+                title="Atalhos do mestre"
+                description="Pontes rapidas entre comando, lore e sessao ativa."
+              >
+                <div className="session-shell-list">
+                  {activeCampaign.supportLinks.map((link) => (
+                    <div key={link.href} className="session-shell-list-item">
+                      <p className="session-shell-list-item-title">{link.label}</p>
+                      <Link to={link.href} className="session-shell-action w-fit">
+                        <Crown className="h-4 w-4" />
+                        Abrir rota
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </SidebarModule>
+            </div>
           </div>
         </section>
 
-        <GameMasterPanel />
+        <PanelCard
+          title="Console central"
+          description="Abaixo ficam combate, NPCs, sessoes e publicacoes dentro do mesmo quadro operacional."
+        >
+          <GameMasterPanel />
+        </PanelCard>
       </motion.div>
     </div>
   );

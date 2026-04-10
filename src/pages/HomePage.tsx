@@ -1,282 +1,217 @@
-import { BookMarked, Compass, ScrollText, Skull, Swords } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, BookOpen, Flame, ScrollText, Swords, UserRound } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import ArchivePortalSection from "@/components/portal/ArchivePortalSection";
-import PortalDoorCard from "@/components/portal/PortalDoorCard";
-import PortalHeroSection from "@/components/portal/PortalHeroSection";
-import RitualSectionHeading from "@/components/portal/RitualSectionHeading";
-import { encyclopediaEntries } from "@/lib/encyclopedia";
-import { archiveBrand, archiveReferenceArt } from "@/lib/archive-reference";
+import { SOZ_CAMPAIGNS, SOZ_CHRONOLOGY_ERAS, SOZ_SITE, resolveSozCharacters } from "@/lib/soz-content";
+import { archiveReferenceArt } from "@/lib/archive-reference";
 import { usePortalShellMode } from "@/lib/portal-state";
-import { getWitcherBestiaryMetadata } from "@/lib/witcher-bestiary";
+import { SozSectionIntro, SozTimelineList } from "@/components/soz/SozPrimitives";
 
-const primaryPortals = [
-  {
-    title: "Universo",
-    description: "Reinos, linhagens, faccoes e ruinas lidas como um unico corpo de historia.",
-    to: "/universo",
-    cta: "Explorar universo",
-    image: archiveReferenceArt.wanderer,
-    icon: BookMarked,
-  },
-  {
-    title: "Bestiario",
-    description: "Criaturas, entidades e presencas sem repouso preservadas em dossies de caca.",
-    to: "/bestiario",
-    cta: "Abrir bestiario",
-    image: archiveReferenceArt.creature,
-    icon: Skull,
-  },
-  {
-    title: "Cronicas",
-    description: "Relatos de estrada, contratos e manuscritos que mantem a campanha respirando.",
-    to: "/cronicas",
-    cta: "Ler cronicas",
-    image: archiveReferenceArt.desk,
-    icon: ScrollText,
-  },
-] as const;
-
-const archiveIndexCards = [
-  {
-    icon: BookMarked,
-    title: "Universo",
-    description: "Perfis, eras, faccoes e verbetes ligados ao mesmo arquivo.",
-    path: "/universo",
-  },
-  {
-    icon: Skull,
-    title: "Bestiario",
-    description: "Fraquezas, habitats, niveis de perigo e notas de encontro.",
-    path: "/bestiario",
-  },
-  {
-    icon: ScrollText,
-    title: "Cronicas",
-    description: "Capitulos, registros de sessao e manuscritos de campanha.",
-    path: "/cronicas",
-  },
-  {
-    icon: Compass,
-    title: "Mapa",
-    description: "Atlas por camadas, rotas, regioes, locais e travessias.",
-    path: "/mapa",
-  },
-  {
-    icon: Swords,
-    title: "Jogar",
-    description: "Hub de sessao com mesa, oraculo e preparo para a proxima cena.",
-    path: "/jogar",
-  },
-] as const;
-
-const archivePortals = [
-  {
-    title: "Abrir o atlas",
-    description: "Cruze cartas regionais, fronteiras e locais do continente sem romper a leitura.",
-    to: "/mapa",
-    cta: "Ir para o mapa",
-  },
-  {
-    title: "Entrar na sessao",
-    description: "Acesse a mesa, organize a cena e mantenha dossies e cronicas por perto.",
-    to: "/jogar",
-    cta: "Abrir sessao",
-  },
-  {
-    title: "Consultar o oraculo",
-    description: "Leia registros em voz alta ou mantenha um dialogo continuo com Luna.",
-    to: "/jogar/oraculo",
-    cta: "Despertar Luna",
-  },
-  {
-    title: "Enviar correspondencia",
-    description: "Abra um canal direto com o arquivo para propostas, duvidas e contato.",
-    to: "/contato",
-    cta: "Ir para contato",
-  },
-] as const;
-
-const bestiaryPreview = encyclopediaEntries
-  .filter((entry) => entry.category === "monstros")
-  .slice(0, 3);
+const featuredCharacters = resolveSozCharacters(["nashara", "alaric-dorne", "sorrow-noxmourn"]);
+const currentCampaign = SOZ_CAMPAIGNS[0];
 
 export default function HomePage() {
   usePortalShellMode("editorial", "ambient");
 
   return (
-    <div className="mx-auto max-w-[1380px] space-y-10 px-4 py-8 md:px-6 md:py-12">
-      <PortalHeroSection
-        kicker={archiveBrand.subtitle}
-        titleTop="Arquivo do"
-        titleBottom="Continente"
-        tagline="Bestiarios, cartas do atlas, manuscritos e registros de sessao reunidos sob o mesmo selo."
-        backgroundImage={archiveReferenceArt.hero}
-        actions={[
-          { label: "Explorar Universo", to: "/universo" },
-          { label: "Abrir Bestiario", to: "/bestiario", variant: "secondary" },
-          { label: "Entrar na Campanha", to: "/jogar", variant: "secondary" },
-        ]}
-      />
+    <div className="soz-page">
+      <section className="soz-hero">
+        <div className="soz-hero-image" aria-hidden="true">
+          <img src={archiveReferenceArt.hero} alt="" decoding="async" />
+        </div>
 
-      <section className="dark-lore-door-grid">
-        {primaryPortals.map((portal, index) => (
-          <motion.div
-            key={portal.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.48, delay: index * 0.06 }}
-          >
-            <PortalDoorCard {...portal} />
-          </motion.div>
-        ))}
-      </section>
+        <div className="soz-container soz-hero-grid">
+          <div className="soz-hero-copy">
+            <p className="soz-hero-eyebrow">Dark fantasy • Site oficial do universo</p>
+            <h1 className="soz-page-title">Sands of Zerrikania</h1>
+            <p className="soz-copy">{SOZ_SITE.universeLine}</p>
 
-      <section className="dark-lore-page-frame dark-lore-editorial-grid">
-        <motion.div
-          initial={{ opacity: 0, x: -24 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.25 }}
-          transition={{ duration: 0.58, ease: "easeOut" }}
-          className="dark-lore-editorial-copy"
-        >
-          <p className="dark-lore-section-kicker">O chamado</p>
-          <h2 className="dark-lore-section-title">Um portal feito para ler, cruzar e levar o mundo para a mesa.</h2>
-          <p className="dark-lore-editorial-text">
-            O Arquivo do Continente organiza lore, criaturas, cronicas e cartas do atlas como
-            partes de uma mesma travessia. Primeiro voce entende o mundo. Depois encontra suas
-            ameacas, abre os registros e leva tudo para a sessao.
-          </p>
-          <p className="dark-lore-editorial-text">
-            Nada aqui deveria soar como ferramenta isolada. O mapa conversa com os verbetes, o
-            bestiario dialoga com as cronicas, e a sessao continua a leitura sem quebrar o clima.
-          </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link to="/mapa" className="dark-lore-button">
-              Abrir Atlas Completo
-            </Link>
-            <Link to="/jogar" className="dark-lore-button dark-lore-button-ghost">
-              Cruzar com a Sessao
-            </Link>
+            <div className="soz-hero-actions">
+              <Link to="/mundo" className="soz-button">
+                Explorar o mundo
+              </Link>
+              <Link to={`/campanha/${currentCampaign.slug}`} className="soz-button-secondary">
+                Ler a campanha
+              </Link>
+            </div>
+
+            <div className="soz-hero-meta">
+              <article className="soz-stat-card">
+                <strong>O Veu Falhou</strong>
+                <span className="soz-card-copy">
+                  Mundos antes isolados comecaram a tocar uns aos outros, trazendo ecos,
+                  distorcoes e a correcao violenta do caos.
+                </span>
+              </article>
+              <article className="soz-stat-card">
+                <strong>Dragao Negro</strong>
+                <span className="soz-card-copy">
+                  A profecia de N'kara atravessa o deserto e decide quem caira, quem sera provado
+                  e quem guardara as areias.
+                </span>
+              </article>
+              <article className="soz-stat-card">
+                <strong>1272</strong>
+                <span className="soz-card-copy">
+                  A campanha atual converge em Zerrikania com Guardioes, grimorios e o Espectro do
+                  Caos em movimento.
+                </span>
+              </article>
+            </div>
           </div>
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 24 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.25 }}
-          transition={{ duration: 0.58, ease: "easeOut", delay: 0.08 }}
-          className="dark-lore-editorial-figure"
-        >
-          <img
-            src={archiveReferenceArt.portal}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            decoding="async"
-            className="dark-lore-editorial-image"
-          />
-          <div className="dark-lore-editorial-glow" />
-        </motion.div>
+          <div className="soz-hero-side">
+            <div className="soz-scene-panel">
+              <div className="soz-scene-view">
+                <img src={archiveReferenceArt.portal} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+                <div className="soz-scene-caption">
+                  <div>
+                    <strong>Shahr-Rama</strong>
+                    <span>A cidade dourada onde politica, magia e guerra se encontram sob o olhar do deserto.</span>
+                  </div>
+                  <div>
+                    <strong>Nashara</strong>
+                    <span>A cacadora no limiar da profecia.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
-        <div className="space-y-6">
-          <RitualSectionHeading
-            kicker="Indice do arquivo"
-            title="Cinco portas para continuar a leitura"
-            description="Cada trilha foi reduzida ao essencial: entrar, compreender o contexto e seguir para a proxima camada do continente sem friccao."
-            align="center"
+      <section className="soz-page-section">
+        <div className="soz-container soz-grid-2">
+          <div className="soz-panel">
+            <SozSectionIntro
+              eyebrow="O Mundo"
+              title="Onde a areia guarda memoria, sangue e profecia"
+              copy="Antes da historia ser nomeada, os mundos existiam sob um Veu imovel. Quando ele comecou a ceder, surgiram rasgos, ecos e a forca corretiva conhecida como Espectro do Caos. Seculos depois, Zerrikania se tornou o epicentro de uma nova convergencia."
+            />
+
+            <div className="soz-grid-2">
+              <article className="soz-info-card">
+                <p className="soz-card-meta">Veu Imovel</p>
+                <p className="soz-card-copy">A antiga fronteira entre mundos, agora instavel.</p>
+              </article>
+              <article className="soz-info-card">
+                <p className="soz-card-meta">Irmãs de Prata</p>
+                <p className="soz-card-copy">Ecos de Luna que surgem quando a realidade enfraquece.</p>
+              </article>
+              <article className="soz-info-card">
+                <p className="soz-card-meta">Sete Cobras</p>
+                <p className="soz-card-copy">O centro politico e magico que governa Shahr-Rama.</p>
+              </article>
+              <article className="soz-info-card">
+                <p className="soz-card-meta">Guardioes</p>
+                <p className="soz-card-copy">Contencoes vivas que mantem o mundo unido ao redor do rasgo.</p>
+              </article>
+            </div>
+          </div>
+
+          <div className="soz-visual-panel">
+            <img src={archiveReferenceArt.forgotten} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+            <div className="soz-visual-caption">
+              <strong style={{ display: "block", marginBottom: "0.5rem", color: "#e7cb94", fontFamily: "var(--font-display)" }}>
+                A ressonancia do Veu
+              </strong>
+              O novo site usa a fratura entre mundos como nucleo da identidade visual: beleza
+              mistica, pressao cosmica e a sensacao de que o deserto inteiro esta ouvindo.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="soz-page-section">
+        <div className="soz-container">
+          <SozSectionIntro
+            eyebrow="Personagens centrais"
+            title="Vetores do destino em meio ao caos"
+            copy="A Home apresenta os protagonistas como forcas em colisao: a cacadora ligada a profecia, o mago que atravessa portais proibidos e o manipulador cuja presenca altera o rumo da historia."
           />
 
-          <div className="dark-lore-codex-grid">
-            {archiveIndexCards.map(({ icon: Icon, title, description, path }, index) => (
-              <motion.article
-                key={title}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.24 }}
-                transition={{ duration: 0.45, delay: index * 0.05 }}
-                className="dark-lore-archive-card dark-lore-archive-card-compact"
-              >
-                <Link to={path} className="dark-lore-codex-card">
-                  <div className="dark-lore-icon-emblem">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="dark-lore-card-title text-[clamp(1.35rem,1.8vw,1.7rem)]">{title}</h3>
-                    <p className="dark-lore-card-copy">{description}</p>
-                  </div>
-                </Link>
-              </motion.article>
+          <div className="soz-grid-3">
+            {featuredCharacters.map((character) => (
+              <article key={character.slug} className="soz-character-card">
+                <div className="soz-character-image" aria-hidden="true">
+                  <img src={character.image} alt="" loading="lazy" decoding="async" />
+                </div>
+                <div className="soz-character-content">
+                  <p className="soz-eyebrow">{character.subtitle}</p>
+                  <h3 className="soz-card-title">{character.title}</h3>
+                  <p className="soz-card-copy">{character.summary}</p>
+                  <Link to={`/personagem/${character.slug}`} className="soz-card-link">
+                    Abrir personagem
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="dark-lore-page-frame px-6 py-8 md:px-8 md:py-10">
-        <div className="space-y-6">
-          <RitualSectionHeading
-            kicker="Bestiario em vigilia"
-            title="Tres presencas ja catalogadas"
-            description="O arquivo de criaturas continua ligado ao mundo. Cada dossie pode abrir caca, atlas, cronica e sessao a partir do mesmo registro."
-            align="center"
-          />
-
-          <div className="dark-lore-bestiary-grid">
-            {bestiaryPreview.map((entry, index) => {
-              const metadata = getWitcherBestiaryMetadata(entry.slug);
-
-              return (
-                <motion.article
-                  key={entry.slug}
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.24 }}
-                  transition={{ duration: 0.48, delay: index * 0.06 }}
-                  className="dark-lore-beast-card"
-                >
-                  <div className="dark-lore-beast-image-wrap">
-                    <img
-                      src={entry.image}
-                      alt={entry.imageAlt}
-                      loading="lazy"
-                      decoding="async"
-                      className="dark-lore-beast-image"
-                    />
-                  </div>
-                  <div className="dark-lore-beast-body">
-                    <h3 className="dark-lore-card-title text-[clamp(1.55rem,2vw,2rem)]">{entry.title}</h3>
-                    <p className="dark-lore-card-meta">
-                      {metadata?.type ?? "Entidade"}
-                      {metadata ? ` - perigo ${metadata.dangerLevel}/5` : ""}
-                    </p>
-                    <p className="dark-lore-card-copy">{entry.summary}</p>
-                    <Link to={`/bestiario/${entry.slug}`} className="dark-lore-button dark-lore-button-small">
-                      Ver ficha
-                    </Link>
-                  </div>
-                </motion.article>
-              );
-            })}
+      <section className="soz-page-section">
+        <div className="soz-container">
+          <div className="soz-prophecy-box">
+            <div className="soz-sigil">
+              <Flame className="h-8 w-8" />
+            </div>
+            <p className="soz-eyebrow">A Profecia do Dragao Negro</p>
+            <blockquote className="soz-quote">{SOZ_SITE.prophecy}</blockquote>
           </div>
         </div>
       </section>
 
-      <ArchivePortalSection
-        kicker="Passagens do arquivo"
-        title="Cada sala leva a outra"
-        description="Atlas, bestiario, cronicas e sessao foram organizados como um unico arquivo. Entre por qualquer porta e o resto do continente se abre em seguida."
-        items={archivePortals}
-      />
+      <section className="soz-page-section">
+        <div className="soz-container">
+          <SozSectionIntro
+            eyebrow="Cronologia visual"
+            title="Da falha do Veu a convergencia em Zerrikania"
+            copy="A homepage usa uma linha do tempo curta, mas forte, para situar novos visitantes sem exigir leitura extensa. Cada era marca um degrau de pressao ate a campanha atual."
+          />
 
-      <section className="dark-lore-cta-band">
-        <p className="dark-lore-cta-line">O arquivo permanece aberto.</p>
-        <Link to="/jogar" className="dark-lore-button">
-          Entrar no Portal
-        </Link>
+          <SozTimelineList
+            items={SOZ_CHRONOLOGY_ERAS.map((era) => ({
+              eyebrow: era.eyebrow,
+              title: era.title,
+              description: era.description,
+            }))}
+          />
+        </div>
+      </section>
+
+      <section className="soz-page-section">
+        <div className="soz-container">
+          <div className="soz-cta-panel">
+            <div className="soz-section-intro" style={{ marginBottom: 0 }}>
+              <p className="soz-eyebrow">Campanha em destaque</p>
+              <h2 className="soz-section-title">Ecos de Areth-Ur</h2>
+              <p className="soz-section-copy">
+                {currentCampaign.synopsis} Use a campanha como ponte entre mundo, bestiario e
+                cronologia.
+              </p>
+            </div>
+
+            <div className="soz-button-row">
+              <Link to="/campanhas" className="soz-button">
+                <ScrollText className="h-4 w-4" />
+                Abrir campanhas
+              </Link>
+              <Link to={`/campanha/${currentCampaign.slug}`} className="soz-button-secondary">
+                <Swords className="h-4 w-4" />
+                Ver campanha atual
+              </Link>
+              <Link to="/personagens" className="soz-button-secondary">
+                <UserRound className="h-4 w-4" />
+                Ver personagens
+              </Link>
+              <Link to="/cronologia" className="soz-button-secondary">
+                <BookOpen className="h-4 w-4" />
+                Abrir cronologia
+              </Link>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );

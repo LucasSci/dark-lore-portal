@@ -8,24 +8,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DataSection } from "@/components/ui/data-section";
 import CharacterCreator, { type CharacterData } from "@/components/rpg/CharacterCreator";
 import { createCharacterBundle } from "@/lib/sheets/persistence";
-import type { CharacterRow } from "@/lib/rpg-ui";
 
 export default function CriacaoPage() {
   const navigate = useNavigate();
 
   const handleCreateCharacter = async (draft: CharacterData) => {
-    const bundle = await createCharacterBundle({
-      ...draft,
-      race: draft.race as CharacterRow["race"],
-      class: draft.class as CharacterRow["class"],
-    });
+    const bundle = await createCharacterBundle(draft);
 
     toast.success(
       bundle.source === "remote"
         ? `${bundle.character.name} criado e salvo no grimorio da conta.`
         : `${bundle.character.name} criado com fallback local.`,
     );
-    navigate(`/ficha?character=${bundle.character.id}`);
+    navigate(`/ficha/${bundle.character.id}`);
   };
 
   return (
@@ -50,7 +45,7 @@ export default function CriacaoPage() {
                     Nome, origem e juramento reunidos em uma unica mesa de forja.
                   </h1>
                   <p className="text-base leading-8 text-foreground/88">
-                    A criacao conduz identidade, atributos, classe e historico em etapas claras,
+                    A criacao conduz identidade, atributos, profissao e historico em etapas claras,
                     deixando a ficha pronta para seguir direto para a estrada.
                   </p>
                 </div>
@@ -72,7 +67,7 @@ export default function CriacaoPage() {
                   </div>
 
                   <DataSection label="Passo 01" value="Identidade e aparencia" variant="quiet" />
-                  <DataSection label="Passo 02" value="Raca, classe e atributos" variant="quiet" />
+                  <DataSection label="Passo 02" value="Raca, profissao e atributos" variant="quiet" />
                   <DataSection label="Passo 03" value="Historico e resumo derivado" variant="quiet" tone="info" />
                 </CardContent>
               </Card>

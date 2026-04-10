@@ -2,27 +2,38 @@ import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { BookMarked, Dices, ScrollText, WandSparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 import CharacterSheet from "@/components/rpg/CharacterSheet";
 import DiceRoller from "@/components/rpg/DiceRoller";
 import InventoryPanel from "@/components/rpg/InventoryPanel";
 import SpellBook from "@/components/rpg/SpellBook";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { DataSection } from "@/components/ui/data-section";
+import {
+  ActionStrip,
+  MetricCard,
+  PanelCard,
+  SectionHeader,
+  SidebarModule,
+  StatusBanner,
+} from "@/components/product/ProductShell";
 import { NOIR_CHRONICLE_SHEET } from "@/lib/sheets/noir-chronicle-sheet";
 import {
   loadCharacterBundle,
   persistCharacterBundle,
 } from "@/lib/sheets/persistence";
 import { useCharacterSheetRuntime } from "@/lib/sheets/runtime";
+import type { WitcherInventoryItem, WitcherSpellDefinition } from "@/lib/witcher-trpg-system";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePortalShellMode } from "@/lib/portal-state";
 
 export default function FichaPage() {
+  usePortalShellMode("editorial", "interactive");
+
+  const { sheetId } = useParams();
   const [searchParams] = useSearchParams();
-  const requestedCharacterId = searchParams.get("character");
+  const requestedCharacterId = sheetId ?? searchParams.get("character");
   const bundleQuery = useQuery({
     queryKey: ["character-bundle", requestedCharacterId ?? "latest"],
     queryFn: () => loadCharacterBundle(requestedCharacterId),
@@ -62,62 +73,44 @@ export default function FichaPage() {
     };
   }, [activeBundle?.character, activeBundle?.sheetDefinitionId, sheetRuntime.store]);
 
-  const handleImportItem = async (item: {
-    id: string;
-    name: string;
-    description: string | null;
-    item_type: string;
-    rarity: string;
-    weight: number;
-    value: number;
-    damage: string | null;
-    armor_bonus: number | null;
-    effect: string | null;
-  }) => {
+  const handleImportItem = async (item: WitcherInventoryItem) => {
     await sheetRuntime.importCompendiumData(NOIR_CHRONICLE_SHEET.bindings.inventory, {
       id: item.id,
       kind: "inventory",
       values: {
         name: item.name,
         description: item.description ?? "",
-        item_type: item.item_type,
+        item_type: item.category,
         rarity: item.rarity,
         weight: item.weight,
         value: item.value,
         damage: item.damage ?? "",
-        armor_bonus: item.armor_bonus ?? 0,
+        armor_bonus: item.stoppingPower ?? 0,
+        stopping_power: item.stoppingPower ?? 0,
         effect: item.effect ?? "",
+        hands: item.hands ?? "",
         equipped: false,
       },
     });
     toast.success(`${item.name} vinculado ao inventario.`);
   };
 
-  const handleImportSpell = async (spell: {
-    id: string;
-    name: string;
-    description: string | null;
-    school: string;
-    level: number;
-    casting_time: string;
-    range: string;
-    duration: string;
-    damage: string | null;
-    mp_cost: number;
-  }) => {
+  const handleImportSpell = async (spell: WitcherSpellDefinition) => {
     await sheetRuntime.importCompendiumData(NOIR_CHRONICLE_SHEET.bindings.spellbook, {
       id: spell.id,
       kind: "spellbook",
       values: {
         name: spell.name,
         description: spell.description ?? "",
-        school: spell.school,
-        level: spell.level,
-        casting_time: spell.casting_time,
+        school: spell.tradition,
+        level: 1,
+        casting_time: spell.difficulty,
         range: spell.range,
         duration: spell.duration,
         damage: spell.damage ?? "",
-        mp_cost: spell.mp_cost,
+        mp_cost: spell.vigorCost,
+        tradition: spell.tradition,
+        difficulty: spell.difficulty,
       },
     });
     toast.success(`${spell.name} vinculada ao grimorio.`);
@@ -131,125 +124,60 @@ export default function FichaPage() {
         : "Ficha narrativa";
 
   return (
-    <div className="container py-12 md:py-16">
+    <div className="session-page">
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-12"
+        className="space-y-6"
       >
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_340px]">
-          <Card variant="elevated" className="overflow-hidden">
-            <CardContent className="grid gap-8 p-6 md:p-8 xl:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="space-y-6">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline">{sourceLabel}</Badge>
-                  <Badge variant="info">
-                    {activeBundle?.character?.name ? activeBundle.character.name : "Sem personagem carregado"}
-                  </Badge>
-                </div>
+        <section className="session-shell-hero">
+          <SectionHeader
+            kicker="Character Dossier / Ficha"
+            title="Dossie jogavel, recursos taticos e persistencia no mesmo painel."
+            description={
+              <>
+                <p>
+                  A ficha agora fica claramente dentro da suite operacional. O bloco principal
+                  continua sendo o personagem, mas rolagens, grimorio e inventario orbitam como
+                  ferramentas do mesmo modulo.
+                </p>
+                <p>
+                  O objetivo aqui e manter leitura rapida, edicao clara e continuidade de sessao.
+                </p>
+              </>
+            }
+            aside={
+              <>
+                <span className="session-topbar-meta">{sourceLabel}</span>
+                <span className="session-topbar-meta">
+                  {activeBundle?.character?.name ?? "Sem personagem"}
+                </span>
+                <span className="session-topbar-meta">
+                  Nivel {Number(sheetRuntime.store.values.level ?? activeBundle?.character.level ?? 1)}
+                </span>
+              </>
+            }
+          />
 
-                <div className="max-w-3xl space-y-4">
-                <p className="section-kicker">Ficha narrativa</p>
-                  <h1 className="font-display text-5xl leading-[0.95] text-brand-gradient md:text-6xl">
-                    Ficha, grimorio e inventario organizados como um unico dossier jogavel.
-                  </h1>
-                  <p className="text-base leading-8 text-foreground/88">
-                    A pagina foi reestruturada para destacar a ficha principal, separar ferramentas
-                    auxiliares e manter a persistencia sempre legivel.
-                  </p>
-                </div>
+          <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px]">
+            <div className="space-y-5">
+              <ActionStrip>
+                <Link to="/criacao" className="session-shell-action">
+                  <BookMarked className="h-4 w-4" />
+                  Nova ficha
+                </Link>
+                <Link to="/mestre" className="session-shell-action">
+                  <ScrollText className="h-4 w-4" />
+                  Painel do mestre
+                </Link>
+                <Link to="/story-engine" className="session-shell-action">
+                  <WandSparkles className="h-4 w-4" />
+                  Story Engine
+                </Link>
+              </ActionStrip>
 
-                <div className="grid gap-4 md:grid-cols-3">
-                  <DataSection
-                    label="Origem"
-                    value={
-                      activeBundle?.source === "remote"
-                        ? "Cloud"
-                        : activeBundle?.source === "local"
-                          ? "Cache local"
-                          : "Arquivo inicial"
-                    }
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Bindings"
-                    value={`${sheetRuntime.store.repeaters.inventory?.length ?? 0} itens`}
-                    variant="quiet"
-                    tone="info"
-                  />
-                  <DataSection
-                    label="Magias"
-                    value={`${sheetRuntime.store.repeaters.spellbook?.length ?? 0} registradas`}
-                    variant="quiet"
-                  />
-                </div>
-              </div>
-
-              <Card variant="panel">
-                <CardContent className="space-y-4 p-5">
-                  <div>
-                    <p className="section-kicker">Resumo do personagem</p>
-                    <h2 className="mt-2 font-heading text-2xl text-foreground">
-                      Estado da ficha
-                    </h2>
-                  </div>
-
-                  <DataSection
-                    label="Raca"
-                    value={String(
-                      sheetRuntime.store.values.race ?? activeBundle?.character.race ?? "humano",
-                    )}
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Classe"
-                    value={String(
-                      sheetRuntime.store.values.class ?? activeBundle?.character.class ?? "guerreiro",
-                    )}
-                    variant="quiet"
-                  />
-                  <DataSection
-                    label="Nivel"
-                    value={Number(sheetRuntime.store.values.level ?? activeBundle?.character.level ?? 1)}
-                    variant="quiet"
-                    tone="info"
-                  />
-                </CardContent>
-              </Card>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4">
-            <DataSection label="Ouro" value={Number(sheetRuntime.store.values.gold ?? activeBundle?.character.gold ?? 0)} />
-            <DataSection
-              label="Persistencia"
-              value="Sincroniza quando ha nova revisao da ficha"
-              tone="info"
-            />
-          </div>
-        </section>
-
-        {bundleQuery.isLoading ? (
-          <Card variant="panel">
-            <CardContent className="p-8 text-center text-sm text-muted-foreground">
-              Carregando a ficha persistida...
-            </CardContent>
-          </Card>
-        ) : null}
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <CharacterSheet store={sheetRuntime.store} definition={NOIR_CHRONICLE_SHEET} />
-          <div className="space-y-4">
-            <Card variant="panel">
-              <CardContent className="space-y-3 p-6">
-                <div>
-                    <p className="section-kicker">Leitura geral</p>
-                  <h2 className="mt-2 font-heading text-2xl text-foreground">
-                    Resumo rapido
-                  </h2>
-                </div>
-
-                <DataSection
+              <div className="grid gap-4 md:grid-cols-3">
+                <MetricCard
                   label="Origem"
                   value={
                     activeBundle?.source === "remote"
@@ -258,18 +186,104 @@ export default function FichaPage() {
                         ? "Cache local"
                         : "Arquivo inicial"
                   }
-                  variant="quiet"
+                  detail="A ficha continua sincronizando revisoes mais recentes da runtime."
                 />
-                <DataSection
-                  label="Bindings"
-                  value={`${sheetRuntime.store.repeaters.inventory?.length ?? 0} itens | ${sheetRuntime.store.repeaters.spellbook?.length ?? 0} magias`}
-                  variant="quiet"
+                <MetricCard
+                  label="Inventario"
+                  value={`${sheetRuntime.store.repeaters.inventory?.length ?? 0} itens`}
+                  detail="Carga, armas, componentes e equipamentos ativos."
                 />
-              </CardContent>
-            </Card>
+                <MetricCard
+                  label="Grimorio"
+                  value={`${sheetRuntime.store.repeaters.spellbook?.length ?? 0} entradas`}
+                  detail="Sinais, ritos e magias prontas para consulta."
+                />
+              </div>
+
+              <StatusBanner title="Persistencia" tone="info">
+                A runtime salva novas revisoes automaticamente quando a ficha muda e o bundle ativo
+                permanece consistente entre recargas da pagina.
+              </StatusBanner>
+            </div>
+
+            <div className="session-shell-sidebar">
+              <SidebarModule
+                title="Estado do personagem"
+                description="Leitura curta do que importa antes de voltar para a mesa."
+              >
+                <div className="session-shell-list">
+                  <div className="session-shell-list-item">
+                    <p className="session-shell-list-item-title">Raca</p>
+                    <p className="session-shell-list-item-copy">
+                      {String(
+                        sheetRuntime.store.values.race ?? activeBundle?.character.race ?? "humano",
+                      )}
+                    </p>
+                  </div>
+                  <div className="session-shell-list-item">
+                    <p className="session-shell-list-item-title">Profissao</p>
+                    <p className="session-shell-list-item-copy">
+                      {String(
+                        sheetRuntime.store.values.class ??
+                          activeBundle?.character.class ??
+                          "witcher",
+                      )}
+                    </p>
+                  </div>
+                  <div className="session-shell-list-item">
+                    <p className="session-shell-list-item-title">Ouro</p>
+                    <p className="session-shell-list-item-copy">
+                      {Number(
+                        sheetRuntime.store.values.gold ?? activeBundle?.character.gold ?? 0,
+                      )}{" "}
+                      coroas
+                    </p>
+                  </div>
+                </div>
+              </SidebarModule>
+            </div>
+          </div>
+        </section>
+
+        {bundleQuery.isLoading ? (
+          <StatusBanner title="Carregando bundle" tone="info">
+            Carregando a ficha persistida e os bindings da runtime.
+          </StatusBanner>
+        ) : null}
+
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <PanelCard
+            title="Dossie principal"
+            description="O corpo central da ficha permanece como area principal de leitura e edicao."
+          >
+            <CharacterSheet store={sheetRuntime.store} definition={NOIR_CHRONICLE_SHEET} />
+          </PanelCard>
+          <div className="space-y-4">
+            <SidebarModule
+              title="Leitura geral"
+              description="Resumo tatico para consulta curta."
+            >
+              <div className="session-shell-list">
+                <div className="session-shell-list-item">
+                  <p className="session-shell-list-item-title">Origem</p>
+                  <p className="session-shell-list-item-copy">{sourceLabel}</p>
+                </div>
+                <div className="session-shell-list-item">
+                  <p className="session-shell-list-item-title">Bindings</p>
+                  <p className="session-shell-list-item-copy">
+                    {sheetRuntime.store.repeaters.inventory?.length ?? 0} itens ·{" "}
+                    {sheetRuntime.store.repeaters.spellbook?.length ?? 0} magias
+                  </p>
+                </div>
+              </div>
+            </SidebarModule>
           </div>
         </div>
 
+        <PanelCard
+          title="Ferramentas auxiliares"
+          description="Rolagem, inventario e grimorio ficam abaixo da ficha principal, preservando um fluxo claro de leitura."
+        >
         <Tabs defaultValue="dados" className="space-y-4">
           <TabsList className="grid h-auto w-full grid-cols-3">
             <TabsTrigger value="dados">
@@ -282,31 +296,26 @@ export default function FichaPage() {
             </TabsTrigger>
             <TabsTrigger value="magias">
               <WandSparkles className="mr-2 h-4 w-4" />
-              Magias
+              Sinais e ritos
             </TabsTrigger>
           </TabsList>
           <TabsContent value="dados" className="mt-0">
-            <Card variant="panel">
-              <CardContent className="p-4 sm:p-6">
-                <DiceRoller />
-              </CardContent>
-            </Card>
+            <div className="session-shell-panel" data-tone="muted">
+              <DiceRoller />
+            </div>
           </TabsContent>
           <TabsContent value="inventario" className="mt-0">
-            <Card variant="panel">
-              <CardContent className="p-4 sm:p-6">
-                <InventoryPanel onImportItem={handleImportItem} />
-              </CardContent>
-            </Card>
+            <div className="session-shell-panel" data-tone="muted">
+              <InventoryPanel onImportItem={handleImportItem} />
+            </div>
           </TabsContent>
           <TabsContent value="magias" className="mt-0">
-            <Card variant="panel">
-              <CardContent className="p-4 sm:p-6">
-                <SpellBook onImportSpell={handleImportSpell} />
-              </CardContent>
-            </Card>
+            <div className="session-shell-panel" data-tone="muted">
+              <SpellBook onImportSpell={handleImportSpell} />
+            </div>
           </TabsContent>
         </Tabs>
+        </PanelCard>
       </motion.div>
     </div>
   );

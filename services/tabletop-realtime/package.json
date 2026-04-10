@@ -1,0 +1,14 @@
+{
+  "name": "dark-lore-tabletop-realtime",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "socket.io": "^4.8.1"
+  }
+}

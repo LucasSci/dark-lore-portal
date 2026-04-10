@@ -1,0 +1,73 @@
+<section class="scrollable">
+    {{>"systems/TheWitcherTRPG/templates/partials/item-header.hbs"}}
+    <div class="item-options">
+        <div class="item-column">
+            <label>{{localize "WITCHER.Type"}}:</label>
+            <select name="system.type" id="type-select">
+                {{selectOptions selects.enhancementTypes selected=item.system.type localize=true}}
+            </select>
+        </div>
+    </div>
+    {{#if (eq item.system.type "armor")}}
+        <table>
+            <tr>
+                <th>{{localize "WITCHER.Item.Short.Availability"}}</th>
+                <th>{{localize "WITCHER.Enhancement.Stopping"}}</th>
+                <th>{{localize "WITCHER.Enhancement.Bludgeoning"}}</th>
+                <th>{{localize "WITCHER.Enhancement.Slashing"}}</th>
+                <th>{{localize "WITCHER.Enhancement.Piercing"}}</th>
+            </tr>
+            <tr>
+                <td>
+                    <select name="system.avail" id="avail-select">
+                        {{selectOptions config.Availability selected=item.system.avail localize=true}}
+                    </select>
+                </td>
+                <td><input type="text" name="system.stopping" value="{{item.system.stopping}}" data-dtype="Number" />
+                </td>
+                <td><input type="checkbox" name="system.bludgeoning" {{checked item.system.bludgeoning}} /></td>
+                <td><input type="checkbox" name="system.slashing" {{checked item.system.slashing}} /></td>
+                <td><input type="checkbox" name="system.piercing" {{checked item.system.piercing}} /></td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                </td>
+            </tr>
+        </table>
+    {{/if}}
+    <div>
+        <table class="item-bottom-table">
+            <tr>
+                <th><a data-action='addEffect' data-target='system.effects'><i class="fas fa-plus"></i></a></th>
+                <th><b>{{localize "WITCHER.Item.Effect"}}</b></th>
+            </tr>
+            {{#each item.system.effects as |effect id|}}
+                <tr class="list-item" data-id="{{id}}" data-target='system.effects'>
+                    <th>
+                        <a data-action='removeEffect'><i class="fas fa-minus"></i></a>
+                    </th>
+                    <td>
+                        <input class="item-effect" data-action='editEffect'
+                            placeholder="{{localize "WITCHER.Item.Effect"}} {{localize "WITCHER.table.Name"}}"
+                            data-field="name" type="text" value="{{effect.name}}" />
+                    </td>
+                    <td>
+                        <select class="item-effect" data-action="editEffect" data-field="statusEffect">
+                            {{#if (or (eq ../item.system.type "weapon") (eq ../item.system.type "rune"))}}
+                                {{selectOptions ../config.statusEffects blank='' selected=effect.statusEffect nameAttr='id' valueAttr="id" labelAttr="name" localize=true}}
+                            {{else}}
+                                {{selectOptions ../config.armorEffects blank='' selected=effect.statusEffect nameAttr='id' valueAttr="id" labelAttr="name" localize=true}}
+                            {{/if}}
+                        </select>
+                    </td>
+                    <td class="flex">
+                        <label>{{localize "WITCHER.Percentage"}}:</label>
+                        <input data-action="editEffect" data-field="percentage" type="text"
+                            value="{{effect.percentage}}" data-dtype="Number" />
+                        %
+                    </td>
+                </tr>
+            {{/each}}
+        </table>
+    </div>
+</section>

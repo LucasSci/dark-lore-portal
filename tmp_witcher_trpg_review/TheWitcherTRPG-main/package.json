@@ -1,0 +1,10 @@
+{
+    "devDependencies": {
+        "@foundryvtt/foundryvtt-cli": "^3.0.3",
+        "prettier": "^3.3.3"
+    },
+    "scripts": {
+        "build:db": "node ./utils/packs.mjs package pack",
+        "extract": "node ./utils/extract.mjs "
+    }
+}
