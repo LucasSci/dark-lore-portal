@@ -245,10 +245,10 @@ export const VttCommandPanel = memo(function VttCommandPanel({
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                <Button variant="outline" onClick={() => onAdjustHp(selectedToken.id, -5)}>
+                <Button variant="outline" onClick={() => onAdjustHp(selectedToken.id, -5)} title="Remover 5 HP">
                   -5 HP
                 </Button>
-                <Button variant="outline" onClick={() => onAdjustHp(selectedToken.id, 5)}>
+                <Button variant="outline" onClick={() => onAdjustHp(selectedToken.id, 5)} title="Adicionar 5 HP">
                   +5 HP
                 </Button>
                 <Button variant="secondary" onClick={onRevealAroundSelected}>
