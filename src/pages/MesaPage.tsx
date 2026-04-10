@@ -1889,6 +1889,7 @@ export default function MesaPage() {
                       key={n}
                       onClick={() => void rollNotation(n, selectedToken?.payload.name ?? "Mesa")}
                       className="tool-list-item py-1.5 text-[11px] font-medium text-muted-foreground"
+                      aria-label={`Rolar ${n}`}
                     >
                       {n}
                     </button>
@@ -1929,6 +1930,7 @@ export default function MesaPage() {
                             ? "border-primary/40 bg-primary/5"
                             : "border-border/40",
                         )}
+                        aria-label={`Selecionar token ${token.payload.name}`}
                       >
                         <div className={cn(
                           "flex h-8 w-8 items-center justify-center border text-[10px] font-bold",
