@@ -98,18 +98,25 @@ export function computeVisibilityPolygon(
   const angles = new Float64Array(activeWallsCount * 6);
   let angleCount = 0;
 
-  const wallAx = new Float64Array(activeWallsCount);
-  const wallAy = new Float64Array(activeWallsCount);
   const wallDx = new Float64Array(activeWallsCount);
   const wallDy = new Float64Array(activeWallsCount);
+  const wallDiffX = new Float64Array(activeWallsCount);
+  const wallDiffY = new Float64Array(activeWallsCount);
+  const wallTNumerator = new Float64Array(activeWallsCount);
 
   for (let i = 0; i < activeWallsCount; i++) {
     const wall = activeWalls[i];
 
-    wallAx[i] = wall.a.x;
-    wallAy[i] = wall.a.y;
-    wallDx[i] = wall.b.x - wall.a.x;
-    wallDy[i] = wall.b.y - wall.a.y;
+    const dx = wall.b.x - wall.a.x;
+    const dy = wall.b.y - wall.a.y;
+    wallDx[i] = dx;
+    wallDy[i] = dy;
+
+    const diffX = wall.a.x - ox;
+    const diffY = wall.a.y - oy;
+    wallDiffX[i] = diffX;
+    wallDiffY[i] = diffY;
+    wallTNumerator[i] = diffX * dy - diffY * dx;
 
     let angle = Math.atan2(wall.a.y - oy, wall.a.x - ox);
     angles[angleCount++] = angle;
@@ -144,6 +151,7 @@ export function computeVisibilityPolygon(
     let closestT = Infinity;
 
     // ⚡ Bolt: Inline ray-segment intersection math (Cramer's rule) for maximum performance
+    // ⚡ Bolt: Loop Invariant Code Motion (LICM) - precomputed diffX, diffY, and t_numerator outside the angle loop
     for (let j = 0; j < activeWallsCount; j++) {
       const dx = wallDx[j];
       const dy = wallDy[j];
@@ -152,15 +160,13 @@ export function computeVisibilityPolygon(
       // Skip if lines are parallel or collinear
       if (denom > -1e-10 && denom < 1e-10) continue;
 
-      const ax = wallAx[j];
-      const ay = wallAy[j];
-      const diffX = ax - ox;
-      const diffY = ay - oy;
+      const diffX = wallDiffX[j];
+      const diffY = wallDiffY[j];
 
       const u = (diffX * dirY - diffY * dirX) / denom;
       if (u < 0 || u > 1) continue;
 
-      const t = (diffX * dy - diffY * dx) / denom;
+      const t = wallTNumerator[j] / denom;
       if (t >= 0 && t < closestT) {
         closestT = t;
       }

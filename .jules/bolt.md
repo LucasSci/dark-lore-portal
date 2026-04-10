@@ -13,3 +13,7 @@
 ## 2024-04-01 - Chained Array Maps in Polygon Rendering
 **Learning:** Chaining `.map().map()` on large coordinate arrays for rendering map polygons (like Leaflet paths) creates intermediate arrays that must be garbage collected, introducing jank during rapid zoom/pan operations. Projecting entire polygons point-by-point just to calculate their bounding box is also an O(n) waste when projecting the bounds directly is O(1).
 **Action:** Combine multiple array vector transformations into a single `.map()` pass. Always compute bounds on the unprojected source data first, then project the corners of the bounding box, rather than projecting all vertices.
+
+## 2025-05-18 - Loop Invariant Code Motion (LICM) in Raycasting
+**Learning:** During dynamic lighting raycasting, portions of the segment intersection math (like `diffX = ax - ox` or the distance numerator `t_numerator = diffX * dy - diffY * dx`) are entirely dependent on the wall and ray origin, but completely independent of the ray's angle (`dirX`, `dirY`). Calculating these inside the inner ray loop wastes millions of arithmetic operations per frame.
+**Action:** Always look for variables that are invariant to the inner loop parameters and precompute them in outer loops. Moving invariant vector math operations outside the raycasting loop into pre-allocated `Float64Arrays` significantly accelerates the hot intersection loop.
