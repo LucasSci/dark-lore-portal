@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { generateSecureId } from "./utils";
 
 export type PublicationKind = "cronica" | "contrato" | "rumor" | "relatorio";
 export type PublicationStatus = "rascunho" | "publicado" | "arquivado";
