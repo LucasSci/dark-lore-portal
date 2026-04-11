@@ -20,3 +20,7 @@
 ## 2025-05-18 - Loop Invariant Code Motion (LICM) in Raycasting
 **Learning:** During dynamic lighting raycasting, portions of the segment intersection math (like `diffX = ax - ox` or the distance numerator `t_numerator = diffX * dy - diffY * dx`) are entirely dependent on the wall and ray origin, but completely independent of the ray's angle (`dirX`, `dirY`). Calculating these inside the inner ray loop wastes millions of arithmetic operations per frame.
 **Action:** Always look for variables that are invariant to the inner loop parameters and precompute them in outer loops. Moving invariant vector math operations outside the raycasting loop into pre-allocated `Float64Arrays` significantly accelerates the hot intersection loop.
+
+## 2025-05-18 - String concatenation vs Map/Join in hot paths
+**Learning:** Building cache keys or signatures using `[...].map(x => x.prop).join("|")` inside high-frequency operations (like PIXI rendering or cache invalidation checks) creates significant garbage collection overhead due to the allocation of an intermediate array solely for joining.
+**Action:** Replace array `.map().join()` patterns with a standard `for` loop and direct string concatenation (e.g. `str += x.prop + "|"`) in performance critical hot paths to reduce memory allocation.
