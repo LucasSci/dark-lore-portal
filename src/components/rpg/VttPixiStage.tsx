@@ -1408,15 +1408,28 @@ export default memo(function VttPixiStage({
 
     if (page.dynamicLighting && (page.lightSources.length > 0 || tokens.some(t => t.payload.team === "party"))) {
       // Include gridSize (gs) in the signature so that wall segments are correctly re-scaled if the grid size changes
-      const currentWallsSignature = `${gs}:` + page.wallSegments.map((w) => `${w.id}:${w.x1},${w.y1},${w.x2},${w.y2}`).join("|");
+      // ⚡ Bolt Optimization: Replace .map().join() with string concatenation loop to avoid intermediate array allocation
+      let currentWallsSignature = `${gs}:`;
+      const wallsLen = page.wallSegments.length;
+      for (let i = 0; i < wallsLen; i++) {
+        const w = page.wallSegments[i]!;
+        currentWallsSignature += `${w.id}:${w.x1},${w.y1},${w.x2},${w.y2}|`;
+      }
 
       if (wallsSignatureRef.current !== currentWallsSignature) {
         visionCacheRef.current.clear();
         wallsSignatureRef.current = currentWallsSignature;
-        wallSegsCacheRef.current = page.wallSegments.map((w) => ({
-          a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
-          b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
-        }));
+        // ⚡ Bolt Optimization: Use a pre-sized array instead of .map() to avoid array resize overhead
+        const newWallSegs = new Array(wallsLen);
+        const halfGs = gs / 2;
+        for (let i = 0; i < wallsLen; i++) {
+          const w = page.wallSegments[i]!;
+          newWallSegs[i] = {
+            a: { x: w.x1 * gs + halfGs, y: w.y1 * gs + halfGs },
+            b: { x: w.x2 * gs + halfGs, y: w.y2 * gs + halfGs },
+          };
+        }
+        wallSegsCacheRef.current = newWallSegs;
       }
 
       const wallSegs: Segment[] = wallSegsCacheRef.current;
