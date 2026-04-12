@@ -1407,16 +1407,29 @@ export default memo(function VttPixiStage({
     lightingLayer.zIndex = 8; // Between map and fog
 
     if (page.dynamicLighting && (page.lightSources.length > 0 || tokens.some(t => t.payload.team === "party"))) {
-      // Include gridSize (gs) in the signature so that wall segments are correctly re-scaled if the grid size changes
-      const currentWallsSignature = `${gs}:` + page.wallSegments.map((w) => `${w.id}:${w.x1},${w.y1},${w.x2},${w.y2}`).join("|");
+      // ⚡ Bolt Optimization: Use standard `for` loop and string concatenation instead of `.map().join()`
+      // to avoid intermediate array allocations and GC overhead in hot render path.
+      let currentWallsSignature = gs + ":";
+      for (let i = 0; i < page.wallSegments.length; i++) {
+        const w = page.wallSegments[i];
+        if (i > 0) currentWallsSignature += "|";
+        currentWallsSignature += w.id + ":" + w.x1 + "," + w.y1 + "," + w.x2 + "," + w.y2;
+      }
 
       if (wallsSignatureRef.current !== currentWallsSignature) {
         visionCacheRef.current.clear();
         wallsSignatureRef.current = currentWallsSignature;
-        wallSegsCacheRef.current = page.wallSegments.map((w) => ({
-          a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
-          b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
-        }));
+
+        // ⚡ Bolt Optimization: Pre-allocate array to avoid GC overhead
+        const newWallSegs = new Array(page.wallSegments.length);
+        for (let i = 0; i < page.wallSegments.length; i++) {
+          const w = page.wallSegments[i];
+          newWallSegs[i] = {
+            a: { x: w.x1 * gs + gs / 2, y: w.y1 * gs + gs / 2 },
+            b: { x: w.x2 * gs + gs / 2, y: w.y2 * gs + gs / 2 },
+          };
+        }
+        wallSegsCacheRef.current = newWallSegs;
       }
 
       const wallSegs: Segment[] = wallSegsCacheRef.current;
