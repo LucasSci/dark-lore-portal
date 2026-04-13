@@ -125,7 +125,7 @@ import {
   WitcherCampaignBrief,
   useSocketTabletopRealtime,
 } from "@/features/witcher-system";
-import { cn } from "@/lib/utils";
+import { cn, generateSecureShortId } from "@/lib/utils";
 import { toast } from "sonner";
 import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 import {
@@ -458,14 +458,14 @@ export default function MesaPage() {
             ? loadedScene.chatMessages
             : [
                 {
-                  id: `chat-${Date.now()}-system`,
+                  id: `chat-${generateSecureShortId()}-system`,
                   author: "Sistema",
                   tone: "system",
                   text: sceneNarration.system,
                   time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
                 },
                 {
-                  id: `chat-${Date.now()}-narrador`,
+                  id: `chat-${generateSecureShortId()}-narrador`,
                   author: activeCampaign.gmLabel,
                   tone: "party",
                   text: sceneNarration.narrator,

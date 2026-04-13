@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { rollDice } from "@/lib/rpg-utils";
+import { generateSecureShortId } from "@/lib/utils";
 
 const DICE_TYPES = [
   { sides: 4, label: "d4" },
@@ -17,7 +18,7 @@ const DICE_TYPES = [
 ];
 
 interface RollResult {
-  id: number;
+  id: string;
   dice: string;
   results: number[];
   total: number;
@@ -39,7 +40,7 @@ export default function DiceRoller() {
 
       setRolls((previous) => [
         {
-          id: Date.now(),
+          id: generateSecureShortId(),
           dice: `${numDice}${label}${modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ""}`,
           results,
           total: finalTotal,
