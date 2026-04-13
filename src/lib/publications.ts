@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { generateSecureId } from "./utils";
+import { generateSecureId, generateSecureShortId } from "./utils";
 
 export type PublicationKind = "cronica" | "contrato" | "rumor" | "relatorio";
 export type PublicationStatus = "rascunho" | "publicado" | "arquivado";
@@ -196,8 +196,8 @@ function persistPublication(
       }
     : {
         ...draft,
-        id: `publication-${Date.now()}`,
-        slug: slugify(draft.title || `publication-${Date.now()}`),
+        id: `publication-${generateSecureShortId()}`,
+        slug: slugify(draft.title || `publication-${generateSecureShortId()}`),
         createdAt: now,
         updatedAt: now,
       };
