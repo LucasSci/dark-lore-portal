@@ -23,3 +23,6 @@
 ## 2025-05-18 - Chained array operations in hot React renders
 **Learning:** In performance-critical React canvas/PIXI integrations (like VttPixiStage), computing string signatures using chained `.map().join()` operations or mapping large arrays inside a frequently updated `useEffect` or render loop causes unnecessary intermediate array allocations, significantly increasing Garbage Collection (GC) overhead.
 **Action:** Always replace `.map().join()` with a standard `for` loop and string concatenation when generating string signatures in hot paths. Similarly, pre-allocate arrays (`new Array(length)`) instead of using `.map()` when caching transformed data in hot loops to eliminate GC pressure.
+## 2025-05-18 - Batching PIXI Graphics in Hot Renders
+**Learning:** Creating thousands of individual PIXI `Graphics` objects for repeated identical shapes (like fog cells on a grid) in a hot React render loop causes massive Garbage Collection (GC) overhead and negatively impacts rendering performance.
+**Action:** Always batch identical shapes into a single PIXI `Graphics` object when possible by creating the `Graphics` instance outside the loop, appending paths (like `rect` or `circle`) inside the loop, and calling `fill`/`stroke` once at the end.

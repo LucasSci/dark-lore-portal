@@ -1150,6 +1150,11 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
+    // ⚡ Bolt Optimization: Batch fog rendering into a single PIXI.Graphics object
+    // to significantly reduce GC overhead and PIXI draw calls.
+    const batchedFog = new Graphics();
+    let hasFog = false;
+
     for (const cell of page.cells) {
       const cellGraphic = new Graphics();
 
@@ -1162,14 +1167,15 @@ export default memo(function VttPixiStage({
       interactionLayer.addChild(cellGraphic);
 
       if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+        batchedFog.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
+        hasFog = true;
       }
+    }
+
+    if (hasFog) {
+      batchedFog.fill({ color: 0x060505, alpha: 0.84 });
+      batchedFog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+      fogLayer.addChild(batchedFog);
     }
 
     for (const token of tokens) {
