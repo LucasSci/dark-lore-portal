@@ -23,3 +23,7 @@
 ## 2025-05-18 - Chained array operations in hot React renders
 **Learning:** In performance-critical React canvas/PIXI integrations (like VttPixiStage), computing string signatures using chained `.map().join()` operations or mapping large arrays inside a frequently updated `useEffect` or render loop causes unnecessary intermediate array allocations, significantly increasing Garbage Collection (GC) overhead.
 **Action:** Always replace `.map().join()` with a standard `for` loop and string concatenation when generating string signatures in hot paths. Similarly, pre-allocate arrays (`new Array(length)`) instead of using `.map()` when caching transformed data in hot loops to eliminate GC pressure.
+
+## 2025-05-18 - Math.max/Math.min call stack risk and array mapping in bounds calculation
+**Learning:** Using `.map()` to separate X and Y coordinates followed by `Math.min(...xs)` or `Math.max(...ys)` introduces a double performance penalty: first by creating intermediate arrays that need Garbage Collection, and second by risking a "Maximum call stack size exceeded" error if the coordinate array length exceeds JavaScript engine argument limits (typically ~65,536 arguments).
+**Action:** Always compute polygon or coordinate bounds using a single-pass `for` loop, updating the local min/max numeric variables directly, avoiding array allocations and variadic function calls entirely.
