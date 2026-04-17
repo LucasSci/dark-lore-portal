@@ -10,3 +10,7 @@
 **Vulnerability:** Several RPG components (CombatTracker, GameMasterPanel, publications) used `Date.now().toString()` or `${Date.now()}` to generate unique IDs for new entities, publications, and combatants.
 **Learning:** `Date.now()` is highly predictable and can generate duplicate IDs if multiple entities are created within the same millisecond (e.g., during rapid UI interactions, bulk creation, or automated testing). This causes React rendering bugs (duplicate keys) and potential ID collision vulnerabilities.
 **Prevention:** Always use the centralized `generateSecureId()` utility for ID generation in React state and store objects, ensuring uniqueness and security.
+## 2024-05-24 - Never track .env files with secrets
+**Vulnerability:** A `.env` file was checked into version control containing critical API keys (e.g. `VITE_GEMINI_API_KEY`), exposing sensitive credentials.
+**Learning:** Developers might accidentally add `.env` files to source control if `.gitignore` is improperly configured, leading to immediate secret leaks.
+**Prevention:** Ensure `.env` and related environment files (like `.env.local`) are always in `.gitignore`. Provide a `.env.example` to document required variables instead.
