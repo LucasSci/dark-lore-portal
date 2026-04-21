@@ -1150,6 +1150,10 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
+    // ⚡ Bolt Optimization: Batch fog rendering to reduce GC overhead
+    const combinedFog = new Graphics();
+    let hasFog = false;
+
     for (const cell of page.cells) {
       const cellGraphic = new Graphics();
 
@@ -1162,14 +1166,15 @@ export default memo(function VttPixiStage({
       interactionLayer.addChild(cellGraphic);
 
       if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+        combinedFog.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
+        hasFog = true;
       }
+    }
+
+    if (hasFog) {
+      combinedFog.fill({ color: 0x060505, alpha: 0.84 });
+      combinedFog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+      fogLayer.addChild(combinedFog);
     }
 
     for (const token of tokens) {
@@ -1350,23 +1355,28 @@ export default memo(function VttPixiStage({
     wallLayer.zIndex = 12;
     const gs = page.gridSize;
 
+    // ⚡ Bolt Optimization: Batch wall rendering to reduce GC overhead
+    const combinedWallLines = new Graphics();
+    const combinedWallDots = new Graphics();
+    let hasWalls = false;
+
     for (const wall of page.wallSegments) {
-      const wallLine = new Graphics();
+      hasWalls = true;
       const ax = wall.x1 * gs + gs / 2;
       const ay = wall.y1 * gs + gs / 2;
       const bx = wall.x2 * gs + gs / 2;
       const by = wall.y2 * gs + gs / 2;
-      wallLine.moveTo(ax, ay);
-      wallLine.lineTo(bx, by);
-      wallLine.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
+      combinedWallLines.moveTo(ax, ay);
+      combinedWallLines.lineTo(bx, by);
       // Endpoint dots
-      const dotA = new Graphics();
-      dotA.circle(ax, ay, 3);
-      dotA.fill({ color: 0xe85d4a, alpha: 0.8 });
-      const dotB = new Graphics();
-      dotB.circle(bx, by, 3);
-      dotB.fill({ color: 0xe85d4a, alpha: 0.8 });
-      wallLayer.addChild(wallLine, dotA, dotB);
+      combinedWallDots.circle(ax, ay, 3);
+      combinedWallDots.circle(bx, by, 3);
+    }
+
+    if (hasWalls) {
+      combinedWallLines.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
+      combinedWallDots.fill({ color: 0xe85d4a, alpha: 0.8 });
+      wallLayer.addChild(combinedWallLines, combinedWallDots);
     }
 
     // Wall preview (during placement)
