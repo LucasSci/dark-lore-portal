@@ -23,3 +23,7 @@
 ## 2025-05-18 - Chained array operations in hot React renders
 **Learning:** In performance-critical React canvas/PIXI integrations (like VttPixiStage), computing string signatures using chained `.map().join()` operations or mapping large arrays inside a frequently updated `useEffect` or render loop causes unnecessary intermediate array allocations, significantly increasing Garbage Collection (GC) overhead.
 **Action:** Always replace `.map().join()` with a standard `for` loop and string concatenation when generating string signatures in hot paths. Similarly, pre-allocate arrays (`new Array(length)`) instead of using `.map()` when caching transformed data in hot loops to eliminate GC pressure.
+
+## 2024-04-22 - Replace Math.min/Math.max with Inline Conditionals in Hot Loops
+**Learning:** In hot loops, such as 2D raycasting collision or AABB checks (e.g., `computeVisibilityPolygon`), using `Math.min` and `Math.max` causes measurable function call overhead and can hinder JS engine optimizations. Replacing them with direct inline conditional checks (e.g., `if (ax > bx) { ... }`) significantly reduces this overhead.
+**Action:** When filtering objects or computing boundaries in high-frequency loops, manually expand min/max logic into direct conditionals rather than calling standard Math library functions.
