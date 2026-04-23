@@ -960,13 +960,24 @@ export function clusterAtlasLocations(locations: AtlasLocation[], cellSize = 56)
   return [...buckets.values()];
 }
 
+// ⚡ Bolt: Use a single pass to compute bounds without creating intermediate arrays or risking call stack limits
 export function getPolygonBounds(points: AtlasCoordinate[]): AtlasBounds {
-  const xs = points.map((pointValue) => pointValue.x);
-  const ys = points.map((pointValue) => pointValue.y);
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  for (let i = 0; i < points.length; i++) {
+    const pt = points[i];
+    if (pt.x < minX) minX = pt.x;
+    if (pt.x > maxX) maxX = pt.x;
+    if (pt.y < minY) minY = pt.y;
+    if (pt.y > maxY) maxY = pt.y;
+  }
 
   return {
-    southWest: { x: Math.min(...xs), y: Math.max(...ys) },
-    northEast: { x: Math.max(...xs), y: Math.min(...ys) },
+    southWest: { x: minX, y: maxY },
+    northEast: { x: maxX, y: minY },
   };
 }
 
