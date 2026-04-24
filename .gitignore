@@ -31,3 +31,6 @@ vendor_lib/
 *.sln
 *.sw?
 .vercel
+
+.env
+.env.*
