@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -147,6 +148,7 @@ export default function StoryEnginePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [imageTargetId, setImageTargetId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const lastSavedSignatureRef = useRef<string>("");
 
@@ -332,9 +334,11 @@ export default function StoryEnginePage() {
     if (!activeProject) {
       return;
     }
+    setIsDeleteDialogOpen(true);
+  }, [activeProject]);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const confirmDeleteProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -1213,6 +1217,17 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      {activeProject && (
+        <ConfirmActionDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          title="Remover projeto"
+          description={`Tem certeza que deseja remover o projeto "${activeProject.title}"? Esta ação não pode ser desfeita e os dados locais serão perdidos.`}
+          confirmLabel="Remover projeto"
+          onConfirm={confirmDeleteProject}
+        />
+      )}
     </div>
   );
 }

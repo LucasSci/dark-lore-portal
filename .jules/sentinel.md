@@ -10,3 +10,7 @@
 **Vulnerability:** Several RPG components (CombatTracker, GameMasterPanel, publications) used `Date.now().toString()` or `${Date.now()}` to generate unique IDs for new entities, publications, and combatants.
 **Learning:** `Date.now()` is highly predictable and can generate duplicate IDs if multiple entities are created within the same millisecond (e.g., during rapid UI interactions, bulk creation, or automated testing). This causes React rendering bugs (duplicate keys) and potential ID collision vulnerabilities.
 **Prevention:** Always use the centralized `generateSecureId()` utility for ID generation in React state and store objects, ensuring uniqueness and security.
+## 2024-05-20 - Avoid blocking browser dialogs (window.confirm)
+**Vulnerability:** The application used `window.confirm` to ask for confirmation before deleting a project in the Story Engine. This native dialog blocks the main thread, opening up the risk of client-side Denial of Service (DoS) (e.g., via alert spam) and origin-spoofing vulnerabilities.
+**Learning:** Native blocking dialogs break out of the React rendering cycle and the UI sandbox, making the application unresponsive.
+**Prevention:** Replace all usages of native dialogs (`window.alert`, `window.confirm`, `window.prompt`) with custom, non-blocking React components such as `ConfirmActionDialog` to ensure UI consistency and avoid main-thread blocking.
