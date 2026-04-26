@@ -1,3 +1,7 @@
+## 2024-05-18 - Avoid Math.min/max with spread on large arrays
+**Learning:** Using the spread operator (`...`) with `Math.min()` and `Math.max()` on large arrays risks throwing a "Maximum call stack size exceeded" error. It also incurs garbage collection overhead from mapping intermediate arrays.
+**Action:** When finding minimum and maximum values in large coordinate or point arrays, use a single-pass `for` loop to update primitive variables directly to eliminate memory allocation and avoid JS engine argument limits.
+
 ## 2024-05-18 - Avoid array spreading in hot loops
 **Learning:** In hot functions like `computeVisibilityPolygon` (which may be called multiple times per frame for line-of-sight and lighting calculations), using the spread syntax (`[...walls, ...boundaryWalls]`) to allocate an intermediate array simply for iterating over it creates significant garbage collection (GC) overhead.
 **Action:** Always avoid creating intermediate arrays with the spread operator in performance-critical loops. Iterate over the base arrays directly and conditionally push to your target array, or process boundary cases outside the main loop.
