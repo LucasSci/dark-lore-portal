@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { generateSecureId } from "./utils";
+import { generateSecureId, generateSecureShortId } from "./utils";
 
 export type PublicationKind = "cronica" | "contrato" | "rumor" | "relatorio";
 export type PublicationStatus = "rascunho" | "publicado" | "arquivado";
@@ -184,6 +184,8 @@ function persistPublication(
   ensureSeeded();
   const publications = readPublications();
   const now = new Date().toISOString();
+  const newId = draft.id || `publication-${generateSecureId()}`;
+
   const saved: CampaignPublication = draft.id
     ? {
         ...(publications.find((entry) => entry.id === draft.id) ?? {
@@ -196,8 +198,8 @@ function persistPublication(
       }
     : {
         ...draft,
-        id: `publication-${Date.now()}`,
-        slug: slugify(draft.title || `publication-${Date.now()}`),
+        id: newId,
+        slug: slugify(draft.title || `publication-${generateSecureShortId()}`),
         createdAt: now,
         updatedAt: now,
       };
