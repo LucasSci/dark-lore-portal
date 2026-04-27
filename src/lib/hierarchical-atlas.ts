@@ -960,13 +960,26 @@ export function clusterAtlasLocations(locations: AtlasLocation[], cellSize = 56)
   return [...buckets.values()];
 }
 
+// ⚡ Bolt Optimization: Replaced `.map()` and `Math.min/max(...arr)` with a single-pass `for` loop
+// to eliminate GC overhead from intermediate arrays and avoid "Maximum call stack size exceeded"
+// errors on large coordinate sets.
 export function getPolygonBounds(points: AtlasCoordinate[]): AtlasBounds {
-  const xs = points.map((pointValue) => pointValue.x);
-  const ys = points.map((pointValue) => pointValue.y);
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i]!;
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  }
 
   return {
-    southWest: { x: Math.min(...xs), y: Math.max(...ys) },
-    northEast: { x: Math.max(...xs), y: Math.min(...ys) },
+    southWest: { x: minX, y: maxY },
+    northEast: { x: maxX, y: minY },
   };
 }
 
