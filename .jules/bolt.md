@@ -23,3 +23,6 @@
 ## 2025-05-18 - Chained array operations in hot React renders
 **Learning:** In performance-critical React canvas/PIXI integrations (like VttPixiStage), computing string signatures using chained `.map().join()` operations or mapping large arrays inside a frequently updated `useEffect` or render loop causes unnecessary intermediate array allocations, significantly increasing Garbage Collection (GC) overhead.
 **Action:** Always replace `.map().join()` with a standard `for` loop and string concatenation when generating string signatures in hot paths. Similarly, pre-allocate arrays (`new Array(length)`) instead of using `.map()` when caching transformed data in hot loops to eliminate GC pressure.
+## 2026-04-28 - Array spreading in Math.min/max causes stack overflow
+**Learning:** Using `Math.min(...arr)` or `Math.max(...arr)` on large arrays (like map coordinates) can exceed the JavaScript engine's maximum call stack size limit, causing hard crashes. It also forces the JS engine to allocate intermediate arrays if `.map()` is chained before it.
+**Action:** Replace `Math.min(...arr)` and `.map()` chains with a single-pass `for` loop to find min/max values. This uses O(1) space, avoids stack overflows, and reduces GC pressure.
