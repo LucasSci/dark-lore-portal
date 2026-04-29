@@ -66,10 +66,16 @@ export function computeVisibilityPolygon(
 
     // AABB check
     if (maxRadius !== undefined) {
-      const wMinX = Math.min(w.a.x, w.b.x);
-      const wMaxX = Math.max(w.a.x, w.b.x);
-      const wMinY = Math.min(w.a.y, w.b.y);
-      const wMaxY = Math.max(w.a.y, w.b.y);
+      const ax = w.a.x;
+      const bx = w.b.x;
+      const ay = w.a.y;
+      const by = w.b.y;
+
+      // ⚡ Bolt: Replace Math.min/Math.max with inline conditionals to reduce call overhead in hot loops
+      const wMinX = ax < bx ? ax : bx;
+      const wMaxX = ax > bx ? ax : bx;
+      const wMinY = ay < by ? ay : by;
+      const wMaxY = ay > by ? ay : by;
 
       if (wMaxX < minX || wMinX > maxX || wMaxY < minY || wMinY > maxY) {
         continue; // Skip wall if strictly outside AABB
