@@ -10,3 +10,7 @@
 **Vulnerability:** Several RPG components (CombatTracker, GameMasterPanel, publications) used `Date.now().toString()` or `${Date.now()}` to generate unique IDs for new entities, publications, and combatants.
 **Learning:** `Date.now()` is highly predictable and can generate duplicate IDs if multiple entities are created within the same millisecond (e.g., during rapid UI interactions, bulk creation, or automated testing). This causes React rendering bugs (duplicate keys) and potential ID collision vulnerabilities.
 **Prevention:** Always use the centralized `generateSecureId()` utility for ID generation in React state and store objects, ensuring uniqueness and security.
+## 2024-05-20 - Avoid Date.now() for unique identifiers
+**Vulnerability:** Several RPG components (CombatTracker, GameMasterPanel, publications) used `Date.now().toString()` or `${Date.now()}` to generate unique IDs for new entities, publications, and combatants.
+**Learning:** `Date.now()` is highly predictable and can generate duplicate IDs if multiple entities are created within the same millisecond (e.g., during rapid UI interactions, bulk creation, or automated testing). This causes React rendering bugs (duplicate keys) and potential ID collision vulnerabilities.
+**Prevention:** Always use the centralized `generateSecureId()` or `generateSecureShortId()` utility for ID generation in React state and store objects, ensuring uniqueness and security.
