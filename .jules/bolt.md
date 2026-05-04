@@ -1,3 +1,7 @@
+
+## 2024-05-18 - Avoid array spreading in hot loops
+**Learning:** In hot functions like `computeVisibilityPolygon` (which may be called multiple times per frame for line-of-sight and lighting calculations), using the spread syntax (`[...walls, ...boundaryWalls]`) to allocate an intermediate array simply for iterating over it creates significant garbage collection (GC) overhead.
+**Action:** Always avoid creating intermediate arrays with the spread operator in performance-critical loops. Iterate over the base arrays directly and conditionally push to your target array, or process boundary cases outside the main loop.
 ## 2024-05-18 - Avoid array spreading in hot loops
 **Learning:** In hot functions like `computeVisibilityPolygon` (which may be called multiple times per frame for line-of-sight and lighting calculations), using the spread syntax (`[...walls, ...boundaryWalls]`) to allocate an intermediate array simply for iterating over it creates significant garbage collection (GC) overhead.
 **Action:** Always avoid creating intermediate arrays with the spread operator in performance-critical loops. Iterate over the base arrays directly and conditionally push to your target array, or process boundary cases outside the main loop.
@@ -23,7 +27,6 @@
 ## 2025-05-18 - Chained array operations in hot React renders
 **Learning:** In performance-critical React canvas/PIXI integrations (like VttPixiStage), computing string signatures using chained `.map().join()` operations or mapping large arrays inside a frequently updated `useEffect` or render loop causes unnecessary intermediate array allocations, significantly increasing Garbage Collection (GC) overhead.
 **Action:** Always replace `.map().join()` with a standard `for` loop and string concatenation when generating string signatures in hot paths. Similarly, pre-allocate arrays (`new Array(length)`) instead of using `.map()` when caching transformed data in hot loops to eliminate GC pressure.
-
-## 2024-04-22 - Replace Math.min/Math.max with Inline Conditionals in Hot Loops
-**Learning:** In hot loops, such as 2D raycasting collision or AABB checks (e.g., `computeVisibilityPolygon`), using `Math.min` and `Math.max` causes measurable function call overhead and can hinder JS engine optimizations. Replacing them with direct inline conditional checks (e.g., `if (ax > bx) { ... }`) significantly reduces this overhead.
-**Action:** When filtering objects or computing boundaries in high-frequency loops, manually expand min/max logic into direct conditionals rather than calling standard Math library functions.
+## 2024-05-18 - Bounds calculation via spread operators limits scaling
+**Learning:** In utility functions like `getPolygonBounds`, using `Math.min(...xs)` and `Math.max(...ys)` with the spread operator on large arrays causes "Maximum call stack size exceeded" errors because JS engines limit the number of arguments passed to a function. In addition, mapping `points` to intermediate `xs` and `ys` arrays creates unnecessary garbage collection pressure and iterates over the data 4 times.
+**Action:** Always compute bounds using a single-pass `for` loop directly updating primitive tracking variables (`minX`, `maxX`, `minY`, `maxY`) and avoid intermediate `.map()` allocations or spread operators.
