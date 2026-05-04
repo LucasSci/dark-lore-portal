@@ -974,11 +974,11 @@ export function getPolygonBounds(points: AtlasCoordinate[]): AtlasBounds {
   let maxY = points[0].y;
 
   for (let i = 1; i < points.length; i++) {
-    const p = points[i];
-    if (p.x < minX) minX = p.x;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.y > maxY) maxY = p.y;
+    const pt = points[i];
+    if (pt.x < minX) minX = pt.x;
+    if (pt.x > maxX) maxX = pt.x;
+    if (pt.y < minY) minY = pt.y;
+    if (pt.y > maxY) maxY = pt.y;
   }
 
   return {
