@@ -968,20 +968,17 @@ export function getPolygonBounds(points: AtlasCoordinate[]): AtlasBounds {
     };
   }
 
-  // ⚡ Bolt: Replaced map() + Math.min(...arr) with a single-pass loop
-  // This avoids intermediate array allocations, reducing GC overhead,
-  // and prevents 'Maximum call stack size exceeded' on large polygons.
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
+  let minX = points[0].x;
+  let maxX = points[0].x;
+  let minY = points[0].y;
+  let maxY = points[0].y;
 
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
-    if (p.x < minX) minX = p.x;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.y > maxY) maxY = p.y;
+  for (let i = 1; i < points.length; i++) {
+    const pt = points[i];
+    if (pt.x < minX) minX = pt.x;
+    if (pt.x > maxX) maxX = pt.x;
+    if (pt.y < minY) minY = pt.y;
+    if (pt.y > maxY) maxY = pt.y;
   }
 
   return {
