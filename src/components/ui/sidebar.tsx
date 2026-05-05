@@ -226,6 +226,7 @@ const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.C
         data-sidebar="trigger"
         variant="ghost"
         size="icon"
+        title="Alternar Menu Lateral"
         className={cn("h-7 w-7", className)}
         onClick={(event) => {
           onClick?.(event);
@@ -234,7 +235,7 @@ const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.C
         {...props}
       >
         <PanelLeft />
-        <span className="sr-only">Toggle Sidebar</span>
+        <span className="sr-only">Alternar Menu Lateral</span>
       </Button>
     );
   },
