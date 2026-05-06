@@ -1514,31 +1514,13 @@ export default memo(function VttPixiStage({
 
       // Draw darkness overlay with cutouts for visible areas
       if (visionPolygons.length > 0) {
-        const darkness = new Graphics();
-        // Full darkness rectangle
-        darkness.rect(0, 0, boardWidth, boardHeight);
-        darkness.fill({ color: 0x000000, alpha: 0.72 });
-
-        // Cut out visible areas (draw them with "erase" blend)
-        for (const poly of visionPolygons) {
-          if (poly.length < 3) continue;
-          const cutout = new Graphics();
-          cutout.moveTo(poly[0].x, poly[0].y);
-          for (let i = 1; i < poly.length; i++) {
-            cutout.lineTo(poly[i].x, poly[i].y);
-          }
-          cutout.closePath();
-          cutout.fill({ color: 0x000000, alpha: 0.72 });
-
-          // Use as mask by cutting from darkness
-          lightingLayer.addChild(cutout);
-        }
-
         // Use a mask approach: render darkness, then use visibility polygons as holes
-        // PixiJS approach: render light areas on top with the map color to "reveal"
         // Simpler: draw semi-transparent darkness, then draw visibility polygons to clear it
-        // We'll use the "cut" approach with a single graphics object
+        // We use the "cut" approach with a single graphics object
 
+        // ⚡ Bolt Optimization: Removed redundant block that created individual cutout
+        // Graphics objects and appended them to lightingLayer, only to be immediately
+        // cleared via removeChildren() in favor of this combinedDarkness object.
         const combinedDarkness = new Graphics();
         combinedDarkness.rect(0, 0, boardWidth, boardHeight);
         combinedDarkness.fill({ color: 0x050404, alpha: 0.7 });
@@ -1554,8 +1536,6 @@ export default memo(function VttPixiStage({
           combinedDarkness.cut();
         }
 
-        // Clear the individual cutouts we added above
-        lightingLayer.removeChildren();
         lightingLayer.addChild(combinedDarkness);
 
         // Add subtle gradient glow for each light source
