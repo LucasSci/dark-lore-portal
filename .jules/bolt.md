@@ -30,3 +30,7 @@
 ## 2024-05-18 - Bounds calculation via spread operators limits scaling
 **Learning:** In utility functions like `getPolygonBounds`, using `Math.min(...xs)` and `Math.max(...ys)` with the spread operator on large arrays causes "Maximum call stack size exceeded" errors because JS engines limit the number of arguments passed to a function. In addition, mapping `points` to intermediate `xs` and `ys` arrays creates unnecessary garbage collection pressure and iterates over the data 4 times.
 **Action:** Always compute bounds using a single-pass `for` loop directly updating primitive tracking variables (`minX`, `maxX`, `minY`, `maxY`) and avoid intermediate `.map()` allocations or spread operators.
+
+## 2024-05-18 - Redundant Canvas Drawing Operations
+**Learning:** In the dynamic lighting render block inside `VttPixiStage.tsx`, individual `Graphics` objects were being instantiated, populated with math, filled, and appended to the PIXI display tree (`lightingLayer`), only to be instantly cleared via `lightingLayer.removeChildren()` in favor of a single `combinedDarkness` masking approach. This caused massive unnecessary Garbage Collection (GC) overhead and wasted CPU cycles on drawing operations that were immediately discarded.
+**Action:** When working on complex rendering paths (like custom mask or clipping algorithms), carefully trace the lifecycle of display objects. Ensure that no intermediary graphics objects are unnecessarily calculated and added to the scene graph if a subsequent block of code clears and overrides them.
