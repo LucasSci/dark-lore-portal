@@ -1150,6 +1150,9 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
+    // ⚡ Bolt: Batch fog rendering into a single Graphics object
+    const fogGraphics = new Graphics();
+
     for (const cell of page.cells) {
       const cellGraphic = new Graphics();
 
@@ -1162,15 +1165,15 @@ export default memo(function VttPixiStage({
       interactionLayer.addChild(cellGraphic);
 
       if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+        const cx = cell.x * page.gridSize;
+        const cy = cell.y * page.gridSize;
+        fogGraphics.rect(cx, cy, page.gridSize, page.gridSize);
       }
     }
+
+    fogGraphics.fill({ color: 0x060505, alpha: 0.84 });
+    fogGraphics.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+    fogLayer.addChild(fogGraphics);
 
     for (const token of tokens) {
       const container = new Container();
@@ -1350,23 +1353,28 @@ export default memo(function VttPixiStage({
     wallLayer.zIndex = 12;
     const gs = page.gridSize;
 
+    // ⚡ Bolt: Batch wall rendering into two Graphics objects (lines and dots)
+    const wallLinesGraphics = new Graphics();
+    const wallDotsGraphics = new Graphics();
+
     for (const wall of page.wallSegments) {
-      const wallLine = new Graphics();
       const ax = wall.x1 * gs + gs / 2;
       const ay = wall.y1 * gs + gs / 2;
       const bx = wall.x2 * gs + gs / 2;
       const by = wall.y2 * gs + gs / 2;
-      wallLine.moveTo(ax, ay);
-      wallLine.lineTo(bx, by);
-      wallLine.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
+
+      wallLinesGraphics.moveTo(ax, ay);
+      wallLinesGraphics.lineTo(bx, by);
+
       // Endpoint dots
-      const dotA = new Graphics();
-      dotA.circle(ax, ay, 3);
-      dotA.fill({ color: 0xe85d4a, alpha: 0.8 });
-      const dotB = new Graphics();
-      dotB.circle(bx, by, 3);
-      dotB.fill({ color: 0xe85d4a, alpha: 0.8 });
-      wallLayer.addChild(wallLine, dotA, dotB);
+      wallDotsGraphics.circle(ax, ay, 3);
+      wallDotsGraphics.circle(bx, by, 3);
+    }
+
+    if (page.wallSegments.length > 0) {
+      wallLinesGraphics.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
+      wallDotsGraphics.fill({ color: 0xe85d4a, alpha: 0.8 });
+      wallLayer.addChild(wallLinesGraphics, wallDotsGraphics);
     }
 
     // Wall preview (during placement)
@@ -1514,30 +1522,10 @@ export default memo(function VttPixiStage({
 
       // Draw darkness overlay with cutouts for visible areas
       if (visionPolygons.length > 0) {
-        const darkness = new Graphics();
-        // Full darkness rectangle
-        darkness.rect(0, 0, boardWidth, boardHeight);
-        darkness.fill({ color: 0x000000, alpha: 0.72 });
-
-        // Cut out visible areas (draw them with "erase" blend)
-        for (const poly of visionPolygons) {
-          if (poly.length < 3) continue;
-          const cutout = new Graphics();
-          cutout.moveTo(poly[0].x, poly[0].y);
-          for (let i = 1; i < poly.length; i++) {
-            cutout.lineTo(poly[i].x, poly[i].y);
-          }
-          cutout.closePath();
-          cutout.fill({ color: 0x000000, alpha: 0.72 });
-
-          // Use as mask by cutting from darkness
-          lightingLayer.addChild(cutout);
-        }
-
         // Use a mask approach: render darkness, then use visibility polygons as holes
         // PixiJS approach: render light areas on top with the map color to "reveal"
         // Simpler: draw semi-transparent darkness, then draw visibility polygons to clear it
-        // We'll use the "cut" approach with a single graphics object
+        // ⚡ Bolt: We use the "cut" approach with a single graphics object to minimize GC overhead
 
         const combinedDarkness = new Graphics();
         combinedDarkness.rect(0, 0, boardWidth, boardHeight);
@@ -1554,19 +1542,24 @@ export default memo(function VttPixiStage({
           combinedDarkness.cut();
         }
 
-        // Clear the individual cutouts we added above
-        lightingLayer.removeChildren();
         lightingLayer.addChild(combinedDarkness);
 
         // Add subtle gradient glow for each light source
+        // ⚡ Bolt: Batch light glows into a single Graphics object
+        const combinedLightGlows = new Graphics();
+        let hasLightGlows = false;
+
         for (const light of page.lightSources) {
           const cx = light.cellX * gs + gs / 2;
           const cy = light.cellY * gs + gs / 2;
           const glowRadius = light.radius * gs * 0.6;
-          const lightGlow = new Graphics();
-          lightGlow.circle(cx, cy, glowRadius);
-          lightGlow.fill({ color: light.color, alpha: light.intensity * 0.08 });
-          lightingLayer.addChild(lightGlow);
+          combinedLightGlows.circle(cx, cy, glowRadius);
+          combinedLightGlows.fill({ color: light.color, alpha: light.intensity * 0.08 });
+          hasLightGlows = true;
+        }
+
+        if (hasLightGlows) {
+          lightingLayer.addChild(combinedLightGlows);
         }
       }
     }
