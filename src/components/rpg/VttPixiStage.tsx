@@ -1150,6 +1150,8 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
+    const fogBatch = new Graphics();
+
     for (const cell of page.cells) {
       const cellGraphic = new Graphics();
 
@@ -1162,15 +1164,13 @@ export default memo(function VttPixiStage({
       interactionLayer.addChild(cellGraphic);
 
       if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+        fogBatch.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
       }
     }
+
+    fogBatch.fill({ color: 0x060505, alpha: 0.84 });
+    fogBatch.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+    fogLayer.addChild(fogBatch);
 
     for (const token of tokens) {
       const container = new Container();
@@ -1350,24 +1350,25 @@ export default memo(function VttPixiStage({
     wallLayer.zIndex = 12;
     const gs = page.gridSize;
 
+    const wallLinesBatch = new Graphics();
+    const wallDotsBatch = new Graphics();
+
     for (const wall of page.wallSegments) {
-      const wallLine = new Graphics();
       const ax = wall.x1 * gs + gs / 2;
       const ay = wall.y1 * gs + gs / 2;
       const bx = wall.x2 * gs + gs / 2;
       const by = wall.y2 * gs + gs / 2;
-      wallLine.moveTo(ax, ay);
-      wallLine.lineTo(bx, by);
-      wallLine.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
+      wallLinesBatch.moveTo(ax, ay);
+      wallLinesBatch.lineTo(bx, by);
+
       // Endpoint dots
-      const dotA = new Graphics();
-      dotA.circle(ax, ay, 3);
-      dotA.fill({ color: 0xe85d4a, alpha: 0.8 });
-      const dotB = new Graphics();
-      dotB.circle(bx, by, 3);
-      dotB.fill({ color: 0xe85d4a, alpha: 0.8 });
-      wallLayer.addChild(wallLine, dotA, dotB);
+      wallDotsBatch.circle(ax, ay, 3);
+      wallDotsBatch.circle(bx, by, 3);
     }
+
+    wallLinesBatch.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
+    wallDotsBatch.fill({ color: 0xe85d4a, alpha: 0.8 });
+    wallLayer.addChild(wallLinesBatch, wallDotsBatch);
 
     // Wall preview (during placement)
     if (wallPreview) {
