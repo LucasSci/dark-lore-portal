@@ -1468,6 +1468,8 @@ export default function MesaPage() {
                   <button
                     key={page.id}
                     type="button"
+                    title={`Abrir área ${page.name}`}
+                    aria-label={`Abrir área ${page.name}`}
                     onClick={() => void mutateScene((current) => ({ ...current, activePageId: page.id }), { broadcast: false, persist: true })}
                     className={cn(
                       "flex w-full items-center justify-between rounded-sm border px-3 py-2 text-left text-xs transition-colors",
