@@ -1,4 +1,5 @@
 import { LOCAL_USER_ID, SEED_CHARACTER_ID } from "@/lib/local-identities";
+import { generateSecureShortId } from "@/lib/utils";
 import {
   ATTRIBUTES,
   calculateDefense,
@@ -171,7 +172,7 @@ export function buildCharacterFromCreator(draft: CharacterDraftData): CharacterR
     gold,
     hp_current: hp,
     hp_max: hp,
-    id: `local-character-${Date.now()}`,
+    id: `local-character-${generateSecureShortId()}`,
     initiative_bonus: initiative,
     is_active: true,
     level,
