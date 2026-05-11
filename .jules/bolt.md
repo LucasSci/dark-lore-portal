@@ -30,3 +30,7 @@
 ## 2024-05-18 - Bounds calculation via spread operators limits scaling
 **Learning:** In utility functions like `getPolygonBounds`, using `Math.min(...xs)` and `Math.max(...ys)` with the spread operator on large arrays causes "Maximum call stack size exceeded" errors because JS engines limit the number of arguments passed to a function. In addition, mapping `points` to intermediate `xs` and `ys` arrays creates unnecessary garbage collection pressure and iterates over the data 4 times.
 **Action:** Always compute bounds using a single-pass `for` loop directly updating primitive tracking variables (`minX`, `maxX`, `minY`, `maxY`) and avoid intermediate `.map()` allocations or spread operators.
+
+## 2024-05-18 - Batching PIXI.js Grid and Fog Graphics
+**Learning:** In VTT renderers (like `VttPixiStage.tsx`), creating a new `Graphics` object for every single grid cell or fog cell inside a loop (e.g., iterating through `page.cells`) introduces significant Garbage Collection (GC) overhead and negatively impacts rendering performance during scene updates.
+**Action:** When drawing thousands of identical shapes, always use a single `Graphics` object. Append the individual shape paths (like `rect()`) inside the loop, and apply the fill/stroke outside the loop. To handle interaction on batched objects, attach a single listener (e.g., `pointertap`) to the batched object and resolve the target logically (e.g., using `event.getLocalPosition` and calculating coordinates based on grid size).
