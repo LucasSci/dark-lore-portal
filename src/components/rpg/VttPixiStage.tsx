@@ -1150,27 +1150,39 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
-    for (const cell of page.cells) {
-      const cellGraphic = new Graphics();
+    // ⚡ Bolt: Batch identical grid shapes into single Graphics objects to reduce GC overhead
+    const interactionBatch = new Graphics();
+    interactionBatch.eventMode = "static";
+    interactionBatch.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
 
-      cellGraphic.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-      cellGraphic.rect(0, 0, page.gridSize, page.gridSize);
-      cellGraphic.fill({ color: 0x000000, alpha: 0.001 });
-      cellGraphic.eventMode = "static";
-      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
-      cellGraphic.on("pointertap", () => cellClickRef.current(cell));
-      interactionLayer.addChild(cellGraphic);
+    // ⚡ Bolt: Calculate exact coordinates from pointer relative to interactionLayer
+    interactionBatch.on("pointertap", (event) => {
+      const localPos = interactionLayer.toLocal(event.global);
+      const cellX = Math.floor(localPos.x / page.gridSize);
+      const cellY = Math.floor(localPos.y / page.gridSize);
+      const cell = page.cells.find((c) => c.x === cellX && c.y === cellY);
+      if (cell) {
+        cellClickRef.current(cell);
+      }
+    });
+
+    const fogBatch = new Graphics();
+
+    for (let i = 0; i < page.cells.length; i++) {
+      const cell = page.cells[i];
+      interactionBatch.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
 
       if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+        fogBatch.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
       }
     }
+
+    interactionBatch.fill({ color: 0x000000, alpha: 0.001 });
+    interactionLayer.addChild(interactionBatch);
+
+    fogBatch.fill({ color: 0x060505, alpha: 0.84 });
+    fogBatch.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+    fogLayer.addChild(fogBatch);
 
     for (const token of tokens) {
       const container = new Container();
