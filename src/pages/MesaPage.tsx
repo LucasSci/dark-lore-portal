@@ -226,6 +226,115 @@ function SidePanelCard({
 
 /**
  * ⚡ Bolt Optimization:
+ * Isolating the NPC draft state prevents full-page re-renders on keystrokes.
+ */
+function NpcInput({ onCreateNpc }: { onCreateNpc: (draft: ReturnType<typeof createNpcDraft>) => Promise<void> }) {
+  const [npcDraft, setNpcDraft] = useState(() => createNpcDraft());
+
+  const handleCreate = async () => {
+    if (!npcDraft.name.trim()) return;
+    await onCreateNpc(npcDraft);
+    setNpcDraft(createNpcDraft());
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        {WITCHER_NPC_PRESETS.map((preset) => (
+          <Button
+            key={preset.label}
+            size="sm"
+            variant="outline"
+            className="h-8 text-[11px]"
+            onClick={() => setNpcDraft((current) => ({
+              ...createNpcDraft(preset),
+              name: current.name,
+            }))}
+          >
+            {preset.label}
+          </Button>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="metric-panel px-3 py-2">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">VIT</p>
+          <p className="mt-1 text-sm text-foreground">{npcDraft.hp}</p>
+        </div>
+        <div className="metric-panel px-3 py-2">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">DEF</p>
+          <p className="mt-1 text-sm text-foreground">{npcDraft.ac}</p>
+        </div>
+        <div className="metric-panel px-3 py-2">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">INI</p>
+          <p className="mt-1 text-sm text-foreground">{npcDraft.initiativeBonus}</p>
+        </div>
+      </div>
+      <Input
+        value={npcDraft.name}
+        onChange={(e) => setNpcDraft((c) => ({ ...c, name: e.target.value }))}
+        placeholder="Nome da ameaca ou aliado"
+        className="h-10 text-sm"
+      />
+      <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+        <span>Perfil</span>
+        <Select
+          value={npcDraft.role}
+          onValueChange={(value) => setNpcDraft((current) => ({ ...current, role: value }))}
+        >
+          <SelectTrigger className="h-10 text-sm">
+            <SelectValue placeholder="Escolha um perfil" />
+          </SelectTrigger>
+          <SelectContent>
+            {CLASSES.map((profession) => (
+              <SelectItem key={profession.value} value={profession.label}>
+                {profession.label}
+              </SelectItem>
+            ))}
+            <SelectItem value="Monstro">Monstro</SelectItem>
+            <SelectItem value="Maldicao">Maldicao</SelectItem>
+            <SelectItem value="Aparicao">Aparicao</SelectItem>
+          </SelectContent>
+        </Select>
+      </label>
+      <div className="grid grid-cols-3 gap-1.5">
+        <Input
+          type="number"
+          value={npcDraft.hp}
+          onChange={(e) => setNpcDraft((c) => ({ ...c, hp: Number(e.target.value) }))}
+          placeholder="VIT"
+          className="h-8 text-xs"
+        />
+        <Input
+          type="number"
+          value={npcDraft.ac}
+          onChange={(e) => setNpcDraft((c) => ({ ...c, ac: Number(e.target.value) }))}
+          placeholder="DEF"
+          className="h-8 text-xs"
+        />
+        <Input
+          type="number"
+          value={npcDraft.initiativeBonus}
+          onChange={(e) => setNpcDraft((c) => ({ ...c, initiativeBonus: Number(e.target.value) }))}
+          placeholder="Ini"
+          className="h-8 text-xs"
+        />
+      </div>
+      <Textarea
+        value={npcDraft.notes}
+        onChange={(e) => setNpcDraft((c) => ({ ...c, notes: e.target.value }))}
+        placeholder="Equipamento, fraquezas, sinais, comportamento ou gatilhos da cena"
+        className="min-h-[112px] text-sm"
+      />
+      <Button className="h-10 w-full text-sm" onClick={() => void handleCreate()}>
+        <Plus className="mr-1.5 h-3.5 w-3.5" />
+        Adicionar NPC
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * ⚡ Bolt Optimization:
  * Isolating the chat input state into its own component prevents the massive
  * MesaPage component (and its entire tree of tokens, chat messages, and VTT)
  * from re-rendering on every single keystroke.
@@ -398,7 +507,6 @@ export default function MesaPage() {
   const [connectionLabel, setConnectionLabel] = useState("");
   const [connectionSpawnX, setConnectionSpawnX] = useState(0);
   const [connectionSpawnY, setConnectionSpawnY] = useState(0);
-  const [npcDraft, setNpcDraft] = useState(() => createNpcDraft());
   const sceneRef = useRef(scene);
   const presenceRef = useRef(scene.presence);
   const codexLoadRef = useRef<Promise<TabletopLoreCompendium> | null>(null);
@@ -1299,10 +1407,9 @@ export default function MesaPage() {
     }
   };
 
-  const createNpc = async () => {
-    if (!npcDraft.name.trim()) return;
+  const handleCreateNpc = async (draft: ReturnType<typeof createNpcDraft>) => {
     const nextScene = await mutateScene(
-      (c) => addSceneNpc(c, npcDraft),
+      (c) => addSceneNpc(c, draft),
       {
         eventFactory: (updatedScene) => {
           const object = updatedScene.objects.find((candidate) => candidate.id === updatedScene.selectedObjectId);
@@ -1323,7 +1430,6 @@ export default function MesaPage() {
         },
       },
     );
-    setNpcDraft(createNpcDraft());
     const tok = nextScene.objects.find((o) => o.id === nextScene.selectedObjectId);
     if (tok?.objectType === "token") {
       await appendChatMessage("Sistema", `${tok.payload.name} em ${getPositionLabel(tok.position.x, tok.position.y)}.`, "npc");
@@ -2360,99 +2466,8 @@ export default function MesaPage() {
                       title="Elenco de ameacas"
                       description="Monte um inimigo ou aliado no padrao do Witcher TRPG e solte-o direto na area ativa."
                     >
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap gap-2">
-                          {WITCHER_NPC_PRESETS.map((preset) => (
-                            <Button
-                              key={preset.label}
-                              size="sm"
-                              variant="outline"
-                              className="h-8 text-[11px]"
-                              onClick={() => setNpcDraft((current) => ({
-                                ...createNpcDraft(preset),
-                                name: current.name,
-                              }))}
-                            >
-                              {preset.label}
-                            </Button>
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className="metric-panel px-3 py-2">
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">VIT</p>
-                            <p className="mt-1 text-sm text-foreground">{npcDraft.hp}</p>
-                          </div>
-                          <div className="metric-panel px-3 py-2">
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">DEF</p>
-                            <p className="mt-1 text-sm text-foreground">{npcDraft.ac}</p>
-                          </div>
-                          <div className="metric-panel px-3 py-2">
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">INI</p>
-                            <p className="mt-1 text-sm text-foreground">{npcDraft.initiativeBonus}</p>
-                          </div>
-                        </div>
-                      </div>
+                      <NpcInput onCreateNpc={handleCreateNpc} />
                     </SidePanelCard>
-                    <Input
-                      value={npcDraft.name}
-                      onChange={(e) => setNpcDraft((c) => ({ ...c, name: e.target.value }))}
-                      placeholder="Nome da ameaca ou aliado"
-                      className="h-10 text-sm"
-                    />
-                    <label className="space-y-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                      <span>Perfil</span>
-                      <Select
-                        value={npcDraft.role}
-                        onValueChange={(value) => setNpcDraft((current) => ({ ...current, role: value }))}
-                      >
-                        <SelectTrigger className="h-10 text-sm">
-                          <SelectValue placeholder="Escolha um perfil" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CLASSES.map((profession) => (
-                            <SelectItem key={profession.value} value={profession.label}>
-                              {profession.label}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="Monstro">Monstro</SelectItem>
-                          <SelectItem value="Maldicao">Maldicao</SelectItem>
-                          <SelectItem value="Aparicao">Aparicao</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      <Input
-                        type="number"
-                        value={npcDraft.hp}
-                        onChange={(e) => setNpcDraft((c) => ({ ...c, hp: Number(e.target.value) }))}
-                        placeholder="VIT"
-                        className="h-8 text-xs"
-                      />
-                      <Input
-                        type="number"
-                        value={npcDraft.ac}
-                        onChange={(e) => setNpcDraft((c) => ({ ...c, ac: Number(e.target.value) }))}
-                        placeholder="DEF"
-                        className="h-8 text-xs"
-                      />
-                      <Input
-                        type="number"
-                        value={npcDraft.initiativeBonus}
-                        onChange={(e) => setNpcDraft((c) => ({ ...c, initiativeBonus: Number(e.target.value) }))}
-                        placeholder="Ini"
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                    <Textarea
-                      value={npcDraft.notes}
-                      onChange={(e) => setNpcDraft((c) => ({ ...c, notes: e.target.value }))}
-                      placeholder="Equipamento, fraquezas, sinais, comportamento ou gatilhos da cena"
-                      className="min-h-[112px] text-sm"
-                    />
-                    <Button className="h-10 w-full text-sm" onClick={() => void createNpc()}>
-                      <Plus className="mr-1.5 h-3.5 w-3.5" />
-                      Adicionar NPC
-                    </Button>
                   </div>
                 </ScrollArea>
               </div>
