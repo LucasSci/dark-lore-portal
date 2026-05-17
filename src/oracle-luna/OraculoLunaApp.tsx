@@ -476,6 +476,7 @@ export default function OraculoLunaApp() {
           <input
             type="text"
             placeholder="Buscar capítulo, profecia ou nome..."
+            aria-label="Buscar capítulo, profecia ou nome"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             className="archive-oracle-input rounded-2xl border border-white/10 bg-black/45 text-sm text-white/84 placeholder:text-white/24 focus:border-white/18 focus:outline-none"
@@ -657,6 +658,8 @@ export default function OraculoLunaApp() {
                   ? "border-white/24 bg-zinc-900 text-white shadow-[0_0_30px_rgba(255,255,255,0.08)]"
                   : "border-white/10 bg-zinc-950 text-white hover:border-white/22 hover:bg-zinc-900"
               } ${isConnecting ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+              aria-label={isConnecting ? "Conectando ao Oráculo" : isConnected ? "Desconectar do Oráculo" : "Conectar ao Oráculo"}
+              title={isConnecting ? "Conectando ao Oráculo" : isConnected ? "Desconectar do Oráculo" : "Conectar ao Oráculo"}
             >
               {isConnecting ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -800,6 +803,8 @@ export default function OraculoLunaApp() {
               <button
                 onClick={() => setShowArchive(false)}
                 className="rounded-full p-2 text-white/40 transition-colors hover:bg-white/5 hover:text-white"
+                aria-label="Fechar arquivo de lore"
+                title="Fechar arquivo de lore"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -810,6 +815,7 @@ export default function OraculoLunaApp() {
                 <input
                   type="text"
                   placeholder="Buscar capítulo, profecia ou nome..."
+            aria-label="Buscar capítulo, profecia ou nome"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   className="archive-oracle-input rounded-2xl border border-white/10 bg-black/45 text-sm text-white/84 placeholder:text-white/24 focus:border-white/18 focus:outline-none"
@@ -890,6 +896,8 @@ export default function OraculoLunaApp() {
                 onClick={() => navigateHistory("prev")}
                 disabled={historyIndex === 0}
                 className={`rounded-full p-2 transition-all ${historyIndex === 0 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+                aria-label="Voltar no histórico"
+                title="Voltar no histórico"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -900,6 +908,8 @@ export default function OraculoLunaApp() {
                 onClick={() => navigateHistory("next")}
                 disabled={historyIndex === history.length - 1}
                 className={`rounded-full p-2 transition-all ${historyIndex === history.length - 1 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+                aria-label="Avançar no histórico"
+                title="Avançar no histórico"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

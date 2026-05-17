@@ -489,6 +489,7 @@ export default function CinematicHero() {
                   index === activeScene && "shadow-[0_0_0_1px_hsl(var(--brand)/0.42),0_24px_64px_rgba(0,0,0,0.42)]",
                 )}
                 onClick={() => setActiveScene(index)}
+                aria-label={`Selecionar cena ${scene.sceneLabel}`}
               >
                 <span className="absolute inset-0">
                   <img src={scene.thumbnail} alt="" aria-hidden="true" className="h-full w-full object-cover object-center opacity-72 transition duration-700 group-hover:scale-105" />
