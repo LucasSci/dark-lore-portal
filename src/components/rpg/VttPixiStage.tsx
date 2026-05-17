@@ -1150,27 +1150,36 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
-    for (const cell of page.cells) {
-      const cellGraphic = new Graphics();
+    const cellsGraphics = new Graphics();
+    const fogGraphics = new Graphics();
 
-      cellGraphic.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-      cellGraphic.rect(0, 0, page.gridSize, page.gridSize);
-      cellGraphic.fill({ color: 0x000000, alpha: 0.001 });
-      cellGraphic.eventMode = "static";
-      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
-      cellGraphic.on("pointertap", () => cellClickRef.current(cell));
-      interactionLayer.addChild(cellGraphic);
+    for (const cell of page.cells) {
+      cellsGraphics.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
 
       if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+        fogGraphics.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
       }
     }
+
+    cellsGraphics.fill({ color: 0x000000, alpha: 0.001 });
+
+    cellsGraphics.eventMode = "static";
+    cellsGraphics.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
+    cellsGraphics.on("pointertap", (event) => {
+      const local = interactionLayer.toLocal(event.global);
+      const cellX = Math.floor(local.x / page.gridSize);
+      const cellY = Math.floor(local.y / page.gridSize);
+      const cell = page.cells.find((c) => c.x === cellX && c.y === cellY);
+      if (cell) {
+        cellClickRef.current(cell);
+      }
+    });
+
+    interactionLayer.addChild(cellsGraphics);
+
+    fogGraphics.fill({ color: 0x060505, alpha: 0.84 });
+    fogGraphics.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+    fogLayer.addChild(fogGraphics);
 
     for (const token of tokens) {
       const container = new Container();
@@ -1311,13 +1320,13 @@ export default memo(function VttPixiStage({
       }
 
       // Highlight cells along the path
+      const highlight = new Graphics();
       for (const c of cells) {
-        const highlight = new Graphics();
         highlight.rect(c.x * gs, c.y * gs, gs, gs);
-        highlight.fill({ color: MEASURE_CELL_COLOR, alpha: 0.12 });
-        highlight.stroke({ color: MEASURE_CELL_COLOR, alpha: 0.4, width: 1 });
-        measureLayer.addChild(highlight);
       }
+      highlight.fill({ color: MEASURE_CELL_COLOR, alpha: 0.12 });
+      highlight.stroke({ color: MEASURE_CELL_COLOR, alpha: 0.4, width: 1 });
+      measureLayer.addChild(highlight);
 
       // Draw the line from center to center
       const fromCx = startX * gs + gs / 2;
@@ -1350,24 +1359,24 @@ export default memo(function VttPixiStage({
     wallLayer.zIndex = 12;
     const gs = page.gridSize;
 
+    const wallLineBatch = new Graphics();
+    const wallDotBatch = new Graphics();
+
     for (const wall of page.wallSegments) {
-      const wallLine = new Graphics();
       const ax = wall.x1 * gs + gs / 2;
       const ay = wall.y1 * gs + gs / 2;
       const bx = wall.x2 * gs + gs / 2;
       const by = wall.y2 * gs + gs / 2;
-      wallLine.moveTo(ax, ay);
-      wallLine.lineTo(bx, by);
-      wallLine.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
-      // Endpoint dots
-      const dotA = new Graphics();
-      dotA.circle(ax, ay, 3);
-      dotA.fill({ color: 0xe85d4a, alpha: 0.8 });
-      const dotB = new Graphics();
-      dotB.circle(bx, by, 3);
-      dotB.fill({ color: 0xe85d4a, alpha: 0.8 });
-      wallLayer.addChild(wallLine, dotA, dotB);
+      wallLineBatch.moveTo(ax, ay);
+      wallLineBatch.lineTo(bx, by);
+
+      wallDotBatch.circle(ax, ay, 3);
+      wallDotBatch.circle(bx, by, 3);
     }
+
+    wallLineBatch.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
+    wallDotBatch.fill({ color: 0xe85d4a, alpha: 0.8 });
+    wallLayer.addChild(wallLineBatch, wallDotBatch);
 
     // Wall preview (during placement)
     if (wallPreview) {
