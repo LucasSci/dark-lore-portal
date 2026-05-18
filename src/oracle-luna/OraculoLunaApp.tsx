@@ -800,6 +800,8 @@ export default function OraculoLunaApp() {
               <button
                 onClick={() => setShowArchive(false)}
                 className="rounded-full p-2 text-white/40 transition-colors hover:bg-white/5 hover:text-white"
+                aria-label="Fechar arquivo"
+                title="Fechar arquivo"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -890,6 +892,8 @@ export default function OraculoLunaApp() {
                 onClick={() => navigateHistory("prev")}
                 disabled={historyIndex === 0}
                 className={`rounded-full p-2 transition-all ${historyIndex === 0 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+                aria-label="Voltar no histórico"
+                title="Voltar no histórico"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -900,6 +904,8 @@ export default function OraculoLunaApp() {
                 onClick={() => navigateHistory("next")}
                 disabled={historyIndex === history.length - 1}
                 className={`rounded-full p-2 transition-all ${historyIndex === history.length - 1 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+                aria-label="Avançar no histórico"
+                title="Avançar no histórico"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
