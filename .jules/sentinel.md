@@ -1,16 +1,4 @@
-## 2024-05-18 - Avoid Math.random() for Secure Identifiers
-**Vulnerability:** Core systems (Virtual Tabletop, real-time sync, asset manifest) generated collision-prone, predictable identifiers via `Math.random().toString(36)` instead of utilizing native, cryptographically secure random values.
-**Learning:** `Math.random()` lacks required entropy and predictability guarantees needed for secure ID generation (such as session connection IDs or unique sheet request IDs), increasing vulnerability to ID collisions and potential session/asset hijacking.
-**Prevention:** Always use the centralized `generateSecureId()` or `generateSecureShortId()` from `src/lib/utils.ts` to tap into `crypto.randomUUID()` and `crypto.getRandomValues()` respectively, assuring robust fallback behaviors are present without compromising security in supporting contexts.
-## 2024-05-18 - Avoid allow-same-origin in sandboxed iframes rendering dynamic content
-**Vulnerability:** The AI-generated visual environment (`appCode`) for Oracle Luna was rendered in an `iframe` that had both `allow-scripts` and `allow-same-origin` in its `sandbox` attribute. This permitted the dynamic, potentially untrusted AI HTML to interact with the main application's origin, posing a serious Cross-Site Scripting (XSS) risk.
-**Learning:** Using `allow-same-origin` inside an iframe that renders user or AI-generated content breaks the isolation boundary, allowing the iframe script to traverse the DOM (`window.parent`), read cookies, and access `localStorage`.
-**Prevention:** Never use `allow-same-origin` alongside `allow-scripts` in a sandboxed iframe intended for untrusted content. Let the iframe be isolated into an opaque origin.
-## 2024-05-20 - Avoid Date.now() for unique identifiers
-**Vulnerability:** Several RPG components (CombatTracker, GameMasterPanel, publications) used `Date.now().toString()` or `${Date.now()}` to generate unique IDs for new entities, publications, and combatants.
-**Learning:** `Date.now()` is highly predictable and can generate duplicate IDs if multiple entities are created within the same millisecond (e.g., during rapid UI interactions, bulk creation, or automated testing). This causes React rendering bugs (duplicate keys) and potential ID collision vulnerabilities.
-**Prevention:** Always use the centralized `generateSecureId()` utility for ID generation in React state and store objects, ensuring uniqueness and security.
-## 2024-05-21 - Do not track .env files with actual secrets
-**Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
-**Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
-**Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+## 2024-11-20 - [Predictable Upload Paths]
+**Vulnerability:** The application used `Date.now()` as part of the storage path when uploading battlemaps, making the URLs predictable and susceptible to enumeration or overwrite attacks (if other mechanisms failed).
+**Learning:** Even internal toolings or non-public-facing uploads need randomized, unpredictable paths to prevent unauthorized access or ID collisions.
+**Prevention:** Always use cryptographically secure random string generators (like the centralized `generateSecureShortId` or `generateSecureId` utilities) in combination with timestamps or other identifiers when generating file paths for cloud storage.
