@@ -14,3 +14,7 @@
 **Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
 **Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
 **Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+## 2024-05-19 - Predictable ID Generation for Uploads
+**Vulnerability:** Predictable IDs using `Date.now()` were used for generating file upload paths in `vtt-assets.ts`.
+**Learning:** Developers frequently fall back to `Date.now()` or `Math.random()` when they need a quick ID without thinking about collision risks or predictability on a backend, even when secure utility functions are available.
+**Prevention:** Ensure secure ID generation functions (e.g. `generateSecureShortId()`) are the standard and enforce their usage in code reviews for anything stored on a server or database.
