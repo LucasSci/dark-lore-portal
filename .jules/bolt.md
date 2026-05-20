@@ -2,9 +2,7 @@
 ## 2024-05-18 - Avoid array spreading in hot loops
 **Learning:** In hot functions like `computeVisibilityPolygon` (which may be called multiple times per frame for line-of-sight and lighting calculations), using the spread syntax (`[...walls, ...boundaryWalls]`) to allocate an intermediate array simply for iterating over it creates significant garbage collection (GC) overhead.
 **Action:** Always avoid creating intermediate arrays with the spread operator in performance-critical loops. Iterate over the base arrays directly and conditionally push to your target array, or process boundary cases outside the main loop.
-## 2024-05-18 - Avoid array spreading in hot loops
-**Learning:** In hot functions like `computeVisibilityPolygon` (which may be called multiple times per frame for line-of-sight and lighting calculations), using the spread syntax (`[...walls, ...boundaryWalls]`) to allocate an intermediate array simply for iterating over it creates significant garbage collection (GC) overhead.
-**Action:** Always avoid creating intermediate arrays with the spread operator in performance-critical loops. Iterate over the base arrays directly and conditionally push to your target array, or process boundary cases outside the main loop.
+
 ## 2024-05-18 - Unnecessary PIXI re-renders on every keystroke
 **Learning:** The VTT feature uses a large `useEffect` in `VttPixiStage.tsx` to rebuild the entire PIXI scene graph (thousands of `Graphics` objects for grid cells, fog, tokens, etc.) whenever the board state changes. However, because inline callback functions (`onCellClick`, `onMoveToken`, `onSelectToken`) from the parent component (`MesaPage`) were included in the dependency array, and the `tokens` array was re-computed as a new reference on every render, the entire PIXI graph was destroyed and recreated on *every single keystroke* in the chat or dice inputs.
 **Action:** When integrating React with non-React canvas libraries like PIXI, always memoize derived object arrays (like `tokens`) and use the `useRef` pattern for callback functions passed from the parent to avoid triggering expensive rebuilds when the parent re-renders due to unrelated state changes (like text inputs).
@@ -24,9 +22,15 @@
 ## 2025-05-18 - Loop Invariant Code Motion (LICM) in Raycasting
 **Learning:** During dynamic lighting raycasting, portions of the segment intersection math (like `diffX = ax - ox` or the distance numerator `t_numerator = diffX * dy - diffY * dx`) are entirely dependent on the wall and ray origin, but completely independent of the ray's angle (`dirX`, `dirY`). Calculating these inside the inner ray loop wastes millions of arithmetic operations per frame.
 **Action:** Always look for variables that are invariant to the inner loop parameters and precompute them in outer loops. Moving invariant vector math operations outside the raycasting loop into pre-allocated `Float64Arrays` significantly accelerates the hot intersection loop.
+
 ## 2025-05-18 - Chained array operations in hot React renders
 **Learning:** In performance-critical React canvas/PIXI integrations (like VttPixiStage), computing string signatures using chained `.map().join()` operations or mapping large arrays inside a frequently updated `useEffect` or render loop causes unnecessary intermediate array allocations, significantly increasing Garbage Collection (GC) overhead.
 **Action:** Always replace `.map().join()` with a standard `for` loop and string concatenation when generating string signatures in hot paths. Similarly, pre-allocate arrays (`new Array(length)`) instead of using `.map()` when caching transformed data in hot loops to eliminate GC pressure.
+
 ## 2024-05-18 - Bounds calculation via spread operators limits scaling
 **Learning:** In utility functions like `getPolygonBounds`, using `Math.min(...xs)` and `Math.max(...ys)` with the spread operator on large arrays causes "Maximum call stack size exceeded" errors because JS engines limit the number of arguments passed to a function. In addition, mapping `points` to intermediate `xs` and `ys` arrays creates unnecessary garbage collection pressure and iterates over the data 4 times.
 **Action:** Always compute bounds using a single-pass `for` loop directly updating primitive tracking variables (`minX`, `maxX`, `minY`, `maxY`) and avoid intermediate `.map()` allocations or spread operators.
+
+## 2024-05-19 - Batching UI primitive elements in PixiJS limits GC
+**Learning:** Drawing large arrays of primitive grid elements or fog rects with a new `Graphics()` call per iteration leads to massive memory overhead in the canvas context, increasing both garbage collector frequency and rendering time. For example, rendering interaction rects and thousands of fog items inside the `VttPixiStage` map drastically degraded rendering performance on map interaction updates.
+**Action:** To optimize PIXI.js performance in React render loops (e.g., `VttPixiStage`), avoid creating thousands of individual `Graphics` objects for repeated identical shapes (like grid cells, fog cells, or wall segments). Instead, batch identical shapes into a single `Graphics` object by appending paths (e.g., `rect()`, `moveTo()`, `lineTo()`, `circle()`) inside the loop and calling `fill()` and `stroke()` once outside the loop.
