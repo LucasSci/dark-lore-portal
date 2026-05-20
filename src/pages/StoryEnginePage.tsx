@@ -29,6 +29,7 @@ import {
 } from "@/components/product/ProductShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import {
   StoryEngineContextPanel,
   StoryEngineProjectRail,
@@ -147,6 +148,7 @@ export default function StoryEnginePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [imageTargetId, setImageTargetId] = useState<string | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   const lastSavedSignatureRef = useRef<string>("");
 
@@ -332,13 +334,15 @@ export default function StoryEnginePage() {
     if (!activeProject) {
       return;
     }
+    setProjectToDelete(activeProject.id);
+  }, [activeProject]);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const confirmDeleteProject = useCallback(() => {
+    if (!projectToDelete) {
       return;
     }
 
-    const nextProjects = deleteStoryProject(activeProject.id);
+    const nextProjects = deleteStoryProject(projectToDelete);
     const nextProject = nextProjects[0] ?? buildSeededProject();
 
     if (!nextProjects.length) {
@@ -349,16 +353,16 @@ export default function StoryEnginePage() {
       setActiveStoryProjectId(result.project.id);
       lastSavedSignatureRef.current = buildProjectSignature(result.project);
       navigate(`/story-engine/${result.project.id}${querySuffix}`);
-      return;
+    } else {
+      setProjects(nextProjects);
+      setProjectDraft(nextProject);
+      setActiveProjectIdState(nextProject.id);
+      setActiveStoryProjectId(nextProject.id);
+      lastSavedSignatureRef.current = buildProjectSignature(nextProject);
+      navigate(`/story-engine/${nextProject.id}${querySuffix}`);
     }
-
-    setProjects(nextProjects);
-    setProjectDraft(nextProject);
-    setActiveProjectIdState(nextProject.id);
-    setActiveStoryProjectId(nextProject.id);
-    lastSavedSignatureRef.current = buildProjectSignature(nextProject);
-    navigate(`/story-engine/${nextProject.id}${querySuffix}`);
-  }, [activeProject, buildSeededProject, navigate, querySuffix]);
+    setProjectToDelete(null);
+  }, [projectToDelete, buildSeededProject, navigate, querySuffix]);
 
   const handleStoryUpload = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
@@ -1213,6 +1217,17 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+      <ConfirmActionDialog
+        open={projectToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setProjectToDelete(null);
+          }
+        }}
+        title="Remover projeto"
+        description={activeProject ? `Remover o projeto "${activeProject.title}" do armazenamento local?` : "Remover o projeto?"}
+        onConfirm={confirmDeleteProject}
+      />
     </div>
   );
 }
