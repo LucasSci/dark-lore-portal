@@ -1150,26 +1150,36 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
-    for (const cell of page.cells) {
-      const cellGraphic = new Graphics();
-
-      cellGraphic.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-      cellGraphic.rect(0, 0, page.gridSize, page.gridSize);
-      cellGraphic.fill({ color: 0x000000, alpha: 0.001 });
-      cellGraphic.eventMode = "static";
-      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
-      cellGraphic.on("pointertap", () => cellClickRef.current(cell));
-      interactionLayer.addChild(cellGraphic);
-
-      if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+    // ⚡ Bolt: Batch all interaction cells into a single transparent graphic to reduce GC and node count
+    const interactionSurface = new Graphics();
+    interactionSurface.rect(0, 0, boardWidth, boardHeight);
+    interactionSurface.fill({ color: 0x000000, alpha: 0.001 });
+    interactionSurface.eventMode = "static";
+    interactionSurface.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
+    interactionSurface.on("pointertap", (event) => {
+      const local = interactionLayer.toLocal(event.global);
+      const cellX = Math.floor(local.x / page.gridSize);
+      const cellY = Math.floor(local.y / page.gridSize);
+      const cell = page.cells.find((c) => c.x === cellX && c.y === cellY);
+      if (cell) {
+        cellClickRef.current(cell);
       }
+    });
+    interactionLayer.addChild(interactionSurface);
+
+    // ⚡ Bolt: Batch all fog rects into a single Graphics object to prevent thousands of objects
+    const batchedFog = new Graphics();
+    let hasFog = false;
+    for (const cell of page.cells) {
+      if (!page.fog[cell.id]) {
+        batchedFog.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
+        hasFog = true;
+      }
+    }
+    if (hasFog) {
+      batchedFog.fill({ color: 0x060505, alpha: 0.84 });
+      batchedFog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+      fogLayer.addChild(batchedFog);
     }
 
     for (const token of tokens) {
@@ -1311,12 +1321,15 @@ export default memo(function VttPixiStage({
       }
 
       // Highlight cells along the path
-      for (const c of cells) {
-        const highlight = new Graphics();
-        highlight.rect(c.x * gs, c.y * gs, gs, gs);
-        highlight.fill({ color: MEASURE_CELL_COLOR, alpha: 0.12 });
-        highlight.stroke({ color: MEASURE_CELL_COLOR, alpha: 0.4, width: 1 });
-        measureLayer.addChild(highlight);
+      // ⚡ Bolt: Batch measure highlights into a single Graphics object
+      if (cells.length > 0) {
+        const batchedHighlights = new Graphics();
+        for (const c of cells) {
+          batchedHighlights.rect(c.x * gs, c.y * gs, gs, gs);
+        }
+        batchedHighlights.fill({ color: MEASURE_CELL_COLOR, alpha: 0.12 });
+        batchedHighlights.stroke({ color: MEASURE_CELL_COLOR, alpha: 0.4, width: 1 });
+        measureLayer.addChild(batchedHighlights);
       }
 
       // Draw the line from center to center
@@ -1350,23 +1363,26 @@ export default memo(function VttPixiStage({
     wallLayer.zIndex = 12;
     const gs = page.gridSize;
 
-    for (const wall of page.wallSegments) {
-      const wallLine = new Graphics();
-      const ax = wall.x1 * gs + gs / 2;
-      const ay = wall.y1 * gs + gs / 2;
-      const bx = wall.x2 * gs + gs / 2;
-      const by = wall.y2 * gs + gs / 2;
-      wallLine.moveTo(ax, ay);
-      wallLine.lineTo(bx, by);
-      wallLine.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
-      // Endpoint dots
-      const dotA = new Graphics();
-      dotA.circle(ax, ay, 3);
-      dotA.fill({ color: 0xe85d4a, alpha: 0.8 });
-      const dotB = new Graphics();
-      dotB.circle(bx, by, 3);
-      dotB.fill({ color: 0xe85d4a, alpha: 0.8 });
-      wallLayer.addChild(wallLine, dotA, dotB);
+    // ⚡ Bolt: Batch all walls and endpoints into single Graphics objects to avoid GC overhead
+    const batchedWalls = new Graphics();
+    const batchedWallDots = new Graphics();
+
+    if (page.wallSegments.length > 0) {
+      for (const wall of page.wallSegments) {
+        const ax = wall.x1 * gs + gs / 2;
+        const ay = wall.y1 * gs + gs / 2;
+        const bx = wall.x2 * gs + gs / 2;
+        const by = wall.y2 * gs + gs / 2;
+        batchedWalls.moveTo(ax, ay);
+        batchedWalls.lineTo(bx, by);
+
+        batchedWallDots.circle(ax, ay, 3);
+        batchedWallDots.circle(bx, by, 3);
+      }
+
+      batchedWalls.stroke({ color: 0xe85d4a, alpha: boardMode === "wall" ? 0.85 : 0.35, width: boardMode === "wall" ? 3 : 2 });
+      batchedWallDots.fill({ color: 0xe85d4a, alpha: 0.8 });
+      wallLayer.addChild(batchedWalls, batchedWallDots);
     }
 
     // Wall preview (during placement)
