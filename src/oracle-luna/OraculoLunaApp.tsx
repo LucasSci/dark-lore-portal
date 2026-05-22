@@ -652,6 +652,7 @@ export default function OraculoLunaApp() {
             <button
               onClick={isConnected ? disconnect : connect}
               disabled={isConnecting}
+              aria-label={isConnected ? "Desconectar do Oráculo" : "Conectar ao Oráculo"}
               className={`relative flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${
                 isConnected
                   ? "border-white/24 bg-zinc-900 text-white shadow-[0_0_30px_rgba(255,255,255,0.08)]"
@@ -799,6 +800,7 @@ export default function OraculoLunaApp() {
               </div>
               <button
                 onClick={() => setShowArchive(false)}
+                aria-label="Fechar arquivo"
                 className="rounded-full p-2 text-white/40 transition-colors hover:bg-white/5 hover:text-white"
               >
                 <X className="h-5 w-5" />
@@ -889,6 +891,7 @@ export default function OraculoLunaApp() {
               <button
                 onClick={() => navigateHistory("prev")}
                 disabled={historyIndex === 0}
+                aria-label="Voltar no histórico"
                 className={`rounded-full p-2 transition-all ${historyIndex === 0 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -899,6 +902,7 @@ export default function OraculoLunaApp() {
               <button
                 onClick={() => navigateHistory("next")}
                 disabled={historyIndex === history.length - 1}
+                aria-label="Avançar no histórico"
                 className={`rounded-full p-2 transition-all ${historyIndex === history.length - 1 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
               >
                 <ChevronRight className="h-4 w-4" />
