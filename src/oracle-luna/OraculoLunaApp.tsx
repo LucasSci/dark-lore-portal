@@ -652,6 +652,8 @@ export default function OraculoLunaApp() {
             <button
               onClick={isConnected ? disconnect : connect}
               disabled={isConnecting}
+              title={isConnected ? "Desconectar do oráculo" : "Conectar ao oráculo"}
+              aria-label={isConnected ? "Desconectar do oráculo" : "Conectar ao oráculo"}
               className={`relative flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${
                 isConnected
                   ? "border-white/24 bg-zinc-900 text-white shadow-[0_0_30px_rgba(255,255,255,0.08)]"
@@ -800,6 +802,8 @@ export default function OraculoLunaApp() {
               <button
                 onClick={() => setShowArchive(false)}
                 className="rounded-full p-2 text-white/40 transition-colors hover:bg-white/5 hover:text-white"
+                title="Fechar arquivo"
+                aria-label="Fechar arquivo"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -890,6 +894,8 @@ export default function OraculoLunaApp() {
                 onClick={() => navigateHistory("prev")}
                 disabled={historyIndex === 0}
                 className={`rounded-full p-2 transition-all ${historyIndex === 0 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+                title="Voltar no histórico"
+                aria-label="Voltar no histórico"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -900,6 +906,8 @@ export default function OraculoLunaApp() {
                 onClick={() => navigateHistory("next")}
                 disabled={historyIndex === history.length - 1}
                 className={`rounded-full p-2 transition-all ${historyIndex === history.length - 1 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+                title="Avançar no histórico"
+                aria-label="Avançar no histórico"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
