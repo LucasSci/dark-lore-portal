@@ -51,6 +51,7 @@ import {
 import { getWitcherCampaignById, getWitcherSceneSeed } from "@/features/witcher-system";
 import { usePortalShellMode } from "@/lib/portal-state";
 import { generateSecureShortId } from "@/lib/utils";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 
 function buildProjectSignature(project: StoryProject) {
   const { updatedAt, ...rest } = project;
@@ -278,6 +279,8 @@ export default function StoryEnginePage() {
     return () => window.clearTimeout(timeoutId);
   }, [isBootstrapped, projectDraft]);
 
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
   const activeProject = projectDraft;
   const hasApiKey = hasStoryEngineApiKey();
   const querySuffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
@@ -328,13 +331,8 @@ export default function StoryEnginePage() {
     [navigate, projects, querySuffix],
   );
 
-  const handleDeleteCurrentProject = useCallback(() => {
+  const confirmDeleteProject = useCallback(() => {
     if (!activeProject) {
-      return;
-    }
-
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
       return;
     }
 
@@ -359,6 +357,13 @@ export default function StoryEnginePage() {
     lastSavedSignatureRef.current = buildProjectSignature(nextProject);
     navigate(`/story-engine/${nextProject.id}${querySuffix}`);
   }, [activeProject, buildSeededProject, navigate, querySuffix]);
+
+  const handleDeleteCurrentProject = useCallback(() => {
+    if (!activeProject) {
+      return;
+    }
+    setConfirmDeleteOpen(true);
+  }, [activeProject]);
 
   const handleStoryUpload = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
@@ -1213,6 +1218,16 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      <ConfirmActionDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Remover projeto?"
+        description={`Esta acao remove o projeto "${activeProject?.title ?? "atual"}" do armazenamento local.`}
+        confirmLabel="Remover"
+        pendingLabel="Removendo..."
+        onConfirm={confirmDeleteProject}
+      />
     </div>
   );
 }
