@@ -1,0 +1,4 @@
+💡 What: Replaced the native `window.confirm` dialog in the Story Engine project deletion flow with the custom, React-based `ConfirmActionDialog` component.
+🎯 Why: Native browser alerts/confirms (like `window.confirm`) provide a visually jarring, unstyled user experience that breaks immersion and design system consistency. They can also sometimes block the main thread or cause inconsistent accessibility behavior across different browsers. Using the native design system's confirmation dialog makes the interface more intuitive, pleasant to use, and visually cohesive.
+📸 Before/After: Before: Standard browser pop-up. After: Themed `ConfirmActionDialog` matching the application's aesthetic.
+♿ Accessibility: The custom `ConfirmActionDialog` uses standard `@radix-ui/react-alert-dialog` primitives, which handle focus trapping, screen reader announcements, and keyboard navigation (Esc to close) far more consistently than native dialogs across various assistive technologies.
