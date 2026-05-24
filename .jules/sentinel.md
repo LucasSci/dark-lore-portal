@@ -14,3 +14,7 @@
 **Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
 **Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
 **Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+## 2024-05-24 - Missing utility imports after targeted git merge diff modifications
+**Vulnerability:** Replacing usage of `Date.now()` with specific secure ID generation utilities like `generateSecureShortId()` or `generateSecureId()` using targeted code block replacement tools (e.g., `replace_with_git_merge_diff`) without verifying the `import` statements at the top of the file causes `ReferenceError`s and compiler failures.
+**Learning:** Automated or targeted code replacement often overlooks file-level dependencies. Modifying a line of code deep in a file to use a new function doesn't automatically satisfy the module resolution system.
+**Prevention:** When using `replace_with_git_merge_diff` to replace inline code with an external utility function, always explicitly ensure the necessary `import` statement for the new utility is included in the merge diff, or verify that it is already present in the file before proceeding.
