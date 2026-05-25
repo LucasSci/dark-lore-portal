@@ -30,3 +30,6 @@
 ## 2024-05-18 - Bounds calculation via spread operators limits scaling
 **Learning:** In utility functions like `getPolygonBounds`, using `Math.min(...xs)` and `Math.max(...ys)` with the spread operator on large arrays causes "Maximum call stack size exceeded" errors because JS engines limit the number of arguments passed to a function. In addition, mapping `points` to intermediate `xs` and `ys` arrays creates unnecessary garbage collection pressure and iterates over the data 4 times.
 **Action:** Always compute bounds using a single-pass `for` loop directly updating primitive tracking variables (`minX`, `maxX`, `minY`, `maxY`) and avoid intermediate `.map()` allocations or spread operators.
+## 2025-05-18 - Replacing Math.max(...arr.map()) with for loop prevents stack overflow and avoids GC
+**Learning:** Using `Math.max(1, ...arr.map(...))` limits the maximum call stack size in V8 and causes "Maximum call stack size exceeded" errors for large arrays, plus incurs unnecessary intermediate GC allocations.
+**Action:** Replace `Math.max(1, ...arr.map(...))` with a single-pass `for` loop, eliminating array mapping and call stack size limits in user-generated lists or other potentially large loops.
