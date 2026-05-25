@@ -20,6 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import {
   ActionStrip,
   MetricCard,
@@ -144,6 +145,7 @@ export default function StoryEnginePage() {
   const [step, setStep] = useState<StoryEngineStep>("ingest");
   const [isBootstrapped, setIsBootstrapped] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [imageTargetId, setImageTargetId] = useState<string | null>(null);
@@ -333,8 +335,11 @@ export default function StoryEnginePage() {
       return;
     }
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+    setDeleteDialogOpen(true);
+  }, [activeProject]);
+
+  const confirmDeleteProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -590,6 +595,16 @@ export default function StoryEnginePage() {
 
   return (
     <div className="session-page">
+      {activeProject && (
+        <ConfirmActionDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Remover projeto"
+          description={`Remover o projeto "${activeProject.title}" do armazenamento local? Esta acao nao pode ser desfeita.`}
+          confirmLabel="Remover"
+          onConfirm={confirmDeleteProject}
+        />
+      )}
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
