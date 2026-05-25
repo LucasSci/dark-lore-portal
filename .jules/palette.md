@@ -1,1 +1,4 @@
 # Palette's Journal - Critical UX/A11y Learnings
+## 2024-05-25 - Safe conditional rendering of native dialog replacements
+**Learning:** When replacing blocking browser dialogs (like `window.confirm`) with React-based UI components (like `ConfirmActionDialog`), native dialogs evaluate state synchronously in place, whereas React components persist in the component tree. If the custom dialog description relies on an active item state (e.g., `activeProject.title`), it must be conditionally rendered (e.g., `{activeProject && <ConfirmActionDialog />}`) to prevent "TypeError: Cannot read properties of null" when the item is deleted and the state clears before the dialog completes its unmount animation.
+**Action:** Always wrap `ConfirmActionDialog` in a conditional check for the entity it describes to ensure safe access to the entity properties during render.
