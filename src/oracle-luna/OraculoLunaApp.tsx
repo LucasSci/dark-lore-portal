@@ -657,6 +657,8 @@ export default function OraculoLunaApp() {
                   ? "border-white/24 bg-zinc-900 text-white shadow-[0_0_30px_rgba(255,255,255,0.08)]"
                   : "border-white/10 bg-zinc-950 text-white hover:border-white/22 hover:bg-zinc-900"
               } ${isConnecting ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+              aria-label={isConnected ? "Desconectar do oráculo" : "Conectar ao oráculo"}
+              title={isConnected ? "Desconectar do oráculo" : "Conectar ao oráculo"}
             >
               {isConnecting ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -800,6 +802,8 @@ export default function OraculoLunaApp() {
               <button
                 onClick={() => setShowArchive(false)}
                 className="rounded-full p-2 text-white/40 transition-colors hover:bg-white/5 hover:text-white"
+                aria-label="Fechar arquivo"
+                title="Fechar arquivo"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -890,6 +894,8 @@ export default function OraculoLunaApp() {
                 onClick={() => navigateHistory("prev")}
                 disabled={historyIndex === 0}
                 className={`rounded-full p-2 transition-all ${historyIndex === 0 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+                aria-label="Página anterior no histórico"
+                title="Página anterior no histórico"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -900,6 +906,8 @@ export default function OraculoLunaApp() {
                 onClick={() => navigateHistory("next")}
                 disabled={historyIndex === history.length - 1}
                 className={`rounded-full p-2 transition-all ${historyIndex === history.length - 1 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
+                aria-label="Próxima página no histórico"
+                title="Próxima página no histórico"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
