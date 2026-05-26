@@ -1,0 +1,13 @@
+⚡ Bolt: Refactor max calculation in GameMasterPanel
+
+**What:**
+Replaced the `Math.max(1, ...publications.map(...))` call with a single-pass `for` loop in `GameMasterPanel.tsx`.
+
+**Why:**
+Using `.map()` to create an intermediate array and then spreading (`...`) it into `Math.max()` causes unnecessary Garbage Collection (GC) overhead and risks a `RangeError: Maximum call stack size exceeded` exception if the `publications` collection grows significantly large.
+
+**Impact:**
+Eliminates intermediate array mapping and prevents potential stack overflow errors during the `nextChapter` memoization check.
+
+**Measurement:**
+Run `pnpm test --run` to ensure all RPG UI logic works seamlessly without regressions.
