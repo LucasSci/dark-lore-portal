@@ -1,0 +1,5 @@
+💡 **What**: Replaced the native `window.confirm` browser dialog with the application's existing `ConfirmActionDialog` UI component within `StoryEnginePage`.
+
+🎯 **Why**: Native browser dialogs are visually jarring, block the main thread unnecessarily, and break out of the application's carefully crafted visual theme and immersion. This provides a smoother, consistent user experience for destructive actions like removing a project.
+
+♿ **Accessibility**: The new `ConfirmActionDialog` is built on top of Radix UI's Alert Dialog, meaning it comes with proper ARIA attributes, focus management, and keyboard navigation support built-in, which native dialogs often handle inconsistently across screen readers.
