@@ -20,6 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import {
   ActionStrip,
   MetricCard,
@@ -141,6 +142,7 @@ export default function StoryEnginePage() {
   const [projects, setProjects] = useState<StoryProject[]>([]);
   const [activeProjectId, setActiveProjectIdState] = useState<string | null>(null);
   const [projectDraft, setProjectDraft] = useState<StoryProject | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [step, setStep] = useState<StoryEngineStep>("ingest");
   const [isBootstrapped, setIsBootstrapped] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
@@ -333,8 +335,11 @@ export default function StoryEnginePage() {
       return;
     }
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+    setConfirmDeleteOpen(true);
+  }, [activeProject]);
+
+  const onConfirmDelete = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -744,6 +749,16 @@ export default function StoryEnginePage() {
                     <Trash2 className="h-4 w-4" />
                     Remover projeto
                   </Button>
+                  {activeProject && (
+                    <ConfirmActionDialog
+                      open={confirmDeleteOpen}
+                      onOpenChange={setConfirmDeleteOpen}
+                      title="Remover projeto?"
+                      description={`Remover o projeto "${activeProject.title}" do armazenamento local?`}
+                      confirmLabel="Remover"
+                      onConfirm={onConfirmDelete}
+                    />
+                  )}
                 </div>
               </CardContent>
             </Card>
