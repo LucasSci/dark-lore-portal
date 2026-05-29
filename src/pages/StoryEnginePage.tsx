@@ -20,6 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import {
   ActionStrip,
   MetricCard,
@@ -278,6 +279,8 @@ export default function StoryEnginePage() {
     return () => window.clearTimeout(timeoutId);
   }, [isBootstrapped, projectDraft]);
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const activeProject = projectDraft;
   const hasApiKey = hasStoryEngineApiKey();
   const querySuffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
@@ -332,9 +335,11 @@ export default function StoryEnginePage() {
     if (!activeProject) {
       return;
     }
+    setDeleteDialogOpen(true);
+  }, [activeProject]);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const confirmDeleteProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -349,6 +354,7 @@ export default function StoryEnginePage() {
       setActiveStoryProjectId(result.project.id);
       lastSavedSignatureRef.current = buildProjectSignature(result.project);
       navigate(`/story-engine/${result.project.id}${querySuffix}`);
+      setDeleteDialogOpen(false);
       return;
     }
 
@@ -358,6 +364,7 @@ export default function StoryEnginePage() {
     setActiveStoryProjectId(nextProject.id);
     lastSavedSignatureRef.current = buildProjectSignature(nextProject);
     navigate(`/story-engine/${nextProject.id}${querySuffix}`);
+    setDeleteDialogOpen(false);
   }, [activeProject, buildSeededProject, navigate, querySuffix]);
 
   const handleStoryUpload = useCallback(
@@ -1213,6 +1220,17 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      {activeProject && (
+        <ConfirmActionDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Remover projeto"
+          description={`Tem certeza que deseja remover o projeto "${activeProject.title}" do armazenamento local? Esta ação não pode ser desfeita.`}
+          confirmLabel="Remover"
+          onConfirm={confirmDeleteProject}
+        />
+      )}
     </div>
   );
 }
