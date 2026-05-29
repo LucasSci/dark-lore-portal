@@ -1150,27 +1150,36 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
-    for (const cell of page.cells) {
-      const cellGraphic = new Graphics();
+    const batchedCells = new Graphics();
+    const batchedFog = new Graphics();
 
-      cellGraphic.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-      cellGraphic.rect(0, 0, page.gridSize, page.gridSize);
-      cellGraphic.fill({ color: 0x000000, alpha: 0.001 });
-      cellGraphic.eventMode = "static";
-      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
-      cellGraphic.on("pointertap", () => cellClickRef.current(cell));
-      interactionLayer.addChild(cellGraphic);
+    for (const cell of page.cells) {
+      batchedCells.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
 
       if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+        batchedFog.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
       }
     }
+
+    batchedCells.fill({ color: 0x000000, alpha: 0.001 });
+
+    batchedCells.eventMode = "static";
+    batchedCells.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
+    batchedCells.on("pointertap", (event) => {
+      const localPos = batchedCells.toLocal(event.global);
+      const gridX = Math.floor(localPos.x / page.gridSize);
+      const gridY = Math.floor(localPos.y / page.gridSize);
+      const cell = page.cells.find(c => c.x === gridX && c.y === gridY);
+      if (cell) {
+        cellClickRef.current(cell);
+      }
+    });
+
+    interactionLayer.addChild(batchedCells);
+
+    batchedFog.fill({ color: 0x060505, alpha: 0.84 });
+    batchedFog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+    fogLayer.addChild(batchedFog);
 
     for (const token of tokens) {
       const container = new Container();
