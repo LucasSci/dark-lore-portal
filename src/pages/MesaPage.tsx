@@ -37,6 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { generateSecureShortId } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -458,14 +459,14 @@ export default function MesaPage() {
             ? loadedScene.chatMessages
             : [
                 {
-                  id: `chat-${Date.now()}-system`,
+                  id: `chat-${generateSecureShortId()}-system`,
                   author: "Sistema",
                   tone: "system",
                   text: sceneNarration.system,
                   time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
                 },
                 {
-                  id: `chat-${Date.now()}-narrador`,
+                  id: `chat-${generateSecureShortId()}-narrador`,
                   author: activeCampaign.gmLabel,
                   tone: "party",
                   text: sceneNarration.narrator,
