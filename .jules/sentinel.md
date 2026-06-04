@@ -14,3 +14,7 @@
 **Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
 **Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
 **Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+## 2026-06-04 - Prevent Predictable File Upload Paths
+**Vulnerability:** The application used `Date.now()` combined with the original filename to generate storage paths for uploaded battlemaps (`vtt-assets.ts`).
+**Learning:** Using `Date.now()` is highly predictable and makes file upload paths guessable or easily brute-forced. If multiple entities are created within the same millisecond or if an attacker tries to overwrite files, this can lead to ID collision vulnerabilities or unauthorized access.
+**Prevention:** Always use the centralized `generateSecureShortId()` utility which utilizes `crypto.getRandomValues()` (or `generateSecureId` with `crypto.randomUUID()`) for creating storage paths and unique identifiers.
