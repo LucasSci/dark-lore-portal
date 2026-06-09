@@ -150,7 +150,8 @@ export async function uploadBattlemapAsset(options: {
   }
 
   const fileName = sanitizeFileName(options.file.name);
-  const storagePath = `${user.id}/${options.sessionId}/${Date.now()}-${fileName}`;
+  // 🛡️ Sentinel: Use secure random IDs for file upload paths to prevent predictable identifiers and potential ID collisions.
+  const storagePath = `${user.id}/${options.sessionId}/${generateSecureShortId()}-${fileName}`;
 
   const uploadResult = await supabase.storage
     .from("battlemaps")
