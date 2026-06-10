@@ -382,12 +382,25 @@ export async function loadSceneSnapshot(sessionId: string) {
     const latestInitiative = safeInitiativeRows[0] ?? null;
     const latestInitiativePayload = latestInitiative ? asLooseRecord(latestInitiative.payload) : null;
     const initiative = normalizeInitiativeState(latestInitiativePayload?.initiative);
-    const sceneRevision = Math.max(
-      ...pages.map((page, index) => Number(safePageRows[index]?.revision ?? 1)),
-      ...objects.map((object) => object.revision),
-      Number(latestInitiative?.revision ?? 1),
-      1,
-    );
+
+    // ⚡ Bolt: Replace spread syntax for array max with single-pass loops
+    // What: Replaced Math.max(...array) with manual loops updating a primitive variable.
+    // Why: Using spread syntax on dynamically sized VTT arrays (like objects or pages) creates unnecessary intermediate array allocations via .map() and risks "Maximum call stack size exceeded" errors if the arrays grow large. This optimizes GC and eliminates array limits.
+    // Impact: Eliminates O(N) GC allocations for mapped arrays and safely supports infinitely scaling VTT object limits.
+    let sceneRevision = Math.max(Number(latestInitiative?.revision ?? 1), 1);
+
+    for (let i = 0; i < pages.length; i++) {
+      const rev = Number(safePageRows[i]?.revision ?? 1);
+      if (rev > sceneRevision) {
+        sceneRevision = rev;
+      }
+    }
+
+    for (let i = 0; i < objects.length; i++) {
+      if (objects[i].revision > sceneRevision) {
+        sceneRevision = objects[i].revision;
+      }
+    }
 
     return {
       sessionId,
