@@ -29,6 +29,7 @@ import {
 } from "@/components/product/ProductShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import {
   StoryEngineContextPanel,
   StoryEngineProjectRail,
@@ -147,6 +148,7 @@ export default function StoryEnginePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [imageTargetId, setImageTargetId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const lastSavedSignatureRef = useRef<string>("");
 
@@ -328,16 +330,16 @@ export default function StoryEnginePage() {
     [navigate, projects, querySuffix],
   );
 
-  const handleDeleteCurrentProject = useCallback(() => {
+  const openDeleteDialog = useCallback(() => {
+    setIsDeleteDialogOpen(true);
+  }, []);
+
+  const confirmDeleteProject = useCallback(() => {
     if (!activeProject) {
       return;
     }
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
-      return;
-    }
-
+    setIsDeleteDialogOpen(false);
     const nextProjects = deleteStoryProject(activeProject.id);
     const nextProject = nextProjects[0] ?? buildSeededProject();
 
@@ -740,7 +742,7 @@ export default function StoryEnginePage() {
                     <Download className="h-4 w-4" />
                     Exportar JSON
                   </Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={handleDeleteCurrentProject}>
+                  <Button type="button" size="sm" variant="ghost" onClick={openDeleteDialog}>
                     <Trash2 className="h-4 w-4" />
                     Remover projeto
                   </Button>
@@ -1212,6 +1214,17 @@ export default function StoryEnginePage() {
             ) : null}
           </div>
         </section>
+
+        {activeProject && (
+          <ConfirmActionDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+            title="Remover projeto?"
+            description={`Tem certeza que deseja remover o projeto "${activeProject.title}" do armazenamento local? Esta ação não pode ser desfeita.`}
+            confirmLabel="Remover"
+            onConfirm={confirmDeleteProject}
+          />
+        )}
       </motion.div>
     </div>
   );
