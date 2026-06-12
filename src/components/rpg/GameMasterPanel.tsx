@@ -82,10 +82,19 @@ export default function GameMasterPanel() {
   const [pendingPublicationRemoval, setPendingPublicationRemoval] = useState<CampaignPublication | null>(null);
   const [newNpc, setNewNpc] = useState({ name: "", hp: 20, ac: 12, notes: "" });
   const { publications, upsertPublication, deletePublication } = useCampaignPublications();
-  const nextChapter = useMemo(
-    () => Math.max(1, ...publications.map((publication) => publication.chapterNumber)) + 1,
-    [publications],
-  );
+  // ⚡ Bolt: Prevent array allocation and spread overflow in publications Max computation
+  // What: Replaced spread operator `Math.max(...arr.map())` with a single-pass `for` loop.
+  // Why: Avoids memory allocation for intermediate mapped arrays and protects against 'Maximum call stack size exceeded' exceptions as the publication collection grows.
+  // Impact: Eliminates O(n) array mapping allocations, reducing garbage collection pressure during large document loads.
+  const nextChapter = useMemo(() => {
+    let max = 1;
+    for (let i = 0; i < publications.length; i++) {
+      if (publications[i].chapterNumber > max) {
+        max = publications[i].chapterNumber;
+      }
+    }
+    return max + 1;
+  }, [publications]);
   const [publicationDraft, setPublicationDraft] = useState<CampaignPublicationDraft>(() =>
     createEmptyPublicationDraft(nextChapter),
   );
@@ -136,7 +145,7 @@ export default function GameMasterPanel() {
     );
 
     setEditingPublicationId(null);
-    setPublicationDraft(createEmptyPublicationDraft(Math.max(nextChapter, saved.chapterNumber + 1)));
+    setPublicationDraft(createEmptyPublicationDraft(nextChapter > saved.chapterNumber ? nextChapter : saved.chapterNumber + 1));
   };
 
   const editPublication = (publication: CampaignPublication) => {
