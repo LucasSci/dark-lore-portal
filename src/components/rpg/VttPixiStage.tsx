@@ -1150,27 +1150,40 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
+    // ⚡ Bolt: Batch grid cells into single PIXI Graphics objects for interaction and fog
+    // What: Replace thousands of individual cell Graphics objects with two single batched Graphics objects, moving the interaction listener to the parent container.
+    // Why: Allocating thousands of individual PIXI display objects on every React render cycle causes massive garbage collection spikes.
+    // Impact: Reduces O(N) object instantiations to O(1) for cells, drastically reducing memory pressure and draw calls.
+    const batchedInteraction = new Graphics();
+    const batchedFog = new Graphics();
+
     for (const cell of page.cells) {
-      const cellGraphic = new Graphics();
-
-      cellGraphic.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-      cellGraphic.rect(0, 0, page.gridSize, page.gridSize);
-      cellGraphic.fill({ color: 0x000000, alpha: 0.001 });
-      cellGraphic.eventMode = "static";
-      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
-      cellGraphic.on("pointertap", () => cellClickRef.current(cell));
-      interactionLayer.addChild(cellGraphic);
-
+      batchedInteraction.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
       if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+        batchedFog.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
       }
     }
+
+    batchedInteraction.fill({ color: 0x000000, alpha: 0.001 });
+    interactionLayer.addChild(batchedInteraction);
+
+    // Apply interaction directly to the batched object instead of the layer to avoid memory leaks
+    batchedInteraction.eventMode = "static";
+    batchedInteraction.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
+    batchedInteraction.on("pointertap", (e) => {
+      // Manual hit-test to find the cell based on pointer position relative to the batched interaction graphics
+      const localPos = batchedInteraction.toLocal(e.global);
+      const cellX = Math.floor(localPos.x / page.gridSize);
+      const cellY = Math.floor(localPos.y / page.gridSize);
+      const cell = page.cells.find((c) => c.x === cellX && c.y === cellY);
+      if (cell) {
+        cellClickRef.current(cell);
+      }
+    });
+
+    batchedFog.fill({ color: 0x060505, alpha: 0.84 });
+    batchedFog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+    fogLayer.addChild(batchedFog);
 
     for (const token of tokens) {
       const container = new Container();
