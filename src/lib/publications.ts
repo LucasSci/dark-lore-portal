@@ -196,8 +196,8 @@ function persistPublication(
       }
     : {
         ...draft,
-        id: `publication-${Date.now()}`,
-        slug: slugify(draft.title || `publication-${Date.now()}`),
+        id: `publication-${generateSecureId()}`,
+        slug: slugify(draft.title || `publication-${generateSecureId()}`),
         createdAt: now,
         updatedAt: now,
       };

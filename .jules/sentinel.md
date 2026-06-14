@@ -14,3 +14,7 @@
 **Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
 **Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
 **Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+## 2026-06-14 - Replaced predictable Date.now() ID generation with generateSecureId()
+**Vulnerability:** Used Date.now() for unique publication IDs which can be easily guessed or collide, creating security vulnerabilities.
+**Learning:** Date.now() is predictable and non-unique under load, risking duplication or enumeration vectors.
+**Prevention:** Utilize application's generateSecureId() which leverages crypto to build completely robust identifiers.
