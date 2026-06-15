@@ -14,3 +14,11 @@
 **Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
 **Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
 **Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+## 2026-06-15 - Ensure imports when using custom security utilities
+**Vulnerability:** A  string was replaced with a secure  call, but the required `import` was forgotten, breaking the build.
+**Learning:** Relying on tools that search and replace strings may omit required imports since standard regex/diffs don't inherently resolve TypeScript definitions, leading to runtime ReferenceErrors.
+**Prevention:** When using `replace_with_git_merge_diff` to replace inline code (e.g., `Date.now()`) with an external utility function (e.g., `generateSecureShortId()`), always ensure you explicitly add the necessary `import` statement for the new utility in your merge diff to prevent runtime `ReferenceError`s and build failures.
+## 2026-06-15 - Ensure imports when using custom security utilities
+**Vulnerability:** A Date.now string was replaced with a secure generateSecureShortId call, but the required import was forgotten, breaking the build.
+**Learning:** Relying on tools that search and replace strings may omit required imports since standard regex/diffs dont inherently resolve TypeScript definitions, leading to runtime ReferenceErrors.
+**Prevention:** When using replace_with_git_merge_diff to replace inline code with an external utility function, always ensure you explicitly add the necessary import statement for the new utility in your merge diff to prevent runtime ReferenceErrors and build failures.
