@@ -28,6 +28,7 @@ import {
   StatusBanner,
 } from "@/components/product/ProductShell";
 import { Input } from "@/components/ui/input";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   StoryEngineContextPanel,
@@ -144,6 +145,7 @@ export default function StoryEnginePage() {
   const [step, setStep] = useState<StoryEngineStep>("ingest");
   const [isBootstrapped, setIsBootstrapped] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [imageTargetId, setImageTargetId] = useState<string | null>(null);
@@ -329,12 +331,11 @@ export default function StoryEnginePage() {
   );
 
   const handleDeleteCurrentProject = useCallback(() => {
-    if (!activeProject) {
-      return;
-    }
+    setIsDeleteDialogOpen(true);
+  }, []);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const onConfirmDeleteProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -1213,6 +1214,16 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      {activeProject && (
+        <ConfirmActionDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          title="Remover projeto"
+          description={`Tem certeza que deseja remover o projeto "${activeProject.title}" do armazenamento local?`}
+          onConfirm={onConfirmDeleteProject}
+        />
+      )}
     </div>
   );
 }
