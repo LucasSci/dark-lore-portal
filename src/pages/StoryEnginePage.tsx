@@ -19,6 +19,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ActionStrip,
@@ -140,6 +141,7 @@ export default function StoryEnginePage() {
 
   const [projects, setProjects] = useState<StoryProject[]>([]);
   const [activeProjectId, setActiveProjectIdState] = useState<string | null>(null);
+  const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
   const [projectDraft, setProjectDraft] = useState<StoryProject | null>(null);
   const [step, setStep] = useState<StoryEngineStep>("ingest");
   const [isBootstrapped, setIsBootstrapped] = useState(false);
@@ -328,13 +330,15 @@ export default function StoryEnginePage() {
     [navigate, projects, querySuffix],
   );
 
-  const handleDeleteCurrentProject = useCallback(() => {
+  const handleRequestDeleteProject = useCallback(() => {
     if (!activeProject) {
       return;
     }
+    setConfirmDeleteDialogOpen(true);
+  }, [activeProject]);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const handleDeleteCurrentProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -349,6 +353,7 @@ export default function StoryEnginePage() {
       setActiveStoryProjectId(result.project.id);
       lastSavedSignatureRef.current = buildProjectSignature(result.project);
       navigate(`/story-engine/${result.project.id}${querySuffix}`);
+      setConfirmDeleteDialogOpen(false);
       return;
     }
 
@@ -358,6 +363,7 @@ export default function StoryEnginePage() {
     setActiveStoryProjectId(nextProject.id);
     lastSavedSignatureRef.current = buildProjectSignature(nextProject);
     navigate(`/story-engine/${nextProject.id}${querySuffix}`);
+    setConfirmDeleteDialogOpen(false);
   }, [activeProject, buildSeededProject, navigate, querySuffix]);
 
   const handleStoryUpload = useCallback(
@@ -740,7 +746,7 @@ export default function StoryEnginePage() {
                     <Download className="h-4 w-4" />
                     Exportar JSON
                   </Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={handleDeleteCurrentProject}>
+                  <Button type="button" size="sm" variant="ghost" onClick={handleRequestDeleteProject}>
                     <Trash2 className="h-4 w-4" />
                     Remover projeto
                   </Button>
@@ -1212,6 +1218,17 @@ export default function StoryEnginePage() {
             ) : null}
           </div>
         </section>
+
+        {activeProject ? (
+          <ConfirmActionDialog
+            open={confirmDeleteDialogOpen}
+            onOpenChange={setConfirmDeleteDialogOpen}
+            title="Remover projeto"
+            description={`Tem certeza que deseja remover o projeto "${activeProject.title}" do armazenamento local? Esta ação não pode ser desfeita.`}
+            onConfirm={handleDeleteCurrentProject}
+            confirmLabel="Remover"
+          />
+        ) : null}
       </motion.div>
     </div>
   );
