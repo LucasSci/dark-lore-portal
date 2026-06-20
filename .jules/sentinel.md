@@ -14,3 +14,7 @@
 **Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
 **Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
 **Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+## 2024-05-24 - Predictable Path IDs for User Uploads
+**Vulnerability:** Asset upload paths (`src/lib/vtt-assets.ts`) were utilizing `Date.now()` alongside the original file name to enforce uniqueness in Supabase storage.
+**Learning:** Relying on predictable timestamps and untrusted file names to generate storage paths opens the door to potential ID collision and object overwriting if two assets with identical names are uploaded within the exact same millisecond window. A cryptographically secure random ID ensures guaranteed uniqueness regardless of concurrency or untrusted input.
+**Prevention:** Replace timestamp-based uniqueness logic in sensitive storage functions with robust, unguessable identifiers (e.g., `generateSecureId()`) to construct robust upload paths.

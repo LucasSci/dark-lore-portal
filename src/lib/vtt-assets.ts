@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { LOCAL_SESSION_ID } from "@/lib/local-identities";
 import { isLooseRecord, type LooseSupabaseClient } from "@/lib/loose-supabase";
-import { generateSecureShortId } from "@/lib/utils";
+import { generateSecureId, generateSecureShortId } from "@/lib/utils";
 import type { AssetManifest } from "@/lib/virtual-tabletop";
 
 const db = supabase as typeof supabase & LooseSupabaseClient;
@@ -150,7 +150,7 @@ export async function uploadBattlemapAsset(options: {
   }
 
   const fileName = sanitizeFileName(options.file.name);
-  const storagePath = `${user.id}/${options.sessionId}/${Date.now()}-${fileName}`;
+  const storagePath = `${user.id}/${options.sessionId}/${generateSecureId()}-${fileName}`;
 
   const uploadResult = await supabase.storage
     .from("battlemaps")
