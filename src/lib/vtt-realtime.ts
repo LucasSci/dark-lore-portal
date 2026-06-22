@@ -382,12 +382,17 @@ export async function loadSceneSnapshot(sessionId: string) {
     const latestInitiative = safeInitiativeRows[0] ?? null;
     const latestInitiativePayload = latestInitiative ? asLooseRecord(latestInitiative.payload) : null;
     const initiative = normalizeInitiativeState(latestInitiativePayload?.initiative);
-    const sceneRevision = Math.max(
-      ...pages.map((page, index) => Number(safePageRows[index]?.revision ?? 1)),
-      ...objects.map((object) => object.revision),
-      Number(latestInitiative?.revision ?? 1),
-      1,
-    );
+    // ⚡ Bolt: Optimize sceneRevision calculation
+    // What: Replaced Math.max(...array.map()) with a single-pass loop.
+    // Why: Prevents "Maximum call stack size exceeded" errors on large datasets and eliminates intermediate array allocations and GC overhead.
+    // Impact: Reduces GC pressure and improves performance when loading scenes with many objects.
+    let sceneRevision = Math.max(1, Number(latestInitiative?.revision ?? 1));
+    for (let i = 0; i < pages.length; i++) {
+      sceneRevision = Math.max(sceneRevision, Number(safePageRows[i]?.revision ?? 1));
+    }
+    for (let i = 0; i < objects.length; i++) {
+      sceneRevision = Math.max(sceneRevision, objects[i].revision);
+    }
 
     return {
       sessionId,
