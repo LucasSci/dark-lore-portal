@@ -18,6 +18,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -143,6 +144,7 @@ export default function StoryEnginePage() {
   const [projectDraft, setProjectDraft] = useState<StoryProject | null>(null);
   const [step, setStep] = useState<StoryEngineStep>("ingest");
   const [isBootstrapped, setIsBootstrapped] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -329,12 +331,11 @@ export default function StoryEnginePage() {
   );
 
   const handleDeleteCurrentProject = useCallback(() => {
-    if (!activeProject) {
-      return;
-    }
+    setIsDeleteConfirmOpen(true);
+  }, []);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const executeDeleteCurrentProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -1213,6 +1214,18 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      {activeProject && (
+        <ConfirmActionDialog
+          open={isDeleteConfirmOpen}
+          onOpenChange={setIsDeleteConfirmOpen}
+          title="Remover projeto?"
+          description={`Deseja remover o projeto "${activeProject.title}" do armazenamento local? Esta ação não pode ser desfeita.`}
+          confirmLabel="Remover"
+          cancelLabel="Cancelar"
+          onConfirm={executeDeleteCurrentProject}
+        />
+      )}
     </div>
   );
 }
