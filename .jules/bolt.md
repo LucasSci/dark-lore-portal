@@ -30,3 +30,9 @@
 ## 2024-05-18 - Bounds calculation via spread operators limits scaling
 **Learning:** In utility functions like `getPolygonBounds`, using `Math.min(...xs)` and `Math.max(...ys)` with the spread operator on large arrays causes "Maximum call stack size exceeded" errors because JS engines limit the number of arguments passed to a function. In addition, mapping `points` to intermediate `xs` and `ys` arrays creates unnecessary garbage collection pressure and iterates over the data 4 times.
 **Action:** Always compute bounds using a single-pass `for` loop directly updating primitive tracking variables (`minX`, `maxX`, `minY`, `maxY`) and avoid intermediate `.map()` allocations or spread operators.
+## 2026-06-28 - Prevent stack overflow in max calculations
+**Learning:** In React components like `GameMasterPanel`, using `Math.max(...array.map())` on dynamic or user-generated collections (like `publications`) creates unnecessary intermediate array allocations, adding GC pressure. More critically, it risks "Maximum call stack size exceeded" exceptions if the list grows large.
+**Action:** Always replace spread syntax inside  or  with a single-pass `for` loop when dealing with unbounded or potentially large dynamic collections in hot paths or `useMemo` hooks.
+## 2026-06-28 - Prevent stack overflow in max calculations
+**Learning:** In React components like GameMasterPanel, using Math.max with spread syntax on dynamic or user-generated collections creates unnecessary intermediate array allocations, adding GC pressure. More critically, it risks Maximum call stack size exceeded exceptions if the list grows large.
+**Action:** Always replace spread syntax inside Math.max or Math.min with a single-pass for loop when dealing with unbounded or potentially large dynamic collections in hot paths or useMemo hooks.
