@@ -19,6 +19,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ActionStrip,
@@ -138,6 +139,7 @@ export default function StoryEnginePage() {
     [campaignId, linkedCampaign, linkedScene, sceneId],
   );
 
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [projects, setProjects] = useState<StoryProject[]>([]);
   const [activeProjectId, setActiveProjectIdState] = useState<string | null>(null);
   const [projectDraft, setProjectDraft] = useState<StoryProject | null>(null);
@@ -333,8 +335,11 @@ export default function StoryEnginePage() {
       return;
     }
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+    setIsDeleteDialogOpen(true);
+  }, [activeProject]);
+
+  const onConfirmDeleteProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -1213,6 +1218,16 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      {activeProject && (
+        <ConfirmActionDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          title="Remover projeto"
+          description={`Remover o projeto "${activeProject.title}" do armazenamento local?`}
+          onConfirm={onConfirmDeleteProject}
+        />
+      )}
     </div>
   );
 }
