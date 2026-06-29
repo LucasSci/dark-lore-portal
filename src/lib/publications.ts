@@ -184,6 +184,7 @@ function persistPublication(
   ensureSeeded();
   const publications = readPublications();
   const now = new Date().toISOString();
+  const newPubId = `publication-${generateSecureId()}`;
   const saved: CampaignPublication = draft.id
     ? {
         ...(publications.find((entry) => entry.id === draft.id) ?? {
@@ -196,8 +197,8 @@ function persistPublication(
       }
     : {
         ...draft,
-        id: `publication-${Date.now()}`,
-        slug: slugify(draft.title || `publication-${Date.now()}`),
+        id: newPubId,
+        slug: slugify(draft.title || newPubId),
         createdAt: now,
         updatedAt: now,
       };
