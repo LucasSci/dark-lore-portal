@@ -382,12 +382,23 @@ export async function loadSceneSnapshot(sessionId: string) {
     const latestInitiative = safeInitiativeRows[0] ?? null;
     const latestInitiativePayload = latestInitiative ? asLooseRecord(latestInitiative.payload) : null;
     const initiative = normalizeInitiativeState(latestInitiativePayload?.initiative);
-    const sceneRevision = Math.max(
-      ...pages.map((page, index) => Number(safePageRows[index]?.revision ?? 1)),
-      ...objects.map((object) => object.revision),
-      Number(latestInitiative?.revision ?? 1),
-      1,
-    );
+
+    // ⚡ Bolt: Prevent call stack limits and GC overhead
+    // What: Replaced Math.max(...arr.map()) with a single-pass loop
+    // Why: Large arrays (like VTT objects) exceed call stack size with spread syntax, and .map allocates unnecessary intermediate arrays
+    // Impact: Eliminates crash risk on large scenes and reduces garbage collection pressure
+    let sceneRevision = Math.max(1, Number(latestInitiative?.revision ?? 1));
+    for (let i = 0; i < pages.length; i++) {
+      const pageRev = Number(safePageRows[i]?.revision ?? 1);
+      if (pageRev > sceneRevision) {
+        sceneRevision = pageRev;
+      }
+    }
+    for (let i = 0; i < objects.length; i++) {
+      if (objects[i].revision > sceneRevision) {
+        sceneRevision = objects[i].revision;
+      }
+    }
 
     return {
       sessionId,
