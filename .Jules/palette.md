@@ -1,3 +1,3 @@
-## 2024-05-18 - Missing Accessibility on Icon-only Canvas Controls
-**Learning:** VTT (Virtual Tabletop) and Map interfaces often have floating controls (like zoom, reset, or token HP adjusters) that developers forget to label because the context seems "obvious" visually on the canvas. Screen readers and users relying on explicit hover tooltips are left without context for these actions.
-**Action:** Always ensure that floating map controls and icon-only token adjusters have explicit `title` and `aria-label` attributes to provide clear intent for all users.
+## 2024-07-29 - Replaced window.confirm with ConfirmActionDialog
+**Learning:** Native `window.confirm` dialogs are jarring and block the main thread, leading to a poor user experience in modern web apps. Additionally, they do not integrate visually with custom design systems (like the dark theme used here).
+**Action:** When creating destructive actions, look for and replace existing `window.confirm` calls with the custom `@/components/ui/confirm-action-dialog` component. When implementing this pattern, correctly split the action logic into two hooks (one to open the dialog, one for the confirm callback) and conditionally render the dialog to ensure state is evaluated dynamically.
