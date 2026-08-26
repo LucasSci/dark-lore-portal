@@ -235,15 +235,15 @@ function formatPreviewList(values: string[], limit = 2) {
   return `${values.slice(0, limit).join(", ")} +${values.length - limit}`;
 }
 
-function renderPublicationParagraph(paragraph: string, mentions: UniversePublicationMention[]) {
-  const orderedMentions = [...mentions].sort((left, right) => right.label.length - left.label.length);
-
-  if (orderedMentions.length === 0) {
+function renderPublicationParagraph(
+  paragraph: string,
+  pattern: RegExp | null,
+  mentionByLabel: Map<string, UniversePublicationMention>
+) {
+  if (!pattern) {
     return paragraph;
   }
 
-  const mentionByLabel = new Map(orderedMentions.map((mention) => [mention.label.toLowerCase(), mention]));
-  const pattern = new RegExp(orderedMentions.map((mention) => escapeRegExp(mention.label)).join("|"), "gi");
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
 
@@ -1229,6 +1229,30 @@ function UniversePublicationPage({ publication }: { publication: UniversePublica
     .map(sanitizeImmersiveEntry);
   const [heroDrift, setHeroDrift] = useState({ x: 0, y: 0 });
   const [scrollOffset, setScrollOffset] = useState(0);
+
+  // ⚡ Bolt: Memoize paragraph formatting regex and map
+  // What: Moved the RegExp and Map generation out of the paragraph loop and into a useMemo.
+  // Why: Compiling a RegExp and building a Map for every single paragraph creates massive GC overhead and redundant work.
+  // Impact: O(1) regex compilation per publication instead of O(N) per paragraph, heavily optimizing long publications.
+  const formatting = useMemo(() => {
+    const orderedMentions = [...publication.mentions].sort((left, right) => right.label.length - left.label.length);
+    if (orderedMentions.length === 0) return { pattern: null, mentionByLabel: new Map<string, UniversePublicationMention>() };
+
+    const mentionByLabel = new Map<string, UniversePublicationMention>();
+    let patternString = "";
+    for (let i = 0; i < orderedMentions.length; i++) {
+      const mention = orderedMentions[i];
+      mentionByLabel.set(mention.label.toLowerCase(), mention);
+      if (i > 0) patternString += "|";
+      patternString += escapeRegExp(mention.label);
+    }
+
+    return {
+      pattern: new RegExp(patternString, "gi"),
+      mentionByLabel
+    };
+  }, [publication.mentions]);
+
   const sectionNavItems = useMemo(
     () =>
       [
@@ -1301,7 +1325,7 @@ function UniversePublicationPage({ publication }: { publication: UniversePublica
           <div className="dark-lore-reading-flow space-y-6">
             {publication.paragraphs.map((paragraph, index) => (
               <p key={`${publication.slug}-${index}`} className="dark-lore-reading-paragraph">
-                {renderPublicationParagraph(paragraph, publication.mentions)}
+                {renderPublicationParagraph(paragraph, formatting.pattern, formatting.mentionByLabel)}
               </p>
             ))}
           </div>

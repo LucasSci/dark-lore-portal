@@ -30,3 +30,7 @@
 ## 2024-05-18 - Bounds calculation via spread operators limits scaling
 **Learning:** In utility functions like `getPolygonBounds`, using `Math.min(...xs)` and `Math.max(...ys)` with the spread operator on large arrays causes "Maximum call stack size exceeded" errors because JS engines limit the number of arguments passed to a function. In addition, mapping `points` to intermediate `xs` and `ys` arrays creates unnecessary garbage collection pressure and iterates over the data 4 times.
 **Action:** Always compute bounds using a single-pass `for` loop directly updating primitive tracking variables (`minX`, `maxX`, `minY`, `maxY`) and avoid intermediate `.map()` allocations or spread operators.
+
+## 2025-05-18 - Missing the forest for the trees in performance micro-optimizations
+**Learning:** When attempting to reduce GC allocations from chaining `.map().join()` to compile a RegExp string inside a React child component (like a paragraph render), moving it to a single pass `for` loop is technically correct but completely misses the macro-bottleneck: the `RegExp` and `Map` are still being allocated *on every single paragraph*. A micro-optimization is functionally useless if it's placed inside a loop that shouldn't exist in the first place.
+**Action:** Always zoom out before micro-optimizing. If an object/regex relies only on props from the parent (like publication mentions), hoist the computation out of the child loop and memoize it in the parent (`useMemo`) so it is only compiled O(1) times.
