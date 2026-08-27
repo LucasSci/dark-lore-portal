@@ -14,3 +14,7 @@
 **Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
 **Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
 **Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+## 2024-05-24 - Avoid Date.now() for unique identifiers in publications
+**Vulnerability:** Used predictable Date.now() for unique identifiers in campaign publications, leading to potential duplicate IDs and ID collision vulnerabilities.
+**Learning:** Date.now() is highly predictable and can generate duplicate IDs if multiple entries are created rapidly or programmatically. This undermines data integrity and potential ID collision attacks.
+**Prevention:** Always use the centralized `generateSecureId()` utility for ID generation to ensure uniqueness and cryptographic security.
