@@ -58,7 +58,6 @@ export function useSocketTabletopRealtime({
 
     const socket = io(socketUrl!, {
       transports: ["websocket"],
-      withCredentials: true,
     });
 
     socketRef.current = socket;

@@ -14,3 +14,8 @@
 **Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
 **Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
 **Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+
+## 2024-08-27 - Overly Permissive CORS with WebSocket Hijacking Risk
+**Vulnerability:** The Socket.IO server in `services/tabletop-realtime/server.mjs` used an overly permissive CORS configuration (`origin: true` reflecting any origin) combined with `credentials: true`. The frontend client also sent `withCredentials: true` unnecessarily.
+**Learning:** This combination allows any malicious site to connect to the WebSocket server using the victim ambient credentials, leading to Cross-Site WebSocket Hijacking (CSWSH). Additionally, `credentials: true` is unnecessary if the socket implementation only relies on explicit payload parameters for authentication.
+**Prevention:** Never use `origin: true` (which reflects the origin) with `credentials: true` unless strictly required and validated against a whitelist. If credentials are not used, remove `credentials: true` from both server and client.

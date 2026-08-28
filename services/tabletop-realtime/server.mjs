@@ -13,8 +13,7 @@ const httpServer = createServer((_, res) => {
 
 const io = new Server(httpServer, {
   cors: {
-    origin: frontendOrigin === "*" ? true : frontendOrigin.split(","),
-    credentials: true,
+    origin: frontendOrigin === "*" ? "*" : frontendOrigin.split(","),
   },
 });
 
