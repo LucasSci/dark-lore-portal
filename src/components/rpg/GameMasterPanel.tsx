@@ -82,10 +82,19 @@ export default function GameMasterPanel() {
   const [pendingPublicationRemoval, setPendingPublicationRemoval] = useState<CampaignPublication | null>(null);
   const [newNpc, setNewNpc] = useState({ name: "", hp: 20, ac: 12, notes: "" });
   const { publications, upsertPublication, deletePublication } = useCampaignPublications();
-  const nextChapter = useMemo(
-    () => Math.max(1, ...publications.map((publication) => publication.chapterNumber)) + 1,
-    [publications],
-  );
+  const nextChapter = useMemo(() => {
+    // ⚡ Bolt: Optimize max chapter number calculation
+    // What: Replaced Math.max with spread operator and .map() with a single-pass for loop.
+    // Why: Spreading mapped arrays can exceed call stack size on large datasets and causes unnecessary GC allocations.
+    // Impact: Prevents potential stack overflow errors and reduces GC pressure during render cycles.
+    let max = 1;
+    for (let i = 0; i < publications.length; i++) {
+      if (publications[i].chapterNumber > max) {
+        max = publications[i].chapterNumber;
+      }
+    }
+    return max + 1;
+  }, [publications]);
   const [publicationDraft, setPublicationDraft] = useState<CampaignPublicationDraft>(() =>
     createEmptyPublicationDraft(nextChapter),
   );
@@ -136,7 +145,8 @@ export default function GameMasterPanel() {
     );
 
     setEditingPublicationId(null);
-    setPublicationDraft(createEmptyPublicationDraft(Math.max(nextChapter, saved.chapterNumber + 1)));
+    const updatedNextChapter = saved.chapterNumber >= nextChapter ? saved.chapterNumber + 1 : nextChapter;
+    setPublicationDraft(createEmptyPublicationDraft(updatedNextChapter));
   };
 
   const editPublication = (publication: CampaignPublication) => {
