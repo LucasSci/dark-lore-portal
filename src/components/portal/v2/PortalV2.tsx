@@ -44,6 +44,8 @@ export function V2FilterTabs<T extends string>({
         <button
           key={option.value}
           type="button"
+          role="tab"
+          aria-selected={option.value === value}
           className="portal-v2-filter-tab"
           data-active={option.value === value}
           onClick={() => onChange(option.value)}
