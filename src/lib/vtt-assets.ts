@@ -150,7 +150,8 @@ export async function uploadBattlemapAsset(options: {
   }
 
   const fileName = sanitizeFileName(options.file.name);
-  const storagePath = `${user.id}/${options.sessionId}/${Date.now()}-${fileName}`;
+  const safeSessionId = options.sessionId.replace(/[^a-zA-Z0-9.\-_]/g, "");
+  const storagePath = `${user.id}/${safeSessionId}/${Date.now()}-${fileName}`;
 
   const uploadResult = await supabase.storage
     .from("battlemaps")
