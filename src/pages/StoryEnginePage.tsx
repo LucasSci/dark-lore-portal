@@ -17,6 +17,7 @@ import {
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -98,6 +99,7 @@ export default function StoryEnginePage() {
 
   const navigate = useNavigate();
   const { projectId } = useParams();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const campaignId = searchParams.get("campaignId");
   const sceneId = searchParams.get("sceneId");
@@ -328,13 +330,12 @@ export default function StoryEnginePage() {
     [navigate, projects, querySuffix],
   );
 
-  const handleDeleteCurrentProject = useCallback(() => {
-    if (!activeProject) {
-      return;
-    }
+  const handleDeleteClick = useCallback(() => {
+    setIsDeleteDialogOpen(true);
+  }, []);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const handleDeleteConfirm = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -740,7 +741,7 @@ export default function StoryEnginePage() {
                     <Download className="h-4 w-4" />
                     Exportar JSON
                   </Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={handleDeleteCurrentProject}>
+                  <Button type="button" size="sm" variant="ghost" onClick={handleDeleteClick}>
                     <Trash2 className="h-4 w-4" />
                     Remover projeto
                   </Button>
@@ -1213,6 +1214,15 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Remover projeto?"
+        description={`Tem certeza que deseja remover o projeto "${activeProject?.title}" do armazenamento local? Esta ação não pode ser desfeita.`}
+        confirmLabel="Remover"
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }
