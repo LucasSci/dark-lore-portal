@@ -82,10 +82,19 @@ export default function GameMasterPanel() {
   const [pendingPublicationRemoval, setPendingPublicationRemoval] = useState<CampaignPublication | null>(null);
   const [newNpc, setNewNpc] = useState({ name: "", hp: 20, ac: 12, notes: "" });
   const { publications, upsertPublication, deletePublication } = useCampaignPublications();
-  const nextChapter = useMemo(
-    () => Math.max(1, ...publications.map((publication) => publication.chapterNumber)) + 1,
-    [publications],
-  );
+  const nextChapter = useMemo(() => {
+    // ⚡ Bolt: Use a single-pass loop instead of `.map()` and spread operator to avoid stack overflow and GC pressure on large datasets
+    // What: Replaced `Math.max(1, ...publications.map(p => p.chapterNumber))` with a `for` loop
+    // Why: The spread operator can exceed call stack limits for large publications arrays, and `.map()` creates unnecessary intermediate arrays
+    // Impact: Reduces GC pressure and prevents potential call stack errors for campaigns with many publications
+    let maxChapter = 1;
+    for (let i = 0; i < publications.length; i++) {
+      if (publications[i].chapterNumber > maxChapter) {
+        maxChapter = publications[i].chapterNumber;
+      }
+    }
+    return maxChapter + 1;
+  }, [publications]);
   const [publicationDraft, setPublicationDraft] = useState<CampaignPublicationDraft>(() =>
     createEmptyPublicationDraft(nextChapter),
   );
