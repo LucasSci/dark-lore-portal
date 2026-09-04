@@ -20,6 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import {
   ActionStrip,
   MetricCard,
@@ -98,6 +99,7 @@ export default function StoryEnginePage() {
 
   const navigate = useNavigate();
   const { projectId } = useParams();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [searchParams] = useSearchParams();
   const campaignId = searchParams.get("campaignId");
   const sceneId = searchParams.get("sceneId");
@@ -332,9 +334,11 @@ export default function StoryEnginePage() {
     if (!activeProject) {
       return;
     }
+    setShowDeleteConfirm(true);
+  }, [activeProject]);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const confirmDeleteProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -1213,6 +1217,15 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      <ConfirmActionDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Remover projeto"
+        description={`Remover o projeto "${activeProject?.title}" do armazenamento local?`}
+        confirmLabel="Remover"
+        onConfirm={confirmDeleteProject}
+      />
     </div>
   );
 }
