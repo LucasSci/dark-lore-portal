@@ -83,7 +83,19 @@ export default function GameMasterPanel() {
   const [newNpc, setNewNpc] = useState({ name: "", hp: 20, ac: 12, notes: "" });
   const { publications, upsertPublication, deletePublication } = useCampaignPublications();
   const nextChapter = useMemo(
-    () => Math.max(1, ...publications.map((publication) => publication.chapterNumber)) + 1,
+    () => {
+      // ⚡ Bolt: Replace Math.max spread map with single-pass loop
+      // What: Avoid intermediate array allocation and spread operator limits
+      // Why: Reduces GC pressure and prevents stack overflow on large arrays
+      // Impact: Significant performance improvement in calculation
+      let maxChapter = 1;
+      for (let i = 0; i < publications.length; i++) {
+        if (publications[i].chapterNumber > maxChapter) {
+          maxChapter = publications[i].chapterNumber;
+        }
+      }
+      return maxChapter + 1;
+    },
     [publications],
   );
   const [publicationDraft, setPublicationDraft] = useState<CampaignPublicationDraft>(() =>
