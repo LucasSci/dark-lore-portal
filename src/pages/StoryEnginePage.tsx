@@ -29,6 +29,7 @@ import {
 } from "@/components/product/ProductShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import {
   StoryEngineContextPanel,
   StoryEngineProjectRail,
@@ -147,6 +148,7 @@ export default function StoryEnginePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [imageTargetId, setImageTargetId] = useState<string | null>(null);
+  const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
 
   const lastSavedSignatureRef = useRef<string>("");
 
@@ -332,9 +334,11 @@ export default function StoryEnginePage() {
     if (!activeProject) {
       return;
     }
+    setIsConfirmDeleteDialogOpen(true);
+  }, [activeProject]);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const onConfirmDeleteProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -1213,6 +1217,14 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+      <ConfirmActionDialog
+        open={isConfirmDeleteDialogOpen}
+        onOpenChange={setIsConfirmDeleteDialogOpen}
+        title="Remover Projeto"
+        description={`Remover o projeto "${activeProject?.title}" do armazenamento local?`}
+        confirmLabel="Remover"
+        onConfirm={onConfirmDeleteProject}
+      />
     </div>
   );
 }
