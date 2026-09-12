@@ -50,6 +50,7 @@ import {
 } from "@/features/story-engine";
 import { getWitcherCampaignById, getWitcherSceneSeed } from "@/features/witcher-system";
 import { usePortalShellMode } from "@/lib/portal-state";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { generateSecureShortId } from "@/lib/utils";
 
 function buildProjectSignature(project: StoryProject) {
@@ -99,6 +100,7 @@ export default function StoryEnginePage() {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const [searchParams] = useSearchParams();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const campaignId = searchParams.get("campaignId");
   const sceneId = searchParams.get("sceneId");
 
@@ -332,9 +334,11 @@ export default function StoryEnginePage() {
     if (!activeProject) {
       return;
     }
+    setIsDeleteDialogOpen(true);
+  }, [activeProject]);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const executeDeleteCurrentProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -1213,6 +1217,14 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Remover projeto"
+        description={`Tem certeza que deseja remover o projeto "${activeProject?.title}" do armazenamento local?`}
+        onConfirm={executeDeleteCurrentProject}
+      />
     </div>
   );
 }
