@@ -242,8 +242,17 @@ function renderPublicationParagraph(paragraph: string, mentions: UniversePublica
     return paragraph;
   }
 
-  const mentionByLabel = new Map(orderedMentions.map((mention) => [mention.label.toLowerCase(), mention]));
-  const pattern = new RegExp(orderedMentions.map((mention) => escapeRegExp(mention.label)).join("|"), "gi");
+  // ⚡ Bolt: Eliminate intermediate array allocations by using a single-pass loop
+  const mentionByLabel = new Map<string, UniversePublicationMention>();
+  let patternString = "";
+
+  for (let i = 0; i < orderedMentions.length; i++) {
+    const mention = orderedMentions[i];
+    mentionByLabel.set(mention.label.toLowerCase(), mention);
+    patternString += (i > 0 ? "|" : "") + escapeRegExp(mention.label);
+  }
+
+  const pattern = new RegExp(patternString, "gi");
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
 
