@@ -20,6 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import {
   ActionStrip,
   MetricCard,
@@ -281,6 +282,7 @@ export default function StoryEnginePage() {
   const activeProject = projectDraft;
   const hasApiKey = hasStoryEngineApiKey();
   const querySuffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
 
   const patchProject = useCallback(
     (updater: (project: StoryProject) => StoryProject) => {
@@ -328,13 +330,12 @@ export default function StoryEnginePage() {
     [navigate, projects, querySuffix],
   );
 
-  const handleDeleteCurrentProject = useCallback(() => {
-    if (!activeProject) {
-      return;
-    }
+  const handleDeleteClick = useCallback(() => {
+    setIsConfirmDeleteOpen(true);
+  }, []);
 
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
+  const confirmDeleteProject = useCallback(() => {
+    if (!activeProject) {
       return;
     }
 
@@ -740,7 +741,7 @@ export default function StoryEnginePage() {
                     <Download className="h-4 w-4" />
                     Exportar JSON
                   </Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={handleDeleteCurrentProject}>
+                  <Button type="button" size="sm" variant="ghost" onClick={handleDeleteClick}>
                     <Trash2 className="h-4 w-4" />
                     Remover projeto
                   </Button>
@@ -1213,6 +1214,14 @@ export default function StoryEnginePage() {
           </div>
         </section>
       </motion.div>
+
+      <ConfirmActionDialog
+        open={isConfirmDeleteOpen}
+        onOpenChange={setIsConfirmDeleteOpen}
+        title="Remover projeto"
+        description={`Tem certeza que deseja remover o projeto "${activeProject?.title}" do armazenamento local? Esta ação não pode ser desfeita.`}
+        onConfirm={confirmDeleteProject}
+      />
     </div>
   );
 }
