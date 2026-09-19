@@ -14,3 +14,7 @@
 **Vulnerability:** The project previously tracked an active `.env` file in version control, exposing live Supabase keys, AI keys, and other application secrets to the git history.
 **Learning:** Including `.env` in the repository directly violates the security best practice of keeping secrets isolated from version control, making lateral movement or credential abuse easy for any user with repository access.
 **Prevention:** Ensure `.env` and `.env.*` (excluding `.env.example`) are explicitly defined in `.gitignore` from project inception. Any template files like `.env.example` should contain only empty or safe placeholder strings.
+## 2024-11-20 - Untrack .env file to prevent secret leakage
+**Vulnerability:** The .env file was tracked in version control, exposing secrets like VITE_GEMINI_API_KEY and VITE_SUPABASE_PUBLISHABLE_KEY.
+**Learning:** Even if .env is in .gitignore, if it was previously committed, git continues to track it. It must be explicitly untracked using git rm --cached.
+**Prevention:** Use git rm --cached .env to untrack it and ensure .gitignore contains .env to prevent it from being committed again.
