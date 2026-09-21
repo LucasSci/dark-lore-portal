@@ -235,15 +235,16 @@ function formatPreviewList(values: string[], limit = 2) {
   return `${values.slice(0, limit).join(", ")} +${values.length - limit}`;
 }
 
-function renderPublicationParagraph(paragraph: string, mentions: UniversePublicationMention[]) {
-  const orderedMentions = [...mentions].sort((left, right) => right.label.length - left.label.length);
-
-  if (orderedMentions.length === 0) {
+function renderPublicationParagraph(
+  paragraph: string,
+  mentionByLabel: Map<string, UniversePublicationMention>,
+  patternStr: string,
+) {
+  if (mentionByLabel.size === 0 || !patternStr) {
     return paragraph;
   }
 
-  const mentionByLabel = new Map(orderedMentions.map((mention) => [mention.label.toLowerCase(), mention]));
-  const pattern = new RegExp(orderedMentions.map((mention) => escapeRegExp(mention.label)).join("|"), "gi");
+  const pattern = new RegExp(patternStr, "gi");
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
 
@@ -1239,6 +1240,31 @@ function UniversePublicationPage({ publication }: { publication: UniversePublica
     [],
   );
 
+  const { mentionByLabel, patternStr } = useMemo(() => {
+    // ⚡ Bolt: Precompute mentions processing to avoid O(N * M) allocations and sorting per paragraph
+    const orderedMentions = [...publication.mentions].sort((left, right) => right.label.length - left.label.length);
+    if (orderedMentions.length === 0) {
+      return { mentionByLabel: new Map(), patternStr: "" };
+    }
+
+    const map = new Map<string, UniversePublicationMention>();
+    let patternStr = "";
+
+    for (let i = 0; i < orderedMentions.length; i++) {
+      const mention = orderedMentions[i];
+      map.set(mention.label.toLowerCase(), mention);
+      patternStr += escapeRegExp(mention.label);
+      if (i < orderedMentions.length - 1) {
+        patternStr += "|";
+      }
+    }
+
+    return {
+      mentionByLabel: map,
+      patternStr,
+    };
+  }, [publication.mentions]);
+
   useEffect(() => {
     const syncScrollOffset = () => setScrollOffset(window.scrollY);
     syncScrollOffset();
@@ -1301,7 +1327,7 @@ function UniversePublicationPage({ publication }: { publication: UniversePublica
           <div className="dark-lore-reading-flow space-y-6">
             {publication.paragraphs.map((paragraph, index) => (
               <p key={`${publication.slug}-${index}`} className="dark-lore-reading-paragraph">
-                {renderPublicationParagraph(paragraph, publication.mentions)}
+                {renderPublicationParagraph(paragraph, mentionByLabel, patternStr)}
               </p>
             ))}
           </div>
