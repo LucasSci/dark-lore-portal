@@ -376,7 +376,7 @@ export async function loadSceneSnapshot(sessionId: string) {
           time:
             typeof metadata.time === "string"
               ? metadata.time
-              : chatTimeFormatter.format(new Date(row.created_at ?? Date.now())),
+              : chatTimeFormatter.format(new Date(row.created_at ?? new Date().getTime())),
         };
     });
     const latestInitiative = safeInitiativeRows[0] ?? null;

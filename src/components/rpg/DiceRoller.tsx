@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Dices } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { generateSecureId } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { rollDice } from "@/lib/rpg-utils";
@@ -39,7 +40,7 @@ export default function DiceRoller() {
 
       setRolls((previous) => [
         {
-          id: Date.now(),
+          id: generateSecureId(),
           dice: `${numDice}${label}${modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ""}`,
           results,
           total: finalTotal,

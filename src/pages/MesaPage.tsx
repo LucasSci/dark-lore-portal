@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { generateSecureId } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -458,14 +459,14 @@ export default function MesaPage() {
             ? loadedScene.chatMessages
             : [
                 {
-                  id: `chat-${Date.now()}-system`,
+                  id: `chat-${generateSecureId()}-system`,
                   author: "Sistema",
                   tone: "system",
                   text: sceneNarration.system,
                   time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
                 },
                 {
-                  id: `chat-${Date.now()}-narrador`,
+                  id: `chat-${generateSecureId()}-narrador`,
                   author: activeCampaign.gmLabel,
                   tone: "party",
                   text: sceneNarration.narrator,
