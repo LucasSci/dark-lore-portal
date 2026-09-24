@@ -396,12 +396,12 @@ export default function CombatTracker() {
           <Card variant="panel">
             <CardContent className="space-y-4 p-6">
               <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_92px_92px_92px_120px_auto]">
-                <Input placeholder="Nome da criatura" value={npcName} onChange={(event) => setNpcName(event.target.value)} />
-                <Input type="number" placeholder="HP" value={npcHp} onChange={(event) => setNpcHp(Number(event.target.value))} />
-                <Input type="number" placeholder="DEF" value={npcDefense} onChange={(event) => setNpcDefense(Number(event.target.value))} />
-                <Input type="number" placeholder="ATAQ" value={npcAttack} onChange={(event) => setNpcAttack(Number(event.target.value))} />
-                <Input placeholder="2d6+2" value={npcDamage} onChange={(event) => setNpcDamage(event.target.value)} />
-                <Button onClick={addNpc}>Adicionar</Button>
+                <Input placeholder="Nome da criatura" value={npcName} onChange={(event) => setNpcName(event.target.value)} aria-label="Nome da criatura" title="Nome da criatura" />
+                <Input type="number" placeholder="HP" value={npcHp} onChange={(event) => setNpcHp(Number(event.target.value))} aria-label="Pontos de vida (HP)" title="Pontos de vida (HP)" />
+                <Input type="number" placeholder="DEF" value={npcDefense} onChange={(event) => setNpcDefense(Number(event.target.value))} aria-label="Defesa (DEF)" title="Defesa (DEF)" />
+                <Input type="number" placeholder="ATAQ" value={npcAttack} onChange={(event) => setNpcAttack(Number(event.target.value))} aria-label="Modificador de ataque (ATAQ)" title="Modificador de ataque (ATAQ)" />
+                <Input placeholder="2d6+2" value={npcDamage} onChange={(event) => setNpcDamage(event.target.value)} aria-label="Dano (ex: 2d6+2)" title="Dano (ex: 2d6+2)" />
+                <Button onClick={addNpc} disabled={!npcName.trim()}>Adicionar</Button>
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
