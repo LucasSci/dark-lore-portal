@@ -650,6 +650,8 @@ export default function OraculoLunaApp() {
               </>
             )}
             <button
+              title={isConnected ? "Desconectar do oráculo" : "Conectar ao oráculo"}
+              aria-label={isConnected ? "Desconectar do oráculo" : "Conectar ao oráculo"}
               onClick={isConnected ? disconnect : connect}
               disabled={isConnecting}
               className={`relative flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${
@@ -798,6 +800,8 @@ export default function OraculoLunaApp() {
                 </div>
               </div>
               <button
+                title="Fechar arquivo"
+                aria-label="Fechar arquivo"
                 onClick={() => setShowArchive(false)}
                 className="rounded-full p-2 text-white/40 transition-colors hover:bg-white/5 hover:text-white"
               >
@@ -887,6 +891,8 @@ export default function OraculoLunaApp() {
             </button>
             <div className="flex items-center gap-1 rounded-full border border-white/10 bg-zinc-950/72 p-1 backdrop-blur-md">
               <button
+                title="Voltar no histórico"
+                aria-label="Voltar no histórico"
                 onClick={() => navigateHistory("prev")}
                 disabled={historyIndex === 0}
                 className={`rounded-full p-2 transition-all ${historyIndex === 0 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}
@@ -897,6 +903,8 @@ export default function OraculoLunaApp() {
                 {historyIndex + 1} / {history.length}
               </div>
               <button
+                title="Avançar no histórico"
+                aria-label="Avançar no histórico"
                 onClick={() => navigateHistory("next")}
                 disabled={historyIndex === history.length - 1}
                 className={`rounded-full p-2 transition-all ${historyIndex === history.length - 1 ? "cursor-not-allowed text-white/10 opacity-30" : "text-white/48 hover:bg-white/5 hover:text-white"}`}

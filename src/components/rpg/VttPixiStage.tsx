@@ -1150,26 +1150,40 @@ export default memo(function VttPixiStage({
       gridLayer.addChild(gridGraphics);
     }
 
-    for (const cell of page.cells) {
-      const cellGraphic = new Graphics();
+    // ⚡ Bolt Optimization: Batch interaction and fog rendering into single Graphics objects
+    const batchedInteraction = new Graphics();
+    const batchedFog = new Graphics();
+    let hasFog = false;
 
-      cellGraphic.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-      cellGraphic.rect(0, 0, page.gridSize, page.gridSize);
-      cellGraphic.fill({ color: 0x000000, alpha: 0.001 });
-      cellGraphic.eventMode = "static";
-      cellGraphic.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
-      cellGraphic.on("pointertap", () => cellClickRef.current(cell));
-      interactionLayer.addChild(cellGraphic);
+    for (const cell of page.cells) {
+      batchedInteraction.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
 
       if (!page.fog[cell.id]) {
-        const fog = new Graphics();
-
-        fog.position.set(cell.x * page.gridSize, cell.y * page.gridSize);
-        fog.rect(0, 0, page.gridSize, page.gridSize);
-        fog.fill({ color: 0x060505, alpha: 0.84 });
-        fog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
-        fogLayer.addChild(fog);
+        batchedFog.rect(cell.x * page.gridSize, cell.y * page.gridSize, page.gridSize, page.gridSize);
+        hasFog = true;
       }
+    }
+
+    batchedInteraction.fill({ color: 0x000000, alpha: 0.001 });
+    batchedInteraction.eventMode = "static";
+    batchedInteraction.cursor = boardMode === "fog" ? "crosshair" : boardMode === "measure" ? "crosshair" : "pointer";
+
+    batchedInteraction.on("pointertap", (event) => {
+      const localPos = batchedInteraction.toLocal(event.global);
+      const cellX = Math.floor(localPos.x / page.gridSize);
+      const cellY = Math.floor(localPos.y / page.gridSize);
+      const clickedCell = page.cells.find((c) => c.x === cellX && c.y === cellY);
+      if (clickedCell) {
+        cellClickRef.current(clickedCell);
+      }
+    });
+
+    interactionLayer.addChild(batchedInteraction);
+
+    if (hasFog) {
+      batchedFog.fill({ color: 0x060505, alpha: 0.84 });
+      batchedFog.stroke({ color: 0x110f0d, alpha: 0.42, width: 1 });
+      fogLayer.addChild(batchedFog);
     }
 
     for (const token of tokens) {
@@ -1514,31 +1528,13 @@ export default memo(function VttPixiStage({
 
       // Draw darkness overlay with cutouts for visible areas
       if (visionPolygons.length > 0) {
-        const darkness = new Graphics();
-        // Full darkness rectangle
-        darkness.rect(0, 0, boardWidth, boardHeight);
-        darkness.fill({ color: 0x000000, alpha: 0.72 });
-
-        // Cut out visible areas (draw them with "erase" blend)
-        for (const poly of visionPolygons) {
-          if (poly.length < 3) continue;
-          const cutout = new Graphics();
-          cutout.moveTo(poly[0].x, poly[0].y);
-          for (let i = 1; i < poly.length; i++) {
-            cutout.lineTo(poly[i].x, poly[i].y);
-          }
-          cutout.closePath();
-          cutout.fill({ color: 0x000000, alpha: 0.72 });
-
-          // Use as mask by cutting from darkness
-          lightingLayer.addChild(cutout);
-        }
-
         // Use a mask approach: render darkness, then use visibility polygons as holes
-        // PixiJS approach: render light areas on top with the map color to "reveal"
         // Simpler: draw semi-transparent darkness, then draw visibility polygons to clear it
-        // We'll use the "cut" approach with a single graphics object
+        // We use the "cut" approach with a single graphics object
 
+        // ⚡ Bolt Optimization: Removed redundant block that created individual cutout
+        // Graphics objects and appended them to lightingLayer, only to be immediately
+        // cleared via removeChildren() in favor of this combinedDarkness object.
         const combinedDarkness = new Graphics();
         combinedDarkness.rect(0, 0, boardWidth, boardHeight);
         combinedDarkness.fill({ color: 0x050404, alpha: 0.7 });
@@ -1554,8 +1550,6 @@ export default memo(function VttPixiStage({
           combinedDarkness.cut();
         }
 
-        // Clear the individual cutouts we added above
-        lightingLayer.removeChildren();
         lightingLayer.addChild(combinedDarkness);
 
         // Add subtle gradient glow for each light source
