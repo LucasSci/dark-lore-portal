@@ -19,6 +19,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ActionStrip,
@@ -147,6 +148,7 @@ export default function StoryEnginePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [imageTargetId, setImageTargetId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const lastSavedSignatureRef = useRef<string>("");
 
@@ -330,11 +332,6 @@ export default function StoryEnginePage() {
 
   const handleDeleteCurrentProject = useCallback(() => {
     if (!activeProject) {
-      return;
-    }
-
-    const confirmed = window.confirm(`Remover o projeto "${activeProject.title}" do armazenamento local?`);
-    if (!confirmed) {
       return;
     }
 
@@ -740,13 +737,22 @@ export default function StoryEnginePage() {
                     <Download className="h-4 w-4" />
                     Exportar JSON
                   </Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={handleDeleteCurrentProject}>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setDeleteConfirmOpen(true)}>
                     <Trash2 className="h-4 w-4" />
                     Remover projeto
                   </Button>
                 </div>
               </CardContent>
             </Card>
+
+            <ConfirmActionDialog
+              open={deleteConfirmOpen}
+              onOpenChange={setDeleteConfirmOpen}
+              title="Remover projeto"
+              description={`Tem certeza que deseja remover o projeto "${activeProject?.title}"? Esta acao nao pode ser desfeita.`}
+              confirmLabel="Remover"
+              onConfirm={handleDeleteCurrentProject}
+            />
 
             {step === "ingest" ? (
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
