@@ -34,3 +34,6 @@
 ## 2024-05-18 - Precomputing RegExp for large text bodies
 **Learning:** Generating regular expressions from large dictionaries using `.map().join('|')` inside a map loop over many paragraphs causes O(N*M) intermediate array allocations and significant GC overhead during text rendering.
 **Action:** Precompute Maps and regular expressions once using `useMemo` and an unrolled `for` loop instead of rebuilding them per paragraph.
+## 2024-05-18 - Math.max limitations on array sizes
+**Learning:** Using `Math.max(...array)` on dynamically scaling arrays (like `objects` or `pages` in `vtt-realtime.ts`) introduces a hard ceiling on application scalability because the spread syntax evaluates elements as function arguments, leading to "Maximum call stack size exceeded" exceptions on large inputs. When paired with `.map()`, it also increases GC pressure.
+**Action:** Always compute dynamic bounds and revisions using a single-pass `for` loop directly updating primitive tracking variables, rather than relying on spread syntax and intermediate array maps.
