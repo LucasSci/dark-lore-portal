@@ -581,12 +581,13 @@ function UniverseIndex() {
   }, [activeCategory, search]);
 
   const filteredEntries = useMemo(
-    () =>
-      immersiveEntries.filter((entry) => {
+    () => {
+      const searchTerm = search.trim().toLowerCase();
+      return immersiveEntries.filter((entry) => {
         const matchesCategory =
           activeCategory === "todas" ? true : entry.category === activeCategory;
         const searchable = `${entry.title} ${entry.subtitle} ${entry.summary}`.toLowerCase();
-        const matchesSearch = searchable.includes(search.trim().toLowerCase());
+        const matchesSearch = searchable.includes(searchTerm);
 
         if (!matchesCategory || !matchesSearch) {
           return false;
@@ -613,7 +614,8 @@ function UniverseIndex() {
           monsterDanger === "all" ? true : String(bestiaryMeta.dangerLevel) === monsterDanger;
 
         return matchesType && matchesRegion && matchesDanger;
-      }),
+      });
+    },
     [
       activeCategory,
       hasMonsterFilters,

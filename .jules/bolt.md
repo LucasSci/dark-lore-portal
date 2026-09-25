@@ -43,3 +43,7 @@
 ## 2024-05-18 - Math.max limitations on array sizes
 **Learning:** Using `Math.max(...array)` on dynamically scaling arrays (like `objects` or `pages` in `vtt-realtime.ts`) introduces a hard ceiling on application scalability because the spread syntax evaluates elements as function arguments, leading to "Maximum call stack size exceeded" exceptions on large inputs. When paired with `.map()`, it also increases GC pressure.
 **Action:** Always compute dynamic bounds and revisions using a single-pass `for` loop directly updating primitive tracking variables, rather than relying on spread syntax and intermediate array maps.
+
+## 2024-09-25 - Loop Invariant Code Motion (LICM) in UI Filtering
+**Learning:** Computing invariant values like `search.trim().toLowerCase()` inside high-frequency `.filter()` maps for lists triggers O(N) redundant string allocations, putting immense pressure on garbage collection during typing and filtering.
+**Action:** Always extract values derived solely from dependencies (like the current search input) to a single variable *outside* of the array traversal closure loop, especially inside `useMemo` where data size scales.
