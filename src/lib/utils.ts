@@ -22,11 +22,7 @@ export function generateSecureId(): string {
   }
 
   // Fallback for completely non-secure contexts (HTTP) or older environments
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = char === "x" ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
+  throw new Error("Secure random number generation is not supported in this environment.");
 }
 
 export function generateSecureShortId(): string {
@@ -43,6 +39,5 @@ export function generateSecureShortId(): string {
   }
 
   // Fallback for non-secure contexts
-  const fallbackRandom = Math.random().toString(36).slice(2, 10);
-  return `${timestamp}-${fallbackRandom}`;
+  throw new Error("Secure random number generation is not supported in this environment.");
 }
