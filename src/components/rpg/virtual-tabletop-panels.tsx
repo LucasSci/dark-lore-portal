@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import VttPixiStage from "@/components/rpg/VttPixiStage";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -111,6 +112,9 @@ export const VttCommandPanel = memo(function VttCommandPanel({
   onGridOpacityChange,
   onCreateNpc,
 }: VttCommandPanelProps) {
+  const [confirmClearMapOpen, setConfirmClearMapOpen] = useState(false);
+  const [confirmClearInitiativeOpen, setConfirmClearInitiativeOpen] = useState(false);
+
   return (
     <div className="space-y-4">
       <Card variant="panel">
@@ -181,10 +185,21 @@ export const VttCommandPanel = memo(function VttCommandPanel({
               onChange={(event) => onBattlemapUpload(event.target.files?.[0] ?? null)}
             />
             {battlemapUrl ? (
-              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={onClearBattlemap}>
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => setConfirmClearMapOpen(true)}>
                 Remover mapa
               </Button>
             ) : null}
+            <ConfirmActionDialog
+              open={confirmClearMapOpen}
+              onOpenChange={setConfirmClearMapOpen}
+              title="Remover battlemap?"
+              description="Esta acao removera o battlemap atual. Deseja continuar?"
+              confirmLabel="Remover"
+              onConfirm={() => {
+                onClearBattlemap();
+                setConfirmClearMapOpen(false);
+              }}
+            />
           </div>
 
           <div className="field-note flex items-center justify-between gap-3 px-3 py-3 backdrop-blur-md">
@@ -293,9 +308,20 @@ export const VttCommandPanel = memo(function VttCommandPanel({
             <Button variant="outline" onClick={onAdvanceTurn}>
               Proximo turno
             </Button>
-            <Button variant="ghost" onClick={onClearInitiativeState}>
+            <Button variant="ghost" onClick={() => setConfirmClearInitiativeOpen(true)}>
               Limpar iniciativa
             </Button>
+            <ConfirmActionDialog
+              open={confirmClearInitiativeOpen}
+              onOpenChange={setConfirmClearInitiativeOpen}
+              title="Limpar iniciativa?"
+              description="Isso removera o estado atual de iniciativa de todos os tokens. Deseja continuar?"
+              confirmLabel="Limpar"
+              onConfirm={() => {
+                onClearInitiativeState();
+                setConfirmClearInitiativeOpen(false);
+              }}
+            />
           </div>
 
           <div className="info-panel p-4 backdrop-blur-md">
