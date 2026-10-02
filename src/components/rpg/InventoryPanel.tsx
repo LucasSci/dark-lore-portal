@@ -54,6 +54,7 @@ export default function InventoryPanel({ onImportItem }: Props) {
           className={`border px-3 py-1 text-[11px] uppercase tracking-[0.18em] transition-colors ${
             !filterType ? "border-primary/35 bg-primary/10 text-primary" : "border-border/70 text-muted-foreground"
           }`}
+          aria-pressed={!filterType}
         >
           Todos
         </button>
@@ -66,6 +67,7 @@ export default function InventoryPanel({ onImportItem }: Props) {
             className={`border px-3 py-1 text-[11px] uppercase tracking-[0.18em] transition-colors ${
               filterType === key ? "border-primary/35 bg-primary/10 text-primary" : "border-border/70 text-muted-foreground"
             }`}
+            aria-pressed={filterType === key}
           >
             {label}
           </button>
