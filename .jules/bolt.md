@@ -43,3 +43,7 @@
 ## 2024-05-18 - Math.max limitations on array sizes
 **Learning:** Using `Math.max(...array)` on dynamically scaling arrays (like `objects` or `pages` in `vtt-realtime.ts`) introduces a hard ceiling on application scalability because the spread syntax evaluates elements as function arguments, leading to "Maximum call stack size exceeded" exceptions on large inputs. When paired with `.map()`, it also increases GC pressure.
 **Action:** Always compute dynamic bounds and revisions using a single-pass `for` loop directly updating primitive tracking variables, rather than relying on spread syntax and intermediate array maps.
+
+## 2024-05-18 - Unmemoized array filtering in render loop
+**Learning:** In React components with frequent renders (like canvas overlays), using `.filter()` directly in the render body creates a new array reference on every render, which significantly increases Garbage Collection overhead and forces unnecessary reconciliation of large mapped DOM lists.
+**Action:** Always wrap large derived arrays (like `gridLabels` or `visibleTokenLabels`) in a `useMemo` hook, especially when rendering overlays on top of high-frequency canvas stages.
