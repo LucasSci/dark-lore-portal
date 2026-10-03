@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
+import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   Application,
   Assets,
@@ -1598,8 +1598,8 @@ export default memo(function VttPixiStage({
   );
   const overlayOffsetX = paddingX + page.camera.x;
   const overlayOffsetY = paddingY + page.camera.y;
-  const gridLabels = showGrid ? page.cells.filter((cell) => cell.x === 0 || cell.y === 0) : [];
-  const visibleTokenLabels = tokens.filter((token) => token.id !== draggingTokenId);
+  const gridLabels = useMemo(() => showGrid ? page.cells.filter((cell) => cell.x === 0 || cell.y === 0) : [], [showGrid, page.cells]);
+  const visibleTokenLabels = useMemo(() => tokens.filter((token) => token.id !== draggingTokenId), [tokens, draggingTokenId]);
   const measureLabel = measureState
     ? (() => {
         const fromCx = measureState.startX * page.gridSize + page.gridSize / 2;
