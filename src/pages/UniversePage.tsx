@@ -734,6 +734,7 @@ function UniverseIndex() {
           <button
             type="button"
             onClick={() => setActiveCategory("todas")}
+            aria-pressed={activeCategory === "todas"}
             className={cn("dark-lore-chip", activeCategory === "todas" && "is-active")}
           >
             Todas
@@ -743,6 +744,7 @@ function UniverseIndex() {
               key={category}
               type="button"
               onClick={() => setActiveCategory(category)}
+              aria-pressed={activeCategory === category}
               className={cn("dark-lore-chip", activeCategory === category && "is-active")}
             >
               {encyclopediaCategories[category].label}
