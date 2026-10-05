@@ -68,6 +68,7 @@ export default function SpellBook({ onImportSpell }: Props) {
         <Button
           size="sm"
           variant={filterTradition === "todas" ? "primary" : "outline"}
+          aria-pressed={filterTradition === "todas"}
           onClick={() => setFilterTradition("todas")}
         >
           Todas
@@ -78,6 +79,7 @@ export default function SpellBook({ onImportSpell }: Props) {
             key={tradition}
             size="sm"
             variant={filterTradition === tradition ? "primary" : "outline"}
+            aria-pressed={filterTradition === tradition}
             onClick={() => setFilterTradition(tradition)}
           >
             {traditionMeta[tradition].label}
