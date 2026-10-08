@@ -212,6 +212,7 @@ export default function CharacterCreator({ onSave }: Props) {
                       <button
                         key={homeland}
                         type="button"
+                        aria-pressed={draft.homeland === homeland}
                         onClick={() => void updateAttribute("homeland", homeland)}
                         className={`border px-3 py-3 text-left text-sm transition-colors ${
                           draft.homeland === homeland
@@ -260,6 +261,7 @@ export default function CharacterCreator({ onSave }: Props) {
               <motion.button
                 key={race.value}
                 type="button"
+                aria-pressed={draft.race === race.value}
                 whileHover={{ scale: 1.01, y: -2 }}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => void updateAttribute("race", race.value)}
@@ -285,6 +287,7 @@ export default function CharacterCreator({ onSave }: Props) {
                 <motion.button
                   key={profession.value}
                   type="button"
+                  aria-pressed={draft.class === profession.value}
                   whileHover={{ scale: 1.01, y: -2 }}
                   whileTap={{ scale: 0.99 }}
                   onClick={() => void updateAttribute("class", profession.value)}
@@ -325,6 +328,7 @@ export default function CharacterCreator({ onSave }: Props) {
                       <button
                         key={school}
                         type="button"
+                        aria-pressed={draft.school === school}
                         onClick={() => void updateAttribute("school", school)}
                         className={`border px-3 py-3 text-left text-sm transition-colors ${
                           draft.school === school
