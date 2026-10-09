@@ -43,3 +43,7 @@
 ## 2024-05-18 - Math.max limitations on array sizes
 **Learning:** Using `Math.max(...array)` on dynamically scaling arrays (like `objects` or `pages` in `vtt-realtime.ts`) introduces a hard ceiling on application scalability because the spread syntax evaluates elements as function arguments, leading to "Maximum call stack size exceeded" exceptions on large inputs. When paired with `.map()`, it also increases GC pressure.
 **Action:** Always compute dynamic bounds and revisions using a single-pass `for` loop directly updating primitive tracking variables, rather than relying on spread syntax and intermediate array maps.
+
+## 2025-05-18 - Avoid array iteration with multiple RegExps on hot text parsing paths
+**Learning:** In heavily used string sanitization functions like `sanitizeImmersiveText` (which runs across all encyclopedia entries), using `reduce` over an array of 10 separate RegExps creates significant CPU and Garbage Collection overhead because it allocates a new intermediate string and matching array for every regex.
+**Action:** Combine multiple word-replacement regexes into a single precompiled RegExp with the `|` (OR) operator and replace the string in one pass to cut execution time in half and drastically reduce GC allocations.
