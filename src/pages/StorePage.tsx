@@ -422,12 +422,13 @@ export default function StorePage() {
               </Badge>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Filtro de categorias da loja">
               {filters.map((filter) => (
                 <Button
                   key={filter}
                   size="sm"
                   variant={activeFilter === filter ? "primary" : "outline"}
+                  aria-pressed={activeFilter === filter}
                   onClick={() => setActiveFilter(filter)}
                 >
                   {filter === "todas" ? "Todas" : shopCategoryLabels[filter]}
