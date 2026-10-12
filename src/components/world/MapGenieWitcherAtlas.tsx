@@ -120,6 +120,15 @@ function toLeafletPoint(point: AtlasCoordinate) {
   return L.latLng(point.y, point.x);
 }
 
+function projectPolygon(points: AtlasCoordinate[], projectFn: (p: AtlasCoordinate) => AtlasCoordinate): L.LatLng[] {
+  const len = points.length;
+  const mapped = new Array(len);
+  for (let i = 0; i < len; i++) {
+    mapped[i] = toLeafletPoint(projectFn(points[i]));
+  }
+  return mapped;
+}
+
 function toLeafletBounds(bounds: AtlasBounds) {
   return L.latLngBounds(
     [bounds.northEast.y, bounds.southWest.x],
@@ -557,7 +566,7 @@ export default function MapGenieWitcherAtlas({
       const hue = [208, 255, 34, 7][index % 4];
 
       // ⚡ Bolt: Combine map projections to avoid intermediate array allocation
-      L.polygon(region.polygonCoordinates.map((p) => toLeafletPoint(projectCoordinate(p))), {
+      L.polygon(projectPolygon(region.polygonCoordinates, projectCoordinate), {
         color: `hsla(${hue}, 85%, 72%, 0.92)`,
         weight: 1.4,
         fillColor: `hsla(${hue}, 85%, 48%, 0.22)`,
@@ -582,7 +591,7 @@ export default function MapGenieWitcherAtlas({
         const region = world.regions.find((entry) => entry.id === subRegion.regionId);
 
         // ⚡ Bolt: Combine map projections to avoid intermediate array allocation
-        L.polygon(subRegion.polygonCoordinates.map((p) => toLeafletPoint(projectCoordinate(p))), {
+        L.polygon(projectPolygon(subRegion.polygonCoordinates, projectCoordinate), {
           color: "#d6b15f",
           weight: 1,
           fillColor: "#0b1018",
@@ -599,7 +608,7 @@ export default function MapGenieWitcherAtlas({
 
         if (layers.includes("roads")) {
           subRegion.roads.forEach((road) => {
-            L.polyline(road.points.map(p => toLeafletPoint(projectCoordinate(p))), {
+            L.polyline(projectPolygon(road.points, projectCoordinate), {
               color: "#d6b15f",
               weight: zoomStage === "region" ? 1.4 : 2,
               opacity: 0.72,
@@ -611,7 +620,7 @@ export default function MapGenieWitcherAtlas({
 
         if (layers.includes("rivers")) {
           subRegion.rivers.forEach((river) => {
-            L.polyline(river.points.map(p => toLeafletPoint(projectCoordinate(p))), {
+            L.polyline(projectPolygon(river.points, projectCoordinate), {
               color: "#38bdf8",
               weight: 2,
               opacity: 0.8,
@@ -623,7 +632,7 @@ export default function MapGenieWitcherAtlas({
 
         if (layers.includes("forests")) {
           subRegion.forests.forEach((forest) => {
-            L.polygon(forest.points.map(p => toLeafletPoint(projectCoordinate(p))), {
+            L.polygon(projectPolygon(forest.points, projectCoordinate), {
               color: "#16a34a",
               weight: 1,
               fillColor: "#16a34a",
@@ -692,7 +701,7 @@ export default function MapGenieWitcherAtlas({
     }
 
     if (routePlan) {
-      L.polyline(routePlan.path.map(p => toLeafletPoint(projectCoordinate(p))), {
+      L.polyline(projectPolygon(routePlan.path, projectCoordinate), {
         color: routePlan.risk === "high" ? "#ef4444" : routePlan.risk === "moderate" ? "#f59e0b" : "#16a34a",
         weight: 3,
         opacity: 0.92,
