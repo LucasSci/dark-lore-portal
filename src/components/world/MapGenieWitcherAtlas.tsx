@@ -1239,16 +1239,16 @@ export default function MapGenieWitcherAtlas({
                   <Trees className="h-4 w-4 text-primary" />
                   <p className="text-[11px] uppercase tracking-[0.18em] text-primary/80">Camadas e filtros</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Filtros de mapa">
                   {(["roads", "rivers", "forests", "settlements", "pois", "npcs", "factions", "events", "battlemaps"] as AtlasLayerId[]).map((layer) => (
-                    <Button key={layer} type="button" size="sm" variant={layers.includes(layer) ? "primary" : "outline"} onClick={() => handleLayerToggle(layer)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
+                    <Button key={layer} type="button" size="sm" variant={layers.includes(layer) ? "primary" : "outline"} aria-pressed={layers.includes(layer)} onClick={() => handleLayerToggle(layer)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
                       {getAtlasLayerLabel(layer)}
                     </Button>
                   ))}
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Filtros de localizações">
                   {locationTypeOptions.map((type) => (
-                    <Button key={type} type="button" size="sm" variant={typeFilters.includes(type) ? "secondary" : "ghost"} onClick={() => handleLocationFilterToggle(type)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
+                    <Button key={type} type="button" size="sm" variant={typeFilters.includes(type) ? "secondary" : "ghost"} aria-pressed={typeFilters.includes(type)} onClick={() => handleLocationFilterToggle(type)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
                       {getAtlasLocationTypeLabel(type)}
                     </Button>
                   ))}
@@ -1438,9 +1438,9 @@ export default function MapGenieWitcherAtlas({
               <p className="text-[11px] uppercase tracking-[0.22em] text-primary/80">Painel lateral</p>
               <h3 className="font-heading text-xl text-foreground">{rightMode === "details" ? "Lore do local" : "Ferramentas do mestre"}</h3>
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant={rightMode === "details" ? "primary" : "outline"} className="atlas-mode-button" onClick={() => setRightMode("details")}>Detalhes</Button>
-              <Button size="sm" variant={rightMode === "gm" ? "primary" : "outline"} className="atlas-mode-button" onClick={() => setRightMode("gm")}>Mestre</Button>
+            <div className="flex gap-2" role="group" aria-label="Modo do painel lateral">
+              <Button size="sm" variant={rightMode === "details" ? "primary" : "outline"} aria-pressed={rightMode === "details"} className="atlas-mode-button" onClick={() => setRightMode("details")}>Detalhes</Button>
+              <Button size="sm" variant={rightMode === "gm" ? "primary" : "outline"} aria-pressed={rightMode === "gm"} className="atlas-mode-button" onClick={() => setRightMode("gm")}>Mestre</Button>
             </div>
           </div>
           <ScrollArea
