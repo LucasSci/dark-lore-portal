@@ -1852,7 +1852,8 @@ export default function MesaPage() {
             onClick={() => setShowGrid((v) => !v)}
             active={showGrid}
             title={showGrid ? "Ocultar grid" : "Mostrar grid"}
-            aria-label={showGrid ? "Ocultar grid" : "Mostrar grid"}
+            aria-label="Mostrar grid"
+            aria-pressed={showGrid}
           >
             <Grid3X3 className="h-4 w-4" />
           </ToolRailButton>
@@ -1878,7 +1879,8 @@ export default function MesaPage() {
       <button
         onClick={() => setRightOpen((v) => !v)}
         className="hidden w-5 items-center justify-center border-l border-border/40 bg-surface-raised text-muted-foreground transition-colors hover:text-foreground sm:flex"
-        aria-label={rightOpen ? "Recolher painel" : "Expandir painel"}
+        aria-label="Painel lateral"
+        aria-expanded={rightOpen}
         title={rightOpen ? "Recolher painel" : "Expandir painel"}
       >
         {rightOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
