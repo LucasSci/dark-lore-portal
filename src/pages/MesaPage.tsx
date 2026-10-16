@@ -1674,6 +1674,7 @@ export default function MesaPage() {
               onClick={() => setMobilePanel((v) => !v)}
               className="tool-rail-button h-8 w-8 sm:hidden"
               aria-label="Alternar painel lateral"
+              aria-expanded={mobilePanel}
               title="Alternar painel lateral"
             >
               <MessageSquare className="h-4 w-4" />
@@ -1878,8 +1879,9 @@ export default function MesaPage() {
       <button
         onClick={() => setRightOpen((v) => !v)}
         className="hidden w-5 items-center justify-center border-l border-border/40 bg-surface-raised text-muted-foreground transition-colors hover:text-foreground sm:flex"
-        aria-label={rightOpen ? "Recolher painel" : "Expandir painel"}
-        title={rightOpen ? "Recolher painel" : "Expandir painel"}
+        aria-label="Painel lateral"
+        title="Painel lateral"
+        aria-expanded={rightOpen}
       >
         {rightOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
       </button>
