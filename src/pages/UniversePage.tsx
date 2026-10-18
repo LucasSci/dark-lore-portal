@@ -733,6 +733,7 @@ function UniverseIndex() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
+            aria-pressed={activeCategory === "todas"}
             onClick={() => setActiveCategory("todas")}
             className={cn("dark-lore-chip", activeCategory === "todas" && "is-active")}
           >
@@ -742,6 +743,7 @@ function UniverseIndex() {
             <button
               key={category}
               type="button"
+              aria-pressed={activeCategory === category}
               onClick={() => setActiveCategory(category)}
               className={cn("dark-lore-chip", activeCategory === category && "is-active")}
             >
