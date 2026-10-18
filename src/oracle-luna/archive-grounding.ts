@@ -113,13 +113,28 @@ const chapterRecords: OracleArchiveRecord[] = rawLoreChapters.map((chapter, inde
 });
 
 const entryRecords: OracleArchiveRecord[] = encyclopediaEntries.map((entry) => {
-  const narrativeText = entry.narrative
-    .map((block) => `${block.heading}: ${block.body}`)
-    .join("\n\n");
-  const timelineText = entry.timeline
-    .map((event) => `${event.period}: ${event.title}. ${event.description}`)
-    .join("\n\n");
-  const statsText = entry.stats.map((stat) => `${stat.label}: ${stat.value}`).join("\n");
+  // ⚡ Bolt Optimization: Use standard for loops and string concatenation instead of .map().join()
+  // to avoid intermediate array allocations and GC overhead when processing large data structures.
+  let narrativeText = "";
+  for (let i = 0; i < entry.narrative.length; i++) {
+    const block = entry.narrative[i];
+    if (i > 0) narrativeText += "\n\n";
+    narrativeText += `${block.heading}: ${block.body}`;
+  }
+
+  let timelineText = "";
+  for (let i = 0; i < entry.timeline.length; i++) {
+    const event = entry.timeline[i];
+    if (i > 0) timelineText += "\n\n";
+    timelineText += `${event.period}: ${event.title}. ${event.description}`;
+  }
+
+  let statsText = "";
+  for (let i = 0; i < entry.stats.length; i++) {
+    const stat = entry.stats[i];
+    if (i > 0) statsText += "\n";
+    statsText += `${stat.label}: ${stat.value}`;
+  }
   const body = [entry.summary, narrativeText, timelineText, statsText].filter(Boolean).join("\n\n");
 
   return {
