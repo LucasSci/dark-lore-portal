@@ -397,6 +397,7 @@ function ToolRailButton({
   return (
     <button
       data-active={active}
+      aria-pressed={active}
       className={cn("tool-rail-button h-9 w-9", className)}
       title={title}
       aria-label={ariaLabel || title}
@@ -422,6 +423,7 @@ function FoundrySidebarTabButton({
       onClick={onClick}
       title={title}
       aria-label={title}
+      aria-pressed={active}
       className={cn(
         "flex h-11 w-11 items-center justify-center rounded-sm border text-[hsl(var(--foreground)/0.72)] transition-all",
         active
