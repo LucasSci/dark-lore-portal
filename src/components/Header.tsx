@@ -113,7 +113,8 @@ export default function Header() {
             type="button"
             className="soz-mobile-toggle"
             onClick={() => setMobileOpen((value) => !value)}
-            aria-label={mobileOpen ? "Fechar navegacao" : "Abrir navegacao"}
+            aria-label="Menu de navegação"
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
