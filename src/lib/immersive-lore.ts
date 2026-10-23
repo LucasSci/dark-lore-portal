@@ -9,28 +9,15 @@ export const CURRENT_PROTAGONISTS = [
   "Hauz Darnen",
 ] as const;
 
-const META_PATTERNS = [
-  /\bpdf\b/gi,
-  /\bsite\b/gi,
-  /\brepositorio\b/gi,
-  /\bautomatic[oa]s?\b/gi,
-  /\bdemo\b/gi,
-  /\bmockup\b/gi,
-  /\bplaceholder\b/gi,
-  /\bconte[uú]do presente neste arquivo\b/gi,
-  /\bveio do pdf\b/gi,
-  /\banexo\b/gi,
-];
+// Combined regex for single-pass replacement to reduce GC overhead
+const META_PATTERNS_COMBINED = /\b(pdf|site|repositorio|automatic[oa]s?|demo|mockup|placeholder|conte[uú]do presente neste arquivo|veio do pdf|anexo)\b/gi;
 
 function normalizeSpacing(text: string) {
   return text.replace(/\s{2,}/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim();
 }
 
 export function sanitizeImmersiveText(text: string) {
-  const sanitized = META_PATTERNS.reduce((current, pattern) => {
-    return current.replace(pattern, "");
-  }, text);
-
+  const sanitized = text.replace(META_PATTERNS_COMBINED, "");
   return normalizeSpacing(sanitized);
 }
 
