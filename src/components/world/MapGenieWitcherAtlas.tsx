@@ -1241,14 +1241,14 @@ export default function MapGenieWitcherAtlas({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {(["roads", "rivers", "forests", "settlements", "pois", "npcs", "factions", "events", "battlemaps"] as AtlasLayerId[]).map((layer) => (
-                    <Button key={layer} type="button" size="sm" variant={layers.includes(layer) ? "primary" : "outline"} onClick={() => handleLayerToggle(layer)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
+                    <Button key={layer} type="button" size="sm" variant={layers.includes(layer) ? "primary" : "outline"} aria-pressed={layers.includes(layer)} onClick={() => handleLayerToggle(layer)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
                       {getAtlasLayerLabel(layer)}
                     </Button>
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {locationTypeOptions.map((type) => (
-                    <Button key={type} type="button" size="sm" variant={typeFilters.includes(type) ? "secondary" : "ghost"} onClick={() => handleLocationFilterToggle(type)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
+                    <Button key={type} type="button" size="sm" variant={typeFilters.includes(type) ? "secondary" : "ghost"} aria-pressed={typeFilters.includes(type)} onClick={() => handleLocationFilterToggle(type)} className="atlas-filter-button text-xs uppercase tracking-[0.16em]">
                       {getAtlasLocationTypeLabel(type)}
                     </Button>
                   ))}
