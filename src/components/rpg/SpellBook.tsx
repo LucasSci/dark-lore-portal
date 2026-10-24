@@ -67,6 +67,7 @@ export default function SpellBook({ onImportSpell }: Props) {
       <div className="flex flex-wrap gap-2">
         <Button
           size="sm"
+          aria-pressed={filterTradition === "todas"}
           variant={filterTradition === "todas" ? "primary" : "outline"}
           onClick={() => setFilterTradition("todas")}
         >
@@ -77,6 +78,7 @@ export default function SpellBook({ onImportSpell }: Props) {
           <Button
             key={tradition}
             size="sm"
+            aria-pressed={filterTradition === tradition}
             variant={filterTradition === tradition ? "primary" : "outline"}
             onClick={() => setFilterTradition(tradition)}
           >
