@@ -113,14 +113,30 @@ const chapterRecords: OracleArchiveRecord[] = rawLoreChapters.map((chapter, inde
 });
 
 const entryRecords: OracleArchiveRecord[] = encyclopediaEntries.map((entry) => {
-  const narrativeText = entry.narrative
-    .map((block) => `${block.heading}: ${block.body}`)
-    .join("\n\n");
-  const timelineText = entry.timeline
-    .map((event) => `${event.period}: ${event.title}. ${event.description}`)
-    .join("\n\n");
-  const statsText = entry.stats.map((stat) => `${stat.label}: ${stat.value}`).join("\n");
-  const body = [entry.summary, narrativeText, timelineText, statsText].filter(Boolean).join("\n\n");
+  let narrativeText = "";
+  for (let i = 0; i < entry.narrative.length; i++) {
+    const block = entry.narrative[i];
+    narrativeText += (i > 0 ? "\n\n" : "") + `${block.heading}: ${block.body}`;
+  }
+
+  let timelineText = "";
+  for (let i = 0; i < entry.timeline.length; i++) {
+    const event = entry.timeline[i];
+    timelineText += (i > 0 ? "\n\n" : "") + `${event.period}: ${event.title}. ${event.description}`;
+  }
+
+  let statsText = "";
+  for (let i = 0; i < entry.stats.length; i++) {
+    const stat = entry.stats[i];
+    statsText += (i > 0 ? "\n" : "") + `${stat.label}: ${stat.value}`;
+  }
+
+  const parts = [];
+  if (entry.summary) parts.push(entry.summary);
+  if (narrativeText) parts.push(narrativeText);
+  if (timelineText) parts.push(timelineText);
+  if (statsText) parts.push(statsText);
+  const body = parts.join("\n\n");
 
   return {
     id: `entry:${entry.slug}`,
