@@ -458,6 +458,7 @@ export default function CinematicHero() {
                 <button
                   key={scene.id}
                   type="button"
+                  aria-pressed={index === activeScene}
                   data-active={index === activeScene ? "true" : "false"}
                   className="cinematic-scene-step px-3"
                   onClick={() => setActiveScene(index)}
@@ -483,6 +484,7 @@ export default function CinematicHero() {
               <button
                 key={scene.id}
                 type="button"
+                aria-pressed={index === activeScene}
                 data-active={index === activeScene ? "true" : "false"}
                 className={cn(
                   "cinematic-scene-card group text-left",

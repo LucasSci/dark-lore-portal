@@ -295,6 +295,7 @@ export default function RegionalTileAtlas({
                     <button
                       key={entry.id}
                     type="button"
+                    aria-pressed={isActive}
                     onClick={() => setActiveMapId(entry.id)}
                     className={cn(
                       "w-full border p-4 text-left transition-colors",
