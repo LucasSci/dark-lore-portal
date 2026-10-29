@@ -430,6 +430,7 @@ export default function OraculoLunaApp() {
       <button
         key={chapter.id}
         type="button"
+        aria-pressed={isActive}
         onClick={() => selectChapter(chapter)}
         data-active={isActive}
         className="archive-oracle-entry rounded-2xl"
