@@ -9,27 +9,15 @@ export const CURRENT_PROTAGONISTS = [
   "Hauz Darnen",
 ] as const;
 
-const META_PATTERNS = [
-  /\bpdf\b/gi,
-  /\bsite\b/gi,
-  /\brepositorio\b/gi,
-  /\bautomatic[oa]s?\b/gi,
-  /\bdemo\b/gi,
-  /\bmockup\b/gi,
-  /\bplaceholder\b/gi,
-  /\bconte[uú]do presente neste arquivo\b/gi,
-  /\bveio do pdf\b/gi,
-  /\banexo\b/gi,
-];
+// ⚡ Bolt Optimization: Use a single compiled RegExp to avoid allocating intermediate strings in .reduce()
+const META_PATTERN = /\bpdf\b|\bsite\b|\brepositorio\b|\bautomatic[oa]s?\b|\bdemo\b|\bmockup\b|\bplaceholder\b|\bconte[uú]do presente neste arquivo\b|\bveio do pdf\b|\banexo\b/gi;
 
 function normalizeSpacing(text: string) {
   return text.replace(/\s{2,}/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim();
 }
 
 export function sanitizeImmersiveText(text: string) {
-  const sanitized = META_PATTERNS.reduce((current, pattern) => {
-    return current.replace(pattern, "");
-  }, text);
+  const sanitized = text.replace(META_PATTERN, "");
 
   return normalizeSpacing(sanitized);
 }
