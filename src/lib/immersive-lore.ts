@@ -10,6 +10,8 @@ export const CURRENT_PROTAGONISTS = [
 ] as const;
 
 const META_PATTERNS = [
+  /\bveio do pdf\b/gi,
+  /\bconte[uú]do presente neste arquivo\b/gi,
   /\bpdf\b/gi,
   /\bsite\b/gi,
   /\brepositorio\b/gi,
@@ -17,21 +19,20 @@ const META_PATTERNS = [
   /\bdemo\b/gi,
   /\bmockup\b/gi,
   /\bplaceholder\b/gi,
-  /\bconte[uú]do presente neste arquivo\b/gi,
-  /\bveio do pdf\b/gi,
   /\banexo\b/gi,
 ];
+
+const META_COMBINED_PATTERN = new RegExp(
+  META_PATTERNS.map((p) => p.source).join("|"),
+  "gi"
+);
 
 function normalizeSpacing(text: string) {
   return text.replace(/\s{2,}/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim();
 }
 
 export function sanitizeImmersiveText(text: string) {
-  const sanitized = META_PATTERNS.reduce((current, pattern) => {
-    return current.replace(pattern, "");
-  }, text);
-
-  return normalizeSpacing(sanitized);
+  return normalizeSpacing(text.replace(META_COMBINED_PATTERN, ""));
 }
 
 export function sanitizeImmersiveTimeline(
