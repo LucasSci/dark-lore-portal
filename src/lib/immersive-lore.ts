@@ -9,27 +9,17 @@ export const CURRENT_PROTAGONISTS = [
   "Hauz Darnen",
 ] as const;
 
-const META_PATTERNS = [
-  /\bpdf\b/gi,
-  /\bsite\b/gi,
-  /\brepositorio\b/gi,
-  /\bautomatic[oa]s?\b/gi,
-  /\bdemo\b/gi,
-  /\bmockup\b/gi,
-  /\bplaceholder\b/gi,
-  /\bconte[uú]do presente neste arquivo\b/gi,
-  /\bveio do pdf\b/gi,
-  /\banexo\b/gi,
-];
+// ⚡ Bolt Optimization: Precompiled RegExp with alternation reduces GC pressure
+// from iterating over an array of regexes and allocating multiple intermediate strings.
+// Note: Multi-word patterns must be matched first to avoid partial matches.
+const META_PATTERNS_REGEX = /\bconte[uú]do presente neste arquivo\b|\bveio do pdf\b|\bpdf\b|\bsite\b|\brepositorio\b|\bautomatic[oa]s?\b|\bdemo\b|\bmockup\b|\bplaceholder\b|\banexo\b/gi;
 
 function normalizeSpacing(text: string) {
   return text.replace(/\s{2,}/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim();
 }
 
 export function sanitizeImmersiveText(text: string) {
-  const sanitized = META_PATTERNS.reduce((current, pattern) => {
-    return current.replace(pattern, "");
-  }, text);
+  const sanitized = text.replace(META_PATTERNS_REGEX, "");
 
   return normalizeSpacing(sanitized);
 }
