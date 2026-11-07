@@ -9,29 +9,14 @@ export const CURRENT_PROTAGONISTS = [
   "Hauz Darnen",
 ] as const;
 
-const META_PATTERNS = [
-  /\bpdf\b/gi,
-  /\bsite\b/gi,
-  /\brepositorio\b/gi,
-  /\bautomatic[oa]s?\b/gi,
-  /\bdemo\b/gi,
-  /\bmockup\b/gi,
-  /\bplaceholder\b/gi,
-  /\bconte[uú]do presente neste arquivo\b/gi,
-  /\bveio do pdf\b/gi,
-  /\banexo\b/gi,
-];
+const COMBINED_META_PATTERN = /\b(?:conte[uú]do presente neste arquivo|veio do pdf|automatic[oa]s?|repositorio|placeholder|mockup|anexo|demo|site|pdf)\b/gi;
 
 function normalizeSpacing(text: string) {
   return text.replace(/\s{2,}/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim();
 }
 
 export function sanitizeImmersiveText(text: string) {
-  const sanitized = META_PATTERNS.reduce((current, pattern) => {
-    return current.replace(pattern, "");
-  }, text);
-
-  return normalizeSpacing(sanitized);
+  return normalizeSpacing(text.replace(COMBINED_META_PATTERN, ""));
 }
 
 export function sanitizeImmersiveTimeline(
