@@ -50,6 +50,7 @@ export default function InventoryPanel({ onImportItem }: Props) {
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
+          aria-pressed={!filterType}
           onClick={() => setFilterType(null)}
           className={`border px-3 py-1 text-[11px] uppercase tracking-[0.18em] transition-colors ${
             !filterType ? "border-primary/35 bg-primary/10 text-primary" : "border-border/70 text-muted-foreground"
@@ -62,6 +63,7 @@ export default function InventoryPanel({ onImportItem }: Props) {
           <button
             key={key}
             type="button"
+            aria-pressed={filterType === key}
             onClick={() => setFilterType(key as WitcherInventoryItem["category"])}
             className={`border px-3 py-1 text-[11px] uppercase tracking-[0.18em] transition-colors ${
               filterType === key ? "border-primary/35 bg-primary/10 text-primary" : "border-border/70 text-muted-foreground"
